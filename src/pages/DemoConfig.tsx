@@ -1,24 +1,42 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Save, Eye } from "lucide-react";
+import { ArrowLeft, Save, Eye, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { useDemoStore } from "@/stores/demoStore";
-import { VerificationType } from "@/types/demo";
+import { useDemo, useUpdateDemo } from "@/hooks/useDemos";
+import { DemoEnvironment, VerificationType } from "@/types/demo";
 import { useToast } from "@/hooks/use-toast";
+import { useState, useEffect } from "react";
 
 export default function DemoConfig() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { getDemo, updateDemo } = useDemoStore();
+  const { data: demo, isLoading, error } = useDemo(id || "");
+  const updateDemoMutation = useUpdateDemo();
   
-  const demo = getDemo(id || "");
+  // Local state for form fields
+  const [localDemo, setLocalDemo] = useState<DemoEnvironment | null>(null);
   
-  if (!demo) {
+  // Sync local state when demo loads
+  useEffect(() => {
+    if (demo) {
+      setLocalDemo(demo);
+    }
+  }, [demo]);
+  
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+  
+  if (error || !demo || !localDemo) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Card className="glass-card max-w-md">
@@ -31,12 +49,13 @@ export default function DemoConfig() {
     );
   }
 
-  const handleUpdate = (updates: Partial<typeof demo>) => {
-    updateDemo(demo.id, updates);
+  const handleUpdate = (updates: Partial<DemoEnvironment>) => {
+    setLocalDemo(prev => prev ? { ...prev, ...updates } : null);
   };
 
   const handleSave = () => {
-    toast({ title: "Saved", description: "Demo configuration has been saved." });
+    if (!localDemo) return;
+    updateDemoMutation.mutate({ id: localDemo.id, updates: localDemo });
   };
 
   return (
@@ -49,16 +68,17 @@ export default function DemoConfig() {
                 <ArrowLeft className="w-5 h-5" />
               </Button>
               <div>
-                <h1 className="text-xl font-bold">{demo.customerName}</h1>
-                <p className="text-sm text-muted-foreground font-mono">/demo/{demo.slug}</p>
+                <h1 className="text-xl font-bold">{localDemo.customerName}</h1>
+                <p className="text-sm text-muted-foreground font-mono">/demo/{localDemo.slug}</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="outline" onClick={() => window.open(`/demo/${demo.slug}`, '_blank')}>
+              <Button variant="outline" onClick={() => window.open(`/demo/${localDemo.slug}`, '_blank')}>
                 <Eye className="w-4 h-4 mr-2" />Preview
               </Button>
-              <Button onClick={handleSave} className="gradient-primary">
-                <Save className="w-4 h-4 mr-2" />Save
+              <Button onClick={handleSave} disabled={updateDemoMutation.isPending} className="gradient-primary">
+                {updateDemoMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+                Save
               </Button>
             </div>
           </div>
@@ -75,15 +95,15 @@ export default function DemoConfig() {
           <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <Label>Customer Name</Label>
-              <Input value={demo.customerName} onChange={(e) => handleUpdate({ customerName: e.target.value })} />
+              <Input value={localDemo.customerName} onChange={(e) => handleUpdate({ customerName: e.target.value })} />
             </div>
             <div className="space-y-2">
               <Label>Logo URL</Label>
-              <Input value={demo.logoUrl || ""} onChange={(e) => handleUpdate({ logoUrl: e.target.value })} placeholder="https://..." />
+              <Input value={localDemo.logoUrl || ""} onChange={(e) => handleUpdate({ logoUrl: e.target.value })} placeholder="https://..." />
             </div>
             <div className="space-y-2">
               <Label>Verification Type</Label>
-              <Select value={demo.verificationType} onValueChange={(v) => handleUpdate({ verificationType: v as VerificationType })}>
+              <Select value={localDemo.verificationType} onValueChange={(v) => handleUpdate({ verificationType: v as VerificationType })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="docBio">Doc & Bio (Document + Selfie)</SelectItem>
@@ -94,7 +114,7 @@ export default function DemoConfig() {
             </div>
             <div className="space-y-2">
               <Label>Return URL</Label>
-              <Input value={demo.returnUrl} onChange={(e) => handleUpdate({ returnUrl: e.target.value })} placeholder="https://..." />
+              <Input value={localDemo.returnUrl} onChange={(e) => handleUpdate({ returnUrl: e.target.value })} placeholder="https://..." />
             </div>
           </CardContent>
         </Card>
@@ -108,27 +128,23 @@ export default function DemoConfig() {
           <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <Label>Resource ID (Default)</Label>
-              <Input value={demo.resourceId} onChange={(e) => handleUpdate({ resourceId: e.target.value })} />
+              <Input value={localDemo.resourceId} onChange={(e) => handleUpdate({ resourceId: e.target.value })} />
             </div>
             <div className="space-y-2">
               <Label>Resource ID (DocBio)</Label>
-              <Input value={demo.resourceIdDocBio || ""} onChange={(e) => handleUpdate({ resourceIdDocBio: e.target.value })} />
+              <Input value={localDemo.resourceIdDocBio || ""} onChange={(e) => handleUpdate({ resourceIdDocBio: e.target.value })} />
             </div>
             <div className="space-y-2">
               <Label>Resource ID (DataBio)</Label>
-              <Input value={demo.resourceIdDataBio || ""} onChange={(e) => handleUpdate({ resourceIdDataBio: e.target.value })} />
+              <Input value={localDemo.resourceIdDataBio || ""} onChange={(e) => handleUpdate({ resourceIdDataBio: e.target.value })} />
             </div>
             <div className="space-y-2">
               <Label>Resource ID (DataOnly)</Label>
-              <Input value={demo.resourceIdDataOnly || ""} onChange={(e) => handleUpdate({ resourceIdDataOnly: e.target.value })} />
+              <Input value={localDemo.resourceIdDataOnly || ""} onChange={(e) => handleUpdate({ resourceIdDataOnly: e.target.value })} />
             </div>
             <div className="space-y-2">
               <Label>Reference ID Prefix</Label>
-              <Input value={demo.referenceIdPrefix || ""} onChange={(e) => handleUpdate({ referenceIdPrefix: e.target.value })} />
-            </div>
-            <div className="space-y-2">
-              <Label>Reference ID</Label>
-              <Input value={demo.referenceId || ""} onChange={(e) => handleUpdate({ referenceId: e.target.value })} />
+              <Input value={localDemo.referenceIdPrefix || ""} onChange={(e) => handleUpdate({ referenceIdPrefix: e.target.value })} />
             </div>
           </CardContent>
         </Card>
@@ -143,22 +159,22 @@ export default function DemoConfig() {
             <div className="space-y-2">
               <Label>Header Background</Label>
               <div className="flex items-center gap-2">
-                <input type="color" value={demo.headerBgColor} onChange={(e) => handleUpdate({ headerBgColor: e.target.value })} className="color-picker-swatch" />
-                <Input value={demo.headerBgColor} onChange={(e) => handleUpdate({ headerBgColor: e.target.value })} className="font-mono" />
+                <input type="color" value={localDemo.headerBgColor} onChange={(e) => handleUpdate({ headerBgColor: e.target.value })} className="color-picker-swatch" />
+                <Input value={localDemo.headerBgColor} onChange={(e) => handleUpdate({ headerBgColor: e.target.value })} className="font-mono" />
               </div>
             </div>
             <div className="space-y-2">
               <Label>Header Text</Label>
               <div className="flex items-center gap-2">
-                <input type="color" value={demo.headerTextColor} onChange={(e) => handleUpdate({ headerTextColor: e.target.value })} className="color-picker-swatch" />
-                <Input value={demo.headerTextColor} onChange={(e) => handleUpdate({ headerTextColor: e.target.value })} className="font-mono" />
+                <input type="color" value={localDemo.headerTextColor} onChange={(e) => handleUpdate({ headerTextColor: e.target.value })} className="color-picker-swatch" />
+                <Input value={localDemo.headerTextColor} onChange={(e) => handleUpdate({ headerTextColor: e.target.value })} className="font-mono" />
               </div>
             </div>
             <div className="space-y-2">
               <Label>Button Color</Label>
               <div className="flex items-center gap-2">
-                <input type="color" value={demo.buttonColor} onChange={(e) => handleUpdate({ buttonColor: e.target.value })} className="color-picker-swatch" />
-                <Input value={demo.buttonColor} onChange={(e) => handleUpdate({ buttonColor: e.target.value })} className="font-mono" />
+                <input type="color" value={localDemo.buttonColor} onChange={(e) => handleUpdate({ buttonColor: e.target.value })} className="color-picker-swatch" />
+                <Input value={localDemo.buttonColor} onChange={(e) => handleUpdate({ buttonColor: e.target.value })} className="font-mono" />
               </div>
             </div>
           </CardContent>
@@ -175,21 +191,21 @@ export default function DemoConfig() {
                 <Label>Include QR Code</Label>
                 <p className="text-sm text-muted-foreground">Show QR code for mobile verification</p>
               </div>
-              <Switch checked={demo.includeQr} onCheckedChange={(v) => handleUpdate({ includeQr: v })} />
+              <Switch checked={localDemo.includeQr} onCheckedChange={(v) => handleUpdate({ includeQr: v })} />
             </div>
             <div className="flex items-center justify-between">
               <div>
                 <Label>Address Verification</Label>
                 <p className="text-sm text-muted-foreground">Validate addresses during verification</p>
               </div>
-              <Switch checked={demo.includeAddressVerification} onCheckedChange={(v) => handleUpdate({ includeAddressVerification: v })} />
+              <Switch checked={localDemo.includeAddressVerification} onCheckedChange={(v) => handleUpdate({ includeAddressVerification: v })} />
             </div>
             <div className="flex items-center justify-between">
               <div>
                 <Label>Active</Label>
                 <p className="text-sm text-muted-foreground">Demo is accessible to users</p>
               </div>
-              <Switch checked={demo.isActive} onCheckedChange={(v) => handleUpdate({ isActive: v })} />
+              <Switch checked={localDemo.isActive} onCheckedChange={(v) => handleUpdate({ isActive: v })} />
             </div>
           </CardContent>
         </Card>
