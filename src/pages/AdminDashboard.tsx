@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Search, Settings, ExternalLink, Trash2, Copy, Building2, Car, Gamepad2, Shield, Landmark, Layers } from "lucide-react";
+import { Plus, Search, Settings, ExternalLink, Trash2, Copy, Building2, Car, Gamepad2, Shield, Landmark, Layers, Heart, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useDemoStore } from "@/stores/demoStore";
+import { useDemos, useDeleteDemo } from "@/hooks/useDemos";
 import { IndustryTemplate } from "@/types/demo";
 import { CreateDemoDialog } from "@/components/admin/CreateDemoDialog";
 import {
@@ -21,27 +21,30 @@ import {
 import { useToast } from "@/hooks/use-toast";
 
 const industryIcons: Record<IndustryTemplate, React.ReactNode> = {
-  banking: <Landmark className="w-5 h-5" />,
+  bank: <Landmark className="w-5 h-5" />,
   rental_car: <Car className="w-5 h-5" />,
-  gambling: <Gamepad2 className="w-5 h-5" />,
+  online_gambling: <Gamepad2 className="w-5 h-5" />,
+  healthcare: <Heart className="w-5 h-5" />,
   insurance: <Shield className="w-5 h-5" />,
-  fintech: <Building2 className="w-5 h-5" />,
+  retail: <ShoppingBag className="w-5 h-5" />,
   custom: <Layers className="w-5 h-5" />,
 };
 
 const industryLabels: Record<IndustryTemplate, string> = {
-  banking: "Banking",
+  bank: "Banking",
   rental_car: "Rental Car",
-  gambling: "Online Gambling",
+  online_gambling: "Online Gambling",
+  healthcare: "Healthcare",
   insurance: "Insurance",
-  fintech: "Fintech",
+  retail: "Retail",
   custom: "Custom",
 };
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { demos, deleteDemo } = useDemoStore();
+  const { data: demos = [], isLoading } = useDemos();
+  const deleteDemo = useDeleteDemo();
   const [searchQuery, setSearchQuery] = useState("");
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -54,10 +57,12 @@ export default function AdminDashboard() {
 
   const handleDelete = () => {
     if (demoToDelete) {
-      deleteDemo(demoToDelete);
-      toast({ title: "Demo deleted", description: "The demo environment has been removed." });
-      setDemoToDelete(null);
-      setDeleteDialogOpen(false);
+      deleteDemo.mutate(demoToDelete, {
+        onSuccess: () => {
+          setDemoToDelete(null);
+          setDeleteDialogOpen(false);
+        }
+      });
     }
   };
 
