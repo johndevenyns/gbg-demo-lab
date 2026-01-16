@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { Building2, Car, Gamepad2, Shield, Landmark, Layers, Check } from "lucide-react";
+import { Building2, Car, Gamepad2, Shield, Landmark, Layers, Check, Heart, ShoppingBag } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useDemoStore } from "@/stores/demoStore";
+import { useCreateDemo } from "@/hooks/useDemos";
 import { IndustryTemplate } from "@/types/demo";
 import { cn } from "@/lib/utils";
 
@@ -16,17 +16,17 @@ interface CreateDemoDialogProps {
 
 const templates: { id: IndustryTemplate; label: string; description: string; icon: React.ReactNode; color: string }[] = [
   {
-    id: "banking",
+    id: "bank",
     label: "Banking",
     description: "Traditional banks & credit unions",
     icon: <Landmark className="w-6 h-6" />,
     color: "#1a1a2e",
   },
   {
-    id: "fintech",
-    label: "Fintech",
-    description: "Digital-first financial services",
-    icon: <Building2 className="w-6 h-6" />,
+    id: "retail",
+    label: "Retail",
+    description: "E-commerce & retail businesses",
+    icon: <ShoppingBag className="w-6 h-6" />,
     color: "#00c4cc",
   },
   {
@@ -37,11 +37,18 @@ const templates: { id: IndustryTemplate; label: string; description: string; ico
     color: "#ff6b00",
   },
   {
-    id: "gambling",
+    id: "online_gambling",
     label: "Online Gambling",
     description: "Gaming & betting platforms",
     icon: <Gamepad2 className="w-6 h-6" />,
     color: "#8b5cf6",
+  },
+  {
+    id: "healthcare",
+    label: "Healthcare",
+    description: "Healthcare providers",
+    icon: <Heart className="w-6 h-6" />,
+    color: "#14b8a6",
   },
   {
     id: "insurance",
@@ -60,18 +67,24 @@ const templates: { id: IndustryTemplate; label: string; description: string; ico
 ];
 
 export function CreateDemoDialog({ open, onOpenChange, onCreated }: CreateDemoDialogProps) {
-  const { createFromTemplate } = useDemoStore();
+  const createDemo = useCreateDemo();
   const [step, setStep] = useState<1 | 2>(1);
   const [selectedTemplate, setSelectedTemplate] = useState<IndustryTemplate | null>(null);
   const [customerName, setCustomerName] = useState("");
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     if (!selectedTemplate || !customerName.trim()) return;
     
-    const demo = createFromTemplate(customerName.trim(), selectedTemplate);
-    onOpenChange(false);
-    resetForm();
-    onCreated(demo.id);
+    createDemo.mutate(
+      { customerName: customerName.trim(), template: selectedTemplate },
+      {
+        onSuccess: (demo) => {
+          onOpenChange(false);
+          resetForm();
+          onCreated(demo.id);
+        }
+      }
+    );
   };
 
   const resetForm = () => {
@@ -160,10 +173,10 @@ export function CreateDemoDialog({ open, onOpenChange, onCreated }: CreateDemoDi
           ) : (
             <Button 
               onClick={handleCreate}
-              disabled={!customerName.trim()}
+              disabled={!customerName.trim() || createDemo.isPending}
               className="gradient-primary"
             >
-              Create Demo
+              {createDemo.isPending ? "Creating..." : "Create Demo"}
             </Button>
           )}
         </div>

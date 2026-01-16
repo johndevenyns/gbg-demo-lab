@@ -2,7 +2,7 @@
 
 export type VerificationType = 'docBio' | 'dataBio' | 'dataOnly';
 
-export type IndustryTemplate = 'banking' | 'rental_car' | 'gambling' | 'insurance' | 'fintech' | 'custom';
+export type IndustryTemplate = 'bank' | 'rental_car' | 'online_gambling' | 'healthcare' | 'insurance' | 'retail' | 'custom';
 
 export interface DemoEnvironment {
   id: string;
@@ -14,8 +14,8 @@ export interface DemoEnvironment {
   // Verification Settings
   verificationType: VerificationType;
   returnUrl: string;
-  approvedRedirectUrl?: string;
-  rejectedRedirectUrl?: string;
+  approvedUrl?: string;
+  rejectedUrl?: string;
   
   // Reference IDs
   referenceIdPrefix?: string;
@@ -33,10 +33,10 @@ export interface DemoEnvironment {
   headerTextColor: string;
   buttonColor: string;
   
-  // Header/Footer from customer site
+  // Header/Footer from customer site (scraped)
   customerSiteUrl?: string;
-  headerHtml?: string;
-  footerHtml?: string;
+  scrapedHeaderHtml?: string;
+  scrapedFooterHtml?: string;
   
   // Feature toggles
   includeAddressVerification: boolean;
@@ -128,8 +128,8 @@ export const AVAILABLE_FORM_FIELDS: Omit<FormField, 'id' | 'order'>[] = [
 
 // Industry template defaults
 export const INDUSTRY_TEMPLATES: Record<IndustryTemplate, Partial<DemoEnvironment>> = {
-  banking: {
-    industryTemplate: 'banking',
+  bank: {
+    industryTemplate: 'bank',
     verificationType: 'docBio',
     headerBgColor: '#1a1a2e',
     headerTextColor: '#ffffff',
@@ -200,8 +200,8 @@ export const INDUSTRY_TEMPLATES: Record<IndustryTemplate, Partial<DemoEnvironmen
       }
     ]
   },
-  gambling: {
-    industryTemplate: 'gambling',
+  online_gambling: {
+    industryTemplate: 'online_gambling',
     verificationType: 'dataBio',
     headerBgColor: '#1e0a3c',
     headerTextColor: '#ffd700',
@@ -233,6 +233,28 @@ export const INDUSTRY_TEMPLATES: Record<IndustryTemplate, Partial<DemoEnvironmen
       }
     ]
   },
+  healthcare: {
+    industryTemplate: 'healthcare',
+    verificationType: 'dataOnly',
+    headerBgColor: '#0f766e',
+    headerTextColor: '#ffffff',
+    buttonColor: '#14b8a6',
+    includeAddressVerification: true,
+    formSteps: [
+      {
+        id: 'step-1',
+        title: 'Patient Information',
+        order: 1,
+        fields: [
+          { id: 'f1', type: 'first_name', label: 'First Name', name: 'firstName', required: true, order: 1 },
+          { id: 'f2', type: 'last_name', label: 'Last Name', name: 'lastName', required: true, order: 2 },
+          { id: 'f3', type: 'date_of_birth', label: 'Date of Birth', name: 'dateOfBirth', required: true, order: 3 },
+          { id: 'f4', type: 'email', label: 'Email', name: 'email', required: true, order: 4 },
+          { id: 'f5', type: 'phone', label: 'Phone', name: 'phone', required: true, order: 5 },
+        ]
+      }
+    ]
+  },
   insurance: {
     industryTemplate: 'insurance',
     verificationType: 'dataOnly',
@@ -255,8 +277,8 @@ export const INDUSTRY_TEMPLATES: Record<IndustryTemplate, Partial<DemoEnvironmen
       }
     ]
   },
-  fintech: {
-    industryTemplate: 'fintech',
+  retail: {
+    industryTemplate: 'retail',
     verificationType: 'docBio',
     headerBgColor: '#00c4cc',
     headerTextColor: '#1a1a2e',
