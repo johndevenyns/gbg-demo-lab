@@ -14,7 +14,90 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      demo_environments: {
+        Row: {
+          approved_url: string | null
+          button_color: string | null
+          created_at: string | null
+          customer_name: string
+          form_steps: Json | null
+          header_bg_color: string | null
+          header_text_color: string | null
+          id: string
+          include_address_verification: boolean | null
+          include_qr: boolean | null
+          industry_template: Database["public"]["Enums"]["industry_template"]
+          is_active: boolean | null
+          logo_url: string | null
+          reference_id_prefix: string | null
+          rejected_url: string | null
+          resource_id: string | null
+          resource_id_databio: string | null
+          resource_id_dataonly: string | null
+          resource_id_docbio: string | null
+          return_url: string | null
+          scraped_footer_html: string | null
+          scraped_header_html: string | null
+          slug: string
+          updated_at: string | null
+          verification_type: Database["public"]["Enums"]["verification_type"]
+        }
+        Insert: {
+          approved_url?: string | null
+          button_color?: string | null
+          created_at?: string | null
+          customer_name: string
+          form_steps?: Json | null
+          header_bg_color?: string | null
+          header_text_color?: string | null
+          id?: string
+          include_address_verification?: boolean | null
+          include_qr?: boolean | null
+          industry_template?: Database["public"]["Enums"]["industry_template"]
+          is_active?: boolean | null
+          logo_url?: string | null
+          reference_id_prefix?: string | null
+          rejected_url?: string | null
+          resource_id?: string | null
+          resource_id_databio?: string | null
+          resource_id_dataonly?: string | null
+          resource_id_docbio?: string | null
+          return_url?: string | null
+          scraped_footer_html?: string | null
+          scraped_header_html?: string | null
+          slug: string
+          updated_at?: string | null
+          verification_type?: Database["public"]["Enums"]["verification_type"]
+        }
+        Update: {
+          approved_url?: string | null
+          button_color?: string | null
+          created_at?: string | null
+          customer_name?: string
+          form_steps?: Json | null
+          header_bg_color?: string | null
+          header_text_color?: string | null
+          id?: string
+          include_address_verification?: boolean | null
+          include_qr?: boolean | null
+          industry_template?: Database["public"]["Enums"]["industry_template"]
+          is_active?: boolean | null
+          logo_url?: string | null
+          reference_id_prefix?: string | null
+          rejected_url?: string | null
+          resource_id?: string | null
+          resource_id_databio?: string | null
+          resource_id_dataonly?: string | null
+          resource_id_docbio?: string | null
+          return_url?: string | null
+          scraped_footer_html?: string | null
+          scraped_header_html?: string | null
+          slug?: string
+          updated_at?: string | null
+          verification_type?: Database["public"]["Enums"]["verification_type"]
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +106,15 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      industry_template:
+        | "bank"
+        | "rental_car"
+        | "online_gambling"
+        | "healthcare"
+        | "insurance"
+        | "retail"
+        | "custom"
+      verification_type: "docBio" | "dataBio" | "dataOnly"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +241,17 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      industry_template: [
+        "bank",
+        "rental_car",
+        "online_gambling",
+        "healthcare",
+        "insurance",
+        "retail",
+        "custom",
+      ],
+      verification_type: ["docBio", "dataBio", "dataOnly"],
+    },
   },
 } as const
