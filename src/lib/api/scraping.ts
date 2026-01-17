@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 export interface ScrapedBranding {
   headerHtml: string;
   footerHtml: string;
+  cssContent: string;
   logoUrl: string | null;
   screenshot: string | null;
   colors: {
