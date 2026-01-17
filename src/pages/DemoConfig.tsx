@@ -74,7 +74,7 @@ export default function DemoConfig() {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="outline" onClick={() => window.open(`/demo/${localDemo.slug}`, '_blank')}>
+              <Button variant="outline" onClick={() => navigate(`/demo/${localDemo.slug}`)}>
                 <Eye className="w-4 h-4 mr-2" />Preview
               </Button>
               <Button onClick={handleSave} disabled={updateDemoMutation.isPending} className="gradient-primary">
