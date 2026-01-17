@@ -24,6 +24,7 @@ const rowToDemo = (row: any): DemoEnvironment => ({
   includeQr: row.include_qr ?? true,
   includeAddressVerification: row.include_address_verification ?? false,
   formSteps: (row.form_steps as FormStep[]) || [],
+  customerSiteUrl: row.customer_site_url || '',
   scrapedHeaderHtml: row.scraped_header_html || '',
   scrapedFooterHtml: row.scraped_footer_html || '',
   createdAt: row.created_at,
@@ -53,6 +54,7 @@ const demoToRow = (demo: Partial<DemoEnvironment>) => {
   if (demo.includeQr !== undefined) row.include_qr = demo.includeQr;
   if (demo.includeAddressVerification !== undefined) row.include_address_verification = demo.includeAddressVerification;
   if (demo.formSteps !== undefined) row.form_steps = JSON.parse(JSON.stringify(demo.formSteps));
+  if (demo.customerSiteUrl !== undefined) row.customer_site_url = demo.customerSiteUrl;
   if (demo.scrapedHeaderHtml !== undefined) row.scraped_header_html = demo.scrapedHeaderHtml;
   if (demo.scrapedFooterHtml !== undefined) row.scraped_footer_html = demo.scrapedFooterHtml;
   if (demo.isActive !== undefined) row.is_active = demo.isActive;
