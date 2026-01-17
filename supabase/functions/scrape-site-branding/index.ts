@@ -35,7 +35,7 @@ Deno.serve(async (req) => {
 
     console.log('Scraping branding from URL:', formattedUrl);
 
-    // Request branding, HTML, and screenshot formats
+    // Request branding, HTML (raw to get CSS), and screenshot formats
     const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
       method: 'POST',
       headers: {
@@ -44,7 +44,7 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         url: formattedUrl,
-        formats: ['html', 'screenshot', 'branding'],
+        formats: ['html', 'rawHtml', 'screenshot', 'branding'],
         onlyMainContent: false,
         waitFor: 2000,
       }),
@@ -62,6 +62,7 @@ Deno.serve(async (req) => {
 
     // Extract header and footer from HTML
     const html = data.data?.html || data.html || '';
+    const rawHtml = data.data?.rawHtml || data.rawHtml || html;
     const branding = data.data?.branding || data.branding || null;
     const screenshot = data.data?.screenshot || data.screenshot || null;
     const metadata = data.data?.metadata || data.metadata || {};
@@ -69,6 +70,9 @@ Deno.serve(async (req) => {
     // Parse header and footer from HTML
     const headerHtml = extractHeader(html);
     const footerHtml = extractFooter(html);
+    
+    // Extract CSS from raw HTML
+    const cssContent = extractCss(rawHtml, formattedUrl);
     
     // Extract logo from branding or metadata
     const logoUrl = branding?.images?.logo || 
@@ -82,7 +86,7 @@ Deno.serve(async (req) => {
     const headerTextColor = colors.textPrimary || '#ffffff';
     const buttonColor = colors.primary || colors.accent || '#6366f1';
 
-    console.log('Scrape successful, extracted branding');
+    console.log('Scrape successful, extracted branding and CSS');
 
     return new Response(
       JSON.stringify({
@@ -90,6 +94,7 @@ Deno.serve(async (req) => {
         data: {
           headerHtml,
           footerHtml,
+          cssContent,
           logoUrl,
           screenshot,
           colors: {
@@ -112,6 +117,56 @@ Deno.serve(async (req) => {
     );
   }
 });
+
+function extractCss(html: string, baseUrl: string): string {
+  const cssFragments: string[] = [];
+  
+  // Extract inline <style> tags
+  const styleTagRegex = /<style[^>]*>([\s\S]*?)<\/style>/gi;
+  let styleMatch;
+  while ((styleMatch = styleTagRegex.exec(html)) !== null) {
+    if (styleMatch[1]) {
+      cssFragments.push(styleMatch[1]);
+    }
+  }
+  
+  // Extract linked stylesheet URLs and create @import rules
+  const linkRegex = /<link[^>]*rel=["']stylesheet["'][^>]*href=["']([^"']+)["'][^>]*>/gi;
+  const linkRegex2 = /<link[^>]*href=["']([^"']+)["'][^>]*rel=["']stylesheet["'][^>]*>/gi;
+  
+  const processedUrls = new Set<string>();
+  
+  for (const regex of [linkRegex, linkRegex2]) {
+    let linkMatch;
+    while ((linkMatch = regex.exec(html)) !== null) {
+      let href = linkMatch[1];
+      if (href && !processedUrls.has(href)) {
+        processedUrls.add(href);
+        // Convert relative URLs to absolute
+        if (href.startsWith('//')) {
+          href = 'https:' + href;
+        } else if (href.startsWith('/')) {
+          try {
+            const urlObj = new URL(baseUrl);
+            href = urlObj.origin + href;
+          } catch {
+            // Keep as-is if URL parsing fails
+          }
+        } else if (!href.startsWith('http')) {
+          try {
+            const urlObj = new URL(baseUrl);
+            href = urlObj.origin + '/' + href;
+          } catch {
+            // Keep as-is if URL parsing fails
+          }
+        }
+        cssFragments.unshift(`@import url("${href}");`);
+      }
+    }
+  }
+  
+  return cssFragments.join('\n\n');
+}
 
 function extractHeader(html: string): string {
   // Try to find header element

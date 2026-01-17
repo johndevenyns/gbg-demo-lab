@@ -37,6 +37,7 @@ export interface DemoEnvironment {
   customerSiteUrl?: string;
   scrapedHeaderHtml?: string;
   scrapedFooterHtml?: string;
+  scrapedCss?: string;
   
   // Feature toggles
   includeAddressVerification: boolean;
