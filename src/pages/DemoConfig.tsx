@@ -10,6 +10,7 @@ import { useDemo, useUpdateDemo } from "@/hooks/useDemos";
 import { DemoEnvironment, VerificationType } from "@/types/demo";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
+import { SiteMirrorCard } from "@/components/admin/SiteMirrorCard";
 
 export default function DemoConfig() {
   const { id } = useParams<{ id: string }>();
@@ -86,6 +87,9 @@ export default function DemoConfig() {
       </header>
 
       <main className="admin-container py-8 space-y-6">
+        {/* Site Mirror */}
+        <SiteMirrorCard demo={localDemo} onApplyBranding={handleUpdate} />
+
         {/* Basic Settings */}
         <Card className="glass-card">
           <CardHeader>
