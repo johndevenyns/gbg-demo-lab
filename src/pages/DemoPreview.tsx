@@ -1,13 +1,20 @@
 import { useParams } from "react-router-dom";
-import { useDemoStore } from "@/stores/demoStore";
+import { useDemoBySlug } from "@/hooks/useDemos";
+import { Loader2 } from "lucide-react";
 
 export default function DemoPreview() {
   const { slug } = useParams<{ slug: string }>();
-  const { getDemo } = useDemoStore();
+  const { data: demo, isLoading, error } = useDemoBySlug(slug || "");
   
-  const demo = getDemo(slug || "");
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
   
-  if (!demo || !demo.isActive) {
+  if (error || !demo || !demo.isActive) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
