@@ -81,12 +81,13 @@ export function SiteMirrorCard({ demo, onApplyBranding }: SiteMirrorCardProps) {
       buttonColor: scrapedData.colors.buttonColor,
       scrapedHeaderHtml: scrapedData.headerHtml,
       scrapedFooterHtml: scrapedData.footerHtml,
+      scrapedCss: scrapedData.cssContent,
     });
 
     setShowPreview(false);
     toast({
       title: "Branding Applied",
-      description: "The scraped branding has been applied to this demo",
+      description: "The scraped branding and CSS have been applied to this demo",
     });
   };
 
@@ -263,6 +264,19 @@ export function SiteMirrorCard({ demo, onApplyBranding }: SiteMirrorCardProps) {
                     <pre className="text-xs font-mono whitespace-pre-wrap break-all">
                       {scrapedData.footerHtml.substring(0, 500)}
                       {scrapedData.footerHtml.length > 500 && "..."}
+                    </pre>
+                  </div>
+                </div>
+              )}
+
+              {/* CSS Preview */}
+              {scrapedData.cssContent && (
+                <div className="space-y-2">
+                  <Label>Extracted CSS ({scrapedData.cssContent.length} chars)</Label>
+                  <div className="bg-muted/50 rounded-lg p-3 max-h-32 overflow-y-auto">
+                    <pre className="text-xs font-mono whitespace-pre-wrap break-all">
+                      {scrapedData.cssContent.substring(0, 500)}
+                      {scrapedData.cssContent.length > 500 && "..."}
                     </pre>
                   </div>
                 </div>
