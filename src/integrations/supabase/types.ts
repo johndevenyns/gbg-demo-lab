@@ -37,6 +37,7 @@ export type Database = {
           resource_id_dataonly: string | null
           resource_id_docbio: string | null
           return_url: string | null
+          scraped_css: string | null
           scraped_footer_html: string | null
           scraped_header_html: string | null
           slug: string
@@ -65,6 +66,7 @@ export type Database = {
           resource_id_dataonly?: string | null
           resource_id_docbio?: string | null
           return_url?: string | null
+          scraped_css?: string | null
           scraped_footer_html?: string | null
           scraped_header_html?: string | null
           slug: string
@@ -93,6 +95,7 @@ export type Database = {
           resource_id_dataonly?: string | null
           resource_id_docbio?: string | null
           return_url?: string | null
+          scraped_css?: string | null
           scraped_footer_html?: string | null
           scraped_header_html?: string | null
           slug?: string

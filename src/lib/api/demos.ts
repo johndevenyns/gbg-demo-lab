@@ -27,6 +27,7 @@ const rowToDemo = (row: any): DemoEnvironment => ({
   customerSiteUrl: row.customer_site_url || '',
   scrapedHeaderHtml: row.scraped_header_html || '',
   scrapedFooterHtml: row.scraped_footer_html || '',
+  scrapedCss: row.scraped_css || '',
   createdAt: row.created_at,
   updatedAt: row.updated_at,
   isActive: row.is_active ?? true,
@@ -57,6 +58,7 @@ const demoToRow = (demo: Partial<DemoEnvironment>) => {
   if (demo.customerSiteUrl !== undefined) row.customer_site_url = demo.customerSiteUrl;
   if (demo.scrapedHeaderHtml !== undefined) row.scraped_header_html = demo.scrapedHeaderHtml;
   if (demo.scrapedFooterHtml !== undefined) row.scraped_footer_html = demo.scrapedFooterHtml;
+  if (demo.scrapedCss !== undefined) row.scraped_css = demo.scrapedCss;
   if (demo.isActive !== undefined) row.is_active = demo.isActive;
   return row;
 };
