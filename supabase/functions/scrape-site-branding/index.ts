@@ -169,39 +169,66 @@ function extractCss(html: string, baseUrl: string): string {
 }
 
 function extractHeader(html: string): string {
-  // Try to find header element
+  const parts: string[] = [];
+  
+  // Extract ALL nav elements (top navigation bars)
+  const navRegex = /<nav[^>]*>[\s\S]*?<\/nav>/gi;
+  let navMatch;
+  while ((navMatch = navRegex.exec(html)) !== null) {
+    parts.push(navMatch[0]);
+  }
+  
+  // Extract header element
   const headerMatch = html.match(/<header[^>]*>[\s\S]*?<\/header>/i);
   if (headerMatch) {
-    return headerMatch[0];
+    // Check if header already contains the navs we found
+    const headerHasNav = parts.some(nav => headerMatch[0].includes(nav));
+    if (headerHasNav) {
+      // Header contains nav, just use header
+      return headerMatch[0];
+    } else {
+      // Add header after navs
+      parts.push(headerMatch[0]);
+    }
   }
   
-  // Try to find nav element as fallback
-  const navMatch = html.match(/<nav[^>]*>[\s\S]*?<\/nav>/i);
-  if (navMatch) {
-    return navMatch[0];
+  // If no semantic elements found, try div-based patterns
+  if (parts.length === 0) {
+    // Look for top bar / announcement bar divs
+    const topBarRegex = /<div[^>]*class="[^"]*(?:top-bar|announcement|promo-bar|utility-nav)[^"]*"[^>]*>[\s\S]*?<\/div>/gi;
+    let topBarMatch;
+    while ((topBarMatch = topBarRegex.exec(html)) !== null) {
+      parts.push(topBarMatch[0]);
+    }
+    
+    // Look for navbar/header divs
+    const navbarDivRegex = /<div[^>]*class="[^"]*(?:navbar|nav-bar|navigation|header|site-header|main-header)[^"]*"[^>]*>[\s\S]*?<\/div>/gi;
+    let navbarMatch;
+    while ((navbarMatch = navbarDivRegex.exec(html)) !== null) {
+      parts.push(navbarMatch[0]);
+    }
   }
   
-  // Try to find div with header-like classes
-  const headerDivMatch = html.match(/<div[^>]*class="[^"]*(?:header|navbar|nav-bar|top-bar)[^"]*"[^>]*>[\s\S]*?<\/div>/i);
-  if (headerDivMatch) {
-    return headerDivMatch[0];
-  }
-  
-  return '';
+  return parts.join('\n');
 }
 
 function extractFooter(html: string): string {
-  // Try to find footer element
+  const parts: string[] = [];
+  
+  // Extract footer element
   const footerMatch = html.match(/<footer[^>]*>[\s\S]*?<\/footer>/i);
   if (footerMatch) {
-    return footerMatch[0];
+    parts.push(footerMatch[0]);
   }
   
-  // Try to find div with footer-like classes
-  const footerDivMatch = html.match(/<div[^>]*class="[^"]*(?:footer|bottom-bar)[^"]*"[^>]*>[\s\S]*?<\/div>/i);
-  if (footerDivMatch) {
-    return footerDivMatch[0];
+  // If no semantic footer, try div-based patterns
+  if (parts.length === 0) {
+    const footerDivRegex = /<div[^>]*class="[^"]*(?:footer|site-footer|main-footer|bottom-bar)[^"]*"[^>]*>[\s\S]*?<\/div>/gi;
+    let footerMatch;
+    while ((footerMatch = footerDivRegex.exec(html)) !== null) {
+      parts.push(footerMatch[0]);
+    }
   }
   
-  return '';
+  return parts.join('\n');
 }
