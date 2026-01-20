@@ -148,18 +148,54 @@ export function SiteMirrorCard({ demo, onApplyBranding }: SiteMirrorCardProps) {
           </div>
 
           {demo.scrapedHeaderHtml && (
-            <div className="p-3 rounded-lg bg-muted/50 border border-border">
-              <p className="text-sm text-muted-foreground">
-                ✓ Header and footer already mirrored from{" "}
-                <a 
-                  href={demo.customerSiteUrl} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-primary hover:underline"
-                >
-                  {demo.customerSiteUrl}
-                </a>
-              </p>
+            <div className="space-y-4">
+              <div className="p-3 rounded-lg bg-muted/50 border border-border">
+                <p className="text-sm text-muted-foreground">
+                  ✓ Header and footer already mirrored from{" "}
+                  <a 
+                    href={demo.customerSiteUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline"
+                  >
+                    {demo.customerSiteUrl}
+                  </a>
+                </p>
+              </div>
+
+              {/* Preview Mirrored Branding */}
+              <div className="space-y-2">
+                <Label className="text-base font-semibold">Preview Mirrored Branding</Label>
+                <div className="border rounded-lg overflow-hidden bg-white">
+                  {/* Render scraped header with CSS in iframe for isolation */}
+                  <iframe
+                    srcDoc={`
+                      <!DOCTYPE html>
+                      <html>
+                        <head>
+                          <meta charset="utf-8">
+                          <meta name="viewport" content="width=device-width, initial-scale=1">
+                          <style>
+                            body { margin: 0; padding: 0; font-family: system-ui, sans-serif; }
+                            * { box-sizing: border-box; }
+                          </style>
+                          ${demo.scrapedCss ? `<style>${demo.scrapedCss}</style>` : ''}
+                        </head>
+                        <body>
+                          ${demo.scrapedHeaderHtml || ''}
+                          <div style="padding: 40px; text-align: center; background: #f5f5f5; min-height: 150px;">
+                            <p style="color: #666; font-size: 14px;">[ Your demo content will appear here ]</p>
+                          </div>
+                          ${demo.scrapedFooterHtml || ''}
+                        </body>
+                      </html>
+                    `}
+                    className="w-full h-[400px] border-0"
+                    title="Mirrored branding preview"
+                    sandbox="allow-same-origin"
+                  />
+                </div>
+              </div>
             </div>
           )}
         </CardContent>
