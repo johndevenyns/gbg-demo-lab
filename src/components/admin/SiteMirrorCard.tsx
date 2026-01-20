@@ -18,11 +18,10 @@ import {
 
 interface SiteMirrorCardProps {
   demo: DemoEnvironment;
-  onApplyBranding: (updates: Partial<DemoEnvironment>) => void;
-  onSave?: () => void;
+  onApplyBranding: (updates: Partial<DemoEnvironment>, autoSave?: boolean) => void;
 }
 
-export function SiteMirrorCard({ demo, onApplyBranding, onSave }: SiteMirrorCardProps) {
+export function SiteMirrorCard({ demo, onApplyBranding }: SiteMirrorCardProps) {
   const { toast } = useToast();
   const [url, setUrl] = useState(demo.customerSiteUrl || "");
   const [isLoading, setIsLoading] = useState(false);
@@ -74,7 +73,7 @@ export function SiteMirrorCard({ demo, onApplyBranding, onSave }: SiteMirrorCard
   const handleApply = () => {
     if (!scrapedData) return;
 
-    onApplyBranding({
+    const updates: Partial<DemoEnvironment> = {
       customerSiteUrl: url,
       logoUrl: scrapedData.logoUrl || demo.logoUrl,
       headerBgColor: scrapedData.colors.headerBgColor,
@@ -83,18 +82,15 @@ export function SiteMirrorCard({ demo, onApplyBranding, onSave }: SiteMirrorCard
       scrapedHeaderHtml: scrapedData.headerHtml,
       scrapedFooterHtml: scrapedData.footerHtml,
       scrapedCss: scrapedData.cssContent,
-    });
+    };
+
+    // Pass true to indicate this should auto-save
+    onApplyBranding(updates, true);
 
     setShowPreview(false);
-    
-    // Auto-save after applying branding
-    if (onSave) {
-      setTimeout(() => onSave(), 100);
-    }
-    
     toast({
-      title: "Branding Applied & Saved",
-      description: "The scraped branding, CSS, and layout have been saved",
+      title: "Branding Applied & Saving...",
+      description: "The scraped branding, CSS, and layout are being saved",
     });
   };
 
