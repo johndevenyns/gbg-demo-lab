@@ -50,8 +50,17 @@ export default function DemoConfig() {
     );
   }
 
-  const handleUpdate = (updates: Partial<DemoEnvironment>) => {
-    setLocalDemo(prev => prev ? { ...prev, ...updates } : null);
+  const handleUpdate = (updates: Partial<DemoEnvironment>, autoSave?: boolean) => {
+    setLocalDemo(prev => {
+      const newDemo = prev ? { ...prev, ...updates } : null;
+      
+      // If autoSave flag is set, save immediately with the new data
+      if (autoSave && newDemo) {
+        updateDemoMutation.mutate({ id: newDemo.id, updates });
+      }
+      
+      return newDemo;
+    });
   };
 
   const handleSave = () => {
@@ -88,7 +97,7 @@ export default function DemoConfig() {
 
       <main className="admin-container py-8 space-y-6">
         {/* Site Mirror */}
-        <SiteMirrorCard demo={localDemo} onApplyBranding={handleUpdate} onSave={handleSave} />
+        <SiteMirrorCard demo={localDemo} onApplyBranding={handleUpdate} />
 
         {/* Basic Settings */}
         <Card className="glass-card">
