@@ -1,10 +1,28 @@
 import { useParams } from "react-router-dom";
 import { useDemoBySlug } from "@/hooks/useDemos";
 import { Loader2 } from "lucide-react";
+import { useEffect } from "react";
 
 export default function DemoPreview() {
   const { slug } = useParams<{ slug: string }>();
   const { data: demo, isLoading, error } = useDemoBySlug(slug || "");
+
+  // Inject scraped CSS into the page
+  useEffect(() => {
+    if (demo?.scrapedCss) {
+      const styleElement = document.createElement('style');
+      styleElement.id = 'scraped-css';
+      styleElement.textContent = demo.scrapedCss;
+      document.head.appendChild(styleElement);
+
+      return () => {
+        const existingStyle = document.getElementById('scraped-css');
+        if (existingStyle) {
+          existingStyle.remove();
+        }
+      };
+    }
+  }, [demo?.scrapedCss]);
   
   if (isLoading) {
     return (
@@ -25,18 +43,28 @@ export default function DemoPreview() {
     );
   }
 
+  const hasScrapedHeader = demo.scrapedHeaderHtml && demo.scrapedHeaderHtml.trim().length > 0;
+  const hasScrapedFooter = demo.scrapedFooterHtml && demo.scrapedFooterHtml.trim().length > 0;
+
   return (
-    <div className="min-h-screen" style={{ backgroundColor: demo.headerBgColor }}>
-      {/* Header */}
-      <header className="py-4 px-6" style={{ backgroundColor: demo.headerBgColor, color: demo.headerTextColor }}>
-        <div className="max-w-4xl mx-auto flex items-center gap-4">
-          {demo.logoUrl && <img src={demo.logoUrl} alt={demo.customerName} className="h-8" />}
-          <span className="font-semibold text-lg">{demo.customerName}</span>
-        </div>
-      </header>
+    <div className="min-h-screen flex flex-col">
+      {/* Scraped Header/Nav or Fallback */}
+      {hasScrapedHeader ? (
+        <div 
+          className="scraped-header"
+          dangerouslySetInnerHTML={{ __html: demo.scrapedHeaderHtml }} 
+        />
+      ) : (
+        <header className="py-4 px-6" style={{ backgroundColor: demo.headerBgColor, color: demo.headerTextColor }}>
+          <div className="max-w-4xl mx-auto flex items-center gap-4">
+            {demo.logoUrl && <img src={demo.logoUrl} alt={demo.customerName} className="h-8" />}
+            <span className="font-semibold text-lg">{demo.customerName}</span>
+          </div>
+        </header>
+      )}
       
       {/* Main Content */}
-      <main className="bg-background min-h-[80vh] py-12">
+      <main className="flex-1 bg-background py-12">
         <div className="max-w-xl mx-auto px-4">
           <div className="bg-card rounded-xl shadow-lg p-8 border border-border">
             <h1 className="text-2xl font-bold mb-6">Start Your Application</h1>
@@ -65,6 +93,14 @@ export default function DemoPreview() {
           </div>
         </div>
       </main>
+
+      {/* Scraped Footer */}
+      {hasScrapedFooter && (
+        <div 
+          className="scraped-footer"
+          dangerouslySetInnerHTML={{ __html: demo.scrapedFooterHtml }} 
+        />
+      )}
     </div>
   );
 }
