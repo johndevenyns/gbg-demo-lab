@@ -19,9 +19,10 @@ import {
 interface SiteMirrorCardProps {
   demo: DemoEnvironment;
   onApplyBranding: (updates: Partial<DemoEnvironment>) => void;
+  onSave?: () => void;
 }
 
-export function SiteMirrorCard({ demo, onApplyBranding }: SiteMirrorCardProps) {
+export function SiteMirrorCard({ demo, onApplyBranding, onSave }: SiteMirrorCardProps) {
   const { toast } = useToast();
   const [url, setUrl] = useState(demo.customerSiteUrl || "");
   const [isLoading, setIsLoading] = useState(false);
@@ -85,9 +86,15 @@ export function SiteMirrorCard({ demo, onApplyBranding }: SiteMirrorCardProps) {
     });
 
     setShowPreview(false);
+    
+    // Auto-save after applying branding
+    if (onSave) {
+      setTimeout(() => onSave(), 100);
+    }
+    
     toast({
-      title: "Branding Applied",
-      description: "The scraped branding and CSS have been applied to this demo",
+      title: "Branding Applied & Saved",
+      description: "The scraped branding, CSS, and layout have been saved",
     });
   };
 

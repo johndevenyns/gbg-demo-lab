@@ -88,7 +88,7 @@ export default function DemoConfig() {
 
       <main className="admin-container py-8 space-y-6">
         {/* Site Mirror */}
-        <SiteMirrorCard demo={localDemo} onApplyBranding={handleUpdate} />
+        <SiteMirrorCard demo={localDemo} onApplyBranding={handleUpdate} onSave={handleSave} />
 
         {/* Basic Settings */}
         <Card className="glass-card">
