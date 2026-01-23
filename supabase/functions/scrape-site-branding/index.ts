@@ -33,6 +33,7 @@ Deno.serve(async (req) => {
       formattedUrl = `https://${formattedUrl}`;
     }
 
+    const baseUrl = new URL(formattedUrl);
     console.log('Scraping branding from URL:', formattedUrl);
 
     // Request branding, HTML (raw to get CSS), and screenshot formats
@@ -60,7 +61,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Extract header and footer from HTML
+    // Extract data from response
     const html = data.data?.html || data.html || '';
     const rawHtml = data.data?.rawHtml || data.rawHtml || html;
     const branding = data.data?.branding || data.branding || null;
@@ -68,11 +69,13 @@ Deno.serve(async (req) => {
     const metadata = data.data?.metadata || data.metadata || {};
 
     // Parse header and footer from HTML
-    const headerHtml = extractHeader(html);
-    const footerHtml = extractFooter(html);
+    const headerHtml = convertRelativeUrls(extractHeader(html), baseUrl);
+    const footerHtml = convertRelativeUrls(extractFooter(html), baseUrl);
     
-    // Extract CSS from raw HTML
-    const cssContent = extractCss(rawHtml, formattedUrl);
+    // Extract and inline all CSS
+    console.log('Extracting and inlining CSS...');
+    const cssContent = await extractAndInlineCss(rawHtml, baseUrl);
+    console.log(`Extracted ${cssContent.length} characters of CSS`);
     
     // Extract logo from branding or metadata
     const logoUrl = branding?.images?.logo || 
@@ -86,7 +89,7 @@ Deno.serve(async (req) => {
     const headerTextColor = colors.textPrimary || '#ffffff';
     const buttonColor = colors.primary || colors.accent || '#6366f1';
 
-    console.log('Scrape successful, extracted branding and CSS');
+    console.log('Scrape successful, extracted branding and inlined CSS');
 
     return new Response(
       JSON.stringify({
@@ -118,54 +121,176 @@ Deno.serve(async (req) => {
   }
 });
 
-function extractCss(html: string, baseUrl: string): string {
+// Convert relative URLs to absolute in HTML content
+function convertRelativeUrls(html: string, baseUrl: URL): string {
+  if (!html) return html;
+  
+  // Convert src attributes
+  html = html.replace(/src=["']([^"']+)["']/gi, (match, url) => {
+    return `src="${makeAbsoluteUrl(url, baseUrl)}"`;
+  });
+  
+  // Convert href attributes
+  html = html.replace(/href=["']([^"']+)["']/gi, (match, url) => {
+    // Skip anchor links and javascript
+    if (url.startsWith('#') || url.startsWith('javascript:')) {
+      return match;
+    }
+    return `href="${makeAbsoluteUrl(url, baseUrl)}"`;
+  });
+  
+  // Convert background-image in inline styles
+  html = html.replace(/url\(["']?([^"')]+)["']?\)/gi, (match, url) => {
+    return `url("${makeAbsoluteUrl(url, baseUrl)}")`;
+  });
+  
+  return html;
+}
+
+// Make a URL absolute
+function makeAbsoluteUrl(url: string, baseUrl: URL): string {
+  if (!url || url.startsWith('data:') || url.startsWith('blob:')) {
+    return url;
+  }
+  
+  if (url.startsWith('//')) {
+    return 'https:' + url;
+  }
+  
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+  
+  if (url.startsWith('/')) {
+    return baseUrl.origin + url;
+  }
+  
+  // Relative URL
+  return baseUrl.origin + '/' + url;
+}
+
+// Extract and inline all CSS from the page
+async function extractAndInlineCss(html: string, baseUrl: URL): Promise<string> {
   const cssFragments: string[] = [];
   
-  // Extract inline <style> tags
+  // Extract inline <style> tags first
   const styleTagRegex = /<style[^>]*>([\s\S]*?)<\/style>/gi;
   let styleMatch;
   while ((styleMatch = styleTagRegex.exec(html)) !== null) {
     if (styleMatch[1]) {
-      cssFragments.push(styleMatch[1]);
+      const processedCss = convertCssUrls(styleMatch[1], baseUrl);
+      cssFragments.push(`/* Inline style */\n${processedCss}`);
     }
   }
   
-  // Extract linked stylesheet URLs and create @import rules
-  const linkRegex = /<link[^>]*rel=["']stylesheet["'][^>]*href=["']([^"']+)["'][^>]*>/gi;
+  // Extract linked stylesheet URLs
+  const stylesheetUrls = new Set<string>();
+  
+  // Match <link rel="stylesheet" href="...">
+  const linkRegex1 = /<link[^>]*rel=["']stylesheet["'][^>]*href=["']([^"']+)["'][^>]*>/gi;
   const linkRegex2 = /<link[^>]*href=["']([^"']+)["'][^>]*rel=["']stylesheet["'][^>]*>/gi;
+  // Also match <link href="..." type="text/css">
+  const linkRegex3 = /<link[^>]*href=["']([^"']+\.css[^"']*)["'][^>]*>/gi;
   
-  const processedUrls = new Set<string>();
-  
-  for (const regex of [linkRegex, linkRegex2]) {
+  for (const regex of [linkRegex1, linkRegex2, linkRegex3]) {
     let linkMatch;
     while ((linkMatch = regex.exec(html)) !== null) {
-      let href = linkMatch[1];
-      if (href && !processedUrls.has(href)) {
-        processedUrls.add(href);
-        // Convert relative URLs to absolute
-        if (href.startsWith('//')) {
-          href = 'https:' + href;
-        } else if (href.startsWith('/')) {
-          try {
-            const urlObj = new URL(baseUrl);
-            href = urlObj.origin + href;
-          } catch {
-            // Keep as-is if URL parsing fails
-          }
-        } else if (!href.startsWith('http')) {
-          try {
-            const urlObj = new URL(baseUrl);
-            href = urlObj.origin + '/' + href;
-          } catch {
-            // Keep as-is if URL parsing fails
-          }
-        }
-        cssFragments.unshift(`@import url("${href}");`);
+      if (linkMatch[1]) {
+        stylesheetUrls.add(linkMatch[1]);
       }
     }
   }
   
-  return cssFragments.join('\n\n');
+  console.log(`Found ${stylesheetUrls.size} external stylesheets to fetch`);
+  
+  // Fetch all external stylesheets in parallel
+  const fetchPromises = Array.from(stylesheetUrls).map(async (href) => {
+    try {
+      const absoluteUrl = makeAbsoluteUrl(href, baseUrl);
+      console.log(`Fetching stylesheet: ${absoluteUrl}`);
+      
+      const response = await fetch(absoluteUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+          'Accept': 'text/css,*/*;q=0.1',
+        },
+      });
+      
+      if (response.ok) {
+        const cssText = await response.text();
+        // Process the CSS to convert relative URLs
+        const processedCss = convertCssUrls(cssText, new URL(absoluteUrl));
+        // Handle @import rules recursively (one level deep)
+        const withImports = await resolveImports(processedCss, new URL(absoluteUrl));
+        return `/* From: ${absoluteUrl} */\n${withImports}`;
+      } else {
+        console.warn(`Failed to fetch ${absoluteUrl}: ${response.status}`);
+        return `/* Failed to fetch: ${absoluteUrl} (${response.status}) */`;
+      }
+    } catch (error) {
+      console.warn(`Error fetching stylesheet ${href}:`, error);
+      return `/* Error fetching: ${href} */`;
+    }
+  });
+  
+  const fetchedStyles = await Promise.all(fetchPromises);
+  
+  // Add fetched stylesheets before inline styles (so inline styles can override)
+  return [...fetchedStyles, ...cssFragments].join('\n\n');
+}
+
+// Convert relative URLs within CSS to absolute
+function convertCssUrls(css: string, baseUrl: URL): string {
+  // Convert url() references
+  return css.replace(/url\(["']?([^"')]+)["']?\)/gi, (match, url) => {
+    const absoluteUrl = makeAbsoluteUrl(url.trim(), baseUrl);
+    return `url("${absoluteUrl}")`;
+  });
+}
+
+// Resolve @import rules in CSS (one level deep)
+async function resolveImports(css: string, baseUrl: URL): Promise<string> {
+  const importRegex = /@import\s+(?:url\()?["']?([^"'\)]+)["']?\)?[^;]*;/gi;
+  const imports: { match: string; url: string }[] = [];
+  
+  let importMatch;
+  while ((importMatch = importRegex.exec(css)) !== null) {
+    imports.push({ match: importMatch[0], url: importMatch[1] });
+  }
+  
+  if (imports.length === 0) {
+    return css;
+  }
+  
+  console.log(`Resolving ${imports.length} @import rules`);
+  
+  // Fetch imported stylesheets
+  const importedCss: string[] = [];
+  for (const imp of imports) {
+    try {
+      const absoluteUrl = makeAbsoluteUrl(imp.url, baseUrl);
+      const response = await fetch(absoluteUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+          'Accept': 'text/css,*/*;q=0.1',
+        },
+      });
+      
+      if (response.ok) {
+        const importedText = await response.text();
+        const processed = convertCssUrls(importedText, new URL(absoluteUrl));
+        importedCss.push(`/* @import from: ${absoluteUrl} */\n${processed}`);
+      }
+    } catch (error) {
+      console.warn(`Error resolving @import ${imp.url}:`, error);
+    }
+    
+    // Remove the @import rule from original CSS
+    css = css.replace(imp.match, '');
+  }
+  
+  // Prepend imported CSS
+  return importedCss.join('\n\n') + '\n\n' + css;
 }
 
 function extractHeader(html: string): string {
