@@ -11,6 +11,7 @@ import { DemoEnvironment, VerificationType } from "@/types/demo";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
 import { SiteMirrorCard } from "@/components/admin/SiteMirrorCard";
+import { FormBuilderSection } from "@/components/formBuilder";
 
 export default function DemoConfig() {
   const { id } = useParams<{ id: string }>();
@@ -96,6 +97,9 @@ export default function DemoConfig() {
       </header>
 
       <main className="admin-container py-8 space-y-6">
+        {/* Form Builder Section */}
+        <FormBuilderSection demo={localDemo} onUpdate={handleUpdate} />
+
         {/* Site Mirror */}
         <SiteMirrorCard demo={localDemo} onApplyBranding={handleUpdate} />
 

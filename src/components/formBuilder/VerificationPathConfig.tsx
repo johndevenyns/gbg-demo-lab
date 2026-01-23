@@ -1,0 +1,163 @@
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { VERIFICATION_PATHS, VerificationPath, PathCondition } from '@/types/formBuilder';
+import { 
+  Smartphone, FileCheck, Database, CreditCard, ArrowRight, Settings2
+} from 'lucide-react';
+
+const PATH_ICONS: Record<string, React.ReactNode> = {
+  docbio: <FileCheck className="w-5 h-5" />,
+  databio: <Database className="w-5 h-5" />,
+  dataonly: <Database className="w-5 h-5" />,
+  mdl: <Smartphone className="w-5 h-5" />,
+};
+
+const CONDITION_LABELS: Record<PathCondition, string> = {
+  always: 'Always available',
+  mobile_detected: 'When mobile device detected',
+  document_available: 'When document is uploaded',
+  high_risk_score: 'When risk score is high',
+  user_preference: 'User selects preference',
+};
+
+interface VerificationPathConfigProps {
+  enabledPaths: string[];
+  pathConditions: Record<string, PathCondition>;
+  defaultPath: string;
+  onTogglePath: (pathId: string) => void;
+  onSetCondition: (pathId: string, condition: PathCondition) => void;
+  onSetDefaultPath: (pathId: string) => void;
+}
+
+export function VerificationPathConfig({
+  enabledPaths,
+  pathConditions,
+  defaultPath,
+  onTogglePath,
+  onSetCondition,
+  onSetDefaultPath,
+}: VerificationPathConfigProps) {
+  return (
+    <Card className="glass-card">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Settings2 className="w-5 h-5" />
+          Verification Paths
+        </CardTitle>
+        <CardDescription>
+          Configure which verification methods are available and when they're used
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {/* Default Path Selection */}
+        <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+          <div>
+            <Label className="font-medium">Default Path</Label>
+            <p className="text-sm text-muted-foreground">Used when no conditions match</p>
+          </div>
+          <Select value={defaultPath} onValueChange={onSetDefaultPath}>
+            <SelectTrigger className="w-[200px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {VERIFICATION_PATHS.filter(p => enabledPaths.includes(p.id)).map(path => (
+                <SelectItem key={path.id} value={path.id}>
+                  <div className="flex items-center gap-2">
+                    {PATH_ICONS[path.id]}
+                    {path.name}
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Path Cards */}
+        <div className="grid gap-3">
+          {VERIFICATION_PATHS.map((path) => {
+            const isEnabled = enabledPaths.includes(path.id);
+            const condition = pathConditions[path.id] || path.condition;
+            const isDefault = defaultPath === path.id;
+            
+            return (
+              <div
+                key={path.id}
+                className={`
+                  p-4 rounded-lg border transition-all
+                  ${isEnabled 
+                    ? 'border-primary/30 bg-card' 
+                    : 'border-border bg-muted/30 opacity-60'
+                  }
+                `}
+              >
+                <div className="flex items-start gap-4">
+                  <div className={`
+                    p-2 rounded-lg
+                    ${isEnabled ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}
+                  `}>
+                    {PATH_ICONS[path.id]}
+                  </div>
+                  
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h4 className="font-semibold">{path.name}</h4>
+                      {isDefault && (
+                        <Badge variant="default" className="text-xs">Default</Badge>
+                      )}
+                      <Badge variant="outline" className="text-xs uppercase">
+                        {path.type}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      {path.description}
+                    </p>
+                    
+                    {isEnabled && (
+                      <div className="flex items-center gap-2">
+                        <ArrowRight className="w-4 h-4 text-muted-foreground" />
+                        <Select 
+                          value={condition} 
+                          onValueChange={(v) => onSetCondition(path.id, v as PathCondition)}
+                        >
+                          <SelectTrigger className="h-8 text-sm w-auto">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Object.entries(CONDITION_LABELS).map(([key, label]) => (
+                              <SelectItem key={key} value={key}>
+                                {label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <Switch
+                    checked={isEnabled}
+                    onCheckedChange={() => onTogglePath(path.id)}
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        
+        {/* Info Box */}
+        <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/20">
+          <h4 className="font-medium text-blue-600 dark:text-blue-400 mb-1">
+            How Branching Works
+          </h4>
+          <p className="text-sm text-muted-foreground">
+            Paths are evaluated in priority order. The first matching condition determines 
+            which verification flow the user sees. If no conditions match, the default path is used.
+          </p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}

@@ -1,0 +1,320 @@
+import { useState } from 'react';
+import { useDroppable, useDraggable } from '@dnd-kit/core';
+import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { FormStep, FormField } from '@/types/demo';
+import { 
+  GripVertical, Trash2, ChevronDown, ChevronUp, Edit2, Check, X,
+  User, Mail, Phone, Calendar, Hash, MapPin, Building, DollarSign, 
+  FileText, Type, CheckSquare
+} from 'lucide-react';
+
+const FIELD_ICONS: Record<string, React.ReactNode> = {
+  first_name: <User className="w-4 h-4" />,
+  last_name: <User className="w-4 h-4" />,
+  middle_name: <User className="w-4 h-4" />,
+  email: <Mail className="w-4 h-4" />,
+  phone: <Phone className="w-4 h-4" />,
+  date_of_birth: <Calendar className="w-4 h-4" />,
+  date: <Calendar className="w-4 h-4" />,
+  ssn: <Hash className="w-4 h-4" />,
+  address_street: <MapPin className="w-4 h-4" />,
+  address_city: <MapPin className="w-4 h-4" />,
+  address_state: <MapPin className="w-4 h-4" />,
+  address_zip: <MapPin className="w-4 h-4" />,
+  address_country: <MapPin className="w-4 h-4" />,
+  employer: <Building className="w-4 h-4" />,
+  income: <DollarSign className="w-4 h-4" />,
+  document_type: <FileText className="w-4 h-4" />,
+  document_number: <FileText className="w-4 h-4" />,
+  text: <Type className="w-4 h-4" />,
+  textarea: <Type className="w-4 h-4" />,
+  checkbox: <CheckSquare className="w-4 h-4" />,
+  select: <FileText className="w-4 h-4" />,
+  gender: <User className="w-4 h-4" />,
+  nationality: <MapPin className="w-4 h-4" />,
+};
+
+interface SortableFieldProps {
+  field: FormField;
+  stepId: string;
+  onRemove: () => void;
+  onToggleRequired: () => void;
+  onUpdateLabel: (label: string) => void;
+}
+
+function SortableField({ field, stepId, onRemove, onToggleRequired, onUpdateLabel }: SortableFieldProps) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editLabel, setEditLabel] = useState(field.label);
+  
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: field.id,
+    data: {
+      type: 'field',
+      field,
+      stepId,
+    },
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  const handleSaveLabel = () => {
+    onUpdateLabel(editLabel);
+    setIsEditing(false);
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`
+        flex items-center gap-2 p-3 rounded-md border border-border bg-card
+        hover:border-primary/30 group transition-all
+        ${isDragging ? 'opacity-50 ring-2 ring-primary shadow-lg' : ''}
+      `}
+    >
+      <div
+        {...attributes}
+        {...listeners}
+        className="cursor-grab active:cursor-grabbing p-1 -ml-1 hover:bg-accent rounded"
+      >
+        <GripVertical className="w-4 h-4 text-muted-foreground" />
+      </div>
+      
+      <span className="text-muted-foreground">
+        {FIELD_ICONS[field.type] || <Type className="w-4 h-4" />}
+      </span>
+      
+      {isEditing ? (
+        <div className="flex-1 flex items-center gap-2">
+          <Input
+            value={editLabel}
+            onChange={(e) => setEditLabel(e.target.value)}
+            className="h-7 text-sm"
+            autoFocus
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleSaveLabel();
+              if (e.key === 'Escape') setIsEditing(false);
+            }}
+          />
+          <Button size="icon" variant="ghost" className="h-7 w-7" onClick={handleSaveLabel}>
+            <Check className="w-3 h-3" />
+          </Button>
+          <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setIsEditing(false)}>
+            <X className="w-3 h-3" />
+          </Button>
+        </div>
+      ) : (
+        <>
+          <span className="text-sm font-medium flex-1">{field.label}</span>
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+            onClick={() => setIsEditing(true)}
+          >
+            <Edit2 className="w-3 h-3" />
+          </Button>
+        </>
+      )}
+      
+      <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
+          <span className="text-xs text-muted-foreground">Req</span>
+          <Switch
+            checked={field.required}
+            onCheckedChange={onToggleRequired}
+            className="scale-75"
+          />
+        </div>
+        
+        <Button
+          size="icon"
+          variant="ghost"
+          className="h-6 w-6 text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+          onClick={onRemove}
+        >
+          <Trash2 className="w-3 h-3" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+interface FormStepCardProps {
+  step: FormStep;
+  stepNumber: number;
+  isExpanded: boolean;
+  onToggleExpand: () => void;
+  onUpdateStep: (updates: Partial<FormStep>) => void;
+  onRemoveStep: () => void;
+  onRemoveField: (fieldId: string) => void;
+  onToggleFieldRequired: (fieldId: string) => void;
+  onUpdateFieldLabel: (fieldId: string, label: string) => void;
+  canDelete: boolean;
+}
+
+export function FormStepCard({
+  step,
+  stepNumber,
+  isExpanded,
+  onToggleExpand,
+  onUpdateStep,
+  onRemoveStep,
+  onRemoveField,
+  onToggleFieldRequired,
+  onUpdateFieldLabel,
+  canDelete,
+}: FormStepCardProps) {
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [editTitle, setEditTitle] = useState(step.title);
+  
+  const { setNodeRef, isOver } = useDroppable({
+    id: `step-${step.id}`,
+    data: {
+      type: 'step',
+      stepId: step.id,
+    },
+  });
+
+  const {
+    attributes,
+    listeners,
+    setNodeRef: setDragRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: `step-drag-${step.id}`,
+    data: {
+      type: 'step-reorder',
+      stepId: step.id,
+    },
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  const handleSaveTitle = () => {
+    onUpdateStep({ title: editTitle });
+    setIsEditingTitle(false);
+  };
+
+  return (
+    <Card
+      ref={setDragRef}
+      style={style}
+      className={`
+        glass-card transition-all duration-200
+        ${isDragging ? 'opacity-50 ring-2 ring-primary' : ''}
+        ${isOver ? 'ring-2 ring-primary/50 bg-primary/5' : ''}
+      `}
+    >
+      <CardHeader className="py-3 px-4">
+        <div className="flex items-center gap-3">
+          <div
+            {...attributes}
+            {...listeners}
+            className="cursor-grab active:cursor-grabbing p-1 hover:bg-accent rounded"
+          >
+            <GripVertical className="w-5 h-5 text-muted-foreground" />
+          </div>
+          
+          <Badge variant="outline" className="font-mono">
+            Step {stepNumber}
+          </Badge>
+          
+          {isEditingTitle ? (
+            <div className="flex-1 flex items-center gap-2">
+              <Input
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+                className="h-8"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleSaveTitle();
+                  if (e.key === 'Escape') setIsEditingTitle(false);
+                }}
+              />
+              <Button size="sm" variant="ghost" onClick={handleSaveTitle}>
+                <Check className="w-4 h-4" />
+              </Button>
+            </div>
+          ) : (
+            <button
+              className="flex-1 text-left font-semibold hover:text-primary transition-colors"
+              onClick={() => setIsEditingTitle(true)}
+            >
+              {step.title}
+            </button>
+          )}
+          
+          <Badge variant="secondary" className="text-xs">
+            {step.fields.length} fields
+          </Badge>
+          
+          <div className="flex items-center gap-1">
+            {canDelete && (
+              <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" onClick={onRemoveStep}>
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            )}
+            <Button size="icon" variant="ghost" className="h-8 w-8" onClick={onToggleExpand}>
+              {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            </Button>
+          </div>
+        </div>
+      </CardHeader>
+      
+      {isExpanded && (
+        <CardContent
+          ref={setNodeRef}
+          className={`
+            pt-0 pb-4 space-y-2 min-h-[100px] transition-colors
+            ${isOver ? 'bg-primary/5' : ''}
+          `}
+        >
+          {step.fields.length === 0 ? (
+            <div className="border-2 border-dashed border-border rounded-lg p-6 text-center text-muted-foreground">
+              <Type className="w-8 h-8 mx-auto mb-2 opacity-50" />
+              <p className="text-sm">Drag fields here</p>
+            </div>
+          ) : (
+            <SortableContext
+              items={step.fields.map(f => f.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              {step.fields.map((field) => (
+                <SortableField
+                  key={field.id}
+                  field={field}
+                  stepId={step.id}
+                  onRemove={() => onRemoveField(field.id)}
+                  onToggleRequired={() => onToggleFieldRequired(field.id)}
+                  onUpdateLabel={(label) => onUpdateFieldLabel(field.id, label)}
+                />
+              ))}
+            </SortableContext>
+          )}
+        </CardContent>
+      )}
+    </Card>
+  );
+}
