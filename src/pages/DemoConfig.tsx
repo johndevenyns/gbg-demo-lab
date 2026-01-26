@@ -109,10 +109,6 @@ export default function DemoConfig() {
               <Input value={localDemo.customerName} onChange={(e) => handleUpdate({ customerName: e.target.value })} />
             </div>
             <div className="space-y-2">
-              <Label>Logo URL</Label>
-              <Input value={localDemo.logoUrl || ""} onChange={(e) => handleUpdate({ logoUrl: e.target.value })} placeholder="https://..." />
-            </div>
-            <div className="space-y-2">
               <Label>Verification Type</Label>
               <Select value={localDemo.verificationType} onValueChange={(v) => handleUpdate({ verificationType: v as VerificationType })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
@@ -127,6 +123,14 @@ export default function DemoConfig() {
               <Label>Return URL</Label>
               <Input value={localDemo.returnUrl} onChange={(e) => handleUpdate({ returnUrl: e.target.value })} placeholder="https://..." />
             </div>
+            <div className="space-y-2">
+              <Label>Resource ID (Default)</Label>
+              <Input value={localDemo.resourceId} onChange={(e) => handleUpdate({ resourceId: e.target.value })} />
+            </div>
+            <div className="space-y-2">
+              <Label>Reference ID Prefix</Label>
+              <Input value={localDemo.referenceIdPrefix || ""} onChange={(e) => handleUpdate({ referenceIdPrefix: e.target.value })} />
+            </div>
             <div className="md:col-span-2 flex items-center justify-between p-4 rounded-lg bg-muted/50">
               <div>
                 <Label>Active</Label>
@@ -140,32 +144,54 @@ export default function DemoConfig() {
         {/* Site Mirror */}
         <SiteMirrorCard demo={localDemo} onApplyBranding={handleUpdate} />
 
-        {/* Branding Colors */}
+        {/* Branding */}
         <Card className="glass-card">
           <CardHeader>
             <CardTitle>Branding</CardTitle>
             <CardDescription>Customize the appearance of the verification interface</CardDescription>
           </CardHeader>
-          <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <CardContent className="space-y-6">
             <div className="space-y-2">
-              <Label>Header Background</Label>
-              <div className="flex items-center gap-2">
-                <input type="color" value={localDemo.headerBgColor} onChange={(e) => handleUpdate({ headerBgColor: e.target.value })} className="color-picker-swatch" />
-                <Input value={localDemo.headerBgColor} onChange={(e) => handleUpdate({ headerBgColor: e.target.value })} className="font-mono" />
+              <Label>Logo URL</Label>
+              <div className="flex items-start gap-4">
+                <div className="flex-1">
+                  <Input value={localDemo.logoUrl || ""} onChange={(e) => handleUpdate({ logoUrl: e.target.value })} placeholder="https://..." />
+                </div>
+                {localDemo.logoUrl && (
+                  <div className="w-16 h-16 rounded-md border border-border bg-muted/50 flex items-center justify-center overflow-hidden shrink-0">
+                    <img 
+                      src={localDemo.logoUrl} 
+                      alt="Logo preview" 
+                      className="max-w-full max-h-full object-contain"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  </div>
+                )}
               </div>
             </div>
-            <div className="space-y-2">
-              <Label>Header Text</Label>
-              <div className="flex items-center gap-2">
-                <input type="color" value={localDemo.headerTextColor} onChange={(e) => handleUpdate({ headerTextColor: e.target.value })} className="color-picker-swatch" />
-                <Input value={localDemo.headerTextColor} onChange={(e) => handleUpdate({ headerTextColor: e.target.value })} className="font-mono" />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="space-y-2">
+                <Label>Header Background</Label>
+                <div className="flex items-center gap-2">
+                  <input type="color" value={localDemo.headerBgColor} onChange={(e) => handleUpdate({ headerBgColor: e.target.value })} className="color-picker-swatch" />
+                  <Input value={localDemo.headerBgColor} onChange={(e) => handleUpdate({ headerBgColor: e.target.value })} className="font-mono" />
+                </div>
               </div>
-            </div>
-            <div className="space-y-2">
-              <Label>Button Color</Label>
-              <div className="flex items-center gap-2">
-                <input type="color" value={localDemo.buttonColor} onChange={(e) => handleUpdate({ buttonColor: e.target.value })} className="color-picker-swatch" />
-                <Input value={localDemo.buttonColor} onChange={(e) => handleUpdate({ buttonColor: e.target.value })} className="font-mono" />
+              <div className="space-y-2">
+                <Label>Header Text</Label>
+                <div className="flex items-center gap-2">
+                  <input type="color" value={localDemo.headerTextColor} onChange={(e) => handleUpdate({ headerTextColor: e.target.value })} className="color-picker-swatch" />
+                  <Input value={localDemo.headerTextColor} onChange={(e) => handleUpdate({ headerTextColor: e.target.value })} className="font-mono" />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Button Color</Label>
+                <div className="flex items-center gap-2">
+                  <input type="color" value={localDemo.buttonColor} onChange={(e) => handleUpdate({ buttonColor: e.target.value })} className="color-picker-swatch" />
+                  <Input value={localDemo.buttonColor} onChange={(e) => handleUpdate({ buttonColor: e.target.value })} className="font-mono" />
+                </div>
               </div>
             </div>
           </CardContent>
@@ -182,10 +208,6 @@ export default function DemoConfig() {
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <Label>Resource ID (Default)</Label>
-              <Input value={localDemo.resourceId} onChange={(e) => handleUpdate({ resourceId: e.target.value })} />
-            </div>
-            <div className="space-y-2">
               <Label>Resource ID (DocBio)</Label>
               <Input value={localDemo.resourceIdDocBio || ""} onChange={(e) => handleUpdate({ resourceIdDocBio: e.target.value })} />
             </div>
@@ -196,10 +218,6 @@ export default function DemoConfig() {
             <div className="space-y-2">
               <Label>Resource ID (DataOnly)</Label>
               <Input value={localDemo.resourceIdDataOnly || ""} onChange={(e) => handleUpdate({ resourceIdDataOnly: e.target.value })} />
-            </div>
-            <div className="space-y-2">
-              <Label>Reference ID Prefix</Label>
-              <Input value={localDemo.referenceIdPrefix || ""} onChange={(e) => handleUpdate({ referenceIdPrefix: e.target.value })} />
             </div>
           </CardContent>
         </Card>
