@@ -97,16 +97,10 @@ export default function DemoConfig() {
       </header>
 
       <main className="admin-container py-8 space-y-6">
-        {/* Form Builder Section */}
-        <FormBuilderSection demo={localDemo} onUpdate={handleUpdate} />
-
-        {/* Site Mirror */}
-        <SiteMirrorCard demo={localDemo} onApplyBranding={handleUpdate} />
-
-        {/* Basic Settings */}
+        {/* Site Settings */}
         <Card className="glass-card">
           <CardHeader>
-            <CardTitle>Basic Settings</CardTitle>
+            <CardTitle>Site Settings</CardTitle>
             <CardDescription>Core configuration for this demo environment</CardDescription>
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -133,38 +127,18 @@ export default function DemoConfig() {
               <Label>Return URL</Label>
               <Input value={localDemo.returnUrl} onChange={(e) => handleUpdate({ returnUrl: e.target.value })} placeholder="https://..." />
             </div>
+            <div className="md:col-span-2 flex items-center justify-between p-4 rounded-lg bg-muted/50">
+              <div>
+                <Label>Active</Label>
+                <p className="text-sm text-muted-foreground">Demo is accessible to users</p>
+              </div>
+              <Switch checked={localDemo.isActive} onCheckedChange={(v) => handleUpdate({ isActive: v })} />
+            </div>
           </CardContent>
         </Card>
 
-        {/* Resource IDs */}
-        <Card className="glass-card">
-          <CardHeader>
-            <CardTitle>Resource IDs</CardTitle>
-            <CardDescription>GBG Journey Resource IDs for verification</CardDescription>
-          </CardHeader>
-          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <Label>Resource ID (Default)</Label>
-              <Input value={localDemo.resourceId} onChange={(e) => handleUpdate({ resourceId: e.target.value })} />
-            </div>
-            <div className="space-y-2">
-              <Label>Resource ID (DocBio)</Label>
-              <Input value={localDemo.resourceIdDocBio || ""} onChange={(e) => handleUpdate({ resourceIdDocBio: e.target.value })} />
-            </div>
-            <div className="space-y-2">
-              <Label>Resource ID (DataBio)</Label>
-              <Input value={localDemo.resourceIdDataBio || ""} onChange={(e) => handleUpdate({ resourceIdDataBio: e.target.value })} />
-            </div>
-            <div className="space-y-2">
-              <Label>Resource ID (DataOnly)</Label>
-              <Input value={localDemo.resourceIdDataOnly || ""} onChange={(e) => handleUpdate({ resourceIdDataOnly: e.target.value })} />
-            </div>
-            <div className="space-y-2">
-              <Label>Reference ID Prefix</Label>
-              <Input value={localDemo.referenceIdPrefix || ""} onChange={(e) => handleUpdate({ referenceIdPrefix: e.target.value })} />
-            </div>
-          </CardContent>
-        </Card>
+        {/* Site Mirror */}
+        <SiteMirrorCard demo={localDemo} onApplyBranding={handleUpdate} />
 
         {/* Branding Colors */}
         <Card className="glass-card">
@@ -197,6 +171,39 @@ export default function DemoConfig() {
           </CardContent>
         </Card>
 
+        {/* Application Form Builder */}
+        <FormBuilderSection demo={localDemo} onUpdate={handleUpdate} />
+
+        {/* Resource IDs */}
+        <Card className="glass-card">
+          <CardHeader>
+            <CardTitle>Resource IDs</CardTitle>
+            <CardDescription>GBG Journey Resource IDs for verification</CardDescription>
+          </CardHeader>
+          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <Label>Resource ID (Default)</Label>
+              <Input value={localDemo.resourceId} onChange={(e) => handleUpdate({ resourceId: e.target.value })} />
+            </div>
+            <div className="space-y-2">
+              <Label>Resource ID (DocBio)</Label>
+              <Input value={localDemo.resourceIdDocBio || ""} onChange={(e) => handleUpdate({ resourceIdDocBio: e.target.value })} />
+            </div>
+            <div className="space-y-2">
+              <Label>Resource ID (DataBio)</Label>
+              <Input value={localDemo.resourceIdDataBio || ""} onChange={(e) => handleUpdate({ resourceIdDataBio: e.target.value })} />
+            </div>
+            <div className="space-y-2">
+              <Label>Resource ID (DataOnly)</Label>
+              <Input value={localDemo.resourceIdDataOnly || ""} onChange={(e) => handleUpdate({ resourceIdDataOnly: e.target.value })} />
+            </div>
+            <div className="space-y-2">
+              <Label>Reference ID Prefix</Label>
+              <Input value={localDemo.referenceIdPrefix || ""} onChange={(e) => handleUpdate({ referenceIdPrefix: e.target.value })} />
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Feature Toggles */}
         <Card className="glass-card">
           <CardHeader>
@@ -216,13 +223,6 @@ export default function DemoConfig() {
                 <p className="text-sm text-muted-foreground">Validate addresses during verification</p>
               </div>
               <Switch checked={localDemo.includeAddressVerification} onCheckedChange={(v) => handleUpdate({ includeAddressVerification: v })} />
-            </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <Label>Active</Label>
-                <p className="text-sm text-muted-foreground">Demo is accessible to users</p>
-              </div>
-              <Switch checked={localDemo.isActive} onCheckedChange={(v) => handleUpdate({ isActive: v })} />
             </div>
           </CardContent>
         </Card>
