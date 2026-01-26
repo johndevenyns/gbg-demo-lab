@@ -120,10 +120,6 @@ export default function DemoConfig() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Return URL</Label>
-              <Input value={localDemo.returnUrl} onChange={(e) => handleUpdate({ returnUrl: e.target.value })} placeholder="https://..." />
-            </div>
-            <div className="space-y-2">
               <Label>Resource ID (Default)</Label>
               <Input value={localDemo.resourceId} onChange={(e) => handleUpdate({ resourceId: e.target.value })} />
             </div>
@@ -199,28 +195,6 @@ export default function DemoConfig() {
 
         {/* Application Form Builder */}
         <FormBuilderSection demo={localDemo} onUpdate={handleUpdate} />
-
-        {/* Resource IDs */}
-        <Card className="glass-card">
-          <CardHeader>
-            <CardTitle>Resource IDs</CardTitle>
-            <CardDescription>GBG Journey Resource IDs for verification</CardDescription>
-          </CardHeader>
-          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <Label>Resource ID (DocBio)</Label>
-              <Input value={localDemo.resourceIdDocBio || ""} onChange={(e) => handleUpdate({ resourceIdDocBio: e.target.value })} />
-            </div>
-            <div className="space-y-2">
-              <Label>Resource ID (DataBio)</Label>
-              <Input value={localDemo.resourceIdDataBio || ""} onChange={(e) => handleUpdate({ resourceIdDataBio: e.target.value })} />
-            </div>
-            <div className="space-y-2">
-              <Label>Resource ID (DataOnly)</Label>
-              <Input value={localDemo.resourceIdDataOnly || ""} onChange={(e) => handleUpdate({ resourceIdDataOnly: e.target.value })} />
-            </div>
-          </CardContent>
-        </Card>
 
         {/* Feature Toggles */}
         <Card className="glass-card">

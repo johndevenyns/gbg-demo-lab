@@ -68,6 +68,10 @@ export function FormBuilderSection({ demo, onUpdate }: FormBuilderSectionProps) 
     setDefaultPath(pathId);
   }, []);
 
+  const handleUpdateResourceId = useCallback((field: 'resourceIdDocBio' | 'resourceIdDataBio' | 'resourceIdDataOnly', value: string) => {
+    onUpdate({ [field]: value });
+  }, [onUpdate]);
+
   const handleResetForm = useCallback(() => {
     if (confirm('Are you sure you want to reset all form steps? This cannot be undone.')) {
       onUpdate({
@@ -146,9 +150,15 @@ export function FormBuilderSection({ demo, onUpdate }: FormBuilderSectionProps) 
               enabledPaths={enabledPaths}
               pathConditions={pathConditions}
               defaultPath={defaultPath}
+              resourceIds={{
+                resourceIdDocBio: demo.resourceIdDocBio || '',
+                resourceIdDataBio: demo.resourceIdDataBio || '',
+                resourceIdDataOnly: demo.resourceIdDataOnly || '',
+              }}
               onTogglePath={handleTogglePath}
               onSetCondition={handleSetCondition}
               onSetDefaultPath={handleSetDefaultPath}
+              onUpdateResourceId={handleUpdateResourceId}
             />
           </TabsContent>
 

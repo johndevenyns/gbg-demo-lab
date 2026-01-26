@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { VERIFICATION_PATHS, VerificationPath, PathCondition } from '@/types/formBuilder';
 import { 
@@ -23,22 +24,39 @@ const CONDITION_LABELS: Record<PathCondition, string> = {
   user_preference: 'User selects preference',
 };
 
+// Map path IDs to resource ID field names
+const PATH_RESOURCE_ID_MAP: Record<string, 'resourceIdDocBio' | 'resourceIdDataBio' | 'resourceIdDataOnly'> = {
+  docbio: 'resourceIdDocBio',
+  databio: 'resourceIdDataBio',
+  dataonly: 'resourceIdDataOnly',
+};
+
+interface ResourceIds {
+  resourceIdDocBio: string;
+  resourceIdDataBio: string;
+  resourceIdDataOnly: string;
+}
+
 interface VerificationPathConfigProps {
   enabledPaths: string[];
   pathConditions: Record<string, PathCondition>;
   defaultPath: string;
+  resourceIds: ResourceIds;
   onTogglePath: (pathId: string) => void;
   onSetCondition: (pathId: string, condition: PathCondition) => void;
   onSetDefaultPath: (pathId: string) => void;
+  onUpdateResourceId: (field: keyof ResourceIds, value: string) => void;
 }
 
 export function VerificationPathConfig({
   enabledPaths,
   pathConditions,
   defaultPath,
+  resourceIds,
   onTogglePath,
   onSetCondition,
   onSetDefaultPath,
+  onUpdateResourceId,
 }: VerificationPathConfigProps) {
   return (
     <Card className="glass-card">
@@ -81,6 +99,8 @@ export function VerificationPathConfig({
             const isEnabled = enabledPaths.includes(path.id);
             const condition = pathConditions[path.id] || path.condition;
             const isDefault = defaultPath === path.id;
+            const resourceIdField = PATH_RESOURCE_ID_MAP[path.id];
+            const resourceIdValue = resourceIdField ? resourceIds[resourceIdField] : '';
             
             return (
               <div
@@ -116,23 +136,38 @@ export function VerificationPathConfig({
                     </p>
                     
                     {isEnabled && (
-                      <div className="flex items-center gap-2">
-                        <ArrowRight className="w-4 h-4 text-muted-foreground" />
-                        <Select 
-                          value={condition} 
-                          onValueChange={(v) => onSetCondition(path.id, v as PathCondition)}
-                        >
-                          <SelectTrigger className="h-8 text-sm w-auto">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {Object.entries(CONDITION_LABELS).map(([key, label]) => (
-                              <SelectItem key={key} value={key}>
-                                {label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <ArrowRight className="w-4 h-4 text-muted-foreground" />
+                          <Select 
+                            value={condition} 
+                            onValueChange={(v) => onSetCondition(path.id, v as PathCondition)}
+                          >
+                            <SelectTrigger className="h-8 text-sm w-auto">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {Object.entries(CONDITION_LABELS).map(([key, label]) => (
+                                <SelectItem key={key} value={key}>
+                                  {label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        
+                        {/* Resource ID input for this path */}
+                        {resourceIdField && (
+                          <div className="space-y-1">
+                            <Label className="text-xs text-muted-foreground">Resource ID</Label>
+                            <Input
+                              value={resourceIdValue}
+                              onChange={(e) => onUpdateResourceId(resourceIdField, e.target.value)}
+                              placeholder="Enter GBG Journey Resource ID"
+                              className="h-8 text-sm font-mono"
+                            />
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
