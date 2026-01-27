@@ -47,6 +47,7 @@ interface VerificationPathConfigProps {
   onSetCondition: (pathId: string, condition: PathCondition) => void;
   onSetDefaultPath: (pathId: string) => void;
   onUpdateResourceId: (field: keyof ResourceIds, value: string) => void;
+  onUpdateGlobalResourceId: (value: string) => void;
 }
 
 export function VerificationPathConfig({
@@ -59,6 +60,7 @@ export function VerificationPathConfig({
   onSetCondition,
   onSetDefaultPath,
   onUpdateResourceId,
+  onUpdateGlobalResourceId,
 }: VerificationPathConfigProps) {
   return (
     <Card className="glass-card">
@@ -72,6 +74,18 @@ export function VerificationPathConfig({
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* Global Resource ID */}
+        <div className="p-3 rounded-lg bg-muted/50 space-y-2">
+          <Label className="font-medium">Global Resource ID</Label>
+          <p className="text-sm text-muted-foreground">Default resource ID used by all paths unless overridden</p>
+          <Input
+            value={globalResourceId}
+            onChange={(e) => onUpdateGlobalResourceId(e.target.value)}
+            placeholder="Enter default Resource ID"
+            className="font-mono"
+          />
+        </div>
+
         {/* Default Path Selection */}
         <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
           <div>

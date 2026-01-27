@@ -72,6 +72,10 @@ export function FormBuilderSection({ demo, onUpdate }: FormBuilderSectionProps) 
     onUpdate({ [field]: value });
   }, [onUpdate]);
 
+  const handleUpdateGlobalResourceId = useCallback((value: string) => {
+    onUpdate({ resourceId: value });
+  }, [onUpdate]);
+
   const handleResetForm = useCallback(() => {
     if (confirm('Are you sure you want to reset all form steps? This cannot be undone.')) {
       onUpdate({
@@ -160,6 +164,7 @@ export function FormBuilderSection({ demo, onUpdate }: FormBuilderSectionProps) 
               onSetCondition={handleSetCondition}
               onSetDefaultPath={handleSetDefaultPath}
               onUpdateResourceId={handleUpdateResourceId}
+              onUpdateGlobalResourceId={handleUpdateGlobalResourceId}
             />
           </TabsContent>
 
