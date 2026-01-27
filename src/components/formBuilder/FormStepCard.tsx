@@ -8,10 +8,11 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { FormStep, FormField } from '@/types/demo';
+import { ADDRESS_VALIDATION_FIELDS } from './FieldPalette';
 import { 
   GripVertical, Trash2, ChevronDown, ChevronUp, Edit2, Check, X,
   User, Mail, Phone, Calendar, Hash, MapPin, Building, DollarSign, 
-  FileText, Type, CheckSquare
+  FileText, Type, CheckSquare, MapPinCheck, Send, Smartphone, Database, FileCheck
 } from 'lucide-react';
 
 const FIELD_ICONS: Record<string, React.ReactNode> = {
@@ -40,17 +41,33 @@ const FIELD_ICONS: Record<string, React.ReactNode> = {
   nationality: <MapPin className="w-4 h-4" />,
 };
 
+const PATH_ICONS: Record<string, React.ReactNode> = {
+  docbio: <FileCheck className="w-4 h-4" />,
+  databio: <Database className="w-4 h-4" />,
+  dataonly: <Database className="w-4 h-4" />,
+  mdl: <Smartphone className="w-4 h-4" />,
+};
+
+const PATH_LABELS: Record<string, string> = {
+  docbio: 'Document + Biometric',
+  databio: 'Data + Biometric',
+  dataonly: 'Data Only',
+  mdl: 'Mobile Driver\'s License',
+};
+
 interface SortableFieldProps {
   field: FormField;
   stepId: string;
+  isAddressValidated?: boolean;
   onRemove: () => void;
   onToggleRequired: () => void;
   onUpdateLabel: (label: string) => void;
 }
 
-function SortableField({ field, stepId, onRemove, onToggleRequired, onUpdateLabel }: SortableFieldProps) {
+function SortableField({ field, stepId, isAddressValidated, onRemove, onToggleRequired, onUpdateLabel }: SortableFieldProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editLabel, setEditLabel] = useState(field.label);
+  const isAddressField = ADDRESS_VALIDATION_FIELDS.includes(field.type);
   
   const {
     attributes,
@@ -83,9 +100,13 @@ function SortableField({ field, stepId, onRemove, onToggleRequired, onUpdateLabe
       ref={setNodeRef}
       style={style}
       className={`
-        flex items-center gap-2 p-3 rounded-md border border-border bg-card
+        flex items-center gap-2 p-3 rounded-md border bg-card
         hover:border-primary/30 group transition-all
         ${isDragging ? 'opacity-50 ring-2 ring-primary shadow-lg' : ''}
+        ${isAddressValidated && isAddressField 
+          ? 'border-green-500/50 bg-green-500/5 ring-1 ring-green-500/30' 
+          : 'border-border'
+        }
       `}
     >
       <div
@@ -96,9 +117,15 @@ function SortableField({ field, stepId, onRemove, onToggleRequired, onUpdateLabe
         <GripVertical className="w-4 h-4 text-muted-foreground" />
       </div>
       
-      <span className="text-muted-foreground">
+      <span className={`${isAddressValidated && isAddressField ? 'text-green-600' : 'text-muted-foreground'}`}>
         {FIELD_ICONS[field.type] || <Type className="w-4 h-4" />}
       </span>
+      
+      {isAddressValidated && isAddressField && (
+        <Badge variant="outline" className="text-xs bg-green-500/10 text-green-600 border-green-500/30">
+          Validated
+        </Badge>
+      )}
       
       {isEditing ? (
         <div className="flex-1 flex items-center gap-2">
@@ -266,6 +293,26 @@ export function FormStepCard({
             </button>
           )}
           
+          {/* Special element badges */}
+          {step.addressValidationEnabled && (
+            <Badge variant="outline" className="text-xs bg-green-500/10 text-green-600 border-green-500/30">
+              <MapPinCheck className="w-3 h-3 mr-1" />
+              Address Validation
+            </Badge>
+          )}
+          {step.verificationPath && (
+            <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/30">
+              {PATH_ICONS[step.verificationPath]}
+              <span className="ml-1">{PATH_LABELS[step.verificationPath]}</span>
+            </Badge>
+          )}
+          {step.submitButton && (
+            <Badge variant="outline" className="text-xs bg-blue-500/10 text-blue-600 border-blue-500/30">
+              <Send className="w-3 h-3 mr-1" />
+              Submit
+            </Badge>
+          )}
+          
           <Badge variant="secondary" className="text-xs">
             {step.fields.length} fields
           </Badge>
@@ -306,6 +353,7 @@ export function FormStepCard({
                   key={field.id}
                   field={field}
                   stepId={step.id}
+                  isAddressValidated={step.addressValidationEnabled}
                   onRemove={() => onRemoveField(field.id)}
                   onToggleRequired={() => onToggleFieldRequired(field.id)}
                   onUpdateLabel={(label) => onUpdateFieldLabel(field.id, label)}

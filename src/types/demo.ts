@@ -57,6 +57,10 @@ export interface FormStep {
   description?: string;
   order: number;
   fields: FormField[];
+  // Special elements
+  addressValidationEnabled?: boolean;
+  submitButton?: boolean;
+  verificationPath?: 'docbio' | 'databio' | 'dataonly' | 'mdl';
 }
 
 export interface FormField {

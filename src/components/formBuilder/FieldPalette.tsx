@@ -3,9 +3,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { AVAILABLE_FORM_FIELDS, FormField } from '@/types/demo';
+import { VERIFICATION_PATHS } from '@/types/formBuilder';
 import { 
   User, Mail, Phone, Calendar, Hash, MapPin, Building, DollarSign, 
-  FileText, Type, CheckSquare, GripVertical, Search
+  FileText, Type, CheckSquare, GripVertical, Search, MapPinCheck,
+  Send, Smartphone, Database, FileCheck, Workflow
 } from 'lucide-react';
 import { useState, useMemo } from 'react';
 
@@ -35,6 +37,13 @@ const FIELD_ICONS: Record<string, React.ReactNode> = {
   nationality: <MapPin className="w-4 h-4" />,
 };
 
+const PATH_ICONS: Record<string, React.ReactNode> = {
+  docbio: <FileCheck className="w-4 h-4" />,
+  databio: <Database className="w-4 h-4" />,
+  dataonly: <Database className="w-4 h-4" />,
+  mdl: <Smartphone className="w-4 h-4" />,
+};
+
 const FIELD_CATEGORIES = {
   personal: ['first_name', 'last_name', 'middle_name', 'date_of_birth', 'gender', 'nationality'],
   contact: ['email', 'phone'],
@@ -43,6 +52,9 @@ const FIELD_CATEGORIES = {
   financial: ['employer', 'income'],
   custom: ['text', 'textarea', 'checkbox', 'select'],
 };
+
+// Address fields that get highlighted when Address Validation is dropped
+export const ADDRESS_VALIDATION_FIELDS = ['address_street', 'address_city', 'address_state', 'address_zip', 'address_country'];
 
 interface DraggableFieldProps {
   field: Omit<FormField, 'id' | 'order'>;
@@ -79,6 +91,50 @@ function DraggableField({ field, index }: DraggableFieldProps) {
       {field.required && (
         <Badge variant="secondary" className="text-xs px-1">req</Badge>
       )}
+    </div>
+  );
+}
+
+// Draggable special element (Address Validation, Submit, Paths)
+interface DraggableSpecialProps {
+  id: string;
+  label: string;
+  icon: React.ReactNode;
+  type: 'address_validation' | 'submit_button' | 'verification_path';
+  pathId?: string;
+  description?: string;
+}
+
+function DraggableSpecial({ id, label, icon, type, pathId, description }: DraggableSpecialProps) {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+    id: `special-${id}`,
+    data: {
+      type,
+      pathId,
+      fromPalette: true,
+    },
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      {...listeners}
+      {...attributes}
+      className={`
+        flex items-center gap-2 p-2 rounded-md border border-border bg-card
+        hover:border-primary/50 hover:bg-accent/50 cursor-grab active:cursor-grabbing
+        transition-all duration-150
+        ${isDragging ? 'opacity-50 ring-2 ring-primary' : ''}
+      `}
+    >
+      <GripVertical className="w-3 h-3 text-muted-foreground" />
+      <span className="text-primary">{icon}</span>
+      <div className="flex-1 min-w-0">
+        <span className="text-sm font-medium truncate block">{label}</span>
+        {description && (
+          <span className="text-xs text-muted-foreground truncate block">{description}</span>
+        )}
+      </div>
     </div>
   );
 }
@@ -121,11 +177,11 @@ export function FieldPalette() {
   return (
     <Card className="glass-card h-full">
       <CardHeader className="pb-3">
-        <CardTitle className="text-lg">Available Fields</CardTitle>
+        <CardTitle className="text-lg">Form Elements</CardTitle>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
-            placeholder="Search fields..."
+            placeholder="Search..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9 h-9"
@@ -133,6 +189,72 @@ export function FieldPalette() {
         </div>
       </CardHeader>
       <CardContent className="space-y-3 overflow-y-auto max-h-[calc(100vh-300px)]">
+        {/* Functions Section */}
+        {!search && (
+          <div>
+            <button
+              onClick={() => setExpandedCategory(expandedCategory === 'functions' ? null : 'functions')}
+              className="w-full flex items-center justify-between py-1.5 px-2 text-sm font-medium text-muted-foreground hover:text-foreground rounded-md hover:bg-accent/50 transition-colors"
+            >
+              <span className="flex items-center gap-2">
+                <Workflow className="w-4 h-4" />
+                Functions
+              </span>
+              <Badge variant="outline" className="text-xs">2</Badge>
+            </button>
+            {expandedCategory === 'functions' && (
+              <div className="mt-2 space-y-1.5 pl-1">
+                <DraggableSpecial
+                  id="address-validation"
+                  label="Address Validation"
+                  icon={<MapPinCheck className="w-4 h-4" />}
+                  type="address_validation"
+                  description="Validates address fields"
+                />
+                <DraggableSpecial
+                  id="submit-button"
+                  label="Submit Button"
+                  icon={<Send className="w-4 h-4" />}
+                  type="submit_button"
+                  description="Form submission trigger"
+                />
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Verification Paths Section */}
+        {!search && (
+          <div>
+            <button
+              onClick={() => setExpandedCategory(expandedCategory === 'paths' ? null : 'paths')}
+              className="w-full flex items-center justify-between py-1.5 px-2 text-sm font-medium text-muted-foreground hover:text-foreground rounded-md hover:bg-accent/50 transition-colors"
+            >
+              <span className="flex items-center gap-2">
+                <Workflow className="w-4 h-4" />
+                Verification Paths
+              </span>
+              <Badge variant="outline" className="text-xs">{VERIFICATION_PATHS.length}</Badge>
+            </button>
+            {expandedCategory === 'paths' && (
+              <div className="mt-2 space-y-1.5 pl-1">
+                {VERIFICATION_PATHS.map(path => (
+                  <DraggableSpecial
+                    key={path.id}
+                    id={`path-${path.id}`}
+                    label={path.name}
+                    icon={PATH_ICONS[path.id]}
+                    type="verification_path"
+                    pathId={path.id}
+                    description={path.description}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Field Categories */}
         {Object.entries(groupedFields).map(([category, fields]) => (
           <div key={category}>
             <button
@@ -152,7 +274,7 @@ export function FieldPalette() {
           </div>
         ))}
         
-        {Object.keys(groupedFields).length === 0 && (
+        {Object.keys(groupedFields).length === 0 && search && (
           <div className="text-center py-8 text-muted-foreground">
             <Type className="w-8 h-8 mx-auto mb-2 opacity-50" />
             <p className="text-sm">No fields match your search</p>
