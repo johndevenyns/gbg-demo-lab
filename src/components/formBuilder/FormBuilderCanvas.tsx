@@ -67,8 +67,40 @@ export function FormBuilderCanvas({ steps, onUpdateSteps }: FormBuilderCanvasPro
     const activeData = active.data.current;
     const overData = over.data.current;
 
+    // Handle dropping special elements (address validation, submit, paths)
+    if (activeData?.fromPalette && activeData?.type === 'address_validation' && overData?.type === 'step') {
+      const targetStepId = overData.stepId;
+      onUpdateSteps(steps.map(step => 
+        step.id === targetStepId 
+          ? { ...step, addressValidationEnabled: true }
+          : step
+      ));
+      return;
+    }
+
+    if (activeData?.fromPalette && activeData?.type === 'submit_button' && overData?.type === 'step') {
+      const targetStepId = overData.stepId;
+      onUpdateSteps(steps.map(step => 
+        step.id === targetStepId 
+          ? { ...step, submitButton: true }
+          : step
+      ));
+      return;
+    }
+
+    if (activeData?.fromPalette && activeData?.type === 'verification_path' && overData?.type === 'step') {
+      const targetStepId = overData.stepId;
+      const pathId = activeData.pathId as 'docbio' | 'databio' | 'dataonly' | 'mdl';
+      onUpdateSteps(steps.map(step => 
+        step.id === targetStepId 
+          ? { ...step, verificationPath: pathId }
+          : step
+      ));
+      return;
+    }
+
     // Handle dropping a field from palette
-    if (activeData?.fromPalette && overData?.type === 'step') {
+    if (activeData?.fromPalette && activeData?.type === 'field' && overData?.type === 'step') {
       const targetStepId = overData.stepId;
       const field = activeData.field;
       
@@ -321,10 +353,20 @@ export function FormBuilderCanvas({ steps, onUpdateSteps }: FormBuilderCanvasPro
 
       {/* Drag Overlay */}
       <DragOverlay>
-        {activeId && activeData?.fromPalette && (
+        {activeId && activeData?.fromPalette && activeData?.type === 'field' && (
           <div className="flex items-center gap-2 p-3 rounded-md border border-primary bg-card shadow-lg">
             <GripVertical className="w-4 h-4 text-muted-foreground" />
             <span className="text-sm font-medium">{activeData.field?.label}</span>
+          </div>
+        )}
+        {activeId && activeData?.fromPalette && (activeData?.type === 'address_validation' || activeData?.type === 'submit_button' || activeData?.type === 'verification_path') && (
+          <div className="flex items-center gap-2 p-3 rounded-md border border-primary bg-card shadow-lg">
+            <GripVertical className="w-4 h-4 text-muted-foreground" />
+            <span className="text-sm font-medium">
+              {activeData.type === 'address_validation' && 'Address Validation'}
+              {activeData.type === 'submit_button' && 'Submit Button'}
+              {activeData.type === 'verification_path' && 'Verification Path'}
+            </span>
           </div>
         )}
         {activeId && activeData?.type === 'field' && !activeData.fromPalette && (
