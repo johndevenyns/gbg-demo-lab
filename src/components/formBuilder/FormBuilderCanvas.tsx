@@ -67,16 +67,7 @@ export function FormBuilderCanvas({ steps, onUpdateSteps }: FormBuilderCanvasPro
     const activeData = active.data.current;
     const overData = over.data.current;
 
-    // Handle dropping special elements (address validation, submit, paths)
-    if (activeData?.fromPalette && activeData?.type === 'address_validation' && overData?.type === 'step') {
-      const targetStepId = overData.stepId;
-      onUpdateSteps(steps.map(step => 
-        step.id === targetStepId 
-          ? { ...step, addressValidationEnabled: true }
-          : step
-      ));
-      return;
-    }
+    // Handle dropping special elements (submit, paths)
 
     if (activeData?.fromPalette && activeData?.type === 'submit_button' && overData?.type === 'step') {
       const targetStepId = overData.stepId;
@@ -359,11 +350,10 @@ export function FormBuilderCanvas({ steps, onUpdateSteps }: FormBuilderCanvasPro
             <span className="text-sm font-medium">{activeData.field?.label}</span>
           </div>
         )}
-        {activeId && activeData?.fromPalette && (activeData?.type === 'address_validation' || activeData?.type === 'submit_button' || activeData?.type === 'verification_path') && (
+        {activeId && activeData?.fromPalette && (activeData?.type === 'submit_button' || activeData?.type === 'verification_path') && (
           <div className="flex items-center gap-2 p-3 rounded-md border border-primary bg-card shadow-lg">
             <GripVertical className="w-4 h-4 text-muted-foreground" />
             <span className="text-sm font-medium">
-              {activeData.type === 'address_validation' && 'Address Validation'}
               {activeData.type === 'submit_button' && 'Submit Button'}
               {activeData.type === 'verification_path' && 'Verification Path'}
             </span>

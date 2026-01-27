@@ -293,13 +293,18 @@ export function FormStepCard({
             </button>
           )}
           
-          {/* Special element badges */}
-          {step.addressValidationEnabled && (
-            <Badge variant="outline" className="text-xs bg-green-500/10 text-green-600 border-green-500/30">
-              <MapPinCheck className="w-3 h-3 mr-1" />
-              Address Validation
-            </Badge>
-          )}
+          {/* Address Validation Toggle */}
+          <div className="flex items-center gap-1.5">
+            <Switch
+              checked={step.addressValidationEnabled || false}
+              onCheckedChange={(checked) => onUpdateStep({ addressValidationEnabled: checked })}
+              className="scale-75"
+            />
+            <span className={`text-xs flex items-center gap-1 ${step.addressValidationEnabled ? 'text-green-600' : 'text-muted-foreground'}`}>
+              <MapPinCheck className="w-3 h-3" />
+              Address
+            </span>
+          </div>
           {step.verificationPath && (
             <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/30">
               {PATH_ICONS[step.verificationPath]}
