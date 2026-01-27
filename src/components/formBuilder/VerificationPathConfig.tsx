@@ -41,6 +41,7 @@ interface VerificationPathConfigProps {
   enabledPaths: string[];
   pathConditions: Record<string, PathCondition>;
   defaultPath: string;
+  globalResourceId: string;
   resourceIds: ResourceIds;
   onTogglePath: (pathId: string) => void;
   onSetCondition: (pathId: string, condition: PathCondition) => void;
@@ -52,6 +53,7 @@ export function VerificationPathConfig({
   enabledPaths,
   pathConditions,
   defaultPath,
+  globalResourceId,
   resourceIds,
   onTogglePath,
   onSetCondition,
@@ -159,13 +161,22 @@ export function VerificationPathConfig({
                         {/* Resource ID input for this path */}
                         {resourceIdField && (
                           <div className="space-y-1">
-                            <Label className="text-xs text-muted-foreground">Resource ID</Label>
+                            <Label className="text-xs text-muted-foreground">
+                              Resource ID {!resourceIdValue && globalResourceId && (
+                                <span className="text-muted-foreground/60">(using global default)</span>
+                              )}
+                            </Label>
                             <Input
                               value={resourceIdValue}
                               onChange={(e) => onUpdateResourceId(resourceIdField, e.target.value)}
-                              placeholder="Enter GBG Journey Resource ID"
+                              placeholder={globalResourceId || "Enter Resource ID (or set global default)"}
                               className="h-8 text-sm font-mono"
                             />
+                            {!resourceIdValue && globalResourceId && (
+                              <p className="text-xs text-muted-foreground/60">
+                                Will use: <span className="font-mono">{globalResourceId}</span>
+                              </p>
+                            )}
                           </div>
                         )}
                       </div>

@@ -150,6 +150,7 @@ export function FormBuilderSection({ demo, onUpdate }: FormBuilderSectionProps) 
               enabledPaths={enabledPaths}
               pathConditions={pathConditions}
               defaultPath={defaultPath}
+              globalResourceId={demo.resourceId || ''}
               resourceIds={{
                 resourceIdDocBio: demo.resourceIdDocBio || '',
                 resourceIdDataBio: demo.resourceIdDataBio || '',
