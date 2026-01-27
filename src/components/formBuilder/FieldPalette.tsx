@@ -200,17 +200,10 @@ export function FieldPalette() {
                 <Workflow className="w-4 h-4" />
                 Functions
               </span>
-              <Badge variant="outline" className="text-xs">2</Badge>
+              <Badge variant="outline" className="text-xs">1</Badge>
             </button>
             {expandedCategory === 'functions' && (
               <div className="mt-2 space-y-1.5 pl-1">
-                <DraggableSpecial
-                  id="address-validation"
-                  label="Address Validation"
-                  icon={<MapPinCheck className="w-4 h-4" />}
-                  type="address_validation"
-                  description="Validates address fields"
-                />
                 <DraggableSpecial
                   id="submit-button"
                   label="Submit Button"
