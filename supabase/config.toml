@@ -5,3 +5,9 @@ verify_jwt = false
 
 [functions.api-proxy]
 verify_jwt = false
+
+[functions.create-verification-session]
+verify_jwt = false
+
+[functions.get-verification-status]
+verify_jwt = false

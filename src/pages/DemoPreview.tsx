@@ -84,6 +84,10 @@ export default function DemoPreview() {
                 failurePageConfig={demo.failurePageConfig || DEFAULT_FAILURE_CONFIG}
                 approvedUrl={demo.approvedUrl}
                 rejectedUrl={demo.rejectedUrl}
+                customerName={demo.customerName}
+                returnUrl={demo.returnUrl}
+                includeQr={demo.includeQr}
+                referenceIdPrefix={demo.referenceIdPrefix}
                 onComplete={handleFlowComplete}
               />
             ) : (

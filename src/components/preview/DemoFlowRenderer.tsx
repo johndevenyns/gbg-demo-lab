@@ -1,12 +1,13 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
-import { FormStep, PageElement, StepApiResponse } from '@/types/demo';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { FormStep, PageElement, StepApiResponse, MdlProvider, VerificationType } from '@/types/demo';
 import { FormStyleConfig, DEFAULT_FORM_STYLE } from '@/types/formStyle';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, QrCode, ArrowLeft, ArrowRight, Check, Copy, ExternalLink, AlertCircle } from 'lucide-react';
+import { Loader2, QrCode, ArrowLeft, ArrowRight, Check, Copy, ExternalLink, AlertCircle, Smartphone } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { ResultPage, ResultPageConfig, DEFAULT_SUCCESS_CONFIG, DEFAULT_FAILURE_CONFIG } from './ResultPage';
+import { VerificationMethodSelector } from './VerificationMethodSelector';
 
 interface DemoFlowRendererProps {
   steps: FormStep[];
@@ -16,6 +17,10 @@ interface DemoFlowRendererProps {
   failurePageConfig?: ResultPageConfig;
   approvedUrl?: string;
   rejectedUrl?: string;
+  customerName?: string;
+  returnUrl?: string;
+  includeQr?: boolean;
+  referenceIdPrefix?: string;
   onComplete?: (success: boolean, referenceId?: string) => void;
 }
 
@@ -139,6 +144,10 @@ export function DemoFlowRenderer({
   failurePageConfig,
   approvedUrl,
   rejectedUrl,
+  customerName,
+  returnUrl,
+  includeQr,
+  referenceIdPrefix,
   onComplete 
 }: DemoFlowRendererProps) {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
@@ -148,6 +157,10 @@ export function DemoFlowRenderer({
   const [error, setError] = useState<string | null>(null);
   const [flowComplete, setFlowComplete] = useState<'success' | 'failure' | null>(null);
   const [referenceId, setReferenceId] = useState<string | null>(null);
+  const [selectedVerificationType, setSelectedVerificationType] = useState<VerificationType | null>(null);
+  const [verificationSessionId, setVerificationSessionId] = useState<string | null>(null);
+  const [pollingStatus, setPollingStatus] = useState<string | null>(null);
+  const pollingRef = useRef<NodeJS.Timeout | null>(null);
 
   // Use provided form style or default
   const style = formStyle || DEFAULT_FORM_STYLE;
@@ -303,6 +316,139 @@ export function DemoFlowRenderer({
       setIsLoading(false);
     }
   };
+
+  // Create verification session with the API
+  const createVerificationSession = useCallback(async (verificationType: VerificationType) => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      console.log('Creating verification session:', { verificationType, customerName, formData });
+      
+      const { data, error: invokeError } = await supabase.functions.invoke('create-verification-session', {
+        body: {
+          formData,
+          verificationType,
+          customerName: customerName || 'Verification Demo',
+          returnUrl: returnUrl || window.location.href,
+          includeQr: includeQr ?? true,
+          referenceIdPrefix: referenceIdPrefix,
+        },
+      });
+
+      if (invokeError) {
+        console.error('Edge function error:', invokeError);
+        throw new Error(invokeError.message || 'Failed to create verification session');
+      }
+
+      console.log('Verification session created:', data);
+
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to create verification session');
+      }
+
+      // Store session data
+      setVerificationSessionId(data.sessionId);
+      if (data.referenceId) {
+        setReferenceId(data.referenceId);
+      }
+
+      // Store response in apiResponses for template interpolation
+      const apiResponse: StepApiResponse = {
+        stepId: currentStep?.id || 'verification',
+        timestamp: new Date().toISOString(),
+        data: {
+          sessionId: data.sessionId,
+          verifyUrl: data.verifyUrl,
+          shortUrl: data.shortUrl,
+          qrCodeUrl: data.qrCodeUrl,
+          status: data.status,
+          referenceId: data.referenceId,
+        },
+      };
+      setApiResponses(prev => [...prev, apiResponse]);
+
+      toast.success('Verification session created');
+      goToNextStep();
+      
+    } catch (err) {
+      console.error('Create verification session error:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to create verification session';
+      setError(errorMessage);
+      toast.error(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [formData, customerName, returnUrl, includeQr, referenceIdPrefix, currentStep?.id, goToNextStep]);
+
+  // Poll for verification status
+  const pollVerificationStatus = useCallback(async () => {
+    if (!verificationSessionId) return;
+
+    try {
+      const { data, error: invokeError } = await supabase.functions.invoke('get-verification-status', {
+        body: { sessionId: verificationSessionId },
+      });
+
+      if (invokeError) {
+        console.error('Status poll error:', invokeError);
+        return;
+      }
+
+      console.log('Verification status:', data);
+      setPollingStatus(data.status);
+
+      if (data.isComplete) {
+        // Stop polling
+        if (pollingRef.current) {
+          clearInterval(pollingRef.current);
+          pollingRef.current = null;
+        }
+
+        if (data.isPassed) {
+          completeFlow(true, referenceId || undefined);
+        } else {
+          completeFlow(false, referenceId || undefined);
+        }
+      }
+    } catch (err) {
+      console.error('Status poll error:', err);
+    }
+  }, [verificationSessionId, referenceId, completeFlow]);
+
+  // Start polling when verification session is created
+  useEffect(() => {
+    if (verificationSessionId && currentStep?.stepType === 'verification') {
+      const interval = (currentStep.verificationConfig?.statusPollingInterval || 5) * 1000;
+      pollingRef.current = setInterval(pollVerificationStatus, interval);
+      
+      // Initial poll
+      pollVerificationStatus();
+
+      return () => {
+        if (pollingRef.current) {
+          clearInterval(pollingRef.current);
+          pollingRef.current = null;
+        }
+      };
+    }
+  }, [verificationSessionId, currentStep?.stepType, currentStep?.verificationConfig?.statusPollingInterval, pollVerificationStatus]);
+
+  // Handle method selection
+  const handleDocumentScanSelected = useCallback(() => {
+    const path = currentStep?.methodSelectionConfig?.documentScanPath || 'docbio';
+    setSelectedVerificationType(path === 'databio' ? 'dataBio' : 'docBio');
+    createVerificationSession(path === 'databio' ? 'dataBio' : 'docBio');
+  }, [currentStep?.methodSelectionConfig?.documentScanPath, createVerificationSession]);
+
+  const handleMdlProviderSelected = useCallback((provider: MdlProvider) => {
+    console.log('mDL provider selected:', provider);
+    // For mDL, we would typically redirect to the provider's flow
+    // For now, we'll create a dataBio session as a fallback
+    setSelectedVerificationType('dataBio');
+    toast.info(`${provider.name} selected - starting verification...`);
+    createVerificationSession('dataBio');
+  }, [createVerificationSession]);
 
   // Handle step-specific rendering and actions
   useEffect(() => {
@@ -498,30 +644,112 @@ export function DemoFlowRenderer({
         );
 
       case 'verification':
+        const qrUrl = getApiValue('qrCodeUrl') || getApiValue(currentStep.verificationConfig?.qrCodeUrlField || '');
+        const shortUrl = getApiValue('shortUrl');
+        const verifyUrl = getApiValue('verifyUrl');
+        const currentStatus = pollingStatus || getApiValue('status') || getApiValue(currentStep.verificationConfig?.statusField || '') || 'Pending';
+        
         return (
           <div className="text-center py-8 space-y-6">
+            {/* QR Code section */}
             {currentStep.verificationConfig?.qrCodeEnabled && (
               <div>
                 <p className="font-medium mb-2">{currentStep.verificationConfig.qrCodeTitle || 'Scan QR Code'}</p>
-                <QRCodeDisplay 
-                  url={getApiValue(currentStep.verificationConfig.qrCodeUrlField || '')} 
-                  size={200} 
-                />
+                {qrUrl ? (
+                  <div className="inline-block bg-white p-4 rounded-lg shadow-md">
+                    <img 
+                      src={qrUrl} 
+                      alt="Verification QR Code" 
+                      className="w-48 h-48 mx-auto"
+                      onError={(e) => {
+                        // Fallback to placeholder if image fails
+                        e.currentTarget.style.display = 'none';
+                        e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                      }}
+                    />
+                    <div className="hidden">
+                      <QRCodeDisplay url={shortUrl || verifyUrl || ''} size={192} />
+                    </div>
+                  </div>
+                ) : (
+                  <QRCodeDisplay url={shortUrl || verifyUrl || 'Waiting for session...'} size={200} />
+                )}
                 {currentStep.verificationConfig.qrCodeInstructions && (
                   <p className="text-sm text-muted-foreground mt-2">
                     {currentStep.verificationConfig.qrCodeInstructions}
                   </p>
                 )}
+                {shortUrl && (
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Or visit: <a href={shortUrl} target="_blank" rel="noopener noreferrer" className="text-primary underline">{shortUrl}</a>
+                  </p>
+                )}
               </div>
             )}
+            
+            {/* Direct redirect option */}
+            {verifyUrl && !currentStep.verificationConfig?.qrCodeEnabled && (
+              <div className="space-y-4">
+                <Smartphone className="w-12 h-12 mx-auto text-primary" />
+                <p className="font-medium">Continue on this device</p>
+                <Button
+                  onClick={() => window.location.href = verifyUrl}
+                  style={{ backgroundColor: buttonColor }}
+                >
+                  Start Verification
+                  <ExternalLink className="w-4 h-4 ml-2" />
+                </Button>
+              </div>
+            )}
+            
+            {/* Status display */}
             {currentStep.verificationConfig?.statusEnabled && (
-              <div>
-                <Badge variant="outline" className="bg-yellow-500/20 text-yellow-600">
-                  Status: {getApiValue(currentStep.verificationConfig.statusField || '') || 'Pending'}
+              <div className="space-y-2">
+                <Badge 
+                  variant="outline" 
+                  className={`
+                    ${currentStatus === 'completed' ? 'bg-green-500/20 text-green-600 border-green-500/30' : ''}
+                    ${currentStatus === 'failed' || currentStatus === 'expired' ? 'bg-red-500/20 text-red-600 border-red-500/30' : ''}
+                    ${currentStatus === 'pending' || currentStatus === 'in_progress' ? 'bg-yellow-500/20 text-yellow-600 border-yellow-500/30' : ''}
+                  `}
+                >
+                  Status: {currentStatus}
                 </Badge>
+                {verificationSessionId && (
+                  <p className="text-xs text-muted-foreground">
+                    Session: {verificationSessionId.substring(0, 8)}...
+                  </p>
+                )}
+                {(currentStatus === 'pending' || currentStatus === 'in_progress') && (
+                  <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Waiting for verification...
+                  </div>
+                )}
+              </div>
+            )}
+            
+            {/* Reference ID */}
+            {referenceId && (
+              <div className="pt-4 border-t border-border">
+                <p className="text-sm text-muted-foreground">Reference ID</p>
+                <p className="font-mono font-medium">{referenceId}</p>
               </div>
             )}
           </div>
+        );
+
+      case 'method_selection':
+        return (
+          <VerificationMethodSelector
+            config={currentStep.methodSelectionConfig || {
+              documentScanEnabled: true,
+              mobileIdEnabled: true,
+            }}
+            formStyle={style}
+            onSelectDocumentScan={handleDocumentScanSelected}
+            onSelectProvider={handleMdlProviderSelected}
+          />
         );
 
       case 'page':
