@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Search, Settings, ExternalLink, Trash2, Copy, Building2, Car, Gamepad2, Shield, Landmark, Layers, Heart, ShoppingBag } from "lucide-react";
+import { Plus, Search, Settings, ExternalLink, Trash2, Copy, Building2, Car, Gamepad2, Shield, Landmark, Layers, Heart, ShoppingBag, ImageOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -39,6 +39,33 @@ const industryLabels: Record<IndustryTemplate, string> = {
   retail: "Retail",
   custom: "Custom",
 };
+
+// Logo thumbnail for demo cards
+function DemoLogo({ url, fallbackColor, fallbackIcon }: { url?: string | null; fallbackColor: string; fallbackIcon: React.ReactNode }) {
+  const [hasError, setHasError] = useState(false);
+  
+  if (!url || hasError) {
+    return (
+      <div 
+        className="w-10 h-10 rounded-lg flex items-center justify-center text-white"
+        style={{ backgroundColor: fallbackColor }}
+      >
+        {fallbackIcon}
+      </div>
+    );
+  }
+  
+  return (
+    <div className="w-10 h-10 rounded-lg border border-border bg-white flex items-center justify-center overflow-hidden">
+      <img 
+        src={url} 
+        alt="Customer logo" 
+        className="max-w-full max-h-full object-contain"
+        onError={() => setHasError(true)}
+      />
+    </div>
+  );
+}
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -164,12 +191,11 @@ export default function AdminDashboard() {
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
-                      <div 
-                        className="w-10 h-10 rounded-lg flex items-center justify-center text-white"
-                        style={{ backgroundColor: demo.buttonColor }}
-                      >
-                        {industryIcons[demo.industryTemplate]}
-                      </div>
+                      <DemoLogo 
+                        url={demo.logoUrl} 
+                        fallbackColor={demo.buttonColor}
+                        fallbackIcon={industryIcons[demo.industryTemplate]}
+                      />
                       <div>
                         <CardTitle className="text-lg">{demo.customerName}</CardTitle>
                         <CardDescription className="font-mono text-xs">/demo/{demo.slug}</CardDescription>
