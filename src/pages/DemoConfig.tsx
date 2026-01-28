@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
 import { SiteMirrorCard } from "@/components/admin/SiteMirrorCard";
 import { FormBuilderSection, FormStyleSection } from "@/components/formBuilder";
+import { FormPreviewPanel } from "@/components/formBuilder/FormPreviewPanel";
 
 // Reusable Logo Thumbnail component
 function LogoThumbnail({ url, size = 'md' }: { url?: string | null; size?: 'sm' | 'md' }) {
@@ -210,6 +211,9 @@ export default function DemoConfig() {
 
         {/* Application Form Builder */}
         <FormBuilderSection demo={localDemo} onUpdate={handleUpdate} />
+
+        {/* Live Form Preview with Fill Pass/Fail */}
+        <FormPreviewPanel demo={localDemo} />
 
         {/* Feature Toggles */}
         <Card className="glass-card">
