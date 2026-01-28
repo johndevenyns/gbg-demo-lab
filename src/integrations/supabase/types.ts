@@ -107,6 +107,39 @@ export type Database = {
         }
         Relationships: []
       }
+      form_templates: {
+        Row: {
+          category: string | null
+          created_at: string
+          description: string | null
+          form_steps: Json
+          form_style: Json | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          form_steps?: Json
+          form_style?: Json | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          form_steps?: Json
+          form_style?: Json | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
