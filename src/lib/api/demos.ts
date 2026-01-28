@@ -1,39 +1,51 @@
 import { supabase } from "@/integrations/supabase/client";
-import { DemoEnvironment, FormStep, INDUSTRY_TEMPLATES, IndustryTemplate } from "@/types/demo";
+import { DemoEnvironment, FormStep, INDUSTRY_TEMPLATES, IndustryTemplate, StoredTestData } from "@/types/demo";
 import { TablesInsert } from "@/integrations/supabase/types";
 import { FormStyleConfig, DEFAULT_FORM_STYLE } from "@/types/formStyle";
 
+// Extended form style with test data
+interface FormStyleWithTestData extends FormStyleConfig {
+  storedTestData?: StoredTestData;
+}
+
 // Helper to convert database row to DemoEnvironment
-const rowToDemo = (row: any): DemoEnvironment => ({
-  id: row.id,
-  slug: row.slug,
-  customerName: row.customer_name,
-  industryTemplate: row.industry_template as IndustryTemplate,
-  verificationType: row.verification_type,
-  returnUrl: row.return_url || '',
-  approvedUrl: row.approved_url || '',
-  rejectedUrl: row.rejected_url || '',
-  resourceId: row.resource_id || '',
-  resourceIdDataOnly: row.resource_id_dataonly || '',
-  resourceIdDataBio: row.resource_id_databio || '',
-  resourceIdDocBio: row.resource_id_docbio || '',
-  referenceIdPrefix: row.reference_id_prefix || '',
-  logoUrl: row.logo_url || '',
-  headerBgColor: row.header_bg_color || '#1a1a2e',
-  headerTextColor: row.header_text_color || '#ffffff',
-  buttonColor: row.button_color || '#6366f1',
-  includeQr: row.include_qr ?? true,
-  includeAddressVerification: row.include_address_verification ?? false,
-  formSteps: (row.form_steps as FormStep[]) || [],
-  customerSiteUrl: row.customer_site_url || '',
-  scrapedHeaderHtml: row.scraped_header_html || '',
-  scrapedFooterHtml: row.scraped_footer_html || '',
-  scrapedCss: row.scraped_css || '',
-  formStyle: (row.form_style as FormStyleConfig) || DEFAULT_FORM_STYLE,
-  createdAt: row.created_at,
-  updatedAt: row.updated_at,
-  isActive: row.is_active ?? true,
-});
+const rowToDemo = (row: any): DemoEnvironment => {
+  // Extract storedTestData from formStyle if present
+  const formStyleWithData = row.form_style as FormStyleWithTestData | null;
+  const { storedTestData, ...formStyleOnly } = formStyleWithData || {};
+  
+  return {
+    id: row.id,
+    slug: row.slug,
+    customerName: row.customer_name,
+    industryTemplate: row.industry_template as IndustryTemplate,
+    verificationType: row.verification_type,
+    returnUrl: row.return_url || '',
+    approvedUrl: row.approved_url || '',
+    rejectedUrl: row.rejected_url || '',
+    resourceId: row.resource_id || '',
+    resourceIdDataOnly: row.resource_id_dataonly || '',
+    resourceIdDataBio: row.resource_id_databio || '',
+    resourceIdDocBio: row.resource_id_docbio || '',
+    referenceIdPrefix: row.reference_id_prefix || '',
+    logoUrl: row.logo_url || '',
+    headerBgColor: row.header_bg_color || '#1a1a2e',
+    headerTextColor: row.header_text_color || '#ffffff',
+    buttonColor: row.button_color || '#6366f1',
+    includeQr: row.include_qr ?? true,
+    includeAddressVerification: row.include_address_verification ?? false,
+    formSteps: (row.form_steps as FormStep[]) || [],
+    customerSiteUrl: row.customer_site_url || '',
+    scrapedHeaderHtml: row.scraped_header_html || '',
+    scrapedFooterHtml: row.scraped_footer_html || '',
+    scrapedCss: row.scraped_css || '',
+    formStyle: Object.keys(formStyleOnly).length > 0 ? formStyleOnly as FormStyleConfig : DEFAULT_FORM_STYLE,
+    storedTestData: storedTestData,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    isActive: row.is_active ?? true,
+  };
+};
 
 // Helper to convert DemoEnvironment to database row for updates
 const demoToRow = (demo: Partial<DemoEnvironment>) => {
@@ -61,7 +73,18 @@ const demoToRow = (demo: Partial<DemoEnvironment>) => {
   if (demo.scrapedHeaderHtml !== undefined) row.scraped_header_html = demo.scrapedHeaderHtml;
   if (demo.scrapedFooterHtml !== undefined) row.scraped_footer_html = demo.scrapedFooterHtml;
   if (demo.scrapedCss !== undefined) row.scraped_css = demo.scrapedCss;
-  if (demo.formStyle !== undefined) row.form_style = demo.formStyle;
+  
+  // Combine formStyle and storedTestData into one JSON field
+  if (demo.formStyle !== undefined || demo.storedTestData !== undefined) {
+    // Get existing formStyle or use defaults
+    const baseStyle = demo.formStyle || DEFAULT_FORM_STYLE;
+    const formStyleWithData: FormStyleWithTestData = {
+      ...baseStyle,
+      storedTestData: demo.storedTestData,
+    };
+    row.form_style = formStyleWithData;
+  }
+  
   if (demo.isActive !== undefined) row.is_active = demo.isActive;
   return row;
 };

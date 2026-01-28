@@ -2,6 +2,12 @@
 
 export type VerificationType = 'docBio' | 'dataBio' | 'dataOnly';
 
+// Stored test data for Fill Pass/Fail buttons
+export interface StoredTestData {
+  passData: Record<string, string>;
+  failData: Record<string, string>;
+}
+
 export type IndustryTemplate = 'bank' | 'rental_car' | 'online_gambling' | 'healthcare' | 'insurance' | 'retail' | 'custom';
 
 // Import form style config type
@@ -49,6 +55,9 @@ export interface DemoEnvironment {
   // Result page configurations
   successPageConfig?: ResultPageConfig;
   failurePageConfig?: ResultPageConfig;
+  
+  // Stored test data for Fill Pass / Fill Fail buttons
+  storedTestData?: StoredTestData;
   
   // Feature toggles
   includeAddressVerification: boolean;

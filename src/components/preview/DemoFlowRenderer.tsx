@@ -1,9 +1,9 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { FormStep, PageElement, StepApiResponse, MdlProvider, VerificationType } from '@/types/demo';
+import { FormStep, PageElement, StepApiResponse, MdlProvider, VerificationType, StoredTestData } from '@/types/demo';
 import { FormStyleConfig, DEFAULT_FORM_STYLE } from '@/types/formStyle';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, QrCode, ArrowLeft, ArrowRight, Check, Copy, ExternalLink, AlertCircle, Smartphone } from 'lucide-react';
+import { Loader2, QrCode, ArrowLeft, ArrowRight, Check, Copy, ExternalLink, AlertCircle, Smartphone, CheckCircle2, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { ResultPage, ResultPageConfig, DEFAULT_SUCCESS_CONFIG, DEFAULT_FAILURE_CONFIG } from './ResultPage';
@@ -21,6 +21,8 @@ interface DemoFlowRendererProps {
   returnUrl?: string;
   includeQr?: boolean;
   referenceIdPrefix?: string;
+  storedTestData?: StoredTestData;
+  showTestButtons?: boolean;
   onComplete?: (success: boolean, referenceId?: string) => void;
 }
 
@@ -148,6 +150,8 @@ export function DemoFlowRenderer({
   returnUrl,
   includeQr,
   referenceIdPrefix,
+  storedTestData,
+  showTestButtons = false,
   onComplete 
 }: DemoFlowRendererProps) {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
@@ -193,6 +197,23 @@ export function DemoFlowRenderer({
   const handleInputChange = (fieldName: string, value: string) => {
     setFormData(prev => ({ ...prev, [fieldName]: value }));
   };
+
+  // Fill form with test data (pass or fail)
+  const fillTestData = useCallback((type: 'pass' | 'fail') => {
+    if (!storedTestData) {
+      toast.error('No test data configured');
+      return;
+    }
+    
+    const data = type === 'pass' ? storedTestData.passData : storedTestData.failData;
+    if (!data || Object.keys(data).length === 0) {
+      toast.error(`No ${type} test data configured`);
+      return;
+    }
+    
+    setFormData(prev => ({ ...prev, ...data }));
+    toast.success(`Form filled with ${type} test data`);
+  }, [storedTestData]);
 
   // Complete the flow (success or failure)
   const completeFlow = useCallback((success: boolean, refId?: string) => {
@@ -804,6 +825,30 @@ export function DemoFlowRenderer({
 
   return (
     <div className="space-y-6">
+      {/* Test Data Fill Buttons - only show in admin/test mode */}
+      {showTestButtons && storedTestData && (currentStep?.stepType === 'form' || !currentStep?.stepType) && (
+        <div className="flex gap-2 justify-center pb-2 border-b border-dashed border-muted-foreground/30">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => fillTestData('pass')}
+            className="text-green-600 border-green-500/30 hover:bg-green-500/10"
+          >
+            <CheckCircle2 className="w-4 h-4 mr-1" />
+            Fill Pass
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => fillTestData('fail')}
+            className="text-red-600 border-red-500/30 hover:bg-red-500/10"
+          >
+            <XCircle className="w-4 h-4 mr-1" />
+            Fill Fail
+          </Button>
+        </div>
+      )}
+
       {/* Step indicator */}
       <div className="flex items-center justify-center gap-2">
         {steps.map((_, index) => (
