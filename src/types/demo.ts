@@ -6,6 +6,8 @@ export type VerificationType = 'docBio' | 'dataBio' | 'dataOnly';
 export interface StoredTestData {
   passData: Record<string, string>;
   failData: Record<string, string>;
+  showFillPassButton?: boolean;
+  showFillFailButton?: boolean;
 }
 
 export type IndustryTemplate = 'bank' | 'rental_car' | 'online_gambling' | 'healthcare' | 'insurance' | 'retail' | 'custom';
