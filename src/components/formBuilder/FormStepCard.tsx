@@ -14,6 +14,7 @@ import { StepActionsConfig } from './StepActionsConfig';
 import { VerificationStepConfig } from './VerificationStepConfig';
 import { ApiStepConfig } from './ApiStepConfig';
 import { PathStepConfig } from './PathStepConfig';
+import { PageStepConfig } from './PageStepConfig';
 import { 
   GripVertical, Trash2, ChevronDown, ChevronUp, Edit2, Check, X,
   User, Mail, Phone, Calendar, Hash, MapPin, Building, DollarSign, 
@@ -331,6 +332,12 @@ export function FormStepCard({
               Path Step
             </Badge>
           )}
+          {step.stepType === 'page' && (
+            <Badge variant="outline" className="text-xs bg-orange-500/10 text-orange-600 border-orange-500/30">
+              <FileText className="w-3 h-3 mr-1" />
+              Page
+            </Badge>
+          )}
           {step.verificationPath && (
             <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/30">
               {PATH_ICONS[step.verificationPath]}
@@ -441,6 +448,9 @@ export function FormStepCard({
           ) : step.stepType === 'path' ? (
             /* Path Step Type */
             <PathStepConfig step={step} onUpdateStep={onUpdateStep} />
+          ) : step.stepType === 'page' ? (
+            /* Page Step Type */
+            <PageStepConfig step={step} onUpdateStep={onUpdateStep} />
           ) : (
             <>
               {/* Regular Form Step */}
