@@ -2,14 +2,16 @@ import { useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { DemoEnvironment, FormStep } from '@/types/demo';
+import { FormStyleConfig } from '@/types/formStyle';
 import { PathCondition } from '@/types/formBuilder';
 import { FormBuilderCanvas } from './FormBuilderCanvas';
 import { TemplateSelector } from './TemplateSelector';
 import { VerificationPathConfig } from './VerificationPathConfig';
 import { ResultPagesConfig } from './ResultPagesConfig';
+import { SaveTemplateDialog } from './SaveTemplateDialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
-  LayoutGrid, Settings2, Workflow, ExternalLink, Save, RotateCcw
+  LayoutGrid, Settings2, Workflow, ExternalLink, Save, RotateCcw, Bookmark
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -21,7 +23,8 @@ interface FormBuilderSectionProps {
 export function FormBuilderSection({ demo, onUpdate }: FormBuilderSectionProps) {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('builder');
-  
+  const [saveTemplateOpen, setSaveTemplateOpen] = useState(false);
+  const [templateRefreshTrigger, setTemplateRefreshTrigger] = useState(0);
   // Local state for verification paths
   const [enabledPaths, setEnabledPaths] = useState<string[]>(['docbio', 'databio']);
   const [pathConditions, setPathConditions] = useState<Record<string, PathCondition>>({
@@ -36,13 +39,23 @@ export function FormBuilderSection({ demo, onUpdate }: FormBuilderSectionProps) 
     onUpdate({ formSteps: steps });
   }, [onUpdate]);
 
-  const handleApplyTemplate = useCallback((steps: FormStep[], templateName: string) => {
-    onUpdate({ formSteps: steps });
+  const handleApplyTemplate = useCallback((steps: FormStep[], templateName: string, formStyle?: FormStyleConfig) => {
+    const updates: Partial<DemoEnvironment> = { formSteps: steps };
+    if (formStyle) {
+      updates.formStyle = formStyle;
+    }
+    onUpdate(updates);
     toast({
       title: 'Template Applied',
       description: `Applied "${templateName}" template with ${steps.length} step(s)`,
     });
   }, [onUpdate, toast]);
+
+  const handleTemplateSaved = useCallback(() => {
+    setTemplateRefreshTrigger(prev => prev + 1);
+    // Switch to templates tab to show the saved template
+    setActiveTab('templates');
+  }, []);
 
   const handleTogglePath = useCallback((pathId: string) => {
     setEnabledPaths(prev => {
@@ -107,6 +120,10 @@ export function FormBuilderSection({ demo, onUpdate }: FormBuilderSectionProps) 
             </CardDescription>
           </div>
           <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => setSaveTemplateOpen(true)}>
+              <Bookmark className="w-4 h-4 mr-2" />
+              Save as Template
+            </Button>
             <Button variant="outline" size="sm" onClick={handleResetForm}>
               <RotateCcw className="w-4 h-4 mr-2" />
               Reset
@@ -114,6 +131,15 @@ export function FormBuilderSection({ demo, onUpdate }: FormBuilderSectionProps) 
           </div>
         </div>
       </CardHeader>
+
+      {/* Save Template Dialog */}
+      <SaveTemplateDialog
+        open={saveTemplateOpen}
+        onOpenChange={setSaveTemplateOpen}
+        formSteps={demo.formSteps}
+        formStyle={demo.formStyle}
+        onSaved={handleTemplateSaved}
+      />
       <CardContent>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-4 mb-6">
@@ -146,6 +172,7 @@ export function FormBuilderSection({ demo, onUpdate }: FormBuilderSectionProps) 
             <TemplateSelector
               currentTemplate={demo.industryTemplate}
               onApplyTemplate={handleApplyTemplate}
+              refreshTrigger={templateRefreshTrigger}
             />
           </TabsContent>
 
