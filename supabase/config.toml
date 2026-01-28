@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.get-verification-status]
 verify_jwt = false
+
+[functions.address-verification]
+verify_jwt = false
