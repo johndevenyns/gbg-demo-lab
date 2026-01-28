@@ -68,7 +68,30 @@ export function FormBuilderCanvas({ steps, onUpdateSteps }: FormBuilderCanvasPro
     const activeData = active.data.current;
     const overData = over.data.current;
 
-    // Handle dropping special elements (submit, paths)
+    // Handle dropping special elements (submit, paths, verification step)
+
+    // Handle verification step - adds a new verification step
+    if (activeData?.fromPalette && activeData?.type === 'verification_step') {
+      const newStep: FormStep = {
+        id: generateId(),
+        title: 'Verification',
+        order: steps.length + 1,
+        stepType: 'verification',
+        fields: [],
+        verificationConfig: {
+          qrCodeEnabled: true,
+          qrCodeTitle: 'Scan to Verify',
+          qrCodeInstructions: 'Scan this QR code with your mobile device to complete verification',
+          statusEnabled: true,
+          statusPollingInterval: 5,
+          mobileIdEnabled: false,
+          autoAdvanceOnComplete: true,
+        },
+      };
+      onUpdateSteps([...steps, newStep]);
+      setExpandedSteps(prev => new Set([...prev, newStep.id]));
+      return;
+    }
 
     if (activeData?.fromPalette && activeData?.type === 'submit_button' && overData?.type === 'step') {
       const targetStepId = overData.stepId;
@@ -353,12 +376,13 @@ export function FormBuilderCanvas({ steps, onUpdateSteps }: FormBuilderCanvasPro
               <span className="text-sm font-medium">{activeData.field?.label}</span>
             </div>
           )}
-          {activeId && activeData?.fromPalette && (activeData?.type === 'submit_button' || activeData?.type === 'verification_path') && (
+          {activeId && activeData?.fromPalette && (activeData?.type === 'submit_button' || activeData?.type === 'verification_path' || activeData?.type === 'verification_step') && (
             <div className="flex items-center gap-2 p-3 rounded-md border border-primary bg-card shadow-lg">
               <GripVertical className="w-4 h-4 text-muted-foreground" />
               <span className="text-sm font-medium">
                 {activeData.type === 'submit_button' && 'Submit Button'}
                 {activeData.type === 'verification_path' && 'Verification Path'}
+                {activeData.type === 'verification_step' && 'Verification Step'}
               </span>
             </div>
           )}
