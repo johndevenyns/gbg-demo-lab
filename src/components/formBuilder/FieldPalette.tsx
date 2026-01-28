@@ -7,7 +7,7 @@ import { VERIFICATION_PATHS } from '@/types/formBuilder';
 import { 
   User, Mail, Phone, Calendar, Hash, MapPin, Building, DollarSign, 
   FileText, Type, CheckSquare, GripVertical, Search, MapPinCheck,
-  Send, Smartphone, Database, FileCheck, Workflow
+  Send, Smartphone, Database, FileCheck, Workflow, QrCode
 } from 'lucide-react';
 import { useState, useMemo } from 'react';
 
@@ -95,17 +95,18 @@ function DraggableField({ field, index }: DraggableFieldProps) {
   );
 }
 
-// Draggable special element (Address Validation, Submit, Paths)
+// Draggable special element (Address Validation, Submit, Paths, Verification Step)
 interface DraggableSpecialProps {
   id: string;
   label: string;
   icon: React.ReactNode;
-  type: 'address_validation' | 'submit_button' | 'verification_path';
+  type: 'address_validation' | 'submit_button' | 'verification_path' | 'verification_step';
   pathId?: string;
   description?: string;
+  variant?: 'default' | 'purple' | 'blue' | 'green';
 }
 
-function DraggableSpecial({ id, label, icon, type, pathId, description }: DraggableSpecialProps) {
+function DraggableSpecial({ id, label, icon, type, pathId, description, variant = 'default' }: DraggableSpecialProps) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `special-${id}`,
     data: {
@@ -115,20 +116,35 @@ function DraggableSpecial({ id, label, icon, type, pathId, description }: Dragga
     },
   });
 
+  const variantStyles = {
+    default: 'hover:border-primary/50',
+    purple: 'border-purple-500/30 bg-purple-500/5 hover:border-purple-500/50',
+    blue: 'border-blue-500/30 bg-blue-500/5 hover:border-blue-500/50',
+    green: 'border-green-500/30 bg-green-500/5 hover:border-green-500/50',
+  };
+
+  const iconColors = {
+    default: 'text-primary',
+    purple: 'text-purple-600',
+    blue: 'text-blue-600',
+    green: 'text-green-600',
+  };
+
   return (
     <div
       ref={setNodeRef}
       {...listeners}
       {...attributes}
       className={`
-        flex items-center gap-2 p-2 rounded-md border border-border bg-card
-        hover:border-primary/50 hover:bg-accent/50 cursor-grab active:cursor-grabbing
+        flex items-center gap-2 p-2 rounded-md border bg-card
+        hover:bg-accent/50 cursor-grab active:cursor-grabbing
         transition-all duration-150
+        ${variantStyles[variant]}
         ${isDragging ? 'opacity-50 ring-2 ring-primary' : ''}
       `}
     >
       <GripVertical className="w-3 h-3 text-muted-foreground" />
-      <span className="text-primary">{icon}</span>
+      <span className={iconColors[variant]}>{icon}</span>
       <div className="flex-1 min-w-0">
         <span className="text-sm font-medium truncate block">{label}</span>
         {description && (
@@ -189,6 +205,34 @@ export function FieldPalette() {
         </div>
       </CardHeader>
       <CardContent className="space-y-3 overflow-y-auto max-h-[calc(100vh-300px)]">
+        {/* Step Types Section */}
+        {!search && (
+          <div>
+            <button
+              onClick={() => setExpandedCategory(expandedCategory === 'step-types' ? null : 'step-types')}
+              className="w-full flex items-center justify-between py-1.5 px-2 text-sm font-medium text-muted-foreground hover:text-foreground rounded-md hover:bg-accent/50 transition-colors"
+            >
+              <span className="flex items-center gap-2">
+                <Workflow className="w-4 h-4" />
+                Step Types
+              </span>
+              <Badge variant="outline" className="text-xs">1</Badge>
+            </button>
+            {expandedCategory === 'step-types' && (
+              <div className="mt-2 space-y-1.5 pl-1">
+                <DraggableSpecial
+                  id="verification-step"
+                  label="Verification Step"
+                  icon={<QrCode className="w-4 h-4" />}
+                  type="verification_step"
+                  description="QR code, status, mDL display"
+                  variant="purple"
+                />
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Functions Section */}
         {!search && (
           <div>
@@ -210,6 +254,7 @@ export function FieldPalette() {
                   icon={<Send className="w-4 h-4" />}
                   type="submit_button"
                   description="Form submission trigger"
+                  variant="blue"
                 />
               </div>
             )}

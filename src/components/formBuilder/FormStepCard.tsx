@@ -10,11 +10,12 @@ import { Switch } from '@/components/ui/switch';
 import { FormStep, FormField } from '@/types/demo';
 import { ADDRESS_VALIDATION_FIELDS } from './FieldPalette';
 import { StepActionsConfig } from './StepActionsConfig';
+import { VerificationStepConfig } from './VerificationStepConfig';
 import { 
   GripVertical, Trash2, ChevronDown, ChevronUp, Edit2, Check, X,
   User, Mail, Phone, Calendar, Hash, MapPin, Building, DollarSign, 
   FileText, Type, CheckSquare, MapPinCheck, Send, Smartphone, Database, FileCheck,
-  Plug
+  Plug, QrCode, Activity
 } from 'lucide-react';
 
 const FIELD_ICONS: Record<string, React.ReactNode> = {
@@ -309,6 +310,12 @@ export function FormStepCard({
               Address
             </span>
           </div>
+          {step.stepType === 'verification' && (
+            <Badge variant="outline" className="text-xs bg-purple-500/10 text-purple-600 border-purple-500/30">
+              <QrCode className="w-3 h-3 mr-1" />
+              Verification
+            </Badge>
+          )}
           {step.verificationPath && (
             <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/30">
               {PATH_ICONS[step.verificationPath]}
@@ -353,40 +360,105 @@ export function FormStepCard({
             ${isOver ? 'bg-primary/5' : ''}
           `}
         >
-          {step.fields.length === 0 ? (
-            <div className="border-2 border-dashed border-border rounded-lg p-6 text-center text-muted-foreground">
-              <Type className="w-8 h-8 mx-auto mb-2 opacity-50" />
-              <p className="text-sm">Drag fields here</p>
+          {/* Verification Step Type */}
+          {step.stepType === 'verification' ? (
+            <div className="space-y-4">
+              {/* Verification Preview */}
+              <div className="border-2 border-dashed border-purple-500/30 rounded-lg p-6 bg-purple-500/5">
+                <div className="flex items-center justify-center gap-8">
+                  {step.verificationConfig?.qrCodeEnabled && (
+                    <div className="text-center">
+                      <div className="w-24 h-24 mx-auto mb-2 bg-muted rounded-lg flex items-center justify-center border-2 border-dashed border-muted-foreground/30">
+                        <QrCode className="w-12 h-12 text-muted-foreground/50" />
+                      </div>
+                      <p className="text-sm font-medium text-purple-600">
+                        {step.verificationConfig?.qrCodeTitle || 'QR Code'}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        URL from: {step.verificationConfig?.qrCodeUrlField || '(configure field)'}
+                      </p>
+                    </div>
+                  )}
+                  
+                  {step.verificationConfig?.statusEnabled && (
+                    <div className="text-center">
+                      <div className="w-24 h-24 mx-auto mb-2 bg-muted rounded-lg flex items-center justify-center border-2 border-dashed border-muted-foreground/30">
+                        <Activity className="w-12 h-12 text-muted-foreground/50" />
+                      </div>
+                      <p className="text-sm font-medium text-blue-600">Status Display</p>
+                      <p className="text-xs text-muted-foreground">
+                        Field: {step.verificationConfig?.statusField || '(configure field)'}
+                      </p>
+                    </div>
+                  )}
+                  
+                  {step.verificationConfig?.mobileIdEnabled && (
+                    <div className="text-center">
+                      <div className="w-24 h-24 mx-auto mb-2 bg-muted rounded-lg flex items-center justify-center border-2 border-dashed border-muted-foreground/30">
+                        <Smartphone className="w-12 h-12 text-muted-foreground/50" />
+                      </div>
+                      <p className="text-sm font-medium text-green-600">
+                        {step.verificationConfig?.mobileIdTitle || 'Mobile ID'}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        URL from: {step.verificationConfig?.mobileIdUrlField || '(configure field)'}
+                      </p>
+                    </div>
+                  )}
+                  
+                  {!step.verificationConfig?.qrCodeEnabled && 
+                   !step.verificationConfig?.statusEnabled && 
+                   !step.verificationConfig?.mobileIdEnabled && (
+                    <div className="text-center text-muted-foreground">
+                      <QrCode className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                      <p className="text-sm">Configure verification display options below</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              {/* Verification Configuration */}
+              <VerificationStepConfig step={step} onUpdateStep={onUpdateStep} />
             </div>
           ) : (
-            <SortableContext
-              items={step.fields.map(f => f.id)}
-              strategy={verticalListSortingStrategy}
-            >
-              {step.fields.map((field) => (
-                <SortableField
-                  key={field.id}
-                  field={field}
-                  stepId={step.id}
-                  isAddressValidated={step.addressValidationEnabled}
-                  onRemove={() => onRemoveField(field.id)}
-                  onToggleRequired={() => onToggleFieldRequired(field.id)}
-                  onUpdateLabel={(label) => onUpdateFieldLabel(field.id, label)}
+            <>
+              {/* Regular Form Step */}
+              {step.fields.length === 0 ? (
+                <div className="border-2 border-dashed border-border rounded-lg p-6 text-center text-muted-foreground">
+                  <Type className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">Drag fields here</p>
+                </div>
+              ) : (
+                <SortableContext
+                  items={step.fields.map(f => f.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  {step.fields.map((field) => (
+                    <SortableField
+                      key={field.id}
+                      field={field}
+                      stepId={step.id}
+                      isAddressValidated={step.addressValidationEnabled}
+                      onRemove={() => onRemoveField(field.id)}
+                      onToggleRequired={() => onToggleFieldRequired(field.id)}
+                      onUpdateLabel={(label) => onUpdateFieldLabel(field.id, label)}
+                    />
+                  ))}
+                </SortableContext>
+              )}
+              
+              {/* Step Actions Configuration */}
+              <div className="mt-4 pt-4 border-t border-border">
+                <StepActionsConfig
+                  step={step}
+                  stepNumber={stepNumber}
+                  isFirstStep={stepNumber === 1}
+                  isLastStep={stepNumber === totalSteps}
+                  onUpdateStep={onUpdateStep}
                 />
-              ))}
-            </SortableContext>
+              </div>
+            </>
           )}
-          
-          {/* Step Actions Configuration */}
-          <div className="mt-4 pt-4 border-t border-border">
-            <StepActionsConfig
-              step={step}
-              stepNumber={stepNumber}
-              isFirstStep={stepNumber === 1}
-              isLastStep={stepNumber === totalSteps}
-              onUpdateStep={onUpdateStep}
-            />
-          </div>
         </CardContent>
       )}
     </Card>

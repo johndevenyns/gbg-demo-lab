@@ -74,11 +74,42 @@ export interface StepApiResponse {
   data: Record<string, unknown>;
 }
 
+// Verification step configuration
+export type VerificationStatus = 'pending' | 'in_progress' | 'completed' | 'failed' | 'expired';
+
+export interface VerificationStepConfig {
+  // QR code settings - URL comes from API response field
+  qrCodeEnabled: boolean;
+  qrCodeUrlField?: string; // API response field containing the QR URL
+  qrCodeTitle?: string;
+  qrCodeInstructions?: string;
+  
+  // Status display settings
+  statusEnabled: boolean;
+  statusField?: string; // API response field containing status
+  statusPollingInterval?: number; // seconds
+  
+  // Mobile ID path URL placeholder
+  mobileIdEnabled: boolean;
+  mobileIdUrlField?: string; // API response field containing mDL URL
+  mobileIdTitle?: string;
+  mobileIdInstructions?: string;
+  
+  // Completion behavior
+  autoAdvanceOnComplete?: boolean;
+  completionRedirectUrl?: string;
+}
+
+// Step type enumeration
+export type FormStepType = 'form' | 'verification';
+
 export interface FormStep {
   id: string;
   title: string;
   description?: string;
   order: number;
+  // Step type - determines rendering behavior
+  stepType?: FormStepType;
   fields: FormField[];
   // Special elements
   addressValidationEnabled?: boolean;
@@ -88,6 +119,8 @@ export interface FormStep {
   buttons?: StepButton[];
   // API configuration
   apiConfig?: StepApiConfig;
+  // Verification step configuration (only used when stepType = 'verification')
+  verificationConfig?: VerificationStepConfig;
 }
 
 export interface FormField {
