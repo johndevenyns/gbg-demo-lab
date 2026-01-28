@@ -53,8 +53,18 @@ const FIELD_CATEGORIES = {
   custom: ['text', 'textarea', 'checkbox', 'select'],
 };
 
-// Address fields that get highlighted when Address Validation is dropped
-export const ADDRESS_VALIDATION_FIELDS = ['address_street', 'address_city', 'address_state', 'address_zip', 'address_country'];
+// Address fields that can be validated by Loqate API
+// These map to: address1, locality, administrativeArea, postalCode, country
+export const ADDRESS_VALIDATION_FIELDS: string[] = ['address_street', 'address_city', 'address_state', 'address_zip', 'address_country'];
+
+// Human-readable field names for validation display
+export const ADDRESS_FIELD_LABELS: Record<string, string> = {
+  address_street: 'Street',
+  address_city: 'City',
+  address_state: 'State',
+  address_zip: 'ZIP',
+  address_country: 'Country',
+};
 
 interface DraggableFieldProps {
   field: Omit<FormField, 'id' | 'order'>;
