@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { FormStep, FormField } from '@/types/demo';
 import { VERIFICATION_PATHS } from '@/types/formBuilder';
-import { ADDRESS_VALIDATION_FIELDS } from './FieldPalette';
+import { ADDRESS_VALIDATION_FIELDS, ADDRESS_FIELD_LABELS } from './FieldPalette';
 import { StepActionsConfig } from './StepActionsConfig';
 import { VerificationStepConfig } from './VerificationStepConfig';
 import { ApiStepConfig } from './ApiStepConfig';
@@ -303,18 +303,38 @@ export function FormStepCard({
             </button>
           )}
           
-          {/* Address Validation Toggle */}
-          <div className="flex items-center gap-1.5">
-            <Switch
-              checked={step.addressValidationEnabled || false}
-              onCheckedChange={(checked) => onUpdateStep({ addressValidationEnabled: checked })}
-              className="scale-75"
-            />
-            <span className={`text-xs flex items-center gap-1 ${step.addressValidationEnabled ? 'text-green-600' : 'text-muted-foreground'}`}>
-              <MapPinCheck className="w-3 h-3" />
-              Address
-            </span>
-          </div>
+          {/* Address Validation Toggle - Only show if step has address fields */}
+          {(() => {
+            const addressFieldsInStep = step.fields.filter(f => ADDRESS_VALIDATION_FIELDS.includes(f.type));
+            const hasAddressFields = addressFieldsInStep.length > 0;
+            
+            if (!hasAddressFields) return null;
+            
+            return (
+              <div className="flex items-center gap-1.5">
+                <Switch
+                  checked={step.addressValidationEnabled || false}
+                  onCheckedChange={(checked) => onUpdateStep({ addressValidationEnabled: checked })}
+                  className="scale-75"
+                />
+                <span 
+                  className={`text-xs flex items-center gap-1 ${step.addressValidationEnabled ? 'text-green-600' : 'text-muted-foreground'}`}
+                  title={step.addressValidationEnabled 
+                    ? `Validating: ${addressFieldsInStep.map(f => ADDRESS_FIELD_LABELS[f.type] || f.label).join(', ')}`
+                    : 'Enable to validate address fields with Loqate API'
+                  }
+                >
+                  <MapPinCheck className="w-3 h-3" />
+                  Address
+                  {step.addressValidationEnabled && (
+                    <span className="text-[10px] text-green-500 ml-0.5">
+                      ({addressFieldsInStep.length})
+                    </span>
+                  )}
+                </span>
+              </div>
+            );
+          })()}
           {step.stepType === 'verification' && (
             <Badge variant="outline" className="text-xs bg-purple-500/10 text-purple-600 border-purple-500/30">
               <QrCode className="w-3 h-3 mr-1" />
