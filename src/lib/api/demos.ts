@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { DemoEnvironment, FormStep, INDUSTRY_TEMPLATES, IndustryTemplate } from "@/types/demo";
 import { TablesInsert } from "@/integrations/supabase/types";
+import { FormStyleConfig, DEFAULT_FORM_STYLE } from "@/types/formStyle";
 
 // Helper to convert database row to DemoEnvironment
 const rowToDemo = (row: any): DemoEnvironment => ({
@@ -28,6 +29,7 @@ const rowToDemo = (row: any): DemoEnvironment => ({
   scrapedHeaderHtml: row.scraped_header_html || '',
   scrapedFooterHtml: row.scraped_footer_html || '',
   scrapedCss: row.scraped_css || '',
+  formStyle: (row.form_style as FormStyleConfig) || DEFAULT_FORM_STYLE,
   createdAt: row.created_at,
   updatedAt: row.updated_at,
   isActive: row.is_active ?? true,
@@ -59,6 +61,7 @@ const demoToRow = (demo: Partial<DemoEnvironment>) => {
   if (demo.scrapedHeaderHtml !== undefined) row.scraped_header_html = demo.scrapedHeaderHtml;
   if (demo.scrapedFooterHtml !== undefined) row.scraped_footer_html = demo.scrapedFooterHtml;
   if (demo.scrapedCss !== undefined) row.scraped_css = demo.scrapedCss;
+  if (demo.formStyle !== undefined) row.form_style = demo.formStyle;
   if (demo.isActive !== undefined) row.is_active = demo.isActive;
   return row;
 };

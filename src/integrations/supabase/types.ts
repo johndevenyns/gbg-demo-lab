@@ -22,6 +22,7 @@ export type Database = {
           customer_name: string
           customer_site_url: string | null
           form_steps: Json | null
+          form_style: Json | null
           header_bg_color: string | null
           header_text_color: string | null
           id: string
@@ -51,6 +52,7 @@ export type Database = {
           customer_name: string
           customer_site_url?: string | null
           form_steps?: Json | null
+          form_style?: Json | null
           header_bg_color?: string | null
           header_text_color?: string | null
           id?: string
@@ -80,6 +82,7 @@ export type Database = {
           customer_name?: string
           customer_site_url?: string | null
           form_steps?: Json | null
+          form_style?: Json | null
           header_bg_color?: string | null
           header_text_color?: string | null
           id?: string

@@ -11,3 +11,4 @@ export { VerificationStepConfig } from './VerificationStepConfig';
 export { ApiStepConfig } from './ApiStepConfig';
 export { PathStepConfig } from './PathStepConfig';
 export { PageStepConfig } from './PageStepConfig';
+export { FormStyleSection } from './FormStyleSection';

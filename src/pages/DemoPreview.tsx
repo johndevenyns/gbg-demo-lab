@@ -80,6 +80,7 @@ export default function DemoPreview() {
               <DemoFlowRenderer
                 steps={demo.formSteps}
                 buttonColor={demo.buttonColor}
+                formStyle={demo.formStyle}
                 onComplete={handleFlowComplete}
               />
             ) : (
