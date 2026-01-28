@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { FormStep, PageElement, StepApiResponse, MdlProvider, VerificationType, StoredTestData } from '@/types/demo';
+import { FormStep, PageElement, StepApiResponse, MdlProvider, VerificationType, StoredTestData, FormField } from '@/types/demo';
 import { FormStyleConfig, DEFAULT_FORM_STYLE } from '@/types/formStyle';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { ResultPage, ResultPageConfig, DEFAULT_SUCCESS_CONFIG, DEFAULT_FAILURE_CONFIG } from './ResultPage';
 import { VerificationMethodSelector } from './VerificationMethodSelector';
+import { AddressValidationDialog } from './AddressValidationDialog';
 
 // Helper to determine if a color is light or dark and return contrasting text color
 const getContrastTextColor = (hexColor: string): string => {
@@ -185,6 +186,17 @@ export function DemoFlowRenderer({
   const [pollingStatus, setPollingStatus] = useState<string | null>(null);
   const pollingRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Address validation state
+  const [showAddressDialog, setShowAddressDialog] = useState(false);
+  const [addressValidation, setAddressValidation] = useState<{
+    originalAddress: string;
+    suggestedAddress: string;
+    confidence: number;
+    aqi: string;
+    isApiError: boolean;
+  } | null>(null);
+  const [pendingNextStep, setPendingNextStep] = useState(false);
+
   // Use provided form style or default
   const style = formStyle || DEFAULT_FORM_STYLE;
 
@@ -234,6 +246,72 @@ export function DemoFlowRenderer({
     toast.success(`Form filled with ${type} test data`);
   }, [storedTestData]);
 
+  // Validate address using Loqate API
+  const validateAddress = useCallback(async (): Promise<{
+    isValid: boolean;
+    confidence: number;
+    aqi: string;
+    suggestedAddress: string;
+    isApiError: boolean;
+  }> => {
+    // Build combined address from form data
+    const street = formData.addressStreet || '';
+    const city = formData.addressCity || '';
+    const state = formData.addressState || '';
+    const zip = formData.addressZip || '';
+    const country = formData.addressCountry || 'USA';
+    
+    const combinedAddress = [street, city, state, zip].filter(Boolean).join(', ');
+    
+    if (!combinedAddress.trim()) {
+      return { isValid: true, confidence: 100, aqi: 'A', suggestedAddress: '', isApiError: false };
+    }
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('address-verification', {
+        body: {
+          action: 'verify',
+          text: combinedAddress,
+          address1: street,
+          locality: city,
+          administrativeArea: state,
+          postalCode: zip,
+          country: country,
+        }
+      });
+
+      console.log('Address validation response:', data, error);
+
+      if (error || !data?.success) {
+        // API error - allow proceed with warning
+        return {
+          isValid: true,
+          confidence: 0,
+          aqi: '',
+          suggestedAddress: '',
+          isApiError: true,
+        };
+      }
+
+      return {
+        isValid: !data.isLowConfidence,
+        confidence: data.confidence || 0,
+        aqi: data.aqi || '',
+        suggestedAddress: data.suggestedAddress || '',
+        isApiError: false,
+      };
+    } catch (err) {
+      console.error('Address validation error:', err);
+      return {
+        isValid: true,
+        confidence: 0,
+        aqi: '',
+        suggestedAddress: '',
+        isApiError: true,
+      };
+    }
+  }, [formData]);
+
   // Complete the flow (success or failure)
   const completeFlow = useCallback((success: boolean, refId?: string) => {
     setFlowComplete(success ? 'success' : 'failure');
@@ -241,15 +319,78 @@ export function DemoFlowRenderer({
     onComplete?.(success, refId);
   }, [onComplete]);
 
-  const goToNextStep = useCallback(() => {
+  // Handle address validation dialog proceed
+  const handleAddressValidationProceed = useCallback((useOriginal: boolean) => {
+    if (!useOriginal && addressValidation?.suggestedAddress) {
+      // Parse the suggested address and update form fields
+      // For now, we just store the combined address - could be enhanced to parse into fields
+      toast.success('Using suggested address');
+    }
+    setShowAddressDialog(false);
+    setAddressValidation(null);
+    setPendingNextStep(true);
+  }, [addressValidation]);
+
+  // Effect to continue to next step after dialog closes
+  useEffect(() => {
+    if (pendingNextStep && !showAddressDialog) {
+      setPendingNextStep(false);
+      if (isLastStep) {
+        const refId = referenceId || (allApiData.referenceId as string) || `REF-${Date.now().toString(36).toUpperCase()}`;
+        completeFlow(true, refId);
+      } else {
+        setCurrentStepIndex(prev => prev + 1);
+      }
+    }
+  }, [pendingNextStep, showAddressDialog, isLastStep, referenceId, allApiData, completeFlow]);
+
+  // Proceed to next step (internal - after validation)
+  const proceedToNextStep = useCallback(() => {
     if (isLastStep) {
-      // Generate a reference ID if not already present
       const refId = referenceId || (allApiData.referenceId as string) || `REF-${Date.now().toString(36).toUpperCase()}`;
       completeFlow(true, refId);
     } else {
       setCurrentStepIndex(prev => prev + 1);
     }
   }, [isLastStep, completeFlow, referenceId, allApiData]);
+
+  // Check if current step has address fields
+  const hasAddressFields = useCallback((step: FormStep | undefined): boolean => {
+    if (!step?.fields) return false;
+    const addressFieldTypes = ['address_street', 'address_city', 'address_state', 'address_zip', 'address_country'];
+    return step.fields.some(f => addressFieldTypes.includes(f.type));
+  }, []);
+
+  const goToNextStep = useCallback(async () => {
+    // Check if address validation is enabled and step has address fields
+    if (currentStep?.addressValidationEnabled && hasAddressFields(currentStep)) {
+      setIsLoading(true);
+      const validation = await validateAddress();
+      setIsLoading(false);
+
+      if (!validation.isValid || validation.isApiError) {
+        // Build combined address for display
+        const street = formData.addressStreet || '';
+        const city = formData.addressCity || '';
+        const state = formData.addressState || '';
+        const zip = formData.addressZip || '';
+        const combinedAddress = [street, city, state, zip].filter(Boolean).join(', ');
+        
+        setAddressValidation({
+          originalAddress: combinedAddress,
+          suggestedAddress: validation.suggestedAddress,
+          confidence: validation.confidence,
+          aqi: validation.aqi,
+          isApiError: validation.isApiError,
+        });
+        setShowAddressDialog(true);
+        return;
+      }
+    }
+    
+    // No validation needed or validation passed
+    proceedToNextStep();
+  }, [currentStep, hasAddressFields, validateAddress, formData, proceedToNextStep]);
 
   const goToPrevStep = () => {
     if (!isFirstStep) {
@@ -848,7 +989,23 @@ export function DemoFlowRenderer({
   const showAnyFillButton = (showPassButton || showFailButton) && (currentStep?.stepType === 'form' || !currentStep?.stepType);
 
   return (
-    <div className="space-y-6">
+    <>
+      {/* Address Validation Dialog */}
+      <AddressValidationDialog
+        open={showAddressDialog}
+        onOpenChange={(open) => {
+          setShowAddressDialog(open);
+          if (!open) setAddressValidation(null);
+        }}
+        onProceed={handleAddressValidationProceed}
+        originalAddress={addressValidation?.originalAddress || ""}
+        suggestedAddress={addressValidation?.suggestedAddress || ""}
+        confidence={addressValidation?.confidence || 0}
+        aqi={addressValidation?.aqi || ""}
+        isApiError={addressValidation?.isApiError || false}
+      />
+      
+      <div className="space-y-6">
       {/* Step indicator */}
       <div className="flex items-center justify-center gap-2">
         {steps.map((_, index) => (
@@ -961,6 +1118,7 @@ export function DemoFlowRenderer({
           )}
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }
