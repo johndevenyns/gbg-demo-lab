@@ -8,3 +8,5 @@ export { VerificationPathConfig } from './VerificationPathConfig';
 export { ResultPagesConfig } from './ResultPagesConfig';
 export { StepActionsConfig } from './StepActionsConfig';
 export { VerificationStepConfig } from './VerificationStepConfig';
+export { ApiStepConfig } from './ApiStepConfig';
+export { PathStepConfig } from './PathStepConfig';
