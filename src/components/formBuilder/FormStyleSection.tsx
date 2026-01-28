@@ -82,18 +82,49 @@ export function FormStyleSection({ demo, formStyle, onUpdateStyle, scrapedBrandi
   };
 
   const applyMirroredStyle = () => {
-    if (!scrapedBranding?.branding) return;
+    // Use scraped branding data or fall back to demo's stored colors
+    const mirroredStyle: Partial<FormStyleConfig> = {
+      source: 'mirrored',
+      inputBgColor: '#ffffff',
+      inputBorderColor: '#e2e8f0',
+      borderRadius: 'md',
+      borderWidth: '1',
+      fontSize: 'base',
+    };
 
-    const mirroredStyle = scrapedBrandingToFormStyle({
-      colors: scrapedBranding.branding.colors,
-      fonts: scrapedBranding.branding.fonts,
-      buttonColor: scrapedBranding.colors?.buttonColor,
-    });
+    // Apply colors from scraped branding
+    if (scrapedBranding?.branding?.colors) {
+      if (scrapedBranding.branding.colors.primary) {
+        mirroredStyle.inputFocusBorderColor = scrapedBranding.branding.colors.primary;
+      }
+      if (scrapedBranding.branding.colors.textPrimary) {
+        mirroredStyle.inputTextColor = scrapedBranding.branding.colors.textPrimary;
+        mirroredStyle.labelColor = scrapedBranding.branding.colors.textPrimary;
+      }
+    }
+
+    // Apply fonts from scraped branding
+    if (scrapedBranding?.branding?.fonts && scrapedBranding.branding.fonts.length > 0) {
+      mirroredStyle.fontFamily = scrapedBranding.branding.fonts.map(f => f.family).join(', ') + ', sans-serif';
+    }
+
+    // Fall back to demo's stored colors if no branding data
+    if (demo.buttonColor) {
+      mirroredStyle.inputFocusBorderColor = mirroredStyle.inputFocusBorderColor || demo.buttonColor;
+    }
+    if (demo.headerTextColor && demo.headerTextColor !== '#ffffff') {
+      mirroredStyle.labelColor = mirroredStyle.labelColor || demo.headerTextColor;
+      mirroredStyle.inputTextColor = mirroredStyle.inputTextColor || demo.headerTextColor;
+    }
 
     onUpdateStyle({
       ...DEFAULT_FORM_STYLE,
       ...mirroredStyle,
-      source: 'mirrored',
+    });
+
+    toast({
+      title: 'Mirrored Style Applied',
+      description: 'Form styling updated to match the mirrored site',
     });
   };
 
@@ -113,7 +144,8 @@ export function FormStyleSection({ demo, formStyle, onUpdateStyle, scrapedBrandi
     });
   };
 
-  const hasMirroredData = !!demo.customerSiteUrl && (!!scrapedBranding?.branding || !!demo.scrapedCss);
+  // Show mirrored data if we have either scraped branding or stored demo colors from main site
+  const hasMirroredData = !!demo.customerSiteUrl || !!scrapedBranding?.branding || !!demo.scrapedCss || !!demo.buttonColor;
 
   return (
     <Card className="glass-card">
@@ -204,9 +236,40 @@ export function FormStyleSection({ demo, formStyle, onUpdateStyle, scrapedBrandi
               <div className="space-y-4">
                 <div className="p-4 rounded-lg bg-muted/50 border border-border">
                   <p className="text-sm text-muted-foreground mb-3">
-                    Apply styling extracted from <strong>{demo.customerSiteUrl}</strong>
+                    Apply styling from mirrored site{demo.customerSiteUrl && `: `}
+                    {demo.customerSiteUrl && <strong>{demo.customerSiteUrl}</strong>}
                   </p>
-                  <div className="flex items-center gap-4 mb-4">
+                  <div className="flex flex-wrap items-center gap-4 mb-4">
+                    {/* Show button color from demo */}
+                    {demo.buttonColor && (
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="w-6 h-6 rounded border"
+                          style={{ backgroundColor: demo.buttonColor }}
+                        />
+                        <span className="text-xs text-muted-foreground">Button/Focus</span>
+                      </div>
+                    )}
+                    {/* Show header colors from demo */}
+                    {demo.headerBgColor && (
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="w-6 h-6 rounded border"
+                          style={{ backgroundColor: demo.headerBgColor }}
+                        />
+                        <span className="text-xs text-muted-foreground">Header BG</span>
+                      </div>
+                    )}
+                    {demo.headerTextColor && (
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="w-6 h-6 rounded border"
+                          style={{ backgroundColor: demo.headerTextColor }}
+                        />
+                        <span className="text-xs text-muted-foreground">Text</span>
+                      </div>
+                    )}
+                    {/* Show scraped branding colors if available */}
                     {scrapedBranding?.branding?.colors?.primary && (
                       <div className="flex items-center gap-2">
                         <div
@@ -216,6 +279,7 @@ export function FormStyleSection({ demo, formStyle, onUpdateStyle, scrapedBrandi
                         <span className="text-xs text-muted-foreground">Primary</span>
                       </div>
                     )}
+                    {/* Show fonts from scraped branding */}
                     {scrapedBranding?.branding?.fonts?.[0] && (
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-medium" style={{ fontFamily: scrapedBranding.branding.fonts[0].family }}>
