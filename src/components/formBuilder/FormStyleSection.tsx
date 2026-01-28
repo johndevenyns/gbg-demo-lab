@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Paintbrush, Globe, LayoutTemplate, Palette, Check } from 'lucide-react';
+import { Paintbrush, Globe, LayoutTemplate, Palette, Check, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
@@ -16,7 +16,8 @@ import {
   scrapedBrandingToFormStyle,
 } from '@/types/formStyle';
 import { DemoEnvironment } from '@/types/demo';
-import { ScrapedBranding } from '@/lib/api/scraping';
+import { ScrapedBranding, scrapingApi } from '@/lib/api/scraping';
+import { useToast } from '@/hooks/use-toast';
 
 interface FormStyleSectionProps {
   demo: DemoEnvironment;
@@ -26,10 +27,58 @@ interface FormStyleSectionProps {
 }
 
 export function FormStyleSection({ demo, formStyle, onUpdateStyle, scrapedBranding }: FormStyleSectionProps) {
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<FormStyleSource>(formStyle.source);
+  const [isScraping, setIsScraping] = useState(false);
 
   const handleTabChange = (value: string) => {
     setActiveTab(value as FormStyleSource);
+  };
+
+  const handleScrapeFormUrl = async () => {
+    if (!formStyle.formStyleUrl) {
+      toast({
+        title: 'No URL provided',
+        description: 'Please enter a customer form URL first',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsScraping(true);
+    try {
+      const response = await scrapingApi.scrapeSiteBranding(formStyle.formStyleUrl);
+      
+      if (!response.success || !response.data) {
+        throw new Error(response.error || 'Failed to scrape form styling');
+      }
+
+      const mirroredStyle = scrapedBrandingToFormStyle({
+        colors: response.data.branding?.colors,
+        fonts: response.data.branding?.fonts,
+        buttonColor: response.data.colors?.buttonColor,
+      });
+
+      onUpdateStyle({
+        ...DEFAULT_FORM_STYLE,
+        ...mirroredStyle,
+        formStyleUrl: formStyle.formStyleUrl,
+        source: 'mirrored',
+      });
+
+      toast({
+        title: 'Form styling extracted',
+        description: 'Applied styling from the customer form page',
+      });
+    } catch (error) {
+      toast({
+        title: 'Scraping failed',
+        description: error instanceof Error ? error.message : 'Could not extract form styling',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsScraping(false);
+    }
   };
 
   const applyMirroredStyle = () => {
@@ -106,6 +155,20 @@ export function FormStyleSection({ demo, formStyle, onUpdateStyle, scrapedBrandi
                   value={formStyle.formStyleUrl || ''}
                   onChange={(e) => onUpdateStyle({ ...formStyle, formStyleUrl: e.target.value })}
                 />
+                <Button
+                  variant="outline"
+                  onClick={handleScrapeFormUrl}
+                  disabled={!formStyle.formStyleUrl || isScraping}
+                >
+                  {isScraping ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Scraping...
+                    </>
+                  ) : (
+                    'Fetch Styles'
+                  )}
+                </Button>
                 {formStyle.formStyleUrl && (
                   <Button
                     variant="outline"
@@ -119,7 +182,7 @@ export function FormStyleSection({ demo, formStyle, onUpdateStyle, scrapedBrandi
                 )}
               </div>
               <p className="text-xs text-muted-foreground">
-                Specify a URL to a form page on the customer's site to reference their form styling
+                Enter a URL to a form page on the customer's site, then click "Fetch Styles" to extract their form styling
               </p>
             </div>
 
