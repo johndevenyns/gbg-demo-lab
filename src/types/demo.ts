@@ -101,7 +101,7 @@ export interface VerificationStepConfig {
 }
 
 // Step type enumeration
-export type FormStepType = 'form' | 'verification' | 'api' | 'path';
+export type FormStepType = 'form' | 'verification' | 'api' | 'path' | 'page';
 
 // API Step configuration (standalone API call step)
 export interface ApiStepConfig {
@@ -136,6 +136,52 @@ export interface PathStepConfig {
   autoAdvance?: boolean;
 }
 
+// Page content element types
+export type PageElementType = 'heading' | 'text' | 'qr_code' | 'url_link' | 'status_badge' | 'data_field' | 'button';
+
+export interface PageElement {
+  id: string;
+  type: PageElementType;
+  order: number;
+  
+  // Content - can reference API response fields using {{fieldName}} syntax
+  content?: string;
+  
+  // Styling
+  variant?: 'default' | 'primary' | 'success' | 'warning' | 'error' | 'muted';
+  size?: 'sm' | 'md' | 'lg' | 'xl';
+  alignment?: 'left' | 'center' | 'right';
+  
+  // For QR code elements
+  qrUrlField?: string; // API response field for QR URL
+  qrSize?: number;
+  
+  // For URL link elements
+  urlField?: string; // API response field for URL
+  linkText?: string;
+  openInNewTab?: boolean;
+  
+  // For button elements
+  buttonAction?: 'next' | 'redirect' | 'copy';
+  buttonUrl?: string;
+  copyField?: string; // Field to copy to clipboard
+}
+
+// Page Step configuration (customizable display page)
+export interface PageStepConfig {
+  // Page layout
+  layout?: 'centered' | 'full-width';
+  
+  // Content elements
+  elements: PageElement[];
+  
+  // Auto-advance settings
+  autoAdvance?: boolean;
+  autoAdvanceDelay?: number; // seconds
+  autoAdvanceOnField?: string; // Advance when this API response field matches a value
+  autoAdvanceFieldValue?: string;
+}
+
 export interface FormStep {
   id: string;
   title: string;
@@ -158,6 +204,8 @@ export interface FormStep {
   apiStepConfig?: ApiStepConfig;
   // Path step configuration (only used when stepType = 'path')
   pathStepConfig?: PathStepConfig;
+  // Page step configuration (only used when stepType = 'page')
+  pageStepConfig?: PageStepConfig;
 }
 
 export interface FormField {

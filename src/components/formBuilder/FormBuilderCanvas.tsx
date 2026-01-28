@@ -68,7 +68,41 @@ export function FormBuilderCanvas({ steps, onUpdateSteps }: FormBuilderCanvasPro
     const activeData = active.data.current;
     const overData = over.data.current;
 
-    // Handle dropping special elements (submit, paths, verification step, api step, path step)
+    // Handle dropping special elements (submit, paths, verification step, api step, path step, page step)
+
+    // Handle Page step - adds a new customizable page step
+    if (activeData?.fromPalette && activeData?.type === 'page_step') {
+      const newStep: FormStep = {
+        id: generateId(),
+        title: 'Display Page',
+        order: steps.length + 1,
+        stepType: 'page',
+        fields: [],
+        pageStepConfig: {
+          layout: 'centered',
+          elements: [
+            {
+              id: generateId(),
+              type: 'heading',
+              order: 0,
+              content: 'Verification Complete',
+              size: 'xl',
+              alignment: 'center',
+            },
+            {
+              id: generateId(),
+              type: 'text',
+              order: 1,
+              content: 'Your reference ID is {{referenceId}}',
+              alignment: 'center',
+            },
+          ],
+        },
+      };
+      onUpdateSteps([...steps, newStep]);
+      setExpandedSteps(prev => new Set([...prev, newStep.id]));
+      return;
+    }
 
     // Handle API step - adds a new API submission step
     if (activeData?.fromPalette && activeData?.type === 'api_step') {
@@ -413,7 +447,7 @@ export function FormBuilderCanvas({ steps, onUpdateSteps }: FormBuilderCanvasPro
               <span className="text-sm font-medium">{activeData.field?.label}</span>
             </div>
           )}
-          {activeId && activeData?.fromPalette && (activeData?.type === 'submit_button' || activeData?.type === 'verification_path' || activeData?.type === 'verification_step' || activeData?.type === 'api_step' || activeData?.type === 'path_step') && (
+          {activeId && activeData?.fromPalette && (activeData?.type === 'submit_button' || activeData?.type === 'verification_path' || activeData?.type === 'verification_step' || activeData?.type === 'api_step' || activeData?.type === 'path_step' || activeData?.type === 'page_step') && (
             <div className="flex items-center gap-2 p-3 rounded-md border border-primary bg-card shadow-lg">
               <GripVertical className="w-4 h-4 text-muted-foreground" />
               <span className="text-sm font-medium">
@@ -422,6 +456,7 @@ export function FormBuilderCanvas({ steps, onUpdateSteps }: FormBuilderCanvasPro
                 {activeData.type === 'verification_step' && 'Verification Step'}
                 {activeData.type === 'api_step' && 'API Step'}
                 {activeData.type === 'path_step' && 'Path Step'}
+                {activeData.type === 'page_step' && 'Page Step'}
               </span>
             </div>
           )}

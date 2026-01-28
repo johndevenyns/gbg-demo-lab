@@ -95,15 +95,15 @@ function DraggableField({ field, index }: DraggableFieldProps) {
   );
 }
 
-// Draggable special element (Address Validation, Submit, Paths, Verification Step, API Step, Path Step)
+// Draggable special element (Address Validation, Submit, Paths, Verification Step, API Step, Path Step, Page Step)
 interface DraggableSpecialProps {
   id: string;
   label: string;
   icon: React.ReactNode;
-  type: 'address_validation' | 'submit_button' | 'verification_path' | 'verification_step' | 'api_step' | 'path_step';
+  type: 'address_validation' | 'submit_button' | 'verification_path' | 'verification_step' | 'api_step' | 'path_step' | 'page_step';
   pathId?: string;
   description?: string;
-  variant?: 'default' | 'purple' | 'blue' | 'green' | 'cyan';
+  variant?: 'default' | 'purple' | 'blue' | 'green' | 'cyan' | 'orange';
 }
 
 function DraggableSpecial({ id, label, icon, type, pathId, description, variant = 'default' }: DraggableSpecialProps) {
@@ -122,6 +122,7 @@ function DraggableSpecial({ id, label, icon, type, pathId, description, variant 
     blue: 'border-blue-500/30 bg-blue-500/5 hover:border-blue-500/50',
     green: 'border-green-500/30 bg-green-500/5 hover:border-green-500/50',
     cyan: 'border-cyan-500/30 bg-cyan-500/5 hover:border-cyan-500/50',
+    orange: 'border-orange-500/30 bg-orange-500/5 hover:border-orange-500/50',
   };
 
   const iconColors = {
@@ -130,6 +131,7 @@ function DraggableSpecial({ id, label, icon, type, pathId, description, variant 
     blue: 'text-blue-600',
     green: 'text-green-600',
     cyan: 'text-cyan-600',
+    orange: 'text-orange-600',
   };
 
   return (
@@ -218,7 +220,7 @@ export function FieldPalette() {
                 <Workflow className="w-4 h-4" />
                 Step Types
               </span>
-              <Badge variant="outline" className="text-xs">3</Badge>
+              <Badge variant="outline" className="text-xs">4</Badge>
             </button>
             {expandedCategory === 'step-types' && (
               <div className="mt-2 space-y-1.5 pl-1">
@@ -245,6 +247,14 @@ export function FieldPalette() {
                   type="verification_step"
                   description="QR code, status, mDL display"
                   variant="purple"
+                />
+                <DraggableSpecial
+                  id="page-step"
+                  label="Page Step"
+                  icon={<FileText className="w-4 h-4" />}
+                  type="page_step"
+                  description="Custom display page with API data"
+                  variant="orange"
                 />
               </div>
             )}
