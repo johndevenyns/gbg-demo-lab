@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo, CSSProperties } from 'react';
 import { Paintbrush, Globe, LayoutTemplate, Palette, Check, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -618,7 +618,7 @@ function FormStylePreview({
     relaxed: '24px',
   };
 
-  const getInputStyle = (fieldId: string): React.CSSProperties => ({
+  const getInputStyle = (fieldId: string): CSSProperties => ({
     fontFamily: s.fontFamily,
     fontSize: fontSizeMap[s.fontSize],
     backgroundColor: s.inputBgColor,
@@ -632,7 +632,7 @@ function FormStylePreview({
     boxShadow: focusedField === fieldId ? `0 0 0 3px ${s.inputFocusBorderColor}20` : 'none',
   });
 
-  const labelStyle: React.CSSProperties = {
+  const labelStyle: CSSProperties = {
     fontFamily: s.fontFamily,
     fontSize: fontSizeMap[s.fontSize],
     color: s.labelColor,
@@ -641,7 +641,7 @@ function FormStylePreview({
     display: 'block',
   };
 
-  const buttonStyle: React.CSSProperties = {
+  const buttonStyle: CSSProperties = {
     fontFamily: s.fontFamily,
     fontSize: fontSizeMap[s.fontSize],
     backgroundColor: buttonColor || '#6366f1',
@@ -655,7 +655,7 @@ function FormStylePreview({
     transition: 'opacity 0.2s',
   };
 
-  const selectStyle: React.CSSProperties = {
+  const selectStyle: CSSProperties = {
     ...getInputStyle('select'),
     appearance: 'none',
     backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`,
