@@ -51,6 +51,29 @@ export interface DemoEnvironment {
   isActive: boolean;
 }
 
+// Step button configuration
+export interface StepButton {
+  id: 'next' | 'back' | 'submit';
+  enabled: boolean;
+  label: string;
+}
+
+// API submission configuration per step
+export interface StepApiConfig {
+  enabled: boolean;
+  // Fields to include in submission (empty = all fields from this step)
+  includeFields?: string[];
+  // Response field mappings for display
+  responseDisplayFields?: string[];
+}
+
+// API response from a step submission
+export interface StepApiResponse {
+  stepId: string;
+  timestamp: string;
+  data: Record<string, unknown>;
+}
+
 export interface FormStep {
   id: string;
   title: string;
@@ -61,6 +84,10 @@ export interface FormStep {
   addressValidationEnabled?: boolean;
   submitButton?: boolean;
   verificationPath?: 'docbio' | 'databio' | 'dataonly' | 'mdl';
+  // Button configuration
+  buttons?: StepButton[];
+  // API configuration
+  apiConfig?: StepApiConfig;
 }
 
 export interface FormField {

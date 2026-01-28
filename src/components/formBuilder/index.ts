@@ -6,3 +6,4 @@ export { FieldPalette } from './FieldPalette';
 export { TemplateSelector } from './TemplateSelector';
 export { VerificationPathConfig } from './VerificationPathConfig';
 export { ResultPagesConfig } from './ResultPagesConfig';
+export { StepActionsConfig } from './StepActionsConfig';

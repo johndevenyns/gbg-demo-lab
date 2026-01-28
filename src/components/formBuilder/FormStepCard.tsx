@@ -9,10 +9,12 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { FormStep, FormField } from '@/types/demo';
 import { ADDRESS_VALIDATION_FIELDS } from './FieldPalette';
+import { StepActionsConfig } from './StepActionsConfig';
 import { 
   GripVertical, Trash2, ChevronDown, ChevronUp, Edit2, Check, X,
   User, Mail, Phone, Calendar, Hash, MapPin, Building, DollarSign, 
-  FileText, Type, CheckSquare, MapPinCheck, Send, Smartphone, Database, FileCheck
+  FileText, Type, CheckSquare, MapPinCheck, Send, Smartphone, Database, FileCheck,
+  Plug
 } from 'lucide-react';
 
 const FIELD_ICONS: Record<string, React.ReactNode> = {
@@ -186,6 +188,7 @@ function SortableField({ field, stepId, isAddressValidated, onRemove, onToggleRe
 interface FormStepCardProps {
   step: FormStep;
   stepNumber: number;
+  totalSteps: number;
   isExpanded: boolean;
   onToggleExpand: () => void;
   onUpdateStep: (updates: Partial<FormStep>) => void;
@@ -199,6 +202,7 @@ interface FormStepCardProps {
 export function FormStepCard({
   step,
   stepNumber,
+  totalSteps,
   isExpanded,
   onToggleExpand,
   onUpdateStep,
@@ -317,6 +321,12 @@ export function FormStepCard({
               Submit
             </Badge>
           )}
+          {step.apiConfig?.enabled && (
+            <Badge variant="outline" className="text-xs bg-green-500/10 text-green-600 border-green-500/30">
+              <Plug className="w-3 h-3 mr-1" />
+              API
+            </Badge>
+          )}
           
           <Badge variant="secondary" className="text-xs">
             {step.fields.length} fields
@@ -366,6 +376,17 @@ export function FormStepCard({
               ))}
             </SortableContext>
           )}
+          
+          {/* Step Actions Configuration */}
+          <div className="mt-4 pt-4 border-t border-border">
+            <StepActionsConfig
+              step={step}
+              stepNumber={stepNumber}
+              isFirstStep={stepNumber === 1}
+              isLastStep={stepNumber === totalSteps}
+              onUpdateStep={onUpdateStep}
+            />
+          </div>
         </CardContent>
       )}
     </Card>
