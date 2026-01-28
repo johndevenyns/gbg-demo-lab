@@ -5,6 +5,7 @@ export type FormStyleSource = 'default' | 'mirrored' | 'template' | 'custom';
 export interface FormStyleConfig {
   source: FormStyleSource;
   templateId?: string; // Used when source = 'template'
+  formStyleUrl?: string; // URL to a specific form page on customer's site
   
   // Typography
   fontFamily: string;
