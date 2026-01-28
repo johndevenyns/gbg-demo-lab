@@ -6,12 +6,17 @@ import { Badge } from '@/components/ui/badge';
 import { Loader2, QrCode, ArrowLeft, ArrowRight, Check, Copy, ExternalLink, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { ResultPage, ResultPageConfig, DEFAULT_SUCCESS_CONFIG, DEFAULT_FAILURE_CONFIG } from './ResultPage';
 
 interface DemoFlowRendererProps {
   steps: FormStep[];
   buttonColor: string;
   formStyle?: FormStyleConfig;
-  onComplete?: () => void;
+  successPageConfig?: ResultPageConfig;
+  failurePageConfig?: ResultPageConfig;
+  approvedUrl?: string;
+  rejectedUrl?: string;
+  onComplete?: (success: boolean, referenceId?: string) => void;
 }
 
 // Simple QR Code component (placeholder - in production use a real QR library)
@@ -126,12 +131,23 @@ function StyledFormFields({ fields, formData, onInputChange, style }: StyledForm
   );
 }
 
-export function DemoFlowRenderer({ steps, buttonColor, formStyle, onComplete }: DemoFlowRendererProps) {
+export function DemoFlowRenderer({ 
+  steps, 
+  buttonColor, 
+  formStyle, 
+  successPageConfig,
+  failurePageConfig,
+  approvedUrl,
+  rejectedUrl,
+  onComplete 
+}: DemoFlowRendererProps) {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [apiResponses, setApiResponses] = useState<StepApiResponse[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [flowComplete, setFlowComplete] = useState<'success' | 'failure' | null>(null);
+  const [referenceId, setReferenceId] = useState<string | null>(null);
 
   // Use provided form style or default
   const style = formStyle || DEFAULT_FORM_STYLE;
@@ -165,13 +181,22 @@ export function DemoFlowRenderer({ steps, buttonColor, formStyle, onComplete }: 
     setFormData(prev => ({ ...prev, [fieldName]: value }));
   };
 
+  // Complete the flow (success or failure)
+  const completeFlow = useCallback((success: boolean, refId?: string) => {
+    setFlowComplete(success ? 'success' : 'failure');
+    if (refId) setReferenceId(refId);
+    onComplete?.(success, refId);
+  }, [onComplete]);
+
   const goToNextStep = useCallback(() => {
     if (isLastStep) {
-      onComplete?.();
+      // Generate a reference ID if not already present
+      const refId = referenceId || (allApiData.referenceId as string) || `REF-${Date.now().toString(36).toUpperCase()}`;
+      completeFlow(true, refId);
     } else {
       setCurrentStepIndex(prev => prev + 1);
     }
-  }, [isLastStep, onComplete]);
+  }, [isLastStep, completeFlow, referenceId, allApiData]);
 
   const goToPrevStep = () => {
     if (!isFirstStep) {
@@ -523,6 +548,31 @@ export function DemoFlowRenderer({ steps, buttonColor, formStyle, onComplete }: 
 
   // Don't show nav buttons for certain step types
   const showNavButtons = !['api'].includes(currentStep?.stepType || '') || !isLoading;
+
+  // Handle result page button clicks
+  const handleResultButtonClick = (isSuccess: boolean) => {
+    const url = isSuccess ? (approvedUrl || successPageConfig?.buttonUrl) : (rejectedUrl || failurePageConfig?.buttonUrl);
+    if (url) {
+      window.location.href = url;
+    }
+  };
+
+  // If flow is complete, show result page
+  if (flowComplete) {
+    const isSuccess = flowComplete === 'success';
+    const config: ResultPageConfig = isSuccess 
+      ? { ...DEFAULT_SUCCESS_CONFIG, ...successPageConfig, referenceId: referenceId || undefined }
+      : { ...DEFAULT_FAILURE_CONFIG, ...failurePageConfig, referenceId: referenceId || undefined };
+    
+    return (
+      <ResultPage
+        config={config}
+        formStyle={style}
+        buttonColor={buttonColor}
+        onButtonClick={() => handleResultButtonClick(isSuccess)}
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">
