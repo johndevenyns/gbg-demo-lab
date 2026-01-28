@@ -1,17 +1,47 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Save, Eye, Loader2 } from "lucide-react";
+import { ArrowLeft, Save, Eye, Loader2, ImageOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { useDemo, useUpdateDemo } from "@/hooks/useDemos";
-import { DemoEnvironment, VerificationType } from "@/types/demo";
+import { DemoEnvironment } from "@/types/demo";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
 import { SiteMirrorCard } from "@/components/admin/SiteMirrorCard";
 import { FormBuilderSection } from "@/components/formBuilder";
+
+// Reusable Logo Thumbnail component
+function LogoThumbnail({ url, size = 'md' }: { url?: string | null; size?: 'sm' | 'md' }) {
+  const [hasError, setHasError] = useState(false);
+  
+  useEffect(() => {
+    setHasError(false);
+  }, [url]);
+  
+  const sizeClasses = size === 'sm' ? 'w-10 h-10' : 'w-16 h-16';
+  
+  if (!url || hasError) {
+    return (
+      <div className={`${sizeClasses} rounded-md border border-border bg-muted/50 flex flex-col items-center justify-center shrink-0`}>
+        <ImageOff className="w-4 h-4 text-muted-foreground" />
+        <span className="text-[10px] text-muted-foreground mt-0.5">No image</span>
+      </div>
+    );
+  }
+  
+  return (
+    <div className={`${sizeClasses} rounded-md border border-border bg-muted/50 flex items-center justify-center overflow-hidden shrink-0`}>
+      <img 
+        src={url} 
+        alt="Logo preview" 
+        className="max-w-full max-h-full object-contain"
+        onError={() => setHasError(true)}
+      />
+    </div>
+  );
+}
 
 export default function DemoConfig() {
   const { id } = useParams<{ id: string }>();
@@ -99,9 +129,12 @@ export default function DemoConfig() {
       <main className="admin-container py-8 space-y-6">
         {/* Site Settings */}
         <Card className="glass-card">
-          <CardHeader>
-            <CardTitle>Site Settings</CardTitle>
-            <CardDescription>Core configuration for this demo environment</CardDescription>
+          <CardHeader className="flex flex-row items-start justify-between space-y-0">
+            <div>
+              <CardTitle>Site Settings</CardTitle>
+              <CardDescription>Core configuration for this demo environment</CardDescription>
+            </div>
+            <LogoThumbnail url={localDemo.logoUrl} size="md" />
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
@@ -138,18 +171,7 @@ export default function DemoConfig() {
                 <div className="flex-1">
                   <Input value={localDemo.logoUrl || ""} onChange={(e) => handleUpdate({ logoUrl: e.target.value })} placeholder="https://..." />
                 </div>
-                {localDemo.logoUrl && (
-                  <div className="w-16 h-16 rounded-md border border-border bg-muted/50 flex items-center justify-center overflow-hidden shrink-0">
-                    <img 
-                      src={localDemo.logoUrl} 
-                      alt="Logo preview" 
-                      className="max-w-full max-h-full object-contain"
-                      onError={(e) => {
-                        e.currentTarget.style.display = 'none';
-                      }}
-                    />
-                  </div>
-                )}
+                <LogoThumbnail url={localDemo.logoUrl} size="md" />
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
