@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import {
   DndContext,
   DragOverlay,
@@ -17,7 +18,6 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import { restrictToWindowEdges } from '@dnd-kit/modifiers';
 import { Button } from '@/components/ui/button';
 import { FormStep, FormField } from '@/types/demo';
 import { FormStepCard } from './FormStepCard';
@@ -299,7 +299,6 @@ export function FormBuilderCanvas({ steps, onUpdateSteps }: FormBuilderCanvasPro
     <DndContext
       sensors={sensors}
       collisionDetection={closestCenter}
-      modifiers={[restrictToWindowEdges]}
       onDragStart={handleDragStart}
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
@@ -344,30 +343,33 @@ export function FormBuilderCanvas({ steps, onUpdateSteps }: FormBuilderCanvasPro
         </div>
       </div>
 
-      {/* Drag Overlay */}
-      <DragOverlay>
-        {activeId && activeData?.fromPalette && activeData?.type === 'field' && (
-          <div className="flex items-center gap-2 p-3 rounded-md border border-primary bg-card shadow-lg">
-            <GripVertical className="w-4 h-4 text-muted-foreground" />
-            <span className="text-sm font-medium">{activeData.field?.label}</span>
-          </div>
-        )}
-        {activeId && activeData?.fromPalette && (activeData?.type === 'submit_button' || activeData?.type === 'verification_path') && (
-          <div className="flex items-center gap-2 p-3 rounded-md border border-primary bg-card shadow-lg">
-            <GripVertical className="w-4 h-4 text-muted-foreground" />
-            <span className="text-sm font-medium">
-              {activeData.type === 'submit_button' && 'Submit Button'}
-              {activeData.type === 'verification_path' && 'Verification Path'}
-            </span>
-          </div>
-        )}
-        {activeId && activeData?.type === 'field' && !activeData.fromPalette && (
-          <div className="flex items-center gap-2 p-3 rounded-md border border-primary bg-card shadow-lg">
-            <GripVertical className="w-4 h-4 text-muted-foreground" />
-            <span className="text-sm font-medium">{activeData.field?.label}</span>
-          </div>
-        )}
-      </DragOverlay>
+      {/* Drag Overlay - rendered in portal to avoid transform issues */}
+      {createPortal(
+        <DragOverlay dropAnimation={null}>
+          {activeId && activeData?.fromPalette && activeData?.type === 'field' && (
+            <div className="flex items-center gap-2 p-3 rounded-md border border-primary bg-card shadow-lg">
+              <GripVertical className="w-4 h-4 text-muted-foreground" />
+              <span className="text-sm font-medium">{activeData.field?.label}</span>
+            </div>
+          )}
+          {activeId && activeData?.fromPalette && (activeData?.type === 'submit_button' || activeData?.type === 'verification_path') && (
+            <div className="flex items-center gap-2 p-3 rounded-md border border-primary bg-card shadow-lg">
+              <GripVertical className="w-4 h-4 text-muted-foreground" />
+              <span className="text-sm font-medium">
+                {activeData.type === 'submit_button' && 'Submit Button'}
+                {activeData.type === 'verification_path' && 'Verification Path'}
+              </span>
+            </div>
+          )}
+          {activeId && activeData?.type === 'field' && !activeData.fromPalette && (
+            <div className="flex items-center gap-2 p-3 rounded-md border border-primary bg-card shadow-lg">
+              <GripVertical className="w-4 h-4 text-muted-foreground" />
+              <span className="text-sm font-medium">{activeData.field?.label}</span>
+            </div>
+          )}
+        </DragOverlay>,
+        document.body
+      )}
     </DndContext>
   );
 }
