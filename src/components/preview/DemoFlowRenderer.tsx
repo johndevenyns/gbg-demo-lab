@@ -915,24 +915,24 @@ export function DemoFlowRenderer({
           )}
           
           {buttonConfig.next.enabled && currentStep?.stepType !== 'page' && (
-            <Button 
+            <button 
               onClick={goToNextStep} 
-              className="flex-1"
-              style={{ backgroundColor: buttonColor }}
+              className="flex-1 h-10 px-4 py-2 rounded-md text-sm font-medium text-white inline-flex items-center justify-center gap-2 transition-colors hover:opacity-90"
+              style={{ backgroundColor: buttonColor || '#6366f1' }}
             >
               {buttonConfig.next.label}
-              <ArrowRight className="w-4 h-4 ml-2" />
-            </Button>
+              <ArrowRight className="w-4 h-4" />
+            </button>
           )}
           
           {buttonConfig.submit.enabled && currentStep?.stepType !== 'page' && (
-            <Button 
+            <button 
               onClick={goToNextStep}
-              className="flex-1"
-              style={{ backgroundColor: buttonColor }}
+              className="flex-1 h-10 px-4 py-2 rounded-md text-sm font-medium text-white inline-flex items-center justify-center gap-2 transition-colors hover:opacity-90"
+              style={{ backgroundColor: buttonColor || '#6366f1' }}
             >
               {buttonConfig.submit.label}
-            </Button>
+            </button>
           )}
         </div>
       )}
