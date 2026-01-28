@@ -7,31 +7,21 @@ const corsHeaders = {
 
 const BASE_URL = 'https://app.art-of-sales-engineering.com';
 
-interface StatusResponse {
-  success: boolean;
-  sessionId?: string;
-  status?: string;
-  isComplete?: boolean;
-  isPassed?: boolean;
-  error?: string;
-  verificationResult?: Record<string, unknown>;
-}
-
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const VERIFICATION_API_KEY = Deno.env.get('VERIFICATION_API_KEY');
+    const API_KEY = Deno.env.get('VERIFICATION_API_KEY');
     
-    if (!VERIFICATION_API_KEY) {
+    if (!API_KEY) {
       console.error('VERIFICATION_API_KEY not configured');
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: 'Verification service not configured' 
+          error: 'Service configuration error' 
         }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
@@ -58,20 +48,31 @@ serve(async (req) => {
 
     console.log('Getting verification status for session:', sessionId);
 
-    // Call the verification status API
+    // Get session status from API
     const response = await fetch(`${BASE_URL}/api/verification/sessions/${sessionId}`, {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${VERIFICATION_API_KEY}`,
+        'Authorization': `Bearer ${API_KEY}`,
       },
     });
 
     const responseText = await response.text();
     console.log('Status API response:', response.status, responseText.substring(0, 500));
 
-    let apiResponse;
+    if (!response.ok) {
+      console.error('API Error:', response.status, responseText);
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'Unable to check verification status. Please try again.' 
+        }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    let data;
     try {
-      apiResponse = JSON.parse(responseText);
+      data = JSON.parse(responseText);
     } catch {
       console.error('Failed to parse status response:', responseText);
       return new Response(
@@ -83,32 +84,26 @@ serve(async (req) => {
       );
     }
 
-    if (!response.ok) {
-      console.error('Status API error:', apiResponse);
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: apiResponse.error || `Verification service error: ${response.status}` 
-        }),
-        { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Determine if verification is complete and result
-    const status = apiResponse.status || 'pending';
-    const isComplete = ['completed', 'failed', 'expired'].includes(status);
-    const isPassed = status === 'completed';
-
-    const result: StatusResponse = {
+    // Return the full response data with success flag
+    // The status field indicates: pending, completed, failed, expired
+    const result = {
       success: true,
-      sessionId,
-      status,
-      isComplete,
-      isPassed,
-      verificationResult: apiResponse.result || undefined,
+      sessionId: data.sessionId || sessionId,
+      status: data.status || 'pending',
+      instanceId: data.instanceId || null,
+      firstName: data.firstName || null,
+      lastName: data.lastName || null,
+      referenceId: data.referenceId || null,
+      result: data.result || null,
+      rawResponse: data.rawResponse || null,
+      createdAt: data.createdAt || null,
+      completedAt: data.completedAt || null,
+      // Computed fields for easier frontend handling
+      isComplete: ['completed', 'failed', 'expired'].includes(data.status),
+      isPassed: data.status === 'completed',
     };
 
-    console.log('Returning status result:', result);
+    console.log('Returning status result:', JSON.stringify(result, null, 2));
 
     return new Response(
       JSON.stringify(result),
@@ -116,12 +111,12 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('Get verification status error:', error);
+    console.error('Verify status error:', error);
     
     return new Response(
       JSON.stringify({ 
         success: false, 
-        error: error instanceof Error ? error.message : 'Failed to get verification status'
+        error: 'Unable to check verification status. Please try again.'
       }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
