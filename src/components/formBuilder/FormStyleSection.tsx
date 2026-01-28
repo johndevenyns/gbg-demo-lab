@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Paintbrush, Globe, LayoutTemplate, Palette, Check, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -538,7 +538,11 @@ export function FormStyleSection({ demo, formStyle, onUpdateStyle, scrapedBrandi
         {/* Live Preview */}
         <div className="mt-6 pt-6 border-t border-border">
           <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide mb-3">Live Preview</h4>
-          <FormStylePreview style={formStyle} buttonColor={demo.buttonColor} />
+          <FormStylePreview 
+            style={formStyle} 
+            buttonColor={demo.buttonColor} 
+            scrapedBranding={scrapedBranding}
+          />
         </div>
       </CardContent>
     </Card>
@@ -546,8 +550,41 @@ export function FormStyleSection({ demo, formStyle, onUpdateStyle, scrapedBrandi
 }
 
 // Live preview component showing how the form will look
-function FormStylePreview({ style, buttonColor }: { style: FormStyleConfig; buttonColor?: string }) {
+function FormStylePreview({ 
+  style, 
+  buttonColor,
+  scrapedBranding 
+}: { 
+  style: FormStyleConfig; 
+  buttonColor?: string;
+  scrapedBranding?: ScrapedBranding | null;
+}) {
   const [focusedField, setFocusedField] = useState<string | null>(null);
+
+  // Use scraped branding as fallback when style source is default or mirrored
+  const effectiveStyle = useMemo(() => {
+    if (style.source === 'default' && scrapedBranding?.branding) {
+      // Merge scraped branding into default style
+      const merged = { ...style };
+      if (scrapedBranding.branding.colors?.textPrimary) {
+        merged.labelColor = scrapedBranding.branding.colors.textPrimary;
+        merged.inputTextColor = scrapedBranding.branding.colors.textPrimary;
+      }
+      if (scrapedBranding.branding.colors?.primary) {
+        merged.inputFocusBorderColor = scrapedBranding.branding.colors.primary;
+      }
+      if (scrapedBranding.branding.fonts?.[0]?.family) {
+        merged.fontFamily = scrapedBranding.branding.fonts.map(f => f.family).join(', ') + ', sans-serif';
+      }
+      // Keep white background for inputs
+      merged.inputBgColor = '#ffffff';
+      return merged;
+    }
+    return style;
+  }, [style, scrapedBranding]);
+
+  // Use effectiveStyle for all rendering
+  const s = effectiveStyle;
 
   const borderRadiusMap = {
     none: '0px',
@@ -582,36 +619,36 @@ function FormStylePreview({ style, buttonColor }: { style: FormStyleConfig; butt
   };
 
   const getInputStyle = (fieldId: string): React.CSSProperties => ({
-    fontFamily: style.fontFamily,
-    fontSize: fontSizeMap[style.fontSize],
-    backgroundColor: style.inputBgColor,
-    color: style.inputTextColor,
-    border: `${style.borderWidth}px solid ${focusedField === fieldId ? style.inputFocusBorderColor : style.inputBorderColor}`,
-    borderRadius: borderRadiusMap[style.borderRadius],
-    padding: paddingMap[style.inputPadding || 'md'],
+    fontFamily: s.fontFamily,
+    fontSize: fontSizeMap[s.fontSize],
+    backgroundColor: s.inputBgColor,
+    color: s.inputTextColor,
+    border: `${s.borderWidth}px solid ${focusedField === fieldId ? s.inputFocusBorderColor : s.inputBorderColor}`,
+    borderRadius: borderRadiusMap[s.borderRadius],
+    padding: paddingMap[s.inputPadding || 'md'],
     width: '100%',
     outline: 'none',
     transition: 'border-color 0.2s, box-shadow 0.2s',
-    boxShadow: focusedField === fieldId ? `0 0 0 3px ${style.inputFocusBorderColor}20` : 'none',
+    boxShadow: focusedField === fieldId ? `0 0 0 3px ${s.inputFocusBorderColor}20` : 'none',
   });
 
   const labelStyle: React.CSSProperties = {
-    fontFamily: style.fontFamily,
-    fontSize: fontSizeMap[style.fontSize],
-    color: style.labelColor,
-    fontWeight: labelWeightMap[style.labelWeight || 'medium'],
+    fontFamily: s.fontFamily,
+    fontSize: fontSizeMap[s.fontSize],
+    color: s.labelColor,
+    fontWeight: labelWeightMap[s.labelWeight || 'medium'],
     marginBottom: '6px',
     display: 'block',
   };
 
   const buttonStyle: React.CSSProperties = {
-    fontFamily: style.fontFamily,
-    fontSize: fontSizeMap[style.fontSize],
+    fontFamily: s.fontFamily,
+    fontSize: fontSizeMap[s.fontSize],
     backgroundColor: buttonColor || '#6366f1',
     color: '#ffffff',
     border: 'none',
-    borderRadius: borderRadiusMap[style.borderRadius],
-    padding: paddingMap[style.inputPadding || 'md'],
+    borderRadius: borderRadiusMap[s.borderRadius],
+    padding: paddingMap[s.inputPadding || 'md'],
     width: '100%',
     cursor: 'pointer',
     fontWeight: 600,
@@ -627,14 +664,14 @@ function FormStylePreview({ style, buttonColor }: { style: FormStyleConfig; butt
     paddingRight: '36px',
   };
 
-  const spacing = fieldSpacingMap[style.fieldSpacing || 'normal'];
+  const spacing = fieldSpacingMap[s.fieldSpacing || 'normal'];
 
   return (
-    <div className="p-5 rounded-lg border border-border bg-muted/30">
+    <div className="p-5 rounded-lg border border-border" style={{ backgroundColor: '#ffffff' }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: spacing }}>
         {/* Text Input */}
         <div>
-          <label style={labelStyle}>Full Name <span style={{ color: style.errorColor }}>*</span></label>
+          <label style={labelStyle}>Full Name <span style={{ color: s.errorColor }}>*</span></label>
           <input
             type="text"
             placeholder="John Doe"
@@ -704,17 +741,17 @@ function FormStylePreview({ style, buttonColor }: { style: FormStyleConfig; butt
             defaultValue="123"
             style={{
               ...getInputStyle('ssn'),
-              borderColor: style.errorColor,
+              borderColor: s.errorColor,
             }}
           />
-          <p style={{ color: style.errorColor, fontSize: '12px', marginTop: '4px' }}>
+          <p style={{ color: s.errorColor, fontSize: '12px', marginTop: '4px' }}>
             Please enter a valid SSN format
           </p>
         </div>
 
         {/* Success Message */}
         <div className="flex items-center gap-2">
-          <span style={{ color: style.successColor, fontSize: '13px' }}>✓ All fields validated successfully</span>
+          <span style={{ color: s.successColor, fontSize: '13px' }}>✓ All fields validated successfully</span>
         </div>
 
         {/* Submit Button */}
