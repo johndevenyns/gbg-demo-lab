@@ -830,34 +830,6 @@ export function DemoFlowRenderer({
 
   return (
     <div className="space-y-6">
-      {/* Test Data Fill Buttons - only show when enabled in config */}
-      {showAnyFillButton && (
-        <div className="flex gap-2 justify-center pb-2 border-b border-dashed border-muted-foreground/30">
-          {showPassButton && (
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => fillTestData('pass')}
-              className="text-green-600 border-green-500/30 hover:bg-green-500/10"
-            >
-              <CheckCircle2 className="w-4 h-4 mr-1" />
-              Fill Pass
-            </Button>
-          )}
-          {showFailButton && (
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => fillTestData('fail')}
-              className="text-red-600 border-red-500/30 hover:bg-red-500/10"
-            >
-              <XCircle className="w-4 h-4 mr-1" />
-              Fill Fail
-            </Button>
-          )}
-        </div>
-      )}
-
       {/* Step indicator */}
       <div className="flex items-center justify-center gap-2">
         {steps.map((_, index) => (
@@ -874,9 +846,56 @@ export function DemoFlowRenderer({
         ))}
       </div>
 
-      {/* Step title */}
-      <div className="text-center">
-        <h2 className="text-xl font-semibold">{currentStep?.title}</h2>
+      {/* Step title with Fill buttons aligned right */}
+      <div className="space-y-2">
+        <h2 className="text-2xl font-semibold text-foreground" style={{ fontFamily: style.fontFamily }}>
+          {currentStep?.title}
+        </h2>
+        
+        {/* Fill Pass / Fill Fail buttons - pill style aligned right */}
+        {showAnyFillButton && (
+          <div className="flex gap-2 justify-end">
+            {showPassButton && (
+              <button 
+                onClick={() => fillTestData('pass')}
+                className="px-4 py-1.5 text-sm font-medium rounded-full border-2 transition-colors"
+                style={{
+                  color: '#0d9488',
+                  borderColor: '#0d9488',
+                  backgroundColor: 'transparent',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = 'rgba(13, 148, 136, 0.1)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                }}
+              >
+                Fill Pass
+              </button>
+            )}
+            {showFailButton && (
+              <button 
+                onClick={() => fillTestData('fail')}
+                className="px-4 py-1.5 text-sm font-medium rounded-full border-2 transition-colors"
+                style={{
+                  color: '#f87171',
+                  borderColor: '#f87171',
+                  backgroundColor: 'transparent',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = 'rgba(248, 113, 113, 0.1)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                }}
+              >
+                Fill Fail
+              </button>
+            )}
+          </div>
+        )}
+        
         {currentStep?.description && (
           <p className="text-sm text-muted-foreground">{currentStep.description}</p>
         )}
