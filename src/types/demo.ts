@@ -88,6 +88,60 @@ export interface StepApiResponse {
 // Verification step configuration
 export type VerificationStatus = 'pending' | 'in_progress' | 'completed' | 'failed' | 'expired';
 
+// mDL Provider definition
+export interface MdlProvider {
+  id: string;
+  name: string;
+  domain: string;
+  logoUrl: string;
+  providerKey: string; // API provider identifier (e.g., 'denmark-mitid', 'sweden-bankid')
+  enabled: boolean;
+}
+
+// Available mDL providers (from the reference HTML)
+export const AVAILABLE_MDL_PROVIDERS: MdlProvider[] = [
+  {
+    id: 'mitid',
+    name: 'MitID',
+    domain: 'mitid.dk',
+    logoUrl: 'https://content.trinsic.id/connect/integrations/mitid-logo.svg',
+    providerKey: 'denmark-mitid',
+    enabled: true,
+  },
+  {
+    id: 'bankid-sweden',
+    name: 'BankID Sweden',
+    domain: 'nets.eu',
+    logoUrl: 'https://content.trinsic.id/connect/integrations/se-bankid.svg',
+    providerKey: 'sweden-bankid',
+    enabled: true,
+  },
+  {
+    id: 'bankid-norway',
+    name: 'BankID Norway',
+    domain: 'bankid.no',
+    logoUrl: 'https://content.trinsic.id/connect/integrations/no-bankid.svg',
+    providerKey: 'norway-bankid',
+    enabled: true,
+  },
+  {
+    id: 'verimi',
+    name: 'Verimi',
+    domain: 'verimi.de',
+    logoUrl: 'https://content.trinsic.id/connect/integrations/verimi-logo.svg',
+    providerKey: 'germany-verimi',
+    enabled: true,
+  },
+  {
+    id: 'itsme',
+    name: 'itsme',
+    domain: 'itsme.be',
+    logoUrl: 'https://content.trinsic.id/connect/integrations/itsme-logo.svg',
+    providerKey: 'belgium-itsme',
+    enabled: true,
+  },
+];
+
 export interface VerificationStepConfig {
   // QR code settings - URL comes from API response field
   qrCodeEnabled: boolean;
@@ -105,6 +159,9 @@ export interface VerificationStepConfig {
   mobileIdUrlField?: string; // API response field containing mDL URL
   mobileIdTitle?: string;
   mobileIdInstructions?: string;
+  
+  // mDL Provider configuration - which providers are available for selection
+  mobileIdProviders?: MdlProvider[];
   
   // Completion behavior
   autoAdvanceOnComplete?: boolean;
