@@ -120,10 +120,6 @@ export default function DemoConfig() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Resource ID (Default)</Label>
-              <Input value={localDemo.resourceId} onChange={(e) => handleUpdate({ resourceId: e.target.value })} />
-            </div>
-            <div className="space-y-2">
               <Label>Reference ID Prefix</Label>
               <Input value={localDemo.referenceIdPrefix || ""} onChange={(e) => handleUpdate({ referenceIdPrefix: e.target.value })} />
             </div>
