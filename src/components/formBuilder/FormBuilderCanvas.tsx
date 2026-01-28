@@ -422,9 +422,11 @@ export function FormBuilderCanvas({ steps, onUpdateSteps }: FormBuilderCanvasPro
       onDragEnd={handleDragEnd}
     >
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Field Palette */}
+        {/* Field Palette - Sticky */}
         <div className="lg:col-span-1 order-2 lg:order-1">
-          <FieldPalette />
+          <div className="lg:sticky lg:top-24 lg:max-h-[calc(100vh-120px)]">
+            <FieldPalette />
+          </div>
         </div>
 
         {/* Steps Canvas */}
