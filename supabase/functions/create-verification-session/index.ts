@@ -6,6 +6,13 @@ const corsHeaders = {
 };
 
 const BASE_URL = 'https://app.art-of-sales-engineering.com';
+const LEGACY_BASE_URL = 'https://paulandcarolynn.com';
+
+// Normalize URLs to use the public base URL
+const normalizeUrl = (url?: string) =>
+  typeof url === 'string' && url.length > 0
+    ? url.replace(LEGACY_BASE_URL, BASE_URL)
+    : url;
 
 // Field mappings from form field types to API customerData field names
 const FIELD_MAPPINGS: Record<string, string> = {
@@ -39,6 +46,9 @@ interface CreateSessionRequest {
   // Verification configuration
   verificationType: 'docBio' | 'dataBio' | 'dataOnly';
   
+  // Resource ID for the verification journey
+  resourceId?: string;
+  
   // Demo environment settings
   customerName: string;
   returnUrl?: string;
@@ -46,6 +56,14 @@ interface CreateSessionRequest {
   
   // Optional reference ID prefix
   referenceIdPrefix?: string;
+  
+  // Branding configuration
+  branding?: {
+    headerTextColor?: string;
+    headerBgColor?: string;
+    buttonColor?: string;
+    logoUrl?: string;
+  };
 }
 
 interface SessionResponse {
@@ -57,23 +75,24 @@ interface SessionResponse {
   status?: string;
   error?: string;
   referenceId?: string;
+  expiresAt?: string;
 }
 
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const VERIFICATION_API_KEY = Deno.env.get('VERIFICATION_API_KEY');
+    const API_KEY = Deno.env.get('VERIFICATION_API_KEY');
     
-    if (!VERIFICATION_API_KEY) {
+    if (!API_KEY) {
       console.error('VERIFICATION_API_KEY not configured');
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: 'Verification service not configured' 
+          error: 'Service configuration error' 
         }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
@@ -81,12 +100,26 @@ serve(async (req) => {
 
     const requestData: CreateSessionRequest = await req.json();
     
-    console.log('Create verification session request:', {
-      verificationType: requestData.verificationType,
-      customerName: requestData.customerName,
-      includeQr: requestData.includeQr,
-      formDataKeys: Object.keys(requestData.formData || {}),
-    });
+    console.log('=== CREATE VERIFICATION SESSION REQUEST ===');
+    console.log('verificationType:', requestData.verificationType);
+    console.log('customerName:', requestData.customerName);
+    console.log('resourceId:', requestData.resourceId);
+    console.log('includeQr:', requestData.includeQr);
+    console.log('formDataKeys:', Object.keys(requestData.formData || {}));
+
+    // Validate required fields
+    const firstName = requestData.formData?.firstName?.trim();
+    const lastName = requestData.formData?.lastName?.trim();
+    
+    if (!firstName || !lastName) {
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'firstName and lastName are required' 
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     // Build customerData by mapping form fields to API-expected format
     const customerData: Record<string, string> = {};
@@ -95,7 +128,7 @@ serve(async (req) => {
       for (const [fieldName, value] of Object.entries(requestData.formData)) {
         const apiFieldName = FIELD_MAPPINGS[fieldName];
         if (apiFieldName && value) {
-          customerData[apiFieldName] = value;
+          customerData[apiFieldName] = value.trim();
         }
       }
       
@@ -112,35 +145,71 @@ serve(async (req) => {
       }
     }
 
-    // Add verification type to customerData for dataOnly flow
-    if (requestData.verificationType === 'dataOnly') {
-      customerData.verificationType = 'dataOnly';
-    }
+    // Generate reference ID
+    const referenceIdPrefix = requestData.referenceIdPrefix || 'demo';
+    const referenceId = `${referenceIdPrefix}-${Date.now()}`;
 
-    // Build API request body
-    const apiBody = {
+    // Build API request payload
+    const requestPayload: Record<string, any> = {
       returnUrl: requestData.returnUrl || '',
       customerName: requestData.customerName || 'Verification Demo',
       includeQr: requestData.includeQr ?? true,
-      customerData,
       verificationType: requestData.verificationType,
+      referenceId,
+      // firstName and lastName at top level (required by API)
+      firstName,
+      lastName,
+      customerData,
     };
 
-    console.log('Calling verification API with body:', JSON.stringify(apiBody, null, 2));
+    // Add resource ID if provided
+    if (requestData.resourceId) {
+      requestPayload.resourceId = requestData.resourceId;
+    }
+
+    // Add branding if provided
+    if (requestData.branding) {
+      requestPayload.branding = {
+        headerTextColor: requestData.branding.headerTextColor,
+        headerBgColor: requestData.branding.headerBgColor,
+        buttonColor: requestData.branding.buttonColor,
+      };
+      if (requestData.branding.logoUrl) {
+        requestPayload.logoUrl = requestData.branding.logoUrl;
+      }
+    }
+
+    console.log('=== FULL API REQUEST PAYLOAD ===');
+    console.log(JSON.stringify(requestPayload, null, 2));
+    console.log('=== END PAYLOAD ===');
 
     // Call the verification session API
     const response = await fetch(`${BASE_URL}/api/verification/sessions`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${VERIFICATION_API_KEY}`,
+        'Authorization': `Bearer ${API_KEY}`,
+        'x-api-key': API_KEY,
       },
-      body: JSON.stringify(apiBody),
+      body: JSON.stringify(requestPayload),
     });
 
     const responseText = await response.text();
     console.log('Verification API response status:', response.status);
     console.log('Verification API response:', responseText.substring(0, 1000));
+
+    if (!response.ok) {
+      console.error('API Error:', response.status, responseText);
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'Unable to create verification session. Please try again.',
+          apiStatus: response.status,
+          apiResponse: responseText?.slice(0, 500) || null,
+        }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     let apiResponse;
     try {
@@ -156,34 +225,28 @@ serve(async (req) => {
       );
     }
 
-    if (!response.ok) {
-      console.error('Verification API error:', apiResponse);
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: apiResponse.error || `Verification service error: ${response.status}` 
-        }),
-        { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+    // Normalize URLs (handle legacy domain)
+    const verifyUrl = normalizeUrl(apiResponse.verifyUrl);
+    const shortUrl = normalizeUrl(apiResponse.qrCode?.shortUrl);
+    
+    // Generate QR code URL - use API response or fallback to QR server
+    const qrCodeUrl = normalizeUrl(apiResponse.qrCode?.imageUrl) ||
+      `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(verifyUrl ?? apiResponse.verifyUrl)}`;
 
     // Build response with relevant fields
     const result: SessionResponse = {
       success: true,
       sessionId: apiResponse.sessionId,
-      verifyUrl: apiResponse.verifyUrl,
-      shortUrl: apiResponse.qrCode?.shortUrl,
-      qrCodeUrl: apiResponse.qrCode?.imageUrl || `${BASE_URL}/api/verification/sessions/${apiResponse.sessionId}/qr`,
+      verifyUrl,
+      shortUrl,
+      qrCodeUrl,
       status: apiResponse.status || 'pending',
+      referenceId,
+      expiresAt: apiResponse.expiresAt,
     };
 
-    // Add reference ID if provided
-    if (requestData.referenceIdPrefix && apiResponse.sessionId) {
-      const refId = `${requestData.referenceIdPrefix}-${apiResponse.sessionId.substring(0, 8).toUpperCase()}`;
-      result.referenceId = refId;
-    }
-
-    console.log('Returning session result:', result);
+    console.log('=== SESSION CREATED SUCCESSFULLY ===');
+    console.log(JSON.stringify(result, null, 2));
 
     return new Response(
       JSON.stringify(result),
@@ -196,7 +259,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: false, 
-        error: error instanceof Error ? error.message : 'Failed to create verification session'
+        error: 'Unable to create verification session. Please try again.'
       }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
