@@ -88,6 +88,8 @@ export default function DemoPreview() {
                 returnUrl={demo.returnUrl}
                 includeQr={demo.includeQr}
                 referenceIdPrefix={demo.referenceIdPrefix}
+                storedTestData={demo.storedTestData}
+                showTestButtons={true}
                 onComplete={handleFlowComplete}
               />
             ) : (

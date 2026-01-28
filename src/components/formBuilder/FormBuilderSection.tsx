@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { DemoEnvironment, FormStep } from '@/types/demo';
+import { DemoEnvironment, FormStep, StoredTestData } from '@/types/demo';
 import { FormStyleConfig } from '@/types/formStyle';
 import { PathCondition } from '@/types/formBuilder';
 import { FormBuilderCanvas } from './FormBuilderCanvas';
@@ -9,9 +9,10 @@ import { TemplateSelector } from './TemplateSelector';
 import { VerificationPathConfig } from './VerificationPathConfig';
 import { ResultPagesConfig } from './ResultPagesConfig';
 import { SaveTemplateDialog } from './SaveTemplateDialog';
+import { StoredUserDataConfig } from './StoredUserDataConfig';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
-  LayoutGrid, Settings2, Workflow, ExternalLink, Save, RotateCcw, Bookmark
+  LayoutGrid, Settings2, Workflow, ExternalLink, Save, RotateCcw, Bookmark, Users
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -89,6 +90,10 @@ export function FormBuilderSection({ demo, onUpdate }: FormBuilderSectionProps) 
     onUpdate({ resourceId: value });
   }, [onUpdate]);
 
+  const handleUpdateStoredTestData = useCallback((data: StoredTestData) => {
+    onUpdate({ storedTestData: data });
+  }, [onUpdate]);
+
   const handleResetForm = useCallback(() => {
     if (confirm('Are you sure you want to reset all form steps? This cannot be undone.')) {
       onUpdate({
@@ -142,7 +147,7 @@ export function FormBuilderSection({ demo, onUpdate }: FormBuilderSectionProps) 
       />
       <CardContent>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-4 mb-6">
+          <TabsList className="grid w-full grid-cols-5 mb-6">
             <TabsTrigger value="builder" className="flex items-center gap-2">
               <LayoutGrid className="w-4 h-4" />
               <span className="hidden sm:inline">Form Builder</span>
@@ -158,6 +163,10 @@ export function FormBuilderSection({ demo, onUpdate }: FormBuilderSectionProps) 
             <TabsTrigger value="results" className="flex items-center gap-2">
               <ExternalLink className="w-4 h-4" />
               <span className="hidden sm:inline">Results</span>
+            </TabsTrigger>
+            <TabsTrigger value="testdata" className="flex items-center gap-2">
+              <Users className="w-4 h-4" />
+              <span className="hidden sm:inline">Test Data</span>
             </TabsTrigger>
           </TabsList>
 
@@ -203,6 +212,14 @@ export function FormBuilderSection({ demo, onUpdate }: FormBuilderSectionProps) 
               onUpdateApprovedUrl={(url) => onUpdate({ approvedUrl: url })}
               onUpdateRejectedUrl={(url) => onUpdate({ rejectedUrl: url })}
               onUpdateReturnUrl={(url) => onUpdate({ returnUrl: url })}
+            />
+          </TabsContent>
+
+          <TabsContent value="testdata" className="mt-0">
+            <StoredUserDataConfig
+              storedTestData={demo.storedTestData}
+              formSteps={demo.formSteps}
+              onUpdate={handleUpdateStoredTestData}
             />
           </TabsContent>
         </Tabs>
