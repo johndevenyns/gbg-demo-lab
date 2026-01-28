@@ -9,6 +9,25 @@ import { supabase } from '@/integrations/supabase/client';
 import { ResultPage, ResultPageConfig, DEFAULT_SUCCESS_CONFIG, DEFAULT_FAILURE_CONFIG } from './ResultPage';
 import { VerificationMethodSelector } from './VerificationMethodSelector';
 
+// Helper to determine if a color is light or dark and return contrasting text color
+const getContrastTextColor = (hexColor: string): string => {
+  if (!hexColor || hexColor === 'transparent') return '#ffffff';
+  
+  // Remove # if present
+  const hex = hexColor.replace('#', '');
+  if (hex.length < 6) return '#ffffff';
+  
+  // Parse RGB values
+  const r = parseInt(hex.substring(0, 2), 16);
+  const g = parseInt(hex.substring(2, 4), 16);
+  const b = parseInt(hex.substring(4, 6), 16);
+  
+  // Calculate luminance (perceived brightness)
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  
+  // Return dark text for light backgrounds, white text for dark backgrounds
+  return luminance > 0.5 ? '#1a1a1a' : '#ffffff';
+};
 interface DemoFlowRendererProps {
   steps: FormStep[];
   buttonColor: string;
@@ -917,8 +936,11 @@ export function DemoFlowRenderer({
           {buttonConfig.next.enabled && currentStep?.stepType !== 'page' && (
             <button 
               onClick={goToNextStep} 
-              className="flex-1 h-10 px-4 py-2 rounded-md text-sm font-medium text-white inline-flex items-center justify-center gap-2 transition-colors hover:opacity-90"
-              style={{ backgroundColor: buttonColor || '#6366f1' }}
+              className="flex-1 h-10 px-4 py-2 rounded-md text-sm font-medium inline-flex items-center justify-center gap-2 transition-colors hover:opacity-90"
+              style={{ 
+                backgroundColor: buttonColor || '#6366f1',
+                color: getContrastTextColor(buttonColor || '#6366f1')
+              }}
             >
               {buttonConfig.next.label}
               <ArrowRight className="w-4 h-4" />
@@ -928,8 +950,11 @@ export function DemoFlowRenderer({
           {buttonConfig.submit.enabled && currentStep?.stepType !== 'page' && (
             <button 
               onClick={goToNextStep}
-              className="flex-1 h-10 px-4 py-2 rounded-md text-sm font-medium text-white inline-flex items-center justify-center gap-2 transition-colors hover:opacity-90"
-              style={{ backgroundColor: buttonColor || '#6366f1' }}
+              className="flex-1 h-10 px-4 py-2 rounded-md text-sm font-medium inline-flex items-center justify-center gap-2 transition-colors hover:opacity-90"
+              style={{ 
+                backgroundColor: buttonColor || '#6366f1',
+                color: getContrastTextColor(buttonColor || '#6366f1')
+              }}
             >
               {buttonConfig.submit.label}
             </button>
