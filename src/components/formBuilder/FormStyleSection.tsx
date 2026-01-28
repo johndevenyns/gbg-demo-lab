@@ -186,6 +186,20 @@ export function FormStyleSection({ demo, formStyle, onUpdateStyle, scrapedBrandi
               </p>
             </div>
 
+            {/* Container Selector Input */}
+            <div className="space-y-2">
+              <Label htmlFor="form-container-selector">Form Container Selector (Optional)</Label>
+              <Input
+                id="form-container-selector"
+                placeholder="e.g. #signup-form, .application-form, form[name='apply']"
+                value={formStyle.formContainerSelector || ''}
+                onChange={(e) => onUpdateStyle({ ...formStyle, formContainerSelector: e.target.value })}
+              />
+              <p className="text-xs text-muted-foreground">
+                CSS selector to help locate the specific form on the page. Examples: <code className="bg-muted px-1 rounded">#form-id</code>, <code className="bg-muted px-1 rounded">.form-class</code>, <code className="bg-muted px-1 rounded">form[data-type="signup"]</code>
+              </p>
+            </div>
+
             {hasMirroredData ? (
               <div className="space-y-4">
                 <div className="p-4 rounded-lg bg-muted/50 border border-border">

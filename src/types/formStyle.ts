@@ -6,6 +6,7 @@ export interface FormStyleConfig {
   source: FormStyleSource;
   templateId?: string; // Used when source = 'template'
   formStyleUrl?: string; // URL to a specific form page on customer's site
+  formContainerSelector?: string; // CSS selector to target specific form container on the page
   
   // Typography
   fontFamily: string;
