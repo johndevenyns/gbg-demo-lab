@@ -823,29 +823,38 @@ export function DemoFlowRenderer({
     );
   }
 
+  // Determine which fill buttons to show based on config
+  const showPassButton = showTestButtons && storedTestData?.showFillPassButton && Object.keys(storedTestData?.passData || {}).length > 0;
+  const showFailButton = showTestButtons && storedTestData?.showFillFailButton && Object.keys(storedTestData?.failData || {}).length > 0;
+  const showAnyFillButton = (showPassButton || showFailButton) && (currentStep?.stepType === 'form' || !currentStep?.stepType);
+
   return (
     <div className="space-y-6">
-      {/* Test Data Fill Buttons - only show in admin/test mode */}
-      {showTestButtons && storedTestData && (currentStep?.stepType === 'form' || !currentStep?.stepType) && (
+      {/* Test Data Fill Buttons - only show when enabled in config */}
+      {showAnyFillButton && (
         <div className="flex gap-2 justify-center pb-2 border-b border-dashed border-muted-foreground/30">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => fillTestData('pass')}
-            className="text-green-600 border-green-500/30 hover:bg-green-500/10"
-          >
-            <CheckCircle2 className="w-4 h-4 mr-1" />
-            Fill Pass
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => fillTestData('fail')}
-            className="text-red-600 border-red-500/30 hover:bg-red-500/10"
-          >
-            <XCircle className="w-4 h-4 mr-1" />
-            Fill Fail
-          </Button>
+          {showPassButton && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => fillTestData('pass')}
+              className="text-green-600 border-green-500/30 hover:bg-green-500/10"
+            >
+              <CheckCircle2 className="w-4 h-4 mr-1" />
+              Fill Pass
+            </Button>
+          )}
+          {showFailButton && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => fillTestData('fail')}
+              className="text-red-600 border-red-500/30 hover:bg-red-500/10"
+            >
+              <XCircle className="w-4 h-4 mr-1" />
+              Fill Fail
+            </Button>
+          )}
         </div>
       )}
 

@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { DemoEnvironment, FormStep, StoredTestData } from '@/types/demo';
 import { FormStyleConfig } from '@/types/formStyle';
 import { PathCondition } from '@/types/formBuilder';
+import { Switch } from '@/components/ui/switch';
 import { FormBuilderCanvas } from './FormBuilderCanvas';
 import { TemplateSelector } from './TemplateSelector';
 import { VerificationPathConfig } from './VerificationPathConfig';
@@ -12,7 +13,7 @@ import { SaveTemplateDialog } from './SaveTemplateDialog';
 import { StoredUserDataConfig } from './StoredUserDataConfig';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
-  LayoutGrid, Settings2, Workflow, ExternalLink, Save, RotateCcw, Bookmark, Users
+  LayoutGrid, Settings2, Workflow, ExternalLink, RotateCcw, Bookmark, Users, CheckCircle2, XCircle
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -94,6 +95,19 @@ export function FormBuilderSection({ demo, onUpdate }: FormBuilderSectionProps) 
     onUpdate({ storedTestData: data });
   }, [onUpdate]);
 
+  const handleToggleFillButton = useCallback((type: 'pass' | 'fail', enabled: boolean) => {
+    const currentData = demo.storedTestData || { passData: {}, failData: {} };
+    const updatedData: StoredTestData = {
+      ...currentData,
+      showFillPassButton: type === 'pass' ? enabled : currentData.showFillPassButton,
+      showFillFailButton: type === 'fail' ? enabled : currentData.showFillFailButton,
+    };
+    onUpdate({ storedTestData: updatedData });
+  }, [demo.storedTestData, onUpdate]);
+
+  const showFillPass = demo.storedTestData?.showFillPassButton ?? false;
+  const showFillFail = demo.storedTestData?.showFillFailButton ?? false;
+
   const handleResetForm = useCallback(() => {
     if (confirm('Are you sure you want to reset all form steps? This cannot be undone.')) {
       onUpdate({
@@ -125,6 +139,33 @@ export function FormBuilderSection({ demo, onUpdate }: FormBuilderSectionProps) 
             </CardDescription>
           </div>
           <div className="flex items-center gap-2">
+            {/* Fill Button Toggles */}
+            <div className="flex items-center gap-4 pr-4 border-r border-border">
+              <div className="flex items-center gap-2">
+                <Switch
+                  id="fill-pass"
+                  checked={showFillPass}
+                  onCheckedChange={(v) => handleToggleFillButton('pass', v)}
+                  className="data-[state=checked]:bg-green-500"
+                />
+                <label htmlFor="fill-pass" className="text-sm font-medium flex items-center gap-1 cursor-pointer">
+                  <CheckCircle2 className="w-4 h-4 text-green-500" />
+                  Fill Pass
+                </label>
+              </div>
+              <div className="flex items-center gap-2">
+                <Switch
+                  id="fill-fail"
+                  checked={showFillFail}
+                  onCheckedChange={(v) => handleToggleFillButton('fail', v)}
+                  className="data-[state=checked]:bg-red-500"
+                />
+                <label htmlFor="fill-fail" className="text-sm font-medium flex items-center gap-1 cursor-pointer">
+                  <XCircle className="w-4 h-4 text-red-500" />
+                  Fill Fail
+                </label>
+              </div>
+            </div>
             <Button variant="outline" size="sm" onClick={() => setSaveTemplateOpen(true)}>
               <Bookmark className="w-4 h-4 mr-2" />
               Save as Template
