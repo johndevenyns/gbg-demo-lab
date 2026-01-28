@@ -825,10 +825,13 @@ export function DemoFlowRenderer({
         );
 
       case 'verification':
-        const qrUrl = getApiValue('qrCodeUrl') || getApiValue(currentStep.verificationConfig?.qrCodeUrlField || '');
-        const shortUrl = getApiValue('shortUrl');
-        const verifyUrl = getApiValue('verifyUrl');
-        const currentStatus = pollingStatus || getApiValue('status') || getApiValue(currentStep.verificationConfig?.statusField || '') || 'Pending';
+        // Debug: Log available API data to trace qrCodeUrl
+        console.log('Verification step - allApiData:', allApiData);
+        const qrUrl = allApiData.qrCodeUrl as string || getApiValue(currentStep.verificationConfig?.qrCodeUrlField || '');
+        const shortUrl = allApiData.shortUrl as string || '';
+        const verifyUrl = allApiData.verifyUrl as string || '';
+        const currentStatus = pollingStatus || (allApiData.status as string) || getApiValue(currentStep.verificationConfig?.statusField || '') || 'Pending';
+        console.log('Verification URLs:', { qrUrl, shortUrl, verifyUrl, currentStatus });
         
         return (
           <div className="text-center py-8 space-y-6">
