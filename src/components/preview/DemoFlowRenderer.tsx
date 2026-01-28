@@ -3,8 +3,9 @@ import { FormStep, PageElement, StepApiResponse } from '@/types/demo';
 import { FormStyleConfig, DEFAULT_FORM_STYLE } from '@/types/formStyle';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, QrCode, ArrowLeft, ArrowRight, Check, Copy, ExternalLink } from 'lucide-react';
+import { Loader2, QrCode, ArrowLeft, ArrowRight, Check, Copy, ExternalLink, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 interface DemoFlowRendererProps {
   steps: FormStep[];
@@ -178,16 +179,19 @@ export function DemoFlowRenderer({ steps, buttonColor, formStyle, onComplete }: 
     }
   };
 
-  // Simulate API call for API steps
+  // Execute real API call for API steps
   const executeApiStep = async () => {
     setIsLoading(true);
     setError(null);
     
-    try {
-      // Simulate API call with mock response
-      await new Promise(resolve => setTimeout(resolve, 1500));
+    const config = currentStep.apiStepConfig;
+    
+    // Check if endpoint URL is configured
+    if (!config?.endpointUrl) {
+      // Fall back to mock response if no endpoint configured
+      console.log('No endpoint configured, using mock response');
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Mock API response
       const mockResponse: StepApiResponse = {
         stepId: currentStep.id,
         timestamp: new Date().toISOString(),
@@ -202,14 +206,74 @@ export function DemoFlowRenderer({ steps, buttonColor, formStyle, onComplete }: 
       };
       
       setApiResponses(prev => [...prev, mockResponse]);
+      setIsLoading(false);
+      
+      if (config?.autoAdvanceOnSuccess) {
+        const delay = (config.autoAdvanceDelay || 2) * 1000;
+        setTimeout(goToNextStep, delay);
+      }
+      return;
+    }
+    
+    try {
+      // Build request body with form data
+      let requestBody: Record<string, unknown> = {};
+      
+      if (config.includeFields && config.includeFields.length > 0) {
+        // Include only specified fields
+        config.includeFields.forEach(fieldName => {
+          if (formData[fieldName] !== undefined) {
+            requestBody[fieldName] = formData[fieldName];
+          }
+        });
+      } else {
+        // Include all collected form data
+        requestBody = { ...formData };
+      }
+
+      console.log('Calling API endpoint:', config.endpointUrl);
+      console.log('Request body:', requestBody);
+
+      // Call the API proxy edge function
+      const { data, error: invokeError } = await supabase.functions.invoke('api-proxy', {
+        body: {
+          endpointUrl: config.endpointUrl,
+          method: config.method || 'POST',
+          body: requestBody,
+        },
+      });
+
+      if (invokeError) {
+        console.error('Edge function error:', invokeError);
+        throw new Error(invokeError.message || 'Failed to call API');
+      }
+
+      console.log('API response:', data);
+
+      if (!data.success) {
+        throw new Error(data.error || `API returned status ${data.status}`);
+      }
+
+      // Create response object
+      const apiResponse: StepApiResponse = {
+        stepId: currentStep.id,
+        timestamp: new Date().toISOString(),
+        data: typeof data.data === 'object' ? data.data : { response: data.data },
+      };
+      
+      setApiResponses(prev => [...prev, apiResponse]);
+      toast.success('API call successful');
       
       // Auto-advance if configured
-      if (currentStep.apiStepConfig?.autoAdvanceOnSuccess) {
-        const delay = (currentStep.apiStepConfig.autoAdvanceDelay || 2) * 1000;
+      if (config.autoAdvanceOnSuccess) {
+        const delay = (config.autoAdvanceDelay || 2) * 1000;
         setTimeout(goToNextStep, delay);
       }
     } catch (err) {
-      setError('API call failed. Please try again.');
+      console.error('API call error:', err);
+      const errorMessage = err instanceof Error ? err.message : 'API call failed. Please try again.';
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -354,28 +418,43 @@ export function DemoFlowRenderer({ steps, buttonColor, formStyle, onComplete }: 
 
     switch (currentStep.stepType) {
       case 'api':
+        const hasEndpoint = !!currentStep.apiStepConfig?.endpointUrl;
         return (
           <div className="text-center py-8">
             {isLoading ? (
               <>
                 <Loader2 className="w-12 h-12 mx-auto animate-spin text-primary mb-4" />
                 <p className="text-lg font-medium">Processing...</p>
-                <p className="text-sm text-muted-foreground">Please wait while we verify your information</p>
+                <p className="text-sm text-muted-foreground">
+                  {hasEndpoint 
+                    ? `Calling ${currentStep.apiStepConfig?.endpointUrl}...`
+                    : 'Please wait while we verify your information'
+                  }
+                </p>
               </>
             ) : error ? (
-              <>
-                <p className="text-lg font-medium text-destructive">{error}</p>
-                <Button onClick={executeApiStep} className="mt-4">Retry</Button>
-              </>
+              <div className="space-y-4">
+                <AlertCircle className="w-12 h-12 mx-auto text-destructive" />
+                <p className="text-lg font-medium text-destructive">Request Failed</p>
+                <p className="text-sm text-muted-foreground max-w-md mx-auto">{error}</p>
+                <Button onClick={executeApiStep} variant="outline" className="mt-4">
+                  Retry
+                </Button>
+              </div>
             ) : (
               <>
                 <Check className="w-12 h-12 mx-auto text-green-500 mb-4" />
-                <p className="text-lg font-medium">Submitted Successfully</p>
-                {currentStep.apiStepConfig?.responseDisplayFields?.map(field => (
-                  <p key={field} className="text-sm text-muted-foreground">
-                    {field}: {getApiValue(field)}
-                  </p>
-                ))}
+                <p className="text-lg font-medium">
+                  {hasEndpoint ? 'Request Successful' : 'Submitted Successfully'}
+                </p>
+                {currentStep.apiStepConfig?.responseDisplayFields?.map(field => {
+                  const value = getApiValue(field);
+                  return value ? (
+                    <p key={field} className="text-sm text-muted-foreground">
+                      <span className="font-medium">{field}:</span> {value}
+                    </p>
+                  ) : null;
+                })}
               </>
             )}
           </div>

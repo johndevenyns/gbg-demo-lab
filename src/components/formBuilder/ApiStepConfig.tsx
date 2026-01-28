@@ -37,16 +37,23 @@ export function ApiStepConfig({ step, onUpdateStep }: ApiStepConfigProps) {
   return (
     <div className="space-y-4">
       {/* API Preview */}
-      <div className="border-2 border-dashed border-green-500/30 rounded-lg p-6 bg-green-500/5">
+      <div className={`border-2 border-dashed rounded-lg p-6 ${config.endpointUrl ? 'border-green-500/30 bg-green-500/5' : 'border-yellow-500/30 bg-yellow-500/5'}`}>
         <div className="flex items-center justify-center gap-4">
-          <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center">
-            <Plug className="w-8 h-8 text-green-600" />
+          <div className={`w-16 h-16 rounded-full flex items-center justify-center ${config.endpointUrl ? 'bg-green-500/20' : 'bg-yellow-500/20'}`}>
+            <Plug className={`w-8 h-8 ${config.endpointUrl ? 'text-green-600' : 'text-yellow-600'}`} />
           </div>
           <div className="text-center">
-            <p className="text-lg font-semibold text-green-600">API Submission Step</p>
-            <p className="text-sm text-muted-foreground">
-              {config.method || 'POST'} → {config.endpointUrl || '(configure endpoint)'}
+            <p className={`text-lg font-semibold ${config.endpointUrl ? 'text-green-600' : 'text-yellow-600'}`}>
+              {config.endpointUrl ? 'API Submission Step' : 'API Step (Mock Mode)'}
             </p>
+            <p className="text-sm text-muted-foreground">
+              {config.method || 'POST'} → {config.endpointUrl || '(no endpoint - will use mock data)'}
+            </p>
+            {!config.endpointUrl && (
+              <p className="text-xs text-yellow-600 mt-1">
+                Configure an endpoint URL below to make real API calls
+              </p>
+            )}
             {config.responseDisplayFields && config.responseDisplayFields.length > 0 && (
               <p className="text-xs text-muted-foreground mt-1">
                 Displaying: {config.responseDisplayFields.join(', ')}
