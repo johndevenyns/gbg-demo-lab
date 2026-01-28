@@ -8,14 +8,17 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { FormStep, FormField } from '@/types/demo';
+import { VERIFICATION_PATHS } from '@/types/formBuilder';
 import { ADDRESS_VALIDATION_FIELDS } from './FieldPalette';
 import { StepActionsConfig } from './StepActionsConfig';
 import { VerificationStepConfig } from './VerificationStepConfig';
+import { ApiStepConfig } from './ApiStepConfig';
+import { PathStepConfig } from './PathStepConfig';
 import { 
   GripVertical, Trash2, ChevronDown, ChevronUp, Edit2, Check, X,
   User, Mail, Phone, Calendar, Hash, MapPin, Building, DollarSign, 
   FileText, Type, CheckSquare, MapPinCheck, Send, Smartphone, Database, FileCheck,
-  Plug, QrCode, Activity
+  Plug, QrCode, Activity, Workflow
 } from 'lucide-react';
 
 const FIELD_ICONS: Record<string, React.ReactNode> = {
@@ -316,6 +319,18 @@ export function FormStepCard({
               Verification
             </Badge>
           )}
+          {step.stepType === 'api' && (
+            <Badge variant="outline" className="text-xs bg-green-500/10 text-green-600 border-green-500/30">
+              <Plug className="w-3 h-3 mr-1" />
+              API Step
+            </Badge>
+          )}
+          {step.stepType === 'path' && (
+            <Badge variant="outline" className="text-xs bg-cyan-500/10 text-cyan-600 border-cyan-500/30">
+              <Workflow className="w-3 h-3 mr-1" />
+              Path Step
+            </Badge>
+          )}
           {step.verificationPath && (
             <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/30">
               {PATH_ICONS[step.verificationPath]}
@@ -420,6 +435,12 @@ export function FormStepCard({
               {/* Verification Configuration */}
               <VerificationStepConfig step={step} onUpdateStep={onUpdateStep} />
             </div>
+          ) : step.stepType === 'api' ? (
+            /* API Step Type */
+            <ApiStepConfig step={step} onUpdateStep={onUpdateStep} />
+          ) : step.stepType === 'path' ? (
+            /* Path Step Type */
+            <PathStepConfig step={step} onUpdateStep={onUpdateStep} />
           ) : (
             <>
               {/* Regular Form Step */}

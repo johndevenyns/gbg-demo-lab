@@ -7,7 +7,7 @@ import { VERIFICATION_PATHS } from '@/types/formBuilder';
 import { 
   User, Mail, Phone, Calendar, Hash, MapPin, Building, DollarSign, 
   FileText, Type, CheckSquare, GripVertical, Search, MapPinCheck,
-  Send, Smartphone, Database, FileCheck, Workflow, QrCode
+  Send, Smartphone, Database, FileCheck, Workflow, QrCode, Plug
 } from 'lucide-react';
 import { useState, useMemo } from 'react';
 
@@ -95,15 +95,15 @@ function DraggableField({ field, index }: DraggableFieldProps) {
   );
 }
 
-// Draggable special element (Address Validation, Submit, Paths, Verification Step)
+// Draggable special element (Address Validation, Submit, Paths, Verification Step, API Step, Path Step)
 interface DraggableSpecialProps {
   id: string;
   label: string;
   icon: React.ReactNode;
-  type: 'address_validation' | 'submit_button' | 'verification_path' | 'verification_step';
+  type: 'address_validation' | 'submit_button' | 'verification_path' | 'verification_step' | 'api_step' | 'path_step';
   pathId?: string;
   description?: string;
-  variant?: 'default' | 'purple' | 'blue' | 'green';
+  variant?: 'default' | 'purple' | 'blue' | 'green' | 'cyan';
 }
 
 function DraggableSpecial({ id, label, icon, type, pathId, description, variant = 'default' }: DraggableSpecialProps) {
@@ -121,6 +121,7 @@ function DraggableSpecial({ id, label, icon, type, pathId, description, variant 
     purple: 'border-purple-500/30 bg-purple-500/5 hover:border-purple-500/50',
     blue: 'border-blue-500/30 bg-blue-500/5 hover:border-blue-500/50',
     green: 'border-green-500/30 bg-green-500/5 hover:border-green-500/50',
+    cyan: 'border-cyan-500/30 bg-cyan-500/5 hover:border-cyan-500/50',
   };
 
   const iconColors = {
@@ -128,6 +129,7 @@ function DraggableSpecial({ id, label, icon, type, pathId, description, variant 
     purple: 'text-purple-600',
     blue: 'text-blue-600',
     green: 'text-green-600',
+    cyan: 'text-cyan-600',
   };
 
   return (
@@ -216,10 +218,26 @@ export function FieldPalette() {
                 <Workflow className="w-4 h-4" />
                 Step Types
               </span>
-              <Badge variant="outline" className="text-xs">1</Badge>
+              <Badge variant="outline" className="text-xs">3</Badge>
             </button>
             {expandedCategory === 'step-types' && (
               <div className="mt-2 space-y-1.5 pl-1">
+                <DraggableSpecial
+                  id="api-step"
+                  label="API Step"
+                  icon={<Plug className="w-4 h-4" />}
+                  type="api_step"
+                  description="API submission between steps"
+                  variant="green"
+                />
+                <DraggableSpecial
+                  id="path-step"
+                  label="Path Step"
+                  icon={<Workflow className="w-4 h-4" />}
+                  type="path_step"
+                  description="Verification path selection"
+                  variant="cyan"
+                />
                 <DraggableSpecial
                   id="verification-step"
                   label="Verification Step"

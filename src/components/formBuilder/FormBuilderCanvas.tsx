@@ -68,7 +68,44 @@ export function FormBuilderCanvas({ steps, onUpdateSteps }: FormBuilderCanvasPro
     const activeData = active.data.current;
     const overData = over.data.current;
 
-    // Handle dropping special elements (submit, paths, verification step)
+    // Handle dropping special elements (submit, paths, verification step, api step, path step)
+
+    // Handle API step - adds a new API submission step
+    if (activeData?.fromPalette && activeData?.type === 'api_step') {
+      const newStep: FormStep = {
+        id: generateId(),
+        title: 'API Submission',
+        order: steps.length + 1,
+        stepType: 'api',
+        fields: [],
+        apiStepConfig: {
+          method: 'POST',
+          autoAdvanceOnSuccess: true,
+          autoAdvanceDelay: 2,
+        },
+      };
+      onUpdateSteps([...steps, newStep]);
+      setExpandedSteps(prev => new Set([...prev, newStep.id]));
+      return;
+    }
+
+    // Handle Path step - adds a new verification path step
+    if (activeData?.fromPalette && activeData?.type === 'path_step') {
+      const newStep: FormStep = {
+        id: generateId(),
+        title: 'Verification Path',
+        order: steps.length + 1,
+        stepType: 'path',
+        fields: [],
+        pathStepConfig: {
+          pathType: 'docbio',
+          autoAdvance: true,
+        },
+      };
+      onUpdateSteps([...steps, newStep]);
+      setExpandedSteps(prev => new Set([...prev, newStep.id]));
+      return;
+    }
 
     // Handle verification step - adds a new verification step
     if (activeData?.fromPalette && activeData?.type === 'verification_step') {
@@ -376,13 +413,15 @@ export function FormBuilderCanvas({ steps, onUpdateSteps }: FormBuilderCanvasPro
               <span className="text-sm font-medium">{activeData.field?.label}</span>
             </div>
           )}
-          {activeId && activeData?.fromPalette && (activeData?.type === 'submit_button' || activeData?.type === 'verification_path' || activeData?.type === 'verification_step') && (
+          {activeId && activeData?.fromPalette && (activeData?.type === 'submit_button' || activeData?.type === 'verification_path' || activeData?.type === 'verification_step' || activeData?.type === 'api_step' || activeData?.type === 'path_step') && (
             <div className="flex items-center gap-2 p-3 rounded-md border border-primary bg-card shadow-lg">
               <GripVertical className="w-4 h-4 text-muted-foreground" />
               <span className="text-sm font-medium">
                 {activeData.type === 'submit_button' && 'Submit Button'}
                 {activeData.type === 'verification_path' && 'Verification Path'}
                 {activeData.type === 'verification_step' && 'Verification Step'}
+                {activeData.type === 'api_step' && 'API Step'}
+                {activeData.type === 'path_step' && 'Path Step'}
               </span>
             </div>
           )}

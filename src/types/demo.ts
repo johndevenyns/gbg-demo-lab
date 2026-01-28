@@ -101,7 +101,40 @@ export interface VerificationStepConfig {
 }
 
 // Step type enumeration
-export type FormStepType = 'form' | 'verification';
+export type FormStepType = 'form' | 'verification' | 'api' | 'path';
+
+// API Step configuration (standalone API call step)
+export interface ApiStepConfig {
+  // Endpoint configuration
+  endpointUrl?: string;
+  method?: 'GET' | 'POST' | 'PUT' | 'PATCH';
+  
+  // Fields to include in submission (from previous steps)
+  includeFields?: string[];
+  
+  // Response field mappings for display
+  responseDisplayFields?: string[];
+  
+  // Auto-advance after API response
+  autoAdvanceOnSuccess?: boolean;
+  autoAdvanceDelay?: number; // seconds
+}
+
+// Path Step configuration (verification path decision step)
+export interface PathStepConfig {
+  // The verification path type
+  pathType: 'docbio' | 'databio' | 'dataonly' | 'mdl';
+  
+  // Resource ID for this path
+  resourceId?: string;
+  
+  // Display settings
+  title?: string;
+  description?: string;
+  
+  // Auto-advance behavior
+  autoAdvance?: boolean;
+}
 
 export interface FormStep {
   id: string;
@@ -117,10 +150,14 @@ export interface FormStep {
   verificationPath?: 'docbio' | 'databio' | 'dataonly' | 'mdl';
   // Button configuration
   buttons?: StepButton[];
-  // API configuration
+  // API configuration (for form steps with inline API calls)
   apiConfig?: StepApiConfig;
   // Verification step configuration (only used when stepType = 'verification')
   verificationConfig?: VerificationStepConfig;
+  // API step configuration (only used when stepType = 'api')
+  apiStepConfig?: ApiStepConfig;
+  // Path step configuration (only used when stepType = 'path')
+  pathStepConfig?: PathStepConfig;
 }
 
 export interface FormField {
