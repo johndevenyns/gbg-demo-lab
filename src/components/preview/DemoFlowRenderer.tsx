@@ -72,9 +72,10 @@ interface StyledFormFieldsProps {
   formData: Record<string, string>;
   onInputChange: (fieldName: string, value: string) => void;
   style: FormStyleConfig;
+  fieldErrors?: Record<string, string>;
 }
 
-function StyledFormFields({ fields, formData, onInputChange, style }: StyledFormFieldsProps) {
+function StyledFormFields({ fields, formData, onInputChange, style, fieldErrors = {} }: StyledFormFieldsProps) {
   const borderRadiusMap = {
     none: '0px',
     sm: '4px',
@@ -107,18 +108,18 @@ function StyledFormFields({ fields, formData, onInputChange, style }: StyledForm
     relaxed: '24px',
   };
 
-  const inputStyle: React.CSSProperties = {
+  const getInputStyle = (fieldName: string): React.CSSProperties => ({
     fontFamily: style.fontFamily,
     fontSize: fontSizeMap[style.fontSize],
     backgroundColor: style.inputBgColor,
     color: style.inputTextColor,
-    border: `${style.borderWidth}px solid ${style.inputBorderColor}`,
+    border: `${style.borderWidth}px solid ${fieldErrors[fieldName] ? style.errorColor : style.inputBorderColor}`,
     borderRadius: borderRadiusMap[style.borderRadius],
     padding: paddingMap[style.inputPadding || 'md'],
     width: '100%',
     outline: 'none',
     transition: 'border-color 0.2s, box-shadow 0.2s',
-  };
+  });
 
   const labelStyle: React.CSSProperties = {
     fontFamily: style.fontFamily,
@@ -127,6 +128,13 @@ function StyledFormFields({ fields, formData, onInputChange, style }: StyledForm
     fontWeight: labelWeightMap[style.labelWeight || 'medium'],
     marginBottom: '6px',
     display: 'block',
+  };
+
+  const errorStyle: React.CSSProperties = {
+    fontFamily: style.fontFamily,
+    fontSize: '12px',
+    color: style.errorColor,
+    marginTop: '4px',
   };
 
   return (
@@ -142,16 +150,23 @@ function StyledFormFields({ fields, formData, onInputChange, style }: StyledForm
             placeholder={field.placeholder}
             value={formData[field.name] || ''}
             onChange={(e) => onInputChange(field.name, e.target.value)}
-            style={inputStyle}
+            style={getInputStyle(field.name)}
             onFocus={(e) => {
-              e.target.style.borderColor = style.inputFocusBorderColor;
-              e.target.style.boxShadow = `0 0 0 3px ${style.inputFocusBorderColor}20`;
+              if (!fieldErrors[field.name]) {
+                e.target.style.borderColor = style.inputFocusBorderColor;
+                e.target.style.boxShadow = `0 0 0 3px ${style.inputFocusBorderColor}20`;
+              }
             }}
             onBlur={(e) => {
-              e.target.style.borderColor = style.inputBorderColor;
-              e.target.style.boxShadow = 'none';
+              if (!fieldErrors[field.name]) {
+                e.target.style.borderColor = style.inputBorderColor;
+                e.target.style.boxShadow = 'none';
+              }
             }}
           />
+          {fieldErrors[field.name] && (
+            <p style={errorStyle}>{fieldErrors[field.name]}</p>
+          )}
         </div>
       ))}
     </div>
@@ -197,6 +212,9 @@ export function DemoFlowRenderer({
   } | null>(null);
   const [pendingNextStep, setPendingNextStep] = useState(false);
 
+  // Form validation state
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
   // Use provided form style or default
   const style = formStyle || DEFAULT_FORM_STYLE;
 
@@ -227,7 +245,40 @@ export function DemoFlowRenderer({
 
   const handleInputChange = (fieldName: string, value: string) => {
     setFormData(prev => ({ ...prev, [fieldName]: value }));
+    // Clear error when user starts typing
+    if (fieldErrors[fieldName]) {
+      setFieldErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[fieldName];
+        return newErrors;
+      });
+    }
   };
+
+  // Validate required fields for current step
+  const validateRequiredFields = useCallback((): boolean => {
+    if (!currentStep?.fields) return true;
+    
+    const errors: Record<string, string> = {};
+    
+    currentStep.fields.forEach(field => {
+      if (field.required) {
+        const value = formData[field.name];
+        if (!value || (typeof value === 'string' && !value.trim())) {
+          errors[field.name] = `${field.label} is required`;
+        }
+      }
+    });
+    
+    setFieldErrors(errors);
+    
+    if (Object.keys(errors).length > 0) {
+      toast.error('Please fill in all required fields');
+      return false;
+    }
+    
+    return true;
+  }, [currentStep?.fields, formData]);
 
   // Fill form with test data (pass or fail)
   const fillTestData = useCallback((type: 'pass' | 'fail') => {
@@ -362,6 +413,11 @@ export function DemoFlowRenderer({
   }, []);
 
   const goToNextStep = useCallback(async () => {
+    // First validate required fields for form steps
+    if (currentStep?.stepType === 'form' && !validateRequiredFields()) {
+      return;
+    }
+
     // Check if address validation is enabled and step has address fields
     if (currentStep?.addressValidationEnabled && hasAddressFields(currentStep)) {
       setIsLoading(true);
@@ -390,10 +446,11 @@ export function DemoFlowRenderer({
     
     // No validation needed or validation passed
     proceedToNextStep();
-  }, [currentStep, hasAddressFields, validateAddress, formData, proceedToNextStep]);
+  }, [currentStep, hasAddressFields, validateAddress, formData, proceedToNextStep, validateRequiredFields]);
 
   const goToPrevStep = () => {
     if (!isFirstStep) {
+      setFieldErrors({});
       setCurrentStepIndex(prev => prev - 1);
     }
   };
@@ -953,6 +1010,7 @@ export function DemoFlowRenderer({
             formData={formData}
             onInputChange={handleInputChange}
             style={style}
+            fieldErrors={fieldErrors}
           />
         );
     }
