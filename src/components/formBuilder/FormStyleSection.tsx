@@ -96,6 +96,33 @@ export function FormStyleSection({ demo, formStyle, onUpdateStyle, scrapedBrandi
 
           {/* Mirrored Tab */}
           <TabsContent value="mirrored" className="space-y-4">
+            {/* Form Style URL Input */}
+            <div className="space-y-2">
+              <Label htmlFor="form-style-url">Customer Form URL</Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  id="form-style-url"
+                  placeholder="https://customer.com/apply or /signup"
+                  value={formStyle.formStyleUrl || ''}
+                  onChange={(e) => onUpdateStyle({ ...formStyle, formStyleUrl: e.target.value })}
+                />
+                {formStyle.formStyleUrl && (
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    asChild
+                  >
+                    <a href={formStyle.formStyleUrl} target="_blank" rel="noopener noreferrer">
+                      <Globe className="w-4 h-4" />
+                    </a>
+                  </Button>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Specify a URL to a form page on the customer's site to reference their form styling
+              </p>
+            </div>
+
             {hasMirroredData ? (
               <div className="space-y-4">
                 <div className="p-4 rounded-lg bg-muted/50 border border-border">
