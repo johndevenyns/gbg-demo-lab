@@ -101,6 +101,22 @@ export interface MdlProvider {
 // Available mDL providers (from the reference HTML)
 export const AVAILABLE_MDL_PROVIDERS: MdlProvider[] = [
   {
+    id: 'clear',
+    name: 'Clear',
+    domain: 'clearme.com',
+    logoUrl: 'https://content.trinsic.id/connect/integrations/clear-logo.svg',
+    providerKey: 'clear',
+    enabled: true,
+  },
+  {
+    id: 'la-wallet',
+    name: 'LA Wallet',
+    domain: 'lawallet.com',
+    logoUrl: 'https://content.trinsic.id/connect/integrations/la-wallet-logo.svg',
+    providerKey: 'la-wallet',
+    enabled: true,
+  },
+  {
     id: 'mitid',
     name: 'MitID',
     domain: 'mitid.dk',
@@ -169,7 +185,8 @@ export interface VerificationStepConfig {
 }
 
 // Step type enumeration
-export type FormStepType = 'form' | 'verification' | 'api' | 'path' | 'page';
+// Step type enumeration
+export type FormStepType = 'form' | 'verification' | 'api' | 'path' | 'page' | 'method_selection';
 
 // API Step configuration (standalone API call step)
 export interface ApiStepConfig {
@@ -250,6 +267,23 @@ export interface PageStepConfig {
   autoAdvanceFieldValue?: string;
 }
 
+// Method Selection Step configuration (lets user choose between Doc Verification and mDL)
+export interface MethodSelectionStepConfig {
+  // Title and description
+  title?: string;
+  subtitle?: string;
+  
+  // Document Scan option
+  documentScanEnabled: boolean;
+  documentScanTitle?: string;
+  documentScanDescription?: string;
+  documentScanPath?: 'docbio' | 'databio'; // Which verification path for document scan
+  
+  // Mobile ID Providers option
+  mobileIdEnabled: boolean;
+  mobileIdProviders?: MdlProvider[];
+}
+
 export interface FormStep {
   id: string;
   title: string;
@@ -274,6 +308,8 @@ export interface FormStep {
   pathStepConfig?: PathStepConfig;
   // Page step configuration (only used when stepType = 'page')
   pageStepConfig?: PageStepConfig;
+  // Method selection step configuration (only used when stepType = 'method_selection')
+  methodSelectionConfig?: MethodSelectionStepConfig;
 }
 
 export interface FormField {
