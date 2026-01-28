@@ -73,6 +73,7 @@ export function StoredUserDataConfig({
 
   const handleFieldChange = (type: 'pass' | 'fail', fieldName: string, value: string) => {
     const newData: StoredTestData = {
+      ...storedTestData, // Preserve existing flags (showFillPassButton, showFillFailButton)
       passData: type === 'pass' ? { ...passData, [fieldName]: value } : passData,
       failData: type === 'fail' ? { ...failData, [fieldName]: value } : failData,
     };
@@ -81,6 +82,7 @@ export function StoredUserDataConfig({
 
   const handlePopulateDefaults = (type: 'pass' | 'fail') => {
     const newData: StoredTestData = {
+      ...storedTestData, // Preserve existing flags
       passData: type === 'pass' ? { ...DEFAULT_PASS_DATA } : passData,
       failData: type === 'fail' ? { ...DEFAULT_FAIL_DATA } : failData,
     };
@@ -93,6 +95,7 @@ export function StoredUserDataConfig({
 
   const handleClearData = (type: 'pass' | 'fail') => {
     const newData: StoredTestData = {
+      ...storedTestData, // Preserve existing flags
       passData: type === 'pass' ? {} : passData,
       failData: type === 'fail' ? {} : failData,
     };
