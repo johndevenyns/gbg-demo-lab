@@ -15,11 +15,12 @@ import { VerificationStepConfig } from './VerificationStepConfig';
 import { ApiStepConfig } from './ApiStepConfig';
 import { PathStepConfig } from './PathStepConfig';
 import { PageStepConfig } from './PageStepConfig';
+import { MethodSelectionStepConfig } from './MethodSelectionStepConfig';
 import { 
   GripVertical, Trash2, ChevronDown, ChevronUp, Edit2, Check, X,
   User, Mail, Phone, Calendar, Hash, MapPin, Building, DollarSign, 
   FileText, Type, CheckSquare, MapPinCheck, Send, Smartphone, Database, FileCheck,
-  Plug, QrCode, Activity, Workflow
+  Plug, QrCode, Activity, Workflow, SplitSquareVertical
 } from 'lucide-react';
 
 const FIELD_ICONS: Record<string, React.ReactNode> = {
@@ -338,6 +339,12 @@ export function FormStepCard({
               Page
             </Badge>
           )}
+          {step.stepType === 'method_selection' && (
+            <Badge variant="outline" className="text-xs bg-indigo-500/10 text-indigo-600 border-indigo-500/30">
+              <SplitSquareVertical className="w-3 h-3 mr-1" />
+              Method Selection
+            </Badge>
+          )}
           {step.verificationPath && (
             <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/30">
               {PATH_ICONS[step.verificationPath]}
@@ -451,6 +458,41 @@ export function FormStepCard({
           ) : step.stepType === 'page' ? (
             /* Page Step Type */
             <PageStepConfig step={step} onUpdateStep={onUpdateStep} />
+          ) : step.stepType === 'method_selection' ? (
+            /* Method Selection Step Type */
+            <div className="space-y-4">
+              {/* Method Selection Preview */}
+              <div className="border-2 border-dashed border-indigo-500/30 rounded-lg p-6 bg-indigo-500/5">
+                <div className="text-center space-y-4">
+                  <SplitSquareVertical className="w-12 h-12 mx-auto text-indigo-500/50" />
+                  <div>
+                    <p className="font-medium text-indigo-600">
+                      {step.methodSelectionConfig?.title || 'Choose your verification method'}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {step.methodSelectionConfig?.subtitle || 'Select how you\'d like to verify your identity'}
+                    </p>
+                  </div>
+                  <div className="flex justify-center gap-4 text-sm">
+                    {step.methodSelectionConfig?.documentScanEnabled && (
+                      <div className="flex items-center gap-1 text-blue-600">
+                        <FileText className="w-4 h-4" />
+                        <span>Document Scan</span>
+                      </div>
+                    )}
+                    {step.methodSelectionConfig?.mobileIdEnabled && (
+                      <div className="flex items-center gap-1 text-green-600">
+                        <Smartphone className="w-4 h-4" />
+                        <span>Mobile ID ({(step.methodSelectionConfig?.mobileIdProviders || []).filter(p => p.enabled).length} providers)</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+              
+              {/* Method Selection Configuration */}
+              <MethodSelectionStepConfig step={step} onUpdateStep={onUpdateStep} />
+            </div>
           ) : (
             <>
               {/* Regular Form Step */}

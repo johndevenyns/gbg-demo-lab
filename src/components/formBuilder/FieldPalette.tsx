@@ -95,15 +95,15 @@ function DraggableField({ field, index }: DraggableFieldProps) {
   );
 }
 
-// Draggable special element (Address Validation, Submit, Paths, Verification Step, API Step, Path Step, Page Step)
+// Draggable special element (Address Validation, Submit, Paths, Verification Step, API Step, Path Step, Page Step, Method Selection)
 interface DraggableSpecialProps {
   id: string;
   label: string;
   icon: React.ReactNode;
-  type: 'address_validation' | 'submit_button' | 'verification_path' | 'verification_step' | 'api_step' | 'path_step' | 'page_step';
+  type: 'address_validation' | 'submit_button' | 'verification_path' | 'verification_step' | 'api_step' | 'path_step' | 'page_step' | 'method_selection_step';
   pathId?: string;
   description?: string;
-  variant?: 'default' | 'purple' | 'blue' | 'green' | 'cyan' | 'orange';
+  variant?: 'default' | 'purple' | 'blue' | 'green' | 'cyan' | 'orange' | 'indigo';
 }
 
 function DraggableSpecial({ id, label, icon, type, pathId, description, variant = 'default' }: DraggableSpecialProps) {
@@ -123,6 +123,7 @@ function DraggableSpecial({ id, label, icon, type, pathId, description, variant 
     green: 'border-green-500/30 bg-green-500/5 hover:border-green-500/50',
     cyan: 'border-cyan-500/30 bg-cyan-500/5 hover:border-cyan-500/50',
     orange: 'border-orange-500/30 bg-orange-500/5 hover:border-orange-500/50',
+    indigo: 'border-indigo-500/30 bg-indigo-500/5 hover:border-indigo-500/50',
   };
 
   const iconColors = {
@@ -132,6 +133,7 @@ function DraggableSpecial({ id, label, icon, type, pathId, description, variant 
     green: 'text-green-600',
     cyan: 'text-cyan-600',
     orange: 'text-orange-600',
+    indigo: 'text-indigo-600',
   };
 
   return (
@@ -220,7 +222,7 @@ export function FieldPalette() {
                 <Workflow className="w-4 h-4" />
                 Step Types
               </span>
-              <Badge variant="outline" className="text-xs">4</Badge>
+              <Badge variant="outline" className="text-xs">5</Badge>
             </button>
             {expandedCategory === 'step-types' && (
               <div className="mt-2 space-y-1.5 pl-1">
@@ -255,6 +257,14 @@ export function FieldPalette() {
                   type="page_step"
                   description="Custom display page with API data"
                   variant="orange"
+                />
+                <DraggableSpecial
+                  id="method-selection-step"
+                  label="Method Selection"
+                  icon={<Smartphone className="w-4 h-4" />}
+                  type="method_selection_step"
+                  description="Doc scan or mDL choice"
+                  variant="indigo"
                 />
               </div>
             )}
