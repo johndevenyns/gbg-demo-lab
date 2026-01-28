@@ -3,16 +3,10 @@ import { DemoEnvironment, FormStep, INDUSTRY_TEMPLATES, IndustryTemplate, Stored
 import { TablesInsert } from "@/integrations/supabase/types";
 import { FormStyleConfig, DEFAULT_FORM_STYLE } from "@/types/formStyle";
 
-// Extended form style with test data
-interface FormStyleWithTestData extends FormStyleConfig {
-  storedTestData?: StoredTestData;
-}
-
 // Helper to convert database row to DemoEnvironment
 const rowToDemo = (row: any): DemoEnvironment => {
-  // Extract storedTestData from formStyle if present
-  const formStyleWithData = row.form_style as FormStyleWithTestData | null;
-  const { storedTestData, ...formStyleOnly } = formStyleWithData || {};
+  // Parse storedTestData from its dedicated column
+  const storedTestData = row.stored_test_data as StoredTestData | null;
   
   return {
     id: row.id,
@@ -39,8 +33,8 @@ const rowToDemo = (row: any): DemoEnvironment => {
     scrapedHeaderHtml: row.scraped_header_html || '',
     scrapedFooterHtml: row.scraped_footer_html || '',
     scrapedCss: row.scraped_css || '',
-    formStyle: Object.keys(formStyleOnly).length > 0 ? formStyleOnly as FormStyleConfig : DEFAULT_FORM_STYLE,
-    storedTestData: storedTestData,
+    formStyle: (row.form_style as FormStyleConfig) || DEFAULT_FORM_STYLE,
+    storedTestData: storedTestData || undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     isActive: row.is_active ?? true,
@@ -73,18 +67,8 @@ const demoToRow = (demo: Partial<DemoEnvironment>) => {
   if (demo.scrapedHeaderHtml !== undefined) row.scraped_header_html = demo.scrapedHeaderHtml;
   if (demo.scrapedFooterHtml !== undefined) row.scraped_footer_html = demo.scrapedFooterHtml;
   if (demo.scrapedCss !== undefined) row.scraped_css = demo.scrapedCss;
-  
-  // Combine formStyle and storedTestData into one JSON field
-  if (demo.formStyle !== undefined || demo.storedTestData !== undefined) {
-    // Get existing formStyle or use defaults
-    const baseStyle = demo.formStyle || DEFAULT_FORM_STYLE;
-    const formStyleWithData: FormStyleWithTestData = {
-      ...baseStyle,
-      storedTestData: demo.storedTestData,
-    };
-    row.form_style = formStyleWithData;
-  }
-  
+  if (demo.formStyle !== undefined) row.form_style = demo.formStyle;
+  if (demo.storedTestData !== undefined) row.stored_test_data = demo.storedTestData;
   if (demo.isActive !== undefined) row.is_active = demo.isActive;
   return row;
 };

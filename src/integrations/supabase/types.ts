@@ -42,6 +42,7 @@ export type Database = {
           scraped_footer_html: string | null
           scraped_header_html: string | null
           slug: string
+          stored_test_data: Json | null
           updated_at: string | null
           verification_type: Database["public"]["Enums"]["verification_type"]
         }
@@ -72,6 +73,7 @@ export type Database = {
           scraped_footer_html?: string | null
           scraped_header_html?: string | null
           slug: string
+          stored_test_data?: Json | null
           updated_at?: string | null
           verification_type?: Database["public"]["Enums"]["verification_type"]
         }
@@ -102,6 +104,7 @@ export type Database = {
           scraped_footer_html?: string | null
           scraped_header_html?: string | null
           slug?: string
+          stored_test_data?: Json | null
           updated_at?: string | null
           verification_type?: Database["public"]["Enums"]["verification_type"]
         }
