@@ -122,7 +122,14 @@ export function AddressValidationDialog({
           )}
         </div>
         
-        <DialogFooter className="gap-2">
+        <DialogFooter className="gap-2 sm:justify-between">
+          <Button 
+            variant="ghost" 
+            onClick={() => onProceed(true)}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            Skip Validation
+          </Button>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Edit Address
           </Button>
