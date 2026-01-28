@@ -96,9 +96,51 @@ export function FormBuilderSection({ demo, onUpdate }: FormBuilderSectionProps) 
   }, [onUpdate]);
 
   const handleToggleFillButton = useCallback((type: 'pass' | 'fail', enabled: boolean) => {
+    const DEFAULT_PASS_DATA: Record<string, string> = {
+      firstName: 'John',
+      lastName: 'Smith',
+      email: 'john.smith@example.com',
+      phone: '(555) 123-4567',
+      dateOfBirth: '1985-06-15',
+      ssn: '1234',
+      addressStreet: '123 Main Street',
+      addressCity: 'Austin',
+      addressState: 'TX',
+      addressZip: '78701',
+      addressCountry: 'United States',
+    };
+    
+    const DEFAULT_FAIL_DATA: Record<string, string> = {
+      firstName: 'Jane',
+      lastName: 'Doe',
+      email: 'jane.doe@example.com',
+      phone: '(555) 987-6543',
+      dateOfBirth: '1990-01-01',
+      ssn: '0000',
+      addressStreet: '456 Fake Street',
+      addressCity: 'Nowhere',
+      addressState: 'XX',
+      addressZip: '00000',
+      addressCountry: 'Unknown',
+    };
+    
     const currentData = demo.storedTestData || { passData: {}, failData: {} };
+    
+    // When enabling, populate with defaults if data is empty
+    let updatedPassData = currentData.passData;
+    let updatedFailData = currentData.failData;
+    
+    if (enabled && type === 'pass' && (!currentData.passData || Object.keys(currentData.passData).length === 0)) {
+      updatedPassData = DEFAULT_PASS_DATA;
+    }
+    if (enabled && type === 'fail' && (!currentData.failData || Object.keys(currentData.failData).length === 0)) {
+      updatedFailData = DEFAULT_FAIL_DATA;
+    }
+    
     const updatedData: StoredTestData = {
       ...currentData,
+      passData: updatedPassData,
+      failData: updatedFailData,
       showFillPassButton: type === 'pass' ? enabled : currentData.showFillPassButton,
       showFillFailButton: type === 'fail' ? enabled : currentData.showFillFailButton,
     };
