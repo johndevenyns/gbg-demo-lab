@@ -17,6 +17,7 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
+import { restrictToWindowEdges } from '@dnd-kit/modifiers';
 import { Button } from '@/components/ui/button';
 import { FormStep, FormField } from '@/types/demo';
 import { FormStepCard } from './FormStepCard';
@@ -298,6 +299,7 @@ export function FormBuilderCanvas({ steps, onUpdateSteps }: FormBuilderCanvasPro
     <DndContext
       sensors={sensors}
       collisionDetection={closestCenter}
+      modifiers={[restrictToWindowEdges]}
       onDragStart={handleDragStart}
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
