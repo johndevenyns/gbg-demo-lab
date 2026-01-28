@@ -823,9 +823,9 @@ export function DemoFlowRenderer({
     );
   }
 
-  // Determine which fill buttons to show based on config
-  const showPassButton = showTestButtons && storedTestData?.showFillPassButton && Object.keys(storedTestData?.passData || {}).length > 0;
-  const showFailButton = showTestButtons && storedTestData?.showFillFailButton && Object.keys(storedTestData?.failData || {}).length > 0;
+  // Determine which fill buttons to show based on config - show button if toggle is enabled
+  const showPassButton = showTestButtons && storedTestData?.showFillPassButton === true;
+  const showFailButton = showTestButtons && storedTestData?.showFillFailButton === true;
   const showAnyFillButton = (showPassButton || showFailButton) && (currentStep?.stepType === 'form' || !currentStep?.stepType);
 
   return (

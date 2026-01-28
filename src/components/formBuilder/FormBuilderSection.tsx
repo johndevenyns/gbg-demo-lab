@@ -92,9 +92,8 @@ export function FormBuilderSection({ demo, onUpdate }: FormBuilderSectionProps) 
   }, [onUpdate]);
 
   const handleUpdateStoredTestData = useCallback((data: StoredTestData) => {
-    // Include formStyle to ensure proper persistence (storedTestData is stored within formStyle JSON)
-    onUpdate({ storedTestData: data, formStyle: demo.formStyle });
-  }, [onUpdate, demo.formStyle]);
+    onUpdate({ storedTestData: data });
+  }, [onUpdate]);
 
   const handleToggleFillButton = useCallback((type: 'pass' | 'fail', enabled: boolean) => {
     const currentData = demo.storedTestData || { passData: {}, failData: {} };
@@ -103,9 +102,8 @@ export function FormBuilderSection({ demo, onUpdate }: FormBuilderSectionProps) 
       showFillPassButton: type === 'pass' ? enabled : currentData.showFillPassButton,
       showFillFailButton: type === 'fail' ? enabled : currentData.showFillFailButton,
     };
-    // Include formStyle to ensure proper persistence (storedTestData is stored within formStyle JSON)
-    onUpdate({ storedTestData: updatedData, formStyle: demo.formStyle });
-  }, [demo.storedTestData, demo.formStyle, onUpdate]);
+    onUpdate({ storedTestData: updatedData });
+  }, [demo.storedTestData, onUpdate]);
 
   const showFillPass = demo.storedTestData?.showFillPassButton ?? false;
   const showFillFail = demo.storedTestData?.showFillFailButton ?? false;
