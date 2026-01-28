@@ -7,10 +7,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Switch } from "@/components/ui/switch";
 import { useDemo, useUpdateDemo } from "@/hooks/useDemos";
 import { DemoEnvironment } from "@/types/demo";
+import { FormStyleConfig, DEFAULT_FORM_STYLE } from "@/types/formStyle";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
 import { SiteMirrorCard } from "@/components/admin/SiteMirrorCard";
-import { FormBuilderSection } from "@/components/formBuilder";
+import { FormBuilderSection, FormStyleSection } from "@/components/formBuilder";
 
 // Reusable Logo Thumbnail component
 function LogoThumbnail({ url, size = 'md' }: { url?: string | null; size?: 'sm' | 'md' }) {
@@ -199,6 +200,13 @@ export default function DemoConfig() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Form Styling */}
+        <FormStyleSection
+          demo={localDemo}
+          formStyle={localDemo.formStyle || DEFAULT_FORM_STYLE}
+          onUpdateStyle={(style: FormStyleConfig) => handleUpdate({ formStyle: style })}
+        />
 
         {/* Application Form Builder */}
         <FormBuilderSection demo={localDemo} onUpdate={handleUpdate} />

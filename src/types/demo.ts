@@ -4,6 +4,9 @@ export type VerificationType = 'docBio' | 'dataBio' | 'dataOnly';
 
 export type IndustryTemplate = 'bank' | 'rental_car' | 'online_gambling' | 'healthcare' | 'insurance' | 'retail' | 'custom';
 
+// Import form style config type
+import { FormStyleConfig } from './formStyle';
+
 export interface DemoEnvironment {
   id: string;
   slug: string;
@@ -38,6 +41,9 @@ export interface DemoEnvironment {
   scrapedHeaderHtml?: string;
   scrapedFooterHtml?: string;
   scrapedCss?: string;
+  
+  // Form styling
+  formStyle?: FormStyleConfig;
   
   // Feature toggles
   includeAddressVerification: boolean;

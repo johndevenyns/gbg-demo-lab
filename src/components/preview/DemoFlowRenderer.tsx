@@ -1,8 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { FormStep, PageElement, StepApiResponse } from '@/types/demo';
+import { FormStyleConfig, DEFAULT_FORM_STYLE } from '@/types/formStyle';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, QrCode, ArrowLeft, ArrowRight, Check, Copy, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
@@ -10,6 +9,7 @@ import { toast } from 'sonner';
 interface DemoFlowRendererProps {
   steps: FormStep[];
   buttonColor: string;
+  formStyle?: FormStyleConfig;
   onComplete?: () => void;
 }
 
@@ -33,12 +33,107 @@ function QRCodeDisplay({ url, size = 200 }: { url: string; size?: number }) {
   );
 }
 
-export function DemoFlowRenderer({ steps, buttonColor, onComplete }: DemoFlowRendererProps) {
+// Styled form fields component with custom styling applied
+interface StyledFormFieldsProps {
+  fields: FormStep['fields'];
+  formData: Record<string, string>;
+  onInputChange: (fieldName: string, value: string) => void;
+  style: FormStyleConfig;
+}
+
+function StyledFormFields({ fields, formData, onInputChange, style }: StyledFormFieldsProps) {
+  const borderRadiusMap = {
+    none: '0px',
+    sm: '4px',
+    md: '8px',
+    lg: '12px',
+    full: '9999px',
+  };
+
+  const paddingMap = {
+    sm: '8px 12px',
+    md: '10px 14px',
+    lg: '14px 18px',
+  };
+
+  const fontSizeMap = {
+    sm: '14px',
+    base: '16px',
+    lg: '18px',
+  };
+
+  const labelWeightMap = {
+    normal: 400,
+    medium: 500,
+    semibold: 600,
+  };
+
+  const spacingMap = {
+    compact: '12px',
+    normal: '16px',
+    relaxed: '24px',
+  };
+
+  const inputStyle: React.CSSProperties = {
+    fontFamily: style.fontFamily,
+    fontSize: fontSizeMap[style.fontSize],
+    backgroundColor: style.inputBgColor,
+    color: style.inputTextColor,
+    border: `${style.borderWidth}px solid ${style.inputBorderColor}`,
+    borderRadius: borderRadiusMap[style.borderRadius],
+    padding: paddingMap[style.inputPadding || 'md'],
+    width: '100%',
+    outline: 'none',
+    transition: 'border-color 0.2s, box-shadow 0.2s',
+  };
+
+  const labelStyle: React.CSSProperties = {
+    fontFamily: style.fontFamily,
+    fontSize: fontSizeMap[style.fontSize],
+    color: style.labelColor,
+    fontWeight: labelWeightMap[style.labelWeight || 'medium'],
+    marginBottom: '6px',
+    display: 'block',
+  };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: spacingMap[style.fieldSpacing || 'normal'] }}>
+      {fields.map((field) => (
+        <div key={field.id}>
+          <label style={labelStyle}>
+            {field.label}
+            {field.required && <span style={{ color: style.errorColor, marginLeft: '4px' }}>*</span>}
+          </label>
+          <input
+            type={field.type === 'email' ? 'email' : field.type === 'phone' ? 'tel' : 'text'}
+            placeholder={field.placeholder}
+            value={formData[field.name] || ''}
+            onChange={(e) => onInputChange(field.name, e.target.value)}
+            style={inputStyle}
+            onFocus={(e) => {
+              e.target.style.borderColor = style.inputFocusBorderColor;
+              e.target.style.boxShadow = `0 0 0 3px ${style.inputFocusBorderColor}20`;
+            }}
+            onBlur={(e) => {
+              e.target.style.borderColor = style.inputBorderColor;
+              e.target.style.boxShadow = 'none';
+            }}
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function DemoFlowRenderer({ steps, buttonColor, formStyle, onComplete }: DemoFlowRendererProps) {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [apiResponses, setApiResponses] = useState<StepApiResponse[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Use provided form style or default
+  const style = formStyle || DEFAULT_FORM_STYLE;
 
   const currentStep = steps[currentStepIndex];
   const isFirstStep = currentStepIndex === 0;
@@ -335,24 +430,14 @@ export function DemoFlowRenderer({ steps, buttonColor, onComplete }: DemoFlowRen
         );
 
       default:
-        // Form step
+        // Form step - apply custom styling
         return (
-          <div className="space-y-4">
-            {currentStep.fields.map((field) => (
-              <div key={field.id} className="space-y-2">
-                <Label>
-                  {field.label}
-                  {field.required && <span className="text-destructive ml-1">*</span>}
-                </Label>
-                <Input
-                  type={field.type === 'email' ? 'email' : field.type === 'phone' ? 'tel' : 'text'}
-                  placeholder={field.placeholder}
-                  value={formData[field.name] || ''}
-                  onChange={(e) => handleInputChange(field.name, e.target.value)}
-                />
-              </div>
-            ))}
-          </div>
+          <StyledFormFields
+            fields={currentStep.fields}
+            formData={formData}
+            onInputChange={handleInputChange}
+            style={style}
+          />
         );
     }
   };
