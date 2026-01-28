@@ -460,8 +460,8 @@ export function FormStyleSection({ demo, formStyle, onUpdateStyle, scrapedBrandi
 
         {/* Live Preview */}
         <div className="mt-6 pt-6 border-t border-border">
-          <Label className="text-sm font-medium mb-3 block">Live Preview</Label>
-          <FormStylePreview style={formStyle} />
+          <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide mb-3">Live Preview</h4>
+          <FormStylePreview style={formStyle} buttonColor={demo.buttonColor} />
         </div>
       </CardContent>
     </Card>
@@ -469,7 +469,9 @@ export function FormStyleSection({ demo, formStyle, onUpdateStyle, scrapedBrandi
 }
 
 // Live preview component showing how the form will look
-function FormStylePreview({ style }: { style: FormStyleConfig }) {
+function FormStylePreview({ style, buttonColor }: { style: FormStyleConfig; buttonColor?: string }) {
+  const [focusedField, setFocusedField] = useState<string | null>(null);
+
   const borderRadiusMap = {
     none: '0px',
     sm: '4px',
@@ -496,18 +498,25 @@ function FormStylePreview({ style }: { style: FormStyleConfig }) {
     semibold: 600,
   };
 
-  const inputStyle: React.CSSProperties = {
+  const fieldSpacingMap = {
+    compact: '12px',
+    normal: '16px',
+    relaxed: '24px',
+  };
+
+  const getInputStyle = (fieldId: string): React.CSSProperties => ({
     fontFamily: style.fontFamily,
     fontSize: fontSizeMap[style.fontSize],
     backgroundColor: style.inputBgColor,
     color: style.inputTextColor,
-    border: `${style.borderWidth}px solid ${style.inputBorderColor}`,
+    border: `${style.borderWidth}px solid ${focusedField === fieldId ? style.inputFocusBorderColor : style.inputBorderColor}`,
     borderRadius: borderRadiusMap[style.borderRadius],
     padding: paddingMap[style.inputPadding || 'md'],
     width: '100%',
     outline: 'none',
-    transition: 'border-color 0.2s',
-  };
+    transition: 'border-color 0.2s, box-shadow 0.2s',
+    boxShadow: focusedField === fieldId ? `0 0 0 3px ${style.inputFocusBorderColor}20` : 'none',
+  });
 
   const labelStyle: React.CSSProperties = {
     fontFamily: style.fontFamily,
@@ -518,41 +527,127 @@ function FormStylePreview({ style }: { style: FormStyleConfig }) {
     display: 'block',
   };
 
+  const buttonStyle: React.CSSProperties = {
+    fontFamily: style.fontFamily,
+    fontSize: fontSizeMap[style.fontSize],
+    backgroundColor: buttonColor || '#6366f1',
+    color: '#ffffff',
+    border: 'none',
+    borderRadius: borderRadiusMap[style.borderRadius],
+    padding: paddingMap[style.inputPadding || 'md'],
+    width: '100%',
+    cursor: 'pointer',
+    fontWeight: 600,
+    transition: 'opacity 0.2s',
+  };
+
+  const selectStyle: React.CSSProperties = {
+    ...getInputStyle('select'),
+    appearance: 'none',
+    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`,
+    backgroundRepeat: 'no-repeat',
+    backgroundPosition: 'right 12px center',
+    paddingRight: '36px',
+  };
+
+  const spacing = fieldSpacingMap[style.fieldSpacing || 'normal'];
+
   return (
-    <div className="p-4 rounded-lg border border-border bg-card">
-      <div className="space-y-4">
+    <div className="p-5 rounded-lg border border-border bg-muted/30">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: spacing }}>
+        {/* Text Input */}
+        <div>
+          <label style={labelStyle}>Full Name <span style={{ color: style.errorColor }}>*</span></label>
+          <input
+            type="text"
+            placeholder="John Doe"
+            style={getInputStyle('name')}
+            onFocus={() => setFocusedField('name')}
+            onBlur={() => setFocusedField(null)}
+          />
+        </div>
+
+        {/* Email Input */}
         <div>
           <label style={labelStyle}>Email Address</label>
           <input
             type="email"
             placeholder="email@example.com"
-            style={inputStyle}
-            onFocus={(e) => {
-              e.target.style.borderColor = style.inputFocusBorderColor;
-            }}
-            onBlur={(e) => {
-              e.target.style.borderColor = style.inputBorderColor;
-            }}
+            style={getInputStyle('email')}
+            onFocus={() => setFocusedField('email')}
+            onBlur={() => setFocusedField(null)}
           />
         </div>
+
+        {/* Two Column Row */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+          <div>
+            <label style={labelStyle}>Date of Birth</label>
+            <input
+              type="text"
+              placeholder="MM/DD/YYYY"
+              style={getInputStyle('dob')}
+              onFocus={() => setFocusedField('dob')}
+              onBlur={() => setFocusedField(null)}
+            />
+          </div>
+          <div>
+            <label style={labelStyle}>Phone</label>
+            <input
+              type="tel"
+              placeholder="(555) 123-4567"
+              style={getInputStyle('phone')}
+              onFocus={() => setFocusedField('phone')}
+              onBlur={() => setFocusedField(null)}
+            />
+          </div>
+        </div>
+
+        {/* Select Dropdown */}
         <div>
-          <label style={labelStyle}>Full Name</label>
+          <label style={labelStyle}>Country</label>
+          <select
+            style={selectStyle}
+            onFocus={() => setFocusedField('select')}
+            onBlur={() => setFocusedField(null)}
+          >
+            <option value="">Select a country...</option>
+            <option value="us">United States</option>
+            <option value="uk">United Kingdom</option>
+            <option value="ca">Canada</option>
+          </select>
+        </div>
+
+        {/* Error State Example */}
+        <div>
+          <label style={labelStyle}>SSN (with error)</label>
           <input
             type="text"
-            placeholder="John Doe"
-            style={inputStyle}
-            onFocus={(e) => {
-              e.target.style.borderColor = style.inputFocusBorderColor;
-            }}
-            onBlur={(e) => {
-              e.target.style.borderColor = style.inputBorderColor;
+            placeholder="XXX-XX-XXXX"
+            defaultValue="123"
+            style={{
+              ...getInputStyle('ssn'),
+              borderColor: style.errorColor,
             }}
           />
+          <p style={{ color: style.errorColor, fontSize: '12px', marginTop: '4px' }}>
+            Please enter a valid SSN format
+          </p>
         </div>
-        <div className="flex gap-2 pt-2">
-          <span style={{ color: style.errorColor, fontSize: '12px' }}>* Error message</span>
-          <span style={{ color: style.successColor, fontSize: '12px' }}>✓ Valid</span>
+
+        {/* Success Message */}
+        <div className="flex items-center gap-2">
+          <span style={{ color: style.successColor, fontSize: '13px' }}>✓ All fields validated successfully</span>
         </div>
+
+        {/* Submit Button */}
+        <button
+          style={buttonStyle}
+          onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.9')}
+          onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
+        >
+          Continue
+        </button>
       </div>
     </div>
   );
