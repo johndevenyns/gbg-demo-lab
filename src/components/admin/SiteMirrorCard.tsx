@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Globe, Loader2, Check, X, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { scrapingApi, ScrapedBranding } from "@/lib/api/scraping";
 import { useToast } from "@/hooks/use-toast";
 import { DemoEnvironment } from "@/types/demo";
+import { DEFAULT_FORM_STYLE } from "@/types/formStyle";
 import {
   Dialog,
   DialogContent,
@@ -19,6 +20,116 @@ import {
 interface SiteMirrorCardProps {
   demo: DemoEnvironment;
   onApplyBranding: (updates: Partial<DemoEnvironment>, autoSave?: boolean) => void;
+}
+
+// Generate form preview HTML for the iframe
+function generateFormPreviewHtml(demo: DemoEnvironment): string {
+  const style = demo.formStyle || DEFAULT_FORM_STYLE;
+  const buttonColor = demo.buttonColor || '#3B82F6';
+  
+  // Get the first form step's fields (or show placeholder if none)
+  const formSteps = demo.formSteps?.filter(s => s.stepType === 'form') || [];
+  const firstFormStep = formSteps[0];
+  
+  // Build field HTML
+  let fieldsHtml = '';
+  if (firstFormStep?.fields && firstFormStep.fields.length > 0) {
+    firstFormStep.fields.forEach(field => {
+      fieldsHtml += `
+        <div style="margin-bottom: 16px;">
+          <label style="
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: ${style.labelColor || '#333'};
+            font-size: 14px;
+          ">
+            ${field.label}${field.required ? '<span style="color: #ef4444; margin-left: 4px;">*</span>' : ''}
+          </label>
+          <input 
+            type="${field.type === 'email' ? 'email' : field.type === 'phone' ? 'tel' : 'text'}"
+            placeholder="${field.placeholder || ''}"
+            style="
+              width: 100%;
+              padding: 10px 14px;
+              border: 1px solid ${style.inputBorderColor || '#d1d5db'};
+              border-radius: 8px;
+              font-size: 14px;
+              background: ${style.inputBgColor || '#ffffff'};
+              color: ${style.inputTextColor || '#1f2937'};
+              outline: none;
+            "
+          />
+        </div>
+      `;
+    });
+  } else {
+    fieldsHtml = `
+      <div style="margin-bottom: 16px;">
+        <label style="display: block; margin-bottom: 6px; font-weight: 500; color: #333; font-size: 14px;">
+          First Name<span style="color: #ef4444; margin-left: 4px;">*</span>
+        </label>
+        <input type="text" placeholder="John" style="width: 100%; padding: 10px 14px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; background: #fff; outline: none;" />
+      </div>
+      <div style="margin-bottom: 16px;">
+        <label style="display: block; margin-bottom: 6px; font-weight: 500; color: #333; font-size: 14px;">
+          Last Name<span style="color: #ef4444; margin-left: 4px;">*</span>
+        </label>
+        <input type="text" placeholder="Smith" style="width: 100%; padding: 10px 14px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; background: #fff; outline: none;" />
+      </div>
+      <div style="margin-bottom: 16px;">
+        <label style="display: block; margin-bottom: 6px; font-weight: 500; color: #333; font-size: 14px;">
+          Email<span style="color: #ef4444; margin-left: 4px;">*</span>
+        </label>
+        <input type="email" placeholder="john@example.com" style="width: 100%; padding: 10px 14px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; background: #fff; outline: none;" />
+      </div>
+    `;
+  }
+
+  const stepTitle = firstFormStep?.title || 'Application Form';
+  const totalSteps = formSteps.length || 1;
+
+  return `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <style>
+          body { margin: 0; padding: 0; font-family: ${style.fontFamily || 'system-ui, sans-serif'}; }
+          * { box-sizing: border-box; }
+        </style>
+        ${demo.scrapedCss ? `<style>${demo.scrapedCss}</style>` : ''}
+      </head>
+      <body>
+        ${demo.scrapedHeaderHtml || ''}
+        <div style="padding: 40px 20px; background: #f5f5f5; min-height: 300px;">
+          <div style="max-width: 480px; margin: 0 auto; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); padding: 32px; border: 1px solid #e5e7eb;">
+            <div style="text-align: center; margin-bottom: 24px;">
+              <h2 style="margin: 0 0 8px 0; font-size: 20px; font-weight: 600; color: #1f2937;">${stepTitle}</h2>
+              <p style="margin: 0; color: #6b7280; font-size: 14px;">Step 1 of ${totalSteps}</p>
+            </div>
+            ${fieldsHtml}
+            <button style="
+              width: 100%;
+              padding: 12px 24px;
+              background: ${buttonColor};
+              color: white;
+              border: none;
+              border-radius: 8px;
+              font-size: 16px;
+              font-weight: 500;
+              cursor: pointer;
+              margin-top: 8px;
+            ">
+              Continue
+            </button>
+          </div>
+        </div>
+        ${demo.scrapedFooterHtml || ''}
+      </body>
+    </html>
+  `;
 }
 
 export function SiteMirrorCard({ demo, onApplyBranding }: SiteMirrorCardProps) {
@@ -172,28 +283,8 @@ export function SiteMirrorCard({ demo, onApplyBranding }: SiteMirrorCardProps) {
                 <div className="border rounded-lg overflow-hidden bg-white">
                   {/* Render scraped header with CSS in iframe for isolation */}
                   <iframe
-                    srcDoc={`
-                      <!DOCTYPE html>
-                      <html>
-                        <head>
-                          <meta charset="utf-8">
-                          <meta name="viewport" content="width=device-width, initial-scale=1">
-                          <style>
-                            body { margin: 0; padding: 0; font-family: system-ui, sans-serif; }
-                            * { box-sizing: border-box; }
-                          </style>
-                          ${demo.scrapedCss ? `<style>${demo.scrapedCss}</style>` : ''}
-                        </head>
-                        <body>
-                          ${demo.scrapedHeaderHtml || ''}
-                          <div style="padding: 40px; text-align: center; background: #f5f5f5; min-height: 150px;">
-                            <p style="color: #666; font-size: 14px;">[ Your demo content will appear here ]</p>
-                          </div>
-                          ${demo.scrapedFooterHtml || ''}
-                        </body>
-                      </html>
-                    `}
-                    className="w-full h-[400px] border-0"
+                    srcDoc={generateFormPreviewHtml(demo)}
+                    className="w-full h-[500px] border-0"
                     title="Mirrored branding preview"
                     sandbox="allow-same-origin"
                   />
