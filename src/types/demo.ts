@@ -6,6 +6,7 @@ export type IndustryTemplate = 'bank' | 'rental_car' | 'online_gambling' | 'heal
 
 // Import form style config type
 import { FormStyleConfig } from './formStyle';
+import { ResultPageConfig } from '@/components/preview/ResultPage';
 
 export interface DemoEnvironment {
   id: string;
@@ -44,6 +45,10 @@ export interface DemoEnvironment {
   
   // Form styling
   formStyle?: FormStyleConfig;
+  
+  // Result page configurations
+  successPageConfig?: ResultPageConfig;
+  failurePageConfig?: ResultPageConfig;
   
   // Feature toggles
   includeAddressVerification: boolean;

@@ -1,8 +1,9 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useDemoBySlug } from "@/hooks/useDemos";
 import { Loader2 } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 import { DemoFlowRenderer } from "@/components/preview/DemoFlowRenderer";
+import { DEFAULT_SUCCESS_CONFIG, DEFAULT_FAILURE_CONFIG } from "@/components/preview/ResultPage";
 
 export default function DemoPreview() {
   const { slug } = useParams<{ slug: string }>();
@@ -26,12 +27,10 @@ export default function DemoPreview() {
     }
   }, [demo?.scrapedCss]);
 
-  const handleFlowComplete = () => {
-    // Navigate to approved URL or show completion
-    if (demo?.approvedUrl) {
-      window.location.href = demo.approvedUrl;
-    }
-  };
+  const handleFlowComplete = useCallback((success: boolean, referenceId?: string) => {
+    console.log('Flow complete:', { success, referenceId });
+    // The result page handles the redirect via its button
+  }, []);
   
   if (isLoading) {
     return (
@@ -81,6 +80,10 @@ export default function DemoPreview() {
                 steps={demo.formSteps}
                 buttonColor={demo.buttonColor}
                 formStyle={demo.formStyle}
+                successPageConfig={demo.successPageConfig || DEFAULT_SUCCESS_CONFIG}
+                failurePageConfig={demo.failurePageConfig || DEFAULT_FAILURE_CONFIG}
+                approvedUrl={demo.approvedUrl}
+                rejectedUrl={demo.rejectedUrl}
                 onComplete={handleFlowComplete}
               />
             ) : (
