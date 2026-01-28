@@ -1,5 +1,7 @@
 // Form Builder Components Index
 export { FormBuilderSection } from './FormBuilderSection';
+export { FormStyleSection } from './FormStyleSection';
+export { MdlProviderConfig } from './MdlProviderConfig';
 export { FormBuilderCanvas } from './FormBuilderCanvas';
 export { FormStepCard } from './FormStepCard';
 export { FieldPalette } from './FieldPalette';
@@ -11,5 +13,4 @@ export { VerificationStepConfig } from './VerificationStepConfig';
 export { ApiStepConfig } from './ApiStepConfig';
 export { PathStepConfig } from './PathStepConfig';
 export { PageStepConfig } from './PageStepConfig';
-export { FormStyleSection } from './FormStyleSection';
 export { SaveTemplateDialog } from './SaveTemplateDialog';

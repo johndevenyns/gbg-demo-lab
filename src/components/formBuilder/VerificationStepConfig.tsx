@@ -6,7 +6,8 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Button } from '@/components/ui/button';
-import { FormStep, VerificationStepConfig as VerificationConfig } from '@/types/demo';
+import { FormStep, VerificationStepConfig as VerificationConfig, AVAILABLE_MDL_PROVIDERS } from '@/types/demo';
+import { MdlProviderConfig } from './MdlProviderConfig';
 import { 
   QrCode, Activity, Smartphone, ChevronDown, ChevronUp, Settings2, 
   Link, Clock, ArrowRight
@@ -21,6 +22,7 @@ const DEFAULT_CONFIG: VerificationConfig = {
   mobileIdEnabled: false,
   mobileIdTitle: 'Mobile ID Verification',
   mobileIdInstructions: 'Use your mobile driver\'s license for faster verification',
+  mobileIdProviders: AVAILABLE_MDL_PROVIDERS.map(p => ({ ...p, enabled: true })),
   autoAdvanceOnComplete: true,
 };
 
@@ -191,7 +193,7 @@ export function VerificationStepConfig({ step, onUpdateStep }: VerificationStepC
           </div>
           
           {config.mobileIdEnabled && (
-            <div className="space-y-3 p-3 rounded-lg border border-green-500/30 bg-green-500/5">
+            <div className="space-y-4 p-3 rounded-lg border border-green-500/30 bg-green-500/5">
               <div className="space-y-2">
                 <Label className="text-sm flex items-center gap-2">
                   <Link className="w-3 h-3" />
@@ -227,6 +229,14 @@ export function VerificationStepConfig({ step, onUpdateStep }: VerificationStepC
                     className="h-8 text-sm"
                   />
                 </div>
+              </div>
+
+              {/* mDL Provider Selection */}
+              <div className="pt-2 border-t border-green-500/20">
+                <MdlProviderConfig
+                  enabledProviders={config.mobileIdProviders || []}
+                  onChange={(providers) => handleConfigUpdate({ mobileIdProviders: providers })}
+                />
               </div>
             </div>
           )}
