@@ -109,17 +109,6 @@ export default function DemoConfig() {
               <Input value={localDemo.customerName} onChange={(e) => handleUpdate({ customerName: e.target.value })} />
             </div>
             <div className="space-y-2">
-              <Label>Verification Type</Label>
-              <Select value={localDemo.verificationType} onValueChange={(v) => handleUpdate({ verificationType: v as VerificationType })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="docBio">Doc & Bio (Document + Selfie)</SelectItem>
-                  <SelectItem value="dataBio">Data & Bio (User Data + Selfie)</SelectItem>
-                  <SelectItem value="dataOnly">Data Only (No Biometrics)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
               <Label>Reference ID Prefix</Label>
               <Input value={localDemo.referenceIdPrefix || ""} onChange={(e) => handleUpdate({ referenceIdPrefix: e.target.value })} />
             </div>
