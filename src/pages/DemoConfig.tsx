@@ -215,28 +215,6 @@ export default function DemoConfig() {
         {/* Live Form Preview with Fill Pass/Fail */}
         <FormPreviewPanel demo={localDemo} />
 
-        {/* Feature Toggles */}
-        <Card className="glass-card">
-          <CardHeader>
-            <CardTitle>Features</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <Label>Include QR Code</Label>
-                <p className="text-sm text-muted-foreground">Show QR code for mobile verification</p>
-              </div>
-              <Switch checked={localDemo.includeQr} onCheckedChange={(v) => handleUpdate({ includeQr: v })} />
-            </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <Label>Address Verification</Label>
-                <p className="text-sm text-muted-foreground">Validate addresses during verification</p>
-              </div>
-              <Switch checked={localDemo.includeAddressVerification} onCheckedChange={(v) => handleUpdate({ includeAddressVerification: v })} />
-            </div>
-          </CardContent>
-        </Card>
       </main>
     </div>
   );
