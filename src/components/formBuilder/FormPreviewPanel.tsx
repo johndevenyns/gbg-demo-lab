@@ -116,6 +116,13 @@ export function FormPreviewPanel({ demo }: FormPreviewPanelProps) {
                     referenceIdPrefix={demo.referenceIdPrefix}
                     storedTestData={demo.storedTestData}
                     showTestButtons={true}
+                    logoUrl={demo.logoUrl}
+                    headerBgColor={demo.headerBgColor}
+                    headerTextColor={demo.headerTextColor}
+                    resourceId={demo.resourceId}
+                    resourceIdDocBio={demo.resourceIdDocBio}
+                    resourceIdDataBio={demo.resourceIdDataBio}
+                    resourceIdDataOnly={demo.resourceIdDataOnly}
                     onSubmissionLog={handleSubmissionLog}
                     onComplete={(success, refId) => {
                       console.log('Preview flow complete:', { success, refId });
