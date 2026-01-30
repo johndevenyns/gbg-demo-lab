@@ -235,10 +235,6 @@ export function FormBuilderSection({ demo, onUpdate }: FormBuilderSectionProps) 
               <LayoutGrid className="w-4 h-4" />
               <span className="hidden sm:inline">Form Builder</span>
             </TabsTrigger>
-            <TabsTrigger value="templates" className="flex items-center gap-2">
-              <Settings2 className="w-4 h-4" />
-              <span className="hidden sm:inline">Templates</span>
-            </TabsTrigger>
             <TabsTrigger value="paths" className="flex items-center gap-2">
               <Workflow className="w-4 h-4" />
               <span className="hidden sm:inline">Paths</span>
@@ -250,6 +246,10 @@ export function FormBuilderSection({ demo, onUpdate }: FormBuilderSectionProps) 
             <TabsTrigger value="testdata" className="flex items-center gap-2">
               <Users className="w-4 h-4" />
               <span className="hidden sm:inline">Test Data</span>
+            </TabsTrigger>
+            <TabsTrigger value="templates" className="flex items-center gap-2">
+              <Settings2 className="w-4 h-4" />
+              <span className="hidden sm:inline">Templates</span>
             </TabsTrigger>
           </TabsList>
 

@@ -6,8 +6,8 @@ import { AVAILABLE_FORM_FIELDS, FormField } from '@/types/demo';
 import { VERIFICATION_PATHS } from '@/types/formBuilder';
 import { 
   User, Mail, Phone, Calendar, Hash, MapPin, Building, DollarSign, 
-  FileText, Type, CheckSquare, GripVertical, Search, MapPinCheck,
-  Send, Smartphone, Database, FileCheck, Workflow, QrCode, Plug
+  FileText, Type, CheckSquare, GripVertical, Search,
+  Smartphone, Database, FileCheck, Workflow, Plug
 } from 'lucide-react';
 import { useState, useMemo } from 'react';
 
@@ -105,12 +105,12 @@ function DraggableField({ field, index }: DraggableFieldProps) {
   );
 }
 
-// Draggable special element (Address Validation, Submit, Paths, Verification Flow, API Step, Page Step, Method Selection)
+// Draggable special element (Paths, Verification Flow, API Step, Page Step)
 interface DraggableSpecialProps {
   id: string;
   label: string;
   icon: React.ReactNode;
-  type: 'address_validation' | 'submit_button' | 'verification_path' | 'verification_step' | 'api_step' | 'path_step' | 'verification_flow_step' | 'page_step' | 'method_selection_step';
+  type: 'address_validation' | 'verification_path' | 'verification_step' | 'api_step' | 'path_step' | 'verification_flow_step' | 'page_step' | 'method_selection_step';
   pathId?: string;
   description?: string;
   variant?: 'default' | 'purple' | 'blue' | 'green' | 'cyan' | 'orange' | 'indigo';
@@ -259,34 +259,6 @@ export function FieldPalette() {
                   type="page_step"
                   description="Custom display page with API data"
                   variant="orange"
-                />
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Functions Section */}
-        {!search && (
-          <div>
-            <button
-              onClick={() => setExpandedCategory(expandedCategory === 'functions' ? null : 'functions')}
-              className="w-full flex items-center justify-between py-1.5 px-2 text-sm font-medium text-muted-foreground hover:text-foreground rounded-md hover:bg-accent/50 transition-colors"
-            >
-              <span className="flex items-center gap-2">
-                <Workflow className="w-4 h-4" />
-                Functions
-              </span>
-              <Badge variant="outline" className="text-xs">1</Badge>
-            </button>
-            {expandedCategory === 'functions' && (
-              <div className="mt-2 space-y-1.5 pl-1">
-                <DraggableSpecial
-                  id="submit-button"
-                  label="Submit Button"
-                  icon={<Send className="w-4 h-4" />}
-                  type="submit_button"
-                  description="Form submission trigger"
-                  variant="blue"
                 />
               </div>
             )}
