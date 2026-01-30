@@ -52,6 +52,15 @@ interface DemoFlowRendererProps {
   referenceIdPrefix?: string;
   storedTestData?: StoredTestData;
   showTestButtons?: boolean;
+  // Branding props for verification session
+  logoUrl?: string;
+  headerBgColor?: string;
+  headerTextColor?: string;
+  // Resource IDs for different verification types
+  resourceId?: string;
+  resourceIdDocBio?: string;
+  resourceIdDataBio?: string;
+  resourceIdDataOnly?: string;
   onSubmissionLog?: (data: SubmissionLogData) => void;
   onComplete?: (success: boolean, referenceId?: string) => void;
 }
@@ -232,6 +241,13 @@ export function DemoFlowRenderer({
   referenceIdPrefix,
   storedTestData,
   showTestButtons = false,
+  logoUrl,
+  headerBgColor,
+  headerTextColor,
+  resourceId,
+  resourceIdDocBio,
+  resourceIdDataBio,
+  resourceIdDataOnly,
   onSubmissionLog,
   onComplete 
 }: DemoFlowRendererProps) {
@@ -664,6 +680,20 @@ export function DemoFlowRenderer({
     setError(null);
     const startTime = Date.now();
     
+    // Determine the correct resource ID based on verification type
+    const getResourceIdForType = (type: VerificationType): string | undefined => {
+      switch (type) {
+        case 'docBio':
+          return resourceIdDocBio || resourceId;
+        case 'dataBio':
+          return resourceIdDataBio || resourceId;
+        case 'dataOnly':
+          return resourceIdDataOnly || resourceId;
+        default:
+          return resourceId;
+      }
+    };
+    
     const requestBody = {
       formData,
       verificationType,
@@ -671,6 +701,13 @@ export function DemoFlowRenderer({
       returnUrl: returnUrl || window.location.href,
       includeQr: includeQr ?? true,
       referenceIdPrefix: referenceIdPrefix,
+      resourceId: getResourceIdForType(verificationType),
+      logoUrl: logoUrl,
+      branding: {
+        buttonColor: buttonColor,
+        headerTextColor: headerTextColor,
+        headerBgColor: headerBgColor,
+      },
     };
     
     // Log request
@@ -682,7 +719,7 @@ export function DemoFlowRenderer({
     });
     
     try {
-      console.log('Creating verification session:', { verificationType, customerName, formData });
+      console.log('Creating verification session:', { verificationType, customerName, formData, branding: requestBody.branding });
       
       const { data, error: invokeError } = await supabase.functions.invoke('create-verification-session', {
         body: requestBody,
@@ -761,7 +798,7 @@ export function DemoFlowRenderer({
     } finally {
       setIsLoading(false);
     }
-  }, [formData, customerName, returnUrl, includeQr, referenceIdPrefix, currentStep?.id, goToNextStep, onSubmissionLog]);
+  }, [formData, customerName, returnUrl, includeQr, referenceIdPrefix, resourceId, resourceIdDocBio, resourceIdDataBio, resourceIdDataOnly, logoUrl, buttonColor, headerTextColor, headerBgColor, currentStep?.id, goToNextStep, onSubmissionLog]);
 
   // Poll for verification status
   const pollVerificationStatus = useCallback(async () => {

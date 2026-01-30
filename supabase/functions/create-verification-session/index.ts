@@ -57,12 +57,14 @@ interface CreateSessionRequest {
   // Optional reference ID prefix
   referenceIdPrefix?: string;
   
+  // Logo URL (top level in API request)
+  logoUrl?: string;
+  
   // Branding configuration
   branding?: {
     headerTextColor?: string;
     headerBgColor?: string;
     buttonColor?: string;
-    logoUrl?: string;
   };
 }
 
@@ -174,9 +176,11 @@ serve(async (req) => {
         headerBgColor: requestData.branding.headerBgColor,
         buttonColor: requestData.branding.buttonColor,
       };
-      if (requestData.branding.logoUrl) {
-        requestPayload.logoUrl = requestData.branding.logoUrl;
-      }
+    }
+    
+    // Add logoUrl at top level if provided
+    if (requestData.logoUrl) {
+      requestPayload.logoUrl = requestData.logoUrl;
     }
 
     console.log('=== FULL API REQUEST PAYLOAD ===');
