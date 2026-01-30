@@ -56,8 +56,28 @@ interface DemoFlowRendererProps {
   onComplete?: (success: boolean, referenceId?: string) => void;
 }
 
-// Simple QR Code component (placeholder - in production use a real QR library)
+// QR Code component - renders actual QR image from URL or shows placeholder
 function QRCodeDisplay({ url, size = 200 }: { url: string; size?: number }) {
+  const [imageError, setImageError] = useState(false);
+  
+  // Check if we have a valid image URL (not just a placeholder text)
+  const isValidImageUrl = url && (url.startsWith('http://') || url.startsWith('https://'));
+  
+  if (isValidImageUrl && !imageError) {
+    return (
+      <div className="bg-white p-4 rounded-lg inline-block shadow-md">
+        <img 
+          src={url} 
+          alt="QR Code" 
+          style={{ width: size, height: size }}
+          className="mx-auto"
+          onError={() => setImageError(true)}
+        />
+      </div>
+    );
+  }
+  
+  // Fallback placeholder when no valid URL or image failed to load
   return (
     <div 
       className="bg-white p-4 rounded-lg inline-block"
@@ -69,7 +89,9 @@ function QRCodeDisplay({ url, size = 200 }: { url: string; size?: number }) {
       >
         <div className="text-center">
           <QrCode className="w-12 h-12 mx-auto text-muted-foreground/50 mb-2" />
-          <p className="text-xs text-muted-foreground break-all px-2">{url?.substring(0, 50)}...</p>
+          <p className="text-xs text-muted-foreground break-all px-2">
+            {url ? url.substring(0, 50) + (url.length > 50 ? '...' : '') : 'Waiting for QR code...'}
+          </p>
         </div>
       </div>
     </div>
