@@ -232,6 +232,11 @@ export function DemoFlowRenderer({
   const [selectedVerificationType, setSelectedVerificationType] = useState<VerificationType | null>(null);
   const [verificationSessionId, setVerificationSessionId] = useState<string | null>(null);
   const [pollingStatus, setPollingStatus] = useState<string | null>(null);
+  const [verificationSessionData, setVerificationSessionData] = useState<{
+    qrCodeUrl?: string;
+    shortUrl?: string;
+    verifyUrl?: string;
+  } | null>(null);
   const pollingRef = useRef<NodeJS.Timeout | null>(null);
 
   // Address validation state
@@ -704,6 +709,13 @@ export function DemoFlowRenderer({
       if (data.referenceId) {
         setReferenceId(data.referenceId);
       }
+      
+      // Store verification URLs for immediate access (avoids race condition with apiResponses)
+      setVerificationSessionData({
+        qrCodeUrl: data.qrCodeUrl,
+        shortUrl: data.shortUrl,
+        verifyUrl: data.verifyUrl,
+      });
 
       // Store response in apiResponses for template interpolation
       const apiResponse: StepApiResponse = {
@@ -998,9 +1010,11 @@ export function DemoFlowRenderer({
       case 'verification':
         // Debug: Log available API data to trace qrCodeUrl
         console.log('Verification step - allApiData:', allApiData);
-        const qrUrl = allApiData.qrCodeUrl as string || getApiValue(currentStep.verificationConfig?.qrCodeUrlField || '');
-        const shortUrl = allApiData.shortUrl as string || '';
-        const verifyUrl = allApiData.verifyUrl as string || '';
+        console.log('Verification step - verificationSessionData:', verificationSessionData);
+        // Use direct session data first (avoids race condition), then fall back to allApiData
+        const qrUrl = verificationSessionData?.qrCodeUrl || allApiData.qrCodeUrl as string || getApiValue(currentStep.verificationConfig?.qrCodeUrlField || '');
+        const shortUrl = verificationSessionData?.shortUrl || allApiData.shortUrl as string || '';
+        const verifyUrl = verificationSessionData?.verifyUrl || allApiData.verifyUrl as string || '';
         const currentStatus = pollingStatus || (allApiData.status as string) || getApiValue(currentStep.verificationConfig?.statusField || '') || 'Pending';
         console.log('Verification URLs:', { qrUrl, shortUrl, verifyUrl, currentStatus });
         
