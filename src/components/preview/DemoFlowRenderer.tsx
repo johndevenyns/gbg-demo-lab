@@ -56,19 +56,38 @@ interface DemoFlowRendererProps {
   onComplete?: (success: boolean, referenceId?: string) => void;
 }
 
-// QR Code component - renders actual QR image from URL or shows placeholder
-function QRCodeDisplay({ url, size = 200 }: { url: string; size?: number }) {
+// QR Code component:
+// - Prefer a direct image URL (e.g. API-provided qrCodeUrl) when it loads
+// - Otherwise generate an image QR from a value (e.g. shortUrl/verifyUrl)
+function QRCodeDisplay({
+  value,
+  imageUrl,
+  size = 200,
+}: {
+  value?: string;
+  imageUrl?: string;
+  size?: number;
+}) {
   const [imageError, setImageError] = useState(false);
-  
-  // Check if we have a valid image URL (not just a placeholder text)
-  const isValidImageUrl = url && (url.startsWith('http://') || url.startsWith('https://'));
-  
-  if (isValidImageUrl && !imageError) {
+
+  const normalizedValue = (value || '').trim();
+  const canGenerate = normalizedValue.startsWith('http://') || normalizedValue.startsWith('https://');
+  const generatedQrUrl = canGenerate
+    ? `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(normalizedValue)}`
+    : '';
+
+  const normalizedImageUrl = (imageUrl || '').trim();
+  const canUseImageUrl =
+    normalizedImageUrl.startsWith('http://') || normalizedImageUrl.startsWith('https://');
+
+  const finalImgSrc = !imageError && canUseImageUrl ? normalizedImageUrl : generatedQrUrl;
+
+  if (finalImgSrc) {
     return (
       <div className="bg-white p-4 rounded-lg inline-block shadow-md">
-        <img 
-          src={url} 
-          alt="QR Code" 
+        <img
+          src={finalImgSrc}
+          alt="Verification QR Code"
           style={{ width: size, height: size }}
           className="mx-auto"
           onError={() => setImageError(true)}
@@ -76,22 +95,16 @@ function QRCodeDisplay({ url, size = 200 }: { url: string; size?: number }) {
       </div>
     );
   }
-  
-  // Fallback placeholder when no valid URL or image failed to load
+
   return (
-    <div 
-      className="bg-white p-4 rounded-lg inline-block"
-      style={{ width: size + 32, height: size + 32 }}
-    >
-      <div 
+    <div className="bg-white p-4 rounded-lg inline-block" style={{ width: size + 32, height: size + 32 }}>
+      <div
         className="bg-muted border-2 border-dashed border-muted-foreground/30 rounded flex items-center justify-center"
         style={{ width: size, height: size }}
       >
         <div className="text-center">
           <QrCode className="w-12 h-12 mx-auto text-muted-foreground/50 mb-2" />
-          <p className="text-xs text-muted-foreground break-all px-2">
-            {url ? url.substring(0, 50) + (url.length > 50 ? '...' : '') : 'Waiting for QR code...'}
-          </p>
+          <p className="text-xs text-muted-foreground px-2">Waiting for session…</p>
         </div>
       </div>
     </div>
@@ -872,10 +885,10 @@ export function DemoFlowRenderer({
         );
 
       case 'qr_code':
-        const qrUrl = getApiValue(element.qrUrlField || '');
+        const qrValue = getApiValue(element.qrUrlField || '');
         return (
           <div key={element.id} className={alignmentClass}>
-            <QRCodeDisplay url={qrUrl} size={element.qrSize || 200} />
+            <QRCodeDisplay value={qrValue} size={element.qrSize || 200} />
           </div>
         );
 
@@ -1017,11 +1030,15 @@ export function DemoFlowRenderer({
         console.log('Verification step - allApiData:', allApiData);
         console.log('Verification step - verificationSessionDataRef:', verificationSessionDataRef.current);
         // Use ref data first (synchronous update), then fall back to allApiData
-        const qrUrl = verificationSessionDataRef.current?.qrCodeUrl || allApiData.qrCodeUrl as string || getApiValue(currentStep.verificationConfig?.qrCodeUrlField || '');
-        const shortUrl = verificationSessionDataRef.current?.shortUrl || allApiData.shortUrl as string || '';
-        const verifyUrl = verificationSessionDataRef.current?.verifyUrl || allApiData.verifyUrl as string || '';
+        const qrImageUrl =
+          verificationSessionDataRef.current?.qrCodeUrl ||
+          (allApiData.qrCodeUrl as string) ||
+          getApiValue(currentStep.verificationConfig?.qrCodeUrlField || '');
+        const shortUrl = verificationSessionDataRef.current?.shortUrl || (allApiData.shortUrl as string) || '';
+        const verifyUrl = verificationSessionDataRef.current?.verifyUrl || (allApiData.verifyUrl as string) || '';
+        const qrValue = shortUrl || verifyUrl;
         const currentStatus = pollingStatus || (allApiData.status as string) || getApiValue(currentStep.verificationConfig?.statusField || '') || 'Pending';
-        console.log('Verification URLs:', { qrUrl, shortUrl, verifyUrl, currentStatus });
+        console.log('Verification URLs:', { qrImageUrl, qrValue, shortUrl, verifyUrl, currentStatus });
         
         return (
           <div className="text-center py-8 space-y-6">
@@ -1029,25 +1046,7 @@ export function DemoFlowRenderer({
             {currentStep.verificationConfig?.qrCodeEnabled && (
               <div>
                 <p className="font-medium mb-2">{currentStep.verificationConfig.qrCodeTitle || 'Scan QR Code'}</p>
-                {qrUrl ? (
-                  <div className="inline-block bg-white p-4 rounded-lg shadow-md">
-                    <img 
-                      src={qrUrl} 
-                      alt="Verification QR Code" 
-                      className="w-48 h-48 mx-auto"
-                      onError={(e) => {
-                        // Fallback to placeholder if image fails
-                        e.currentTarget.style.display = 'none';
-                        e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                      }}
-                    />
-                    <div className="hidden">
-                      <QRCodeDisplay url={shortUrl || verifyUrl || ''} size={192} />
-                    </div>
-                  </div>
-                ) : (
-                  <QRCodeDisplay url={shortUrl || verifyUrl || 'Waiting for session...'} size={200} />
-                )}
+                <QRCodeDisplay imageUrl={qrImageUrl} value={qrValue} size={200} />
                 {currentStep.verificationConfig.qrCodeInstructions && (
                   <p className="text-sm text-muted-foreground mt-2">
                     {currentStep.verificationConfig.qrCodeInstructions}
