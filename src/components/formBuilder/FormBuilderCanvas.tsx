@@ -68,25 +68,27 @@ export function FormBuilderCanvas({ steps, onUpdateSteps }: FormBuilderCanvasPro
     const activeData = active.data.current;
     const overData = over.data.current;
 
-    // Handle dropping special elements (submit, paths, verification step, api step, path step, page step, method selection)
+    // Handle dropping special elements (submit, paths, verification flow, api step, page step)
 
-    // Handle Method Selection step - adds a new method selection step
-    if (activeData?.fromPalette && activeData?.type === 'method_selection_step') {
+    // Handle Verification Flow step - adds a new verification flow step (combines old path + verification)
+    if (activeData?.fromPalette && activeData?.type === 'verification_flow_step') {
       const newStep: FormStep = {
         id: generateId(),
-        title: 'Choose Verification Method',
+        title: 'Identity Verification',
         order: steps.length + 1,
-        stepType: 'method_selection',
+        stepType: 'verification_flow',
         fields: [],
-        methodSelectionConfig: {
-          title: 'Choose your verification method',
-          subtitle: 'Select how you\'d like to verify your identity',
-          documentScanEnabled: true,
-          documentScanTitle: 'Document Verification',
-          documentScanDescription: 'Scan your driver\'s license or ID and take a selfie',
-          documentScanPath: 'docbio',
-          mobileIdEnabled: true,
-          mobileIdProviders: [],
+        verificationFlowConfig: {
+          pathType: 'docbio',
+          qrCodeEnabled: true,
+          qrCodeTitle: 'Scan to Verify',
+          qrCodeInstructions: 'Scan this QR code with your mobile device to complete verification',
+          statusEnabled: true,
+          statusPollingInterval: 5,
+          mobileIdEnabled: false,
+          autoAdvanceOnComplete: true,
+          showBackButton: true,
+          backButtonLabel: 'Back',
         },
       };
       onUpdateSteps([...steps, newStep]);
@@ -147,7 +149,7 @@ export function FormBuilderCanvas({ steps, onUpdateSteps }: FormBuilderCanvasPro
       return;
     }
 
-    // Handle Path step - adds a new verification path step
+    // Legacy: Handle Path step - adds a new verification path step (deprecated)
     if (activeData?.fromPalette && activeData?.type === 'path_step') {
       const newStep: FormStep = {
         id: generateId(),
@@ -165,7 +167,7 @@ export function FormBuilderCanvas({ steps, onUpdateSteps }: FormBuilderCanvasPro
       return;
     }
 
-    // Handle verification step - adds a new verification step
+    // Legacy: Handle verification step - adds a new verification step (deprecated)
     if (activeData?.fromPalette && activeData?.type === 'verification_step') {
       const newStep: FormStep = {
         id: generateId(),
@@ -181,6 +183,30 @@ export function FormBuilderCanvas({ steps, onUpdateSteps }: FormBuilderCanvasPro
           statusPollingInterval: 5,
           mobileIdEnabled: false,
           autoAdvanceOnComplete: true,
+        },
+      };
+      onUpdateSteps([...steps, newStep]);
+      setExpandedSteps(prev => new Set([...prev, newStep.id]));
+      return;
+    }
+
+    // Legacy: Handle method selection step (deprecated)
+    if (activeData?.fromPalette && activeData?.type === 'method_selection_step') {
+      const newStep: FormStep = {
+        id: generateId(),
+        title: 'Choose Verification Method',
+        order: steps.length + 1,
+        stepType: 'method_selection',
+        fields: [],
+        methodSelectionConfig: {
+          title: 'Choose your verification method',
+          subtitle: 'Select how you\'d like to verify your identity',
+          documentScanEnabled: true,
+          documentScanTitle: 'Document Verification',
+          documentScanDescription: 'Scan your driver\'s license or ID and take a selfie',
+          documentScanPath: 'docbio',
+          mobileIdEnabled: true,
+          mobileIdProviders: [],
         },
       };
       onUpdateSteps([...steps, newStep]);
@@ -473,7 +499,7 @@ export function FormBuilderCanvas({ steps, onUpdateSteps }: FormBuilderCanvasPro
               <span className="text-sm font-medium">{activeData.field?.label}</span>
             </div>
           )}
-          {activeId && activeData?.fromPalette && (activeData?.type === 'submit_button' || activeData?.type === 'verification_path' || activeData?.type === 'verification_step' || activeData?.type === 'api_step' || activeData?.type === 'path_step' || activeData?.type === 'page_step' || activeData?.type === 'method_selection_step') && (
+          {activeId && activeData?.fromPalette && (activeData?.type === 'submit_button' || activeData?.type === 'verification_path' || activeData?.type === 'verification_step' || activeData?.type === 'api_step' || activeData?.type === 'path_step' || activeData?.type === 'verification_flow_step' || activeData?.type === 'page_step' || activeData?.type === 'method_selection_step') && (
             <div className="flex items-center gap-2 p-3 rounded-md border border-primary bg-card shadow-lg">
               <GripVertical className="w-4 h-4 text-muted-foreground" />
               <span className="text-sm font-medium">
@@ -482,6 +508,7 @@ export function FormBuilderCanvas({ steps, onUpdateSteps }: FormBuilderCanvasPro
                 {activeData.type === 'verification_step' && 'Verification Step'}
                 {activeData.type === 'api_step' && 'API Step'}
                 {activeData.type === 'path_step' && 'Path Step'}
+                {activeData.type === 'verification_flow_step' && 'Verification Flow'}
                 {activeData.type === 'page_step' && 'Page Step'}
                 {activeData.type === 'method_selection_step' && 'Method Selection'}
               </span>
