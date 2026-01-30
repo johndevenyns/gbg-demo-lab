@@ -24,6 +24,10 @@ const DEFAULT_CONFIG: VerificationConfig = {
   mobileIdInstructions: 'Use your mobile driver\'s license for faster verification',
   mobileIdProviders: AVAILABLE_MDL_PROVIDERS.map(p => ({ ...p, enabled: true })),
   autoAdvanceOnComplete: true,
+  showBackButton: true,
+  backButtonLabel: 'Back',
+  showNextButton: false,
+  nextButtonLabel: 'Continue',
 };
 
 interface VerificationStepConfigProps {
@@ -240,6 +244,56 @@ export function VerificationStepConfig({ step, onUpdateStep }: VerificationStepC
               </div>
             </div>
           )}
+        </div>
+
+        {/* Navigation Buttons */}
+        <div className="space-y-3 pt-2 border-t border-border">
+          <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
+            <ArrowRight className="w-3 h-3" />
+            Navigation Buttons
+          </Label>
+          
+          <div className="p-3 rounded-lg border border-border space-y-3">
+            {/* Back Button */}
+            <div className="flex items-center gap-3">
+              <Switch
+                checked={config.showBackButton ?? true}
+                onCheckedChange={(v) => handleConfigUpdate({ showBackButton: v })}
+                className="scale-75"
+              />
+              <div className="flex-1 space-y-1">
+                <Label className="text-sm">Back Button</Label>
+                {config.showBackButton !== false && (
+                  <Input
+                    value={config.backButtonLabel || 'Back'}
+                    onChange={(e) => handleConfigUpdate({ backButtonLabel: e.target.value })}
+                    placeholder="Back"
+                    className="h-7 text-sm"
+                  />
+                )}
+              </div>
+            </div>
+            
+            {/* Next/Continue Button */}
+            <div className="flex items-center gap-3">
+              <Switch
+                checked={config.showNextButton ?? false}
+                onCheckedChange={(v) => handleConfigUpdate({ showNextButton: v })}
+                className="scale-75"
+              />
+              <div className="flex-1 space-y-1">
+                <Label className="text-sm">Next/Submit Button</Label>
+                {config.showNextButton && (
+                  <Input
+                    value={config.nextButtonLabel || 'Continue'}
+                    onChange={(e) => handleConfigUpdate({ nextButtonLabel: e.target.value })}
+                    placeholder="Continue"
+                    className="h-7 text-sm"
+                  />
+                )}
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Completion Behavior */}
