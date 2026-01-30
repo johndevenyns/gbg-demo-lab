@@ -14,6 +14,7 @@ import { StepActionsConfig } from './StepActionsConfig';
 import { VerificationStepConfig } from './VerificationStepConfig';
 import { ApiStepConfig } from './ApiStepConfig';
 import { PathStepConfig } from './PathStepConfig';
+import { VerificationFlowConfig } from './VerificationFlowConfig';
 import { PageStepConfig } from './PageStepConfig';
 import { MethodSelectionStepConfig } from './MethodSelectionStepConfig';
 import { 
@@ -338,7 +339,7 @@ export function FormStepCard({
           {step.stepType === 'verification' && (
             <Badge variant="outline" className="text-xs bg-purple-500/10 text-purple-600 border-purple-500/30">
               <QrCode className="w-3 h-3 mr-1" />
-              Verification
+              Verification (Legacy)
             </Badge>
           )}
           {step.stepType === 'api' && (
@@ -350,7 +351,13 @@ export function FormStepCard({
           {step.stepType === 'path' && (
             <Badge variant="outline" className="text-xs bg-cyan-500/10 text-cyan-600 border-cyan-500/30">
               <Workflow className="w-3 h-3 mr-1" />
-              Path Step
+              Path (Legacy)
+            </Badge>
+          )}
+          {step.stepType === 'verification_flow' && (
+            <Badge variant="outline" className="text-xs bg-cyan-500/10 text-cyan-600 border-cyan-500/30">
+              <Workflow className="w-3 h-3 mr-1" />
+              Verification Flow
             </Badge>
           )}
           {step.stepType === 'page' && (
@@ -473,8 +480,11 @@ export function FormStepCard({
             /* API Step Type */
             <ApiStepConfig step={step} onUpdateStep={onUpdateStep} />
           ) : step.stepType === 'path' ? (
-            /* Path Step Type */
+            /* Path Step Type (Legacy) */
             <PathStepConfig step={step} onUpdateStep={onUpdateStep} />
+          ) : step.stepType === 'verification_flow' ? (
+            /* Verification Flow Step Type */
+            <VerificationFlowConfig step={step} onUpdateStep={onUpdateStep} />
           ) : step.stepType === 'page' ? (
             /* Page Step Type */
             <PageStepConfig step={step} onUpdateStep={onUpdateStep} />

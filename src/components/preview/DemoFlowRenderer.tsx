@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { FormStep, PageElement, StepApiResponse, MdlProvider, VerificationType, StoredTestData, FormField } from '@/types/demo';
+import { FormStep, PageElement, StepApiResponse, MdlProvider, VerificationType, StoredTestData, FormField, VerificationFlowConfig as VerificationFlowConfigType } from '@/types/demo';
 import { FormStyleConfig, DEFAULT_FORM_STYLE } from '@/types/formStyle';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -837,9 +837,12 @@ export function DemoFlowRenderer({
 
   // Start polling when verification session is created
   useEffect(() => {
-    if (verificationSessionId && currentStep?.stepType === 'verification') {
-      const interval = (currentStep.verificationConfig?.statusPollingInterval || 5) * 1000;
-      pollingRef.current = setInterval(pollVerificationStatus, interval);
+    const isVerificationStep = currentStep?.stepType === 'verification' || currentStep?.stepType === 'verification_flow';
+    if (verificationSessionId && isVerificationStep) {
+      const pollingInterval = currentStep?.stepType === 'verification_flow'
+        ? (currentStep.verificationFlowConfig?.statusPollingInterval || 5) * 1000
+        : (currentStep?.verificationConfig?.statusPollingInterval || 5) * 1000;
+      pollingRef.current = setInterval(pollVerificationStatus, pollingInterval);
       
       // Initial poll
       pollVerificationStatus();
@@ -851,7 +854,7 @@ export function DemoFlowRenderer({
         }
       };
     }
-  }, [verificationSessionId, currentStep?.stepType, currentStep?.verificationConfig?.statusPollingInterval, pollVerificationStatus]);
+  }, [verificationSessionId, currentStep?.stepType, currentStep?.verificationConfig?.statusPollingInterval, currentStep?.verificationFlowConfig?.statusPollingInterval, pollVerificationStatus]);
 
   // Handle method selection
   const handleDocumentScanSelected = useCallback(() => {
@@ -887,6 +890,22 @@ export function DemoFlowRenderer({
     // Handle verification step button config
     if (currentStep?.stepType === 'verification' && currentStep.verificationConfig) {
       const vc = currentStep.verificationConfig;
+      defaultButtons.back = { 
+        enabled: (vc.showBackButton ?? true) && !isFirstStep, 
+        label: vc.backButtonLabel || 'Back' 
+      };
+      defaultButtons.next = { 
+        enabled: (vc.showNextButton ?? false) && !isLastStep, 
+        label: vc.nextButtonLabel || 'Continue' 
+      };
+      defaultButtons.submit = { 
+        enabled: (vc.showNextButton ?? false) && isLastStep, 
+        label: vc.nextButtonLabel || 'Submit' 
+      };
+    }
+    // Handle verification_flow step button config
+    else if (currentStep?.stepType === 'verification_flow' && currentStep.verificationFlowConfig) {
+      const vc = currentStep.verificationFlowConfig;
       defaultButtons.back = { 
         enabled: (vc.showBackButton ?? true) && !isFirstStep, 
         label: vc.backButtonLabel || 'Back' 
@@ -1076,6 +1095,120 @@ export function DemoFlowRenderer({
             <p className="text-muted-foreground">
               {currentStep.pathStepConfig?.description || 'Proceeding with verification...'}
             </p>
+          </div>
+        );
+
+      case 'verification_flow':
+        // New consolidated verification flow step
+        const vfConfig = currentStep.verificationFlowConfig;
+        const isDataOnly = vfConfig?.pathType === 'dataonly';
+        
+        // Get QR data from verification session
+        const vfQrImageUrl =
+          verificationSessionDataRef.current?.qrCodeUrl ||
+          (allApiData.qrCodeUrl as string);
+        const vfShortUrl = verificationSessionDataRef.current?.shortUrl || (allApiData.shortUrl as string) || '';
+        const vfVerifyUrl = verificationSessionDataRef.current?.verifyUrl || (allApiData.verifyUrl as string) || '';
+        const vfQrValue = vfShortUrl || vfVerifyUrl;
+        const vfStatus = pollingStatus || (allApiData.status as string) || 'Pending';
+        
+        // For data-only paths, show processing status
+        if (isDataOnly) {
+          return (
+            <div className="text-center py-8 space-y-4">
+              <div className="w-16 h-16 mx-auto bg-cyan-500/20 rounded-full flex items-center justify-center">
+                {vfStatus === 'completed' ? (
+                  <CheckCircle2 className="w-8 h-8 text-green-600" />
+                ) : vfStatus === 'failed' ? (
+                  <XCircle className="w-8 h-8 text-red-600" />
+                ) : (
+                  <Loader2 className="w-8 h-8 text-cyan-600 animate-spin" />
+                )}
+              </div>
+              <p className="text-lg font-medium">{vfConfig?.title || 'Data Verification'}</p>
+              <p className="text-muted-foreground">{vfConfig?.description || 'Verifying your information...'}</p>
+              <Badge 
+                variant="outline" 
+                className={`
+                  ${vfStatus === 'completed' ? 'bg-green-500/20 text-green-600 border-green-500/30' : ''}
+                  ${vfStatus === 'failed' || vfStatus === 'expired' ? 'bg-red-500/20 text-red-600 border-red-500/30' : ''}
+                  ${vfStatus === 'pending' || vfStatus === 'in_progress' ? 'bg-yellow-500/20 text-yellow-600 border-yellow-500/30' : ''}
+                `}
+              >
+                Status: {vfStatus}
+              </Badge>
+            </div>
+          );
+        }
+        
+        // For doc/bio paths, show QR code and status
+        return (
+          <div className="text-center py-8 space-y-6">
+            {/* Path info */}
+            <div>
+              <p className="text-lg font-medium">{vfConfig?.title || 'Identity Verification'}</p>
+              <p className="text-muted-foreground text-sm">{vfConfig?.description}</p>
+            </div>
+            
+            {/* QR Code section */}
+            {vfConfig?.qrCodeEnabled && (
+              <div>
+                <p className="font-medium mb-2">{vfConfig.qrCodeTitle || 'Scan QR Code'}</p>
+                <QRCodeDisplay imageUrl={vfQrImageUrl} value={vfQrValue} size={200} />
+                {vfConfig.qrCodeInstructions && (
+                  <p className="text-sm text-muted-foreground mt-2">
+                    {vfConfig.qrCodeInstructions}
+                  </p>
+                )}
+                {vfShortUrl && (
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Or visit: <a href={vfShortUrl} target="_blank" rel="noopener noreferrer" className="text-primary underline">{vfShortUrl}</a>
+                  </p>
+                )}
+              </div>
+            )}
+            
+            {/* Direct redirect option */}
+            {vfVerifyUrl && !vfConfig?.qrCodeEnabled && (
+              <div className="space-y-4">
+                <Smartphone className="w-12 h-12 mx-auto text-primary" />
+                <p className="font-medium">Continue on this device</p>
+                <Button
+                  onClick={() => window.location.href = vfVerifyUrl}
+                  style={{ backgroundColor: buttonColor }}
+                >
+                  Start Verification
+                  <ExternalLink className="w-4 h-4 ml-2" />
+                </Button>
+              </div>
+            )}
+            
+            {/* Status display */}
+            {vfConfig?.statusEnabled && (
+              <div className="space-y-2">
+                <Badge 
+                  variant="outline" 
+                  className={`
+                    ${vfStatus === 'completed' ? 'bg-green-500/20 text-green-600 border-green-500/30' : ''}
+                    ${vfStatus === 'failed' || vfStatus === 'expired' ? 'bg-red-500/20 text-red-600 border-red-500/30' : ''}
+                    ${vfStatus === 'pending' || vfStatus === 'in_progress' ? 'bg-yellow-500/20 text-yellow-600 border-yellow-500/30' : ''}
+                  `}
+                >
+                  Status: {vfStatus}
+                </Badge>
+                {verificationSessionId && (
+                  <p className="text-xs text-muted-foreground">
+                    Session: {verificationSessionId.substring(0, 8)}...
+                  </p>
+                )}
+                {(vfStatus === 'pending' || vfStatus === 'in_progress') && (
+                  <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Waiting for verification...
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         );
 

@@ -105,12 +105,12 @@ function DraggableField({ field, index }: DraggableFieldProps) {
   );
 }
 
-// Draggable special element (Address Validation, Submit, Paths, Verification Step, API Step, Path Step, Page Step, Method Selection)
+// Draggable special element (Address Validation, Submit, Paths, Verification Flow, API Step, Page Step, Method Selection)
 interface DraggableSpecialProps {
   id: string;
   label: string;
   icon: React.ReactNode;
-  type: 'address_validation' | 'submit_button' | 'verification_path' | 'verification_step' | 'api_step' | 'path_step' | 'page_step' | 'method_selection_step';
+  type: 'address_validation' | 'submit_button' | 'verification_path' | 'verification_step' | 'api_step' | 'path_step' | 'verification_flow_step' | 'page_step' | 'method_selection_step';
   pathId?: string;
   description?: string;
   variant?: 'default' | 'purple' | 'blue' | 'green' | 'cyan' | 'orange' | 'indigo';
@@ -232,10 +232,18 @@ export function FieldPalette() {
                 <Workflow className="w-4 h-4" />
                 Step Types
               </span>
-              <Badge variant="outline" className="text-xs">5</Badge>
+              <Badge variant="outline" className="text-xs">3</Badge>
             </button>
             {expandedCategory === 'step-types' && (
               <div className="mt-2 space-y-1.5 pl-1">
+                <DraggableSpecial
+                  id="verification-flow-step"
+                  label="Verification Flow"
+                  icon={<Workflow className="w-4 h-4" />}
+                  type="verification_flow_step"
+                  description="Full verification with QR & status"
+                  variant="cyan"
+                />
                 <DraggableSpecial
                   id="api-step"
                   label="API Step"
@@ -245,36 +253,12 @@ export function FieldPalette() {
                   variant="green"
                 />
                 <DraggableSpecial
-                  id="path-step"
-                  label="Path Step"
-                  icon={<Workflow className="w-4 h-4" />}
-                  type="path_step"
-                  description="Verification path selection"
-                  variant="cyan"
-                />
-                <DraggableSpecial
-                  id="verification-step"
-                  label="Verification Step"
-                  icon={<QrCode className="w-4 h-4" />}
-                  type="verification_step"
-                  description="QR code, status, mDL display"
-                  variant="purple"
-                />
-                <DraggableSpecial
                   id="page-step"
                   label="Page Step"
                   icon={<FileText className="w-4 h-4" />}
                   type="page_step"
                   description="Custom display page with API data"
                   variant="orange"
-                />
-                <DraggableSpecial
-                  id="method-selection-step"
-                  label="Method Selection"
-                  icon={<Smartphone className="w-4 h-4" />}
-                  type="method_selection_step"
-                  description="Doc scan or mDL choice"
-                  variant="indigo"
                 />
               </div>
             )}

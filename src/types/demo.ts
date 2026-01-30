@@ -202,8 +202,8 @@ export interface VerificationStepConfig {
 }
 
 // Step type enumeration
-// Step type enumeration
-export type FormStepType = 'form' | 'verification' | 'api' | 'path' | 'page' | 'method_selection';
+// Note: 'verification' step type is deprecated - use 'verification_flow' instead
+export type FormStepType = 'form' | 'verification' | 'api' | 'path' | 'verification_flow' | 'page' | 'method_selection';
 
 // API Step configuration (standalone API call step)
 export interface ApiStepConfig {
@@ -223,6 +223,7 @@ export interface ApiStepConfig {
 }
 
 // Path Step configuration (verification path decision step)
+// DEPRECATED: Use VerificationFlowConfig instead
 export interface PathStepConfig {
   // The verification path type
   pathType: 'docbio' | 'databio' | 'dataonly' | 'mdl';
@@ -236,6 +237,44 @@ export interface PathStepConfig {
   
   // Auto-advance behavior
   autoAdvance?: boolean;
+}
+
+// Verification Flow configuration (combines path selection with verification display)
+export interface VerificationFlowConfig {
+  // The verification path type
+  pathType: 'docbio' | 'databio' | 'dataonly' | 'mdl';
+  
+  // Resource ID for this path (overrides the demo's default resource ID)
+  resourceId?: string;
+  
+  // Display settings
+  title?: string;
+  description?: string;
+  
+  // QR code settings
+  qrCodeEnabled: boolean;
+  qrCodeTitle?: string;
+  qrCodeInstructions?: string;
+  
+  // Status display settings
+  statusEnabled: boolean;
+  statusPollingInterval?: number; // seconds
+  
+  // Mobile ID path settings (for mDL path type)
+  mobileIdEnabled: boolean;
+  mobileIdTitle?: string;
+  mobileIdInstructions?: string;
+  mobileIdProviders?: MdlProvider[];
+  
+  // Completion behavior
+  autoAdvanceOnComplete?: boolean;
+  completionRedirectUrl?: string;
+  
+  // Navigation buttons
+  showBackButton?: boolean;
+  backButtonLabel?: string;
+  showNextButton?: boolean;
+  nextButtonLabel?: string;
 }
 
 // Page content element types
@@ -317,12 +356,14 @@ export interface FormStep {
   buttons?: StepButton[];
   // API configuration (for form steps with inline API calls)
   apiConfig?: StepApiConfig;
-  // Verification step configuration (only used when stepType = 'verification')
+  // Verification step configuration (DEPRECATED - use verificationFlowConfig instead)
   verificationConfig?: VerificationStepConfig;
   // API step configuration (only used when stepType = 'api')
   apiStepConfig?: ApiStepConfig;
-  // Path step configuration (only used when stepType = 'path')
+  // Path step configuration (DEPRECATED - use verificationFlowConfig instead)
   pathStepConfig?: PathStepConfig;
+  // Verification flow configuration (only used when stepType = 'verification_flow')
+  verificationFlowConfig?: VerificationFlowConfig;
   // Page step configuration (only used when stepType = 'page')
   pageStepConfig?: PageStepConfig;
   // Method selection step configuration (only used when stepType = 'method_selection')
