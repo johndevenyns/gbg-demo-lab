@@ -29,6 +29,15 @@ const getContrastTextColor = (hexColor: string): string => {
   // Return dark text for light backgrounds, white text for dark backgrounds
   return luminance > 0.5 ? '#1a1a1a' : '#ffffff';
 };
+export interface SubmissionLogData {
+  type: 'request' | 'response';
+  endpoint: string;
+  method: string;
+  status?: number;
+  data: Record<string, unknown>;
+  duration?: number;
+}
+
 interface DemoFlowRendererProps {
   steps: FormStep[];
   buttonColor: string;
@@ -43,6 +52,7 @@ interface DemoFlowRendererProps {
   referenceIdPrefix?: string;
   storedTestData?: StoredTestData;
   showTestButtons?: boolean;
+  onSubmissionLog?: (data: SubmissionLogData) => void;
   onComplete?: (success: boolean, referenceId?: string) => void;
 }
 
@@ -187,6 +197,7 @@ export function DemoFlowRenderer({
   referenceIdPrefix,
   storedTestData,
   showTestButtons = false,
+  onSubmissionLog,
   onComplete 
 }: DemoFlowRendererProps) {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
@@ -461,11 +472,21 @@ export function DemoFlowRenderer({
     setError(null);
     
     const config = currentStep.apiStepConfig;
+    const startTime = Date.now();
     
     // Check if endpoint URL is configured
     if (!config?.endpointUrl) {
       // Fall back to mock response if no endpoint configured
       console.log('No endpoint configured, using mock response');
+      
+      // Log mock request
+      onSubmissionLog?.({
+        type: 'request',
+        endpoint: '(mock) No endpoint configured',
+        method: 'POST',
+        data: formData,
+      });
+      
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       const mockResponse: StepApiResponse = {
@@ -480,6 +501,16 @@ export function DemoFlowRenderer({
           transactionId: crypto.randomUUID(),
         },
       };
+      
+      // Log mock response
+      onSubmissionLog?.({
+        type: 'response',
+        endpoint: '(mock) No endpoint configured',
+        method: 'POST',
+        status: 200,
+        data: mockResponse.data,
+        duration: Date.now() - startTime,
+      });
       
       setApiResponses(prev => [...prev, mockResponse]);
       setIsLoading(false);
@@ -509,6 +540,14 @@ export function DemoFlowRenderer({
 
       console.log('Calling API endpoint:', config.endpointUrl);
       console.log('Request body:', requestBody);
+      
+      // Log request
+      onSubmissionLog?.({
+        type: 'request',
+        endpoint: config.endpointUrl,
+        method: config.method || 'POST',
+        data: requestBody,
+      });
 
       // Call the API proxy edge function
       const { data, error: invokeError } = await supabase.functions.invoke('api-proxy', {
@@ -521,10 +560,31 @@ export function DemoFlowRenderer({
 
       if (invokeError) {
         console.error('Edge function error:', invokeError);
+        
+        // Log error response
+        onSubmissionLog?.({
+          type: 'response',
+          endpoint: config.endpointUrl,
+          method: config.method || 'POST',
+          status: 500,
+          data: { error: invokeError.message },
+          duration: Date.now() - startTime,
+        });
+        
         throw new Error(invokeError.message || 'Failed to call API');
       }
 
       console.log('API response:', data);
+      
+      // Log response
+      onSubmissionLog?.({
+        type: 'response',
+        endpoint: config.endpointUrl,
+        method: config.method || 'POST',
+        status: data.status || 200,
+        data: typeof data.data === 'object' ? data.data : { response: data.data },
+        duration: Date.now() - startTime,
+      });
 
       if (!data.success) {
         throw new Error(data.error || `API returned status ${data.status}`);
@@ -559,27 +619,59 @@ export function DemoFlowRenderer({
   const createVerificationSession = useCallback(async (verificationType: VerificationType) => {
     setIsLoading(true);
     setError(null);
+    const startTime = Date.now();
+    
+    const requestBody = {
+      formData,
+      verificationType,
+      customerName: customerName || 'Verification Demo',
+      returnUrl: returnUrl || window.location.href,
+      includeQr: includeQr ?? true,
+      referenceIdPrefix: referenceIdPrefix,
+    };
+    
+    // Log request
+    onSubmissionLog?.({
+      type: 'request',
+      endpoint: 'create-verification-session',
+      method: 'POST',
+      data: requestBody,
+    });
     
     try {
       console.log('Creating verification session:', { verificationType, customerName, formData });
       
       const { data, error: invokeError } = await supabase.functions.invoke('create-verification-session', {
-        body: {
-          formData,
-          verificationType,
-          customerName: customerName || 'Verification Demo',
-          returnUrl: returnUrl || window.location.href,
-          includeQr: includeQr ?? true,
-          referenceIdPrefix: referenceIdPrefix,
-        },
+        body: requestBody,
       });
 
       if (invokeError) {
         console.error('Edge function error:', invokeError);
+        
+        // Log error response
+        onSubmissionLog?.({
+          type: 'response',
+          endpoint: 'create-verification-session',
+          method: 'POST',
+          status: 500,
+          data: { error: invokeError.message },
+          duration: Date.now() - startTime,
+        });
+        
         throw new Error(invokeError.message || 'Failed to create verification session');
       }
 
       console.log('Verification session created:', data);
+      
+      // Log response
+      onSubmissionLog?.({
+        type: 'response',
+        endpoint: 'create-verification-session',
+        method: 'POST',
+        status: data.success ? 200 : 400,
+        data: data,
+        duration: Date.now() - startTime,
+      });
 
       if (!data.success) {
         throw new Error(data.error || 'Failed to create verification session');
@@ -617,7 +709,7 @@ export function DemoFlowRenderer({
     } finally {
       setIsLoading(false);
     }
-  }, [formData, customerName, returnUrl, includeQr, referenceIdPrefix, currentStep?.id, goToNextStep]);
+  }, [formData, customerName, returnUrl, includeQr, referenceIdPrefix, currentStep?.id, goToNextStep, onSubmissionLog]);
 
   // Poll for verification status
   const pollVerificationStatus = useCallback(async () => {
