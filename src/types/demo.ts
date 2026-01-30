@@ -193,6 +193,12 @@ export interface VerificationStepConfig {
   // Completion behavior
   autoAdvanceOnComplete?: boolean;
   completionRedirectUrl?: string;
+  
+  // Navigation buttons
+  showBackButton?: boolean;
+  backButtonLabel?: string;
+  showNextButton?: boolean;
+  nextButtonLabel?: string;
 }
 
 // Step type enumeration

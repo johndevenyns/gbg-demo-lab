@@ -847,7 +847,24 @@ export function DemoFlowRenderer({
       submit: { enabled: isLastStep, label: 'Submit' },
     };
 
-    if (currentStep?.buttons) {
+    // Handle verification step button config
+    if (currentStep?.stepType === 'verification' && currentStep.verificationConfig) {
+      const vc = currentStep.verificationConfig;
+      defaultButtons.back = { 
+        enabled: (vc.showBackButton ?? true) && !isFirstStep, 
+        label: vc.backButtonLabel || 'Back' 
+      };
+      defaultButtons.next = { 
+        enabled: (vc.showNextButton ?? false) && !isLastStep, 
+        label: vc.nextButtonLabel || 'Continue' 
+      };
+      defaultButtons.submit = { 
+        enabled: (vc.showNextButton ?? false) && isLastStep, 
+        label: vc.nextButtonLabel || 'Submit' 
+      };
+    }
+    // Handle standard button config from step.buttons
+    else if (currentStep?.buttons) {
       currentStep.buttons.forEach(btn => {
         if (btn.id === 'back') defaultButtons.back = { enabled: btn.enabled && !isFirstStep, label: btn.label };
         if (btn.id === 'next') defaultButtons.next = { enabled: btn.enabled && !isLastStep, label: btn.label };
@@ -1099,14 +1116,6 @@ export function DemoFlowRenderer({
                     Waiting for verification...
                   </div>
                 )}
-              </div>
-            )}
-            
-            {/* Reference ID */}
-            {referenceId && (
-              <div className="pt-4 border-t border-border">
-                <p className="text-sm text-muted-foreground">Reference ID</p>
-                <p className="font-mono font-medium">{referenceId}</p>
               </div>
             )}
           </div>
