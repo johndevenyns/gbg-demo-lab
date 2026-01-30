@@ -17,3 +17,4 @@ export { MethodSelectionStepConfig } from './MethodSelectionStepConfig';
 export { SaveTemplateDialog } from './SaveTemplateDialog';
 export { StoredUserDataConfig } from './StoredUserDataConfig';
 export { FormPreviewPanel } from './FormPreviewPanel';
+export { SubmissionLogPanel, type SubmissionLogEntry } from './SubmissionLogPanel';
