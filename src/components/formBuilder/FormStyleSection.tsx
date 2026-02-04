@@ -16,7 +16,7 @@ import {
   scrapedBrandingToFormStyle,
 } from '@/types/formStyle';
 import { DemoEnvironment } from '@/types/demo';
-import { ScrapedBranding, scrapingApi } from '@/lib/api/scraping';
+import { ScrapedBranding, scrapingApi, FormElementStyles } from '@/lib/api/scraping';
 import { useToast } from '@/hooks/use-toast';
 
 interface FormStyleSectionProps {
@@ -26,10 +26,83 @@ interface FormStyleSectionProps {
   scrapedBranding?: ScrapedBranding | null;
 }
 
+// Helper to convert extracted form styles to FormStyleConfig
+function formElementStylesToConfig(styles: FormElementStyles): Partial<FormStyleConfig> {
+  const config: Partial<FormStyleConfig> = {
+    source: 'mirrored',
+  };
+
+  // Map input colors
+  if (styles.inputBgColor) config.inputBgColor = styles.inputBgColor;
+  if (styles.inputTextColor) config.inputTextColor = styles.inputTextColor;
+  if (styles.inputBorderColor) config.inputBorderColor = styles.inputBorderColor;
+  if (styles.inputFocusBorderColor) config.inputFocusBorderColor = styles.inputFocusBorderColor;
+  if (styles.inputPlaceholderColor) config.inputPlaceholderColor = styles.inputPlaceholderColor;
+
+  // Map label styles
+  if (styles.labelColor) config.labelColor = styles.labelColor;
+  if (styles.labelFontWeight) {
+    const weight = parseInt(styles.labelFontWeight);
+    if (weight >= 600) config.labelWeight = 'semibold';
+    else if (weight >= 500) config.labelWeight = 'medium';
+    else config.labelWeight = 'normal';
+  }
+
+  // Map font family
+  if (styles.inputFontFamily || styles.labelFontFamily) {
+    config.fontFamily = styles.inputFontFamily || styles.labelFontFamily || DEFAULT_FORM_STYLE.fontFamily;
+  }
+
+  // Map font size
+  if (styles.inputFontSize) {
+    const size = parseInt(styles.inputFontSize);
+    if (size <= 14) config.fontSize = 'sm';
+    else if (size >= 18) config.fontSize = 'lg';
+    else config.fontSize = 'base';
+  }
+
+  // Map border radius
+  if (styles.inputBorderRadius) {
+    const radius = styles.inputBorderRadius.toLowerCase();
+    if (radius === '0' || radius === '0px' || radius === 'none') config.borderRadius = 'none';
+    else if (radius.includes('999') || radius.includes('9999') || radius.includes('50%') || radius.includes('full')) config.borderRadius = 'full';
+    else {
+      const px = parseInt(radius);
+      if (px <= 4) config.borderRadius = 'sm';
+      else if (px >= 12) config.borderRadius = 'lg';
+      else config.borderRadius = 'md';
+    }
+  }
+
+  // Map border width
+  if (styles.inputBorderWidth) {
+    const width = parseInt(styles.inputBorderWidth);
+    if (width === 0) config.borderWidth = '0';
+    else if (width >= 2) config.borderWidth = '2';
+    else config.borderWidth = '1';
+  }
+
+  // Map padding
+  if (styles.inputPadding) {
+    const padding = styles.inputPadding;
+    const values = padding.split(/\s+/).map(v => parseInt(v));
+    const avgPadding = values.reduce((a, b) => a + b, 0) / values.length;
+    if (avgPadding <= 8) config.inputPadding = 'sm';
+    else if (avgPadding >= 16) config.inputPadding = 'lg';
+    else config.inputPadding = 'md';
+  }
+
+  // Map error color
+  if (styles.errorColor) config.errorColor = styles.errorColor;
+
+  return config;
+}
+
 export function FormStyleSection({ demo, formStyle, onUpdateStyle, scrapedBranding }: FormStyleSectionProps) {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<FormStyleSource>(formStyle.source);
   const [isScraping, setIsScraping] = useState(false);
+  const [extractedStyles, setExtractedStyles] = useState<FormElementStyles | null>(null);
 
   const handleTabChange = (value: string) => {
     setActiveTab(value as FormStyleSource);
@@ -47,28 +120,33 @@ export function FormStyleSection({ demo, formStyle, onUpdateStyle, scrapedBrandi
 
     setIsScraping(true);
     try {
-      const response = await scrapingApi.scrapeSiteBranding(formStyle.formStyleUrl);
+      // Use the new form-specific scraping endpoint
+      const response = await scrapingApi.scrapeFormStyles(
+        formStyle.formStyleUrl,
+        formStyle.formContainerSelector || undefined
+      );
       
       if (!response.success || !response.data) {
         throw new Error(response.error || 'Failed to scrape form styling');
       }
 
-      const mirroredStyle = scrapedBrandingToFormStyle({
-        colors: response.data.branding?.colors,
-        fonts: response.data.branding?.fonts,
-        buttonColor: response.data.colors?.buttonColor,
-      });
+      // Store the raw extracted styles for display
+      setExtractedStyles(response.data.styles);
+
+      // Convert to FormStyleConfig
+      const mirroredStyle = formElementStylesToConfig(response.data.styles);
 
       onUpdateStyle({
         ...DEFAULT_FORM_STYLE,
         ...mirroredStyle,
         formStyleUrl: formStyle.formStyleUrl,
+        formContainerSelector: formStyle.formContainerSelector,
         source: 'mirrored',
       });
 
       toast({
         title: 'Form styling extracted',
-        description: 'Applied styling from the customer form page',
+        description: `Applied ${Object.keys(mirroredStyle).length} style properties from the customer form`,
       });
     } catch (error) {
       toast({
@@ -82,7 +160,25 @@ export function FormStyleSection({ demo, formStyle, onUpdateStyle, scrapedBrandi
   };
 
   const applyMirroredStyle = () => {
-    // Use scraped branding data or fall back to demo's stored colors
+    // If we have extracted form styles, use those
+    if (extractedStyles) {
+      const mirroredStyle = formElementStylesToConfig(extractedStyles);
+      onUpdateStyle({
+        ...DEFAULT_FORM_STYLE,
+        ...mirroredStyle,
+        formStyleUrl: formStyle.formStyleUrl,
+        formContainerSelector: formStyle.formContainerSelector,
+        source: 'mirrored',
+      });
+
+      toast({
+        title: 'Extracted Styles Applied',
+        description: 'Form styling updated to match the customer form exactly',
+      });
+      return;
+    }
+
+    // Fallback: Use scraped branding data or demo's stored colors
     const mirroredStyle: Partial<FormStyleConfig> = {
       source: 'mirrored',
       inputBgColor: '#ffffff',
@@ -144,8 +240,8 @@ export function FormStyleSection({ demo, formStyle, onUpdateStyle, scrapedBrandi
     });
   };
 
-  // Show mirrored data if we have either scraped branding or stored demo colors from main site
-  const hasMirroredData = !!demo.customerSiteUrl || !!scrapedBranding?.branding || !!demo.scrapedCss || !!demo.buttonColor;
+  // Show mirrored data if we have either scraped branding, extracted form styles, or stored demo colors
+  const hasMirroredData = !!demo.customerSiteUrl || !!scrapedBranding?.branding || !!demo.scrapedCss || !!demo.buttonColor || !!extractedStyles;
 
   return (
     <Card className="glass-card">
@@ -214,7 +310,7 @@ export function FormStyleSection({ demo, formStyle, onUpdateStyle, scrapedBrandi
                 )}
               </div>
               <p className="text-xs text-muted-foreground">
-                Enter a URL to a form page on the customer's site, then click "Fetch Styles" to extract their form styling
+                Enter a URL to a form page on the customer's site, then click "Fetch Styles" to extract their exact form styling
               </p>
             </div>
 
@@ -228,71 +324,175 @@ export function FormStyleSection({ demo, formStyle, onUpdateStyle, scrapedBrandi
                 onChange={(e) => onUpdateStyle({ ...formStyle, formContainerSelector: e.target.value })}
               />
               <p className="text-xs text-muted-foreground">
-                CSS selector to help locate the specific form on the page. Examples: <code className="bg-muted px-1 rounded">#form-id</code>, <code className="bg-muted px-1 rounded">.form-class</code>, <code className="bg-muted px-1 rounded">form[data-type="signup"]</code>
+                CSS selector to target a specific form. The scraper will extract styles from this container and all its children.
               </p>
             </div>
+
+            {/* Extracted Styles Preview */}
+            {extractedStyles && (
+              <div className="p-4 rounded-lg bg-primary/5 border border-primary/20">
+                <h4 className="text-sm font-semibold mb-3 text-primary">Extracted Form Styles</h4>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {/* Input preview */}
+                  <div className="space-y-1">
+                    <span className="text-xs text-muted-foreground">Input Field</span>
+                    <div
+                      className="h-10 rounded flex items-center px-3 text-sm"
+                      style={{
+                        backgroundColor: extractedStyles.inputBgColor,
+                        color: extractedStyles.inputTextColor,
+                        border: `${extractedStyles.inputBorderWidth} solid ${extractedStyles.inputBorderColor}`,
+                        borderRadius: extractedStyles.inputBorderRadius,
+                        fontFamily: extractedStyles.inputFontFamily,
+                      }}
+                    >
+                      Sample text
+                    </div>
+                  </div>
+                  
+                  {/* Focus state preview */}
+                  <div className="space-y-1">
+                    <span className="text-xs text-muted-foreground">Focus State</span>
+                    <div
+                      className="h-10 rounded flex items-center px-3 text-sm"
+                      style={{
+                        backgroundColor: extractedStyles.inputBgColor,
+                        color: extractedStyles.inputTextColor,
+                        border: `2px solid ${extractedStyles.inputFocusBorderColor}`,
+                        borderRadius: extractedStyles.inputBorderRadius,
+                        boxShadow: extractedStyles.inputFocusBoxShadow,
+                        fontFamily: extractedStyles.inputFontFamily,
+                      }}
+                    >
+                      Focused
+                    </div>
+                  </div>
+                  
+                  {/* Button preview */}
+                  <div className="space-y-1">
+                    <span className="text-xs text-muted-foreground">Button</span>
+                    <div
+                      className="h-10 rounded flex items-center justify-center px-4 text-sm"
+                      style={{
+                        backgroundColor: extractedStyles.buttonBgColor,
+                        color: extractedStyles.buttonTextColor,
+                        borderRadius: extractedStyles.buttonBorderRadius,
+                        fontWeight: extractedStyles.buttonFontWeight,
+                      }}
+                    >
+                      Submit
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Color swatches */}
+                <div className="flex flex-wrap gap-3 mt-4 pt-3 border-t border-border">
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="w-5 h-5 rounded border"
+                      style={{ backgroundColor: extractedStyles.inputBorderColor }}
+                    />
+                    <span className="text-xs text-muted-foreground">Border</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="w-5 h-5 rounded border"
+                      style={{ backgroundColor: extractedStyles.inputFocusBorderColor }}
+                    />
+                    <span className="text-xs text-muted-foreground">Focus</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="w-5 h-5 rounded border"
+                      style={{ backgroundColor: extractedStyles.labelColor }}
+                    />
+                    <span className="text-xs text-muted-foreground">Label</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="w-5 h-5 rounded border"
+                      style={{ backgroundColor: extractedStyles.buttonBgColor }}
+                    />
+                    <span className="text-xs text-muted-foreground">Button</span>
+                  </div>
+                  {extractedStyles.inputFontFamily && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium" style={{ fontFamily: extractedStyles.inputFontFamily }}>
+                        Aa
+                      </span>
+                      <span className="text-xs text-muted-foreground truncate max-w-24">
+                        {extractedStyles.inputFontFamily.split(',')[0]}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
             {hasMirroredData ? (
               <div className="space-y-4">
                 <div className="p-4 rounded-lg bg-muted/50 border border-border">
                   <p className="text-sm text-muted-foreground mb-3">
-                    Apply styling from mirrored site{demo.customerSiteUrl && `: `}
-                    {demo.customerSiteUrl && <strong>{demo.customerSiteUrl}</strong>}
+                    {extractedStyles 
+                      ? 'Form styles extracted and ready to apply'
+                      : `Apply styling from mirrored site${demo.customerSiteUrl ? `: ${demo.customerSiteUrl}` : ''}`
+                    }
                   </p>
-                  <div className="flex flex-wrap items-center gap-4 mb-4">
-                    {/* Show button color from demo */}
-                    {demo.buttonColor && (
-                      <div className="flex items-center gap-2">
-                        <div
-                          className="w-6 h-6 rounded border"
-                          style={{ backgroundColor: demo.buttonColor }}
-                        />
-                        <span className="text-xs text-muted-foreground">Button/Focus</span>
-                      </div>
-                    )}
-                    {/* Show header colors from demo */}
-                    {demo.headerBgColor && (
-                      <div className="flex items-center gap-2">
-                        <div
-                          className="w-6 h-6 rounded border"
-                          style={{ backgroundColor: demo.headerBgColor }}
-                        />
-                        <span className="text-xs text-muted-foreground">Header BG</span>
-                      </div>
-                    )}
-                    {demo.headerTextColor && (
-                      <div className="flex items-center gap-2">
-                        <div
-                          className="w-6 h-6 rounded border"
-                          style={{ backgroundColor: demo.headerTextColor }}
-                        />
-                        <span className="text-xs text-muted-foreground">Text</span>
-                      </div>
-                    )}
-                    {/* Show scraped branding colors if available */}
-                    {scrapedBranding?.branding?.colors?.primary && (
-                      <div className="flex items-center gap-2">
-                        <div
-                          className="w-6 h-6 rounded border"
-                          style={{ backgroundColor: scrapedBranding.branding.colors.primary }}
-                        />
-                        <span className="text-xs text-muted-foreground">Primary</span>
-                      </div>
-                    )}
-                    {/* Show fonts from scraped branding */}
-                    {scrapedBranding?.branding?.fonts?.[0] && (
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium" style={{ fontFamily: scrapedBranding.branding.fonts[0].family }}>
-                          Aa
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          {scrapedBranding.branding.fonts[0].family}
-                        </span>
-                      </div>
-                    )}
-                  </div>
+                  
+                  {/* Fallback: Show demo colors if no extracted styles */}
+                  {!extractedStyles && (
+                    <div className="flex flex-wrap items-center gap-4 mb-4">
+                      {demo.buttonColor && (
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="w-6 h-6 rounded border"
+                            style={{ backgroundColor: demo.buttonColor }}
+                          />
+                          <span className="text-xs text-muted-foreground">Button/Focus</span>
+                        </div>
+                      )}
+                      {demo.headerBgColor && (
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="w-6 h-6 rounded border"
+                            style={{ backgroundColor: demo.headerBgColor }}
+                          />
+                          <span className="text-xs text-muted-foreground">Header BG</span>
+                        </div>
+                      )}
+                      {demo.headerTextColor && (
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="w-6 h-6 rounded border"
+                            style={{ backgroundColor: demo.headerTextColor }}
+                          />
+                          <span className="text-xs text-muted-foreground">Text</span>
+                        </div>
+                      )}
+                      {scrapedBranding?.branding?.colors?.primary && (
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="w-6 h-6 rounded border"
+                            style={{ backgroundColor: scrapedBranding.branding.colors.primary }}
+                          />
+                          <span className="text-xs text-muted-foreground">Primary</span>
+                        </div>
+                      )}
+                      {scrapedBranding?.branding?.fonts?.[0] && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium" style={{ fontFamily: scrapedBranding.branding.fonts[0].family }}>
+                            Aa
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {scrapedBranding.branding.fonts[0].family}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
                   <Button onClick={applyMirroredStyle} className="gradient-primary">
-                    Apply Mirrored Style
+                    {extractedStyles ? 'Apply Extracted Styles' : 'Apply Mirrored Style'}
                   </Button>
                 </div>
                 {formStyle.source === 'mirrored' && (
@@ -306,10 +506,10 @@ export function FormStyleSection({ demo, formStyle, onUpdateStyle, scrapedBrandi
               <div className="p-6 rounded-lg bg-muted/30 border border-dashed border-border text-center">
                 <Globe className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
                 <p className="text-sm text-muted-foreground">
-                  No mirrored site data available.
+                  Enter a form URL above and click "Fetch Styles" to extract the exact form styling.
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Use the Site Mirror feature to scrape a customer's website first.
+                  Or use the Site Mirror feature to scrape a customer's main website for general branding.
                 </p>
               </div>
             )}
