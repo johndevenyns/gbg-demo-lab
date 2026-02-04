@@ -64,6 +64,93 @@ serve(async (req) => {
     // Parse request body
     const { action, email, userId: targetUserId } = await req.json();
 
+    // List all admin users with their emails
+    if (action === "list") {
+      // Get all admin user roles
+      const { data: roles, error: rolesError } = await adminClient
+        .from("user_roles")
+        .select("*")
+        .eq("role", "admin")
+        .order("created_at", { ascending: false });
+
+      if (rolesError) {
+        return new Response(
+          JSON.stringify({ error: "Failed to fetch admin roles" }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Get all users to map emails
+      const { data: usersData, error: usersError } = await adminClient.auth.admin.listUsers();
+      
+      if (usersError) {
+        return new Response(
+          JSON.stringify({ error: "Failed to fetch user details" }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Map user IDs to emails
+      const userMap = new Map(usersData.users.map(u => [u.id, u.email]));
+      
+      const adminsWithEmails = roles?.map(role => ({
+        ...role,
+        email: userMap.get(role.user_id) || 'Unknown',
+      })) || [];
+
+      return new Response(
+        JSON.stringify({ users: adminsWithEmails }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Reset password for a user
+    if (action === "resetPassword") {
+      if (!targetUserId) {
+        return new Response(
+          JSON.stringify({ error: "User ID is required" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Get user's email
+      const { data: usersData, error: usersError } = await adminClient.auth.admin.listUsers();
+      
+      if (usersError) {
+        return new Response(
+          JSON.stringify({ error: "Failed to fetch user details" }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const targetUser = usersData.users.find(u => u.id === targetUserId);
+      
+      if (!targetUser || !targetUser.email) {
+        return new Response(
+          JSON.stringify({ error: "User not found" }),
+          { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Send password reset email
+      const { error: resetError } = await adminClient.auth.admin.generateLink({
+        type: 'recovery',
+        email: targetUser.email,
+      });
+
+      if (resetError) {
+        return new Response(
+          JSON.stringify({ error: "Failed to send password reset: " + resetError.message }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      return new Response(
+        JSON.stringify({ success: true, message: `Password reset email sent to ${targetUser.email}` }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     if (action === "add") {
       if (!email) {
         return new Response(
