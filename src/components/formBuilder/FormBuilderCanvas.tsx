@@ -22,6 +22,7 @@ import { Button } from '@/components/ui/button';
 import { FormStep, FormField } from '@/types/demo';
 import { FormStepCard } from './FormStepCard';
 import { FieldPalette } from './FieldPalette';
+import { AddStepDialog, StepTypeOption } from './AddStepDialog';
 import { Plus, GripVertical } from 'lucide-react';
 
 interface FormBuilderCanvasProps {
@@ -35,6 +36,7 @@ export function FormBuilderCanvas({ steps, onUpdateSteps }: FormBuilderCanvasPro
   );
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
   const [activeData, setActiveData] = useState<any>(null);
+  const [addStepDialogOpen, setAddStepDialogOpen] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -356,15 +358,93 @@ export function FormBuilderCanvas({ steps, onUpdateSteps }: FormBuilderCanvasPro
     }
   };
 
-  const addStep = useCallback(() => {
-    const newStep: FormStep = {
-      id: generateId(),
-      title: `Step ${steps.length + 1}`,
-      order: steps.length + 1,
-      fields: [],
-    };
+  const handleAddStep = useCallback((type: StepTypeOption, title: string) => {
+    const stepId = generateId();
+    let newStep: FormStep;
+
+    if (type === 'form') {
+      newStep = {
+        id: stepId,
+        title,
+        order: steps.length + 1,
+        stepType: 'form',
+        fields: [],
+      };
+    } else if (type.startsWith('verification_')) {
+      const pathType = type.replace('verification_', '') as 'docbio' | 'databio' | 'dataonly' | 'mdl';
+      newStep = {
+        id: stepId,
+        title,
+        order: steps.length + 1,
+        stepType: 'verification_flow',
+        fields: [],
+        verificationFlowConfig: {
+          pathType,
+          qrCodeEnabled: true,
+          qrCodeTitle: 'Scan to Verify',
+          qrCodeInstructions: 'Scan this QR code with your mobile device to complete verification',
+          statusEnabled: true,
+          statusPollingInterval: 5,
+          mobileIdEnabled: pathType === 'mdl',
+          autoAdvanceOnComplete: true,
+          showBackButton: true,
+          backButtonLabel: 'Back',
+        },
+      };
+    } else if (type === 'api') {
+      newStep = {
+        id: stepId,
+        title,
+        order: steps.length + 1,
+        stepType: 'api',
+        fields: [],
+        apiStepConfig: {
+          method: 'POST',
+          autoAdvanceOnSuccess: true,
+          autoAdvanceDelay: 2,
+        },
+      };
+    } else if (type === 'page') {
+      newStep = {
+        id: stepId,
+        title,
+        order: steps.length + 1,
+        stepType: 'page',
+        fields: [],
+        pageStepConfig: {
+          layout: 'centered',
+          elements: [
+            {
+              id: generateId(),
+              type: 'heading',
+              order: 0,
+              content: 'Page Title',
+              size: 'xl',
+              alignment: 'center',
+            },
+            {
+              id: generateId(),
+              type: 'text',
+              order: 1,
+              content: 'Add your content here',
+              alignment: 'center',
+            },
+          ],
+        },
+      };
+    } else {
+      // Fallback to form step
+      newStep = {
+        id: stepId,
+        title,
+        order: steps.length + 1,
+        stepType: 'form',
+        fields: [],
+      };
+    }
+
     onUpdateSteps([...steps, newStep]);
-    setExpandedSteps(prev => new Set([...prev, newStep.id]));
+    setExpandedSteps(prev => new Set([...prev, stepId]));
   }, [steps, onUpdateSteps]);
 
   const removeStep = useCallback((stepId: string) => {
@@ -482,11 +562,17 @@ export function FormBuilderCanvas({ steps, onUpdateSteps }: FormBuilderCanvasPro
           <Button
             variant="outline"
             className="w-full border-dashed h-14"
-            onClick={addStep}
+            onClick={() => setAddStepDialogOpen(true)}
           >
             <Plus className="w-4 h-4 mr-2" />
             Add Step
           </Button>
+          
+          <AddStepDialog
+            open={addStepDialogOpen}
+            onOpenChange={setAddStepDialogOpen}
+            onAddStep={handleAddStep}
+          />
         </div>
       </div>
 

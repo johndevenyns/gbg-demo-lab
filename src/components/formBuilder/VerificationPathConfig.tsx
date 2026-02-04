@@ -67,10 +67,10 @@ export function VerificationPathConfig({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Settings2 className="w-5 h-5" />
-          Verification Paths
+          Verification Types
         </CardTitle>
         <CardDescription>
-          Configure which verification methods are available and when they're used
+          Configure which verification methods are available and their Resource IDs
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">

@@ -3,11 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { AVAILABLE_FORM_FIELDS, FormField } from '@/types/demo';
-import { VERIFICATION_PATHS } from '@/types/formBuilder';
 import { 
   User, Mail, Phone, Calendar, Hash, MapPin, Building, DollarSign, 
-  FileText, Type, CheckSquare, GripVertical, Search,
-  Smartphone, Database, FileCheck, Workflow, Plug
+  FileText, Type, CheckSquare, GripVertical, Search
 } from 'lucide-react';
 import { useState, useMemo } from 'react';
 
@@ -37,13 +35,6 @@ const FIELD_ICONS: Record<string, React.ReactNode> = {
   nationality: <MapPin className="w-4 h-4" />,
 };
 
-const PATH_ICONS: Record<string, React.ReactNode> = {
-  docbio: <FileCheck className="w-4 h-4" />,
-  databio: <Database className="w-4 h-4" />,
-  dataonly: <Database className="w-4 h-4" />,
-  mdl: <Smartphone className="w-4 h-4" />,
-};
-
 const FIELD_CATEGORIES = {
   personal: ['first_name', 'last_name', 'middle_name', 'date_of_birth', 'gender', 'nationality'],
   contact: ['email', 'phone'],
@@ -54,7 +45,6 @@ const FIELD_CATEGORIES = {
 };
 
 // Address fields that can be validated by Loqate API
-// These map to: address1, locality, administrativeArea, postalCode, country
 export const ADDRESS_VALIDATION_FIELDS: string[] = ['address_street', 'address_city', 'address_state', 'address_zip', 'address_country'];
 
 // Human-readable field names for validation display
@@ -101,72 +91,6 @@ function DraggableField({ field, index }: DraggableFieldProps) {
       {field.required && (
         <Badge variant="secondary" className="text-xs px-1">req</Badge>
       )}
-    </div>
-  );
-}
-
-// Draggable special element (Paths, Verification Flow, API Step, Page Step)
-interface DraggableSpecialProps {
-  id: string;
-  label: string;
-  icon: React.ReactNode;
-  type: 'address_validation' | 'verification_path' | 'verification_step' | 'api_step' | 'path_step' | 'verification_flow_step' | 'page_step' | 'method_selection_step';
-  pathId?: string;
-  description?: string;
-  variant?: 'default' | 'purple' | 'blue' | 'green' | 'cyan' | 'orange' | 'indigo';
-}
-
-function DraggableSpecial({ id, label, icon, type, pathId, description, variant = 'default' }: DraggableSpecialProps) {
-  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
-    id: `special-${id}`,
-    data: {
-      type,
-      pathId,
-      fromPalette: true,
-    },
-  });
-
-  const variantStyles = {
-    default: 'hover:border-primary/50',
-    purple: 'border-purple-500/30 bg-purple-500/5 hover:border-purple-500/50',
-    blue: 'border-blue-500/30 bg-blue-500/5 hover:border-blue-500/50',
-    green: 'border-green-500/30 bg-green-500/5 hover:border-green-500/50',
-    cyan: 'border-cyan-500/30 bg-cyan-500/5 hover:border-cyan-500/50',
-    orange: 'border-orange-500/30 bg-orange-500/5 hover:border-orange-500/50',
-    indigo: 'border-indigo-500/30 bg-indigo-500/5 hover:border-indigo-500/50',
-  };
-
-  const iconColors = {
-    default: 'text-primary',
-    purple: 'text-purple-600',
-    blue: 'text-blue-600',
-    green: 'text-green-600',
-    cyan: 'text-cyan-600',
-    orange: 'text-orange-600',
-    indigo: 'text-indigo-600',
-  };
-
-  return (
-    <div
-      ref={setNodeRef}
-      {...listeners}
-      {...attributes}
-      className={`
-        flex items-center gap-2 p-2 rounded-md border bg-card
-        hover:bg-accent/50 cursor-grab active:cursor-grabbing
-        transition-all duration-150
-        ${variantStyles[variant]}
-        ${isDragging ? 'opacity-50 ring-2 ring-primary' : ''}
-      `}
-    >
-      <GripVertical className="w-3 h-3 text-muted-foreground" />
-      <span className={iconColors[variant]}>{icon}</span>
-      <div className="flex-1 min-w-0">
-        <span className="text-sm font-medium truncate block">{label}</span>
-        {description && (
-          <span className="text-xs text-muted-foreground truncate block">{description}</span>
-        )}
-      </div>
     </div>
   );
 }
@@ -221,81 +145,6 @@ export function FieldPalette() {
         </div>
       </CardHeader>
       <CardContent className="space-y-3 overflow-y-auto max-h-[calc(100vh-300px)]">
-        {/* Step Types Section */}
-        {!search && (
-          <div>
-            <button
-              onClick={() => setExpandedCategory(expandedCategory === 'step-types' ? null : 'step-types')}
-              className="w-full flex items-center justify-between py-1.5 px-2 text-sm font-medium text-muted-foreground hover:text-foreground rounded-md hover:bg-accent/50 transition-colors"
-            >
-              <span className="flex items-center gap-2">
-                <Workflow className="w-4 h-4" />
-                Step Types
-              </span>
-              <Badge variant="outline" className="text-xs">3</Badge>
-            </button>
-            {expandedCategory === 'step-types' && (
-              <div className="mt-2 space-y-1.5 pl-1">
-                <DraggableSpecial
-                  id="verification-flow-step"
-                  label="Verification Flow"
-                  icon={<Workflow className="w-4 h-4" />}
-                  type="verification_flow_step"
-                  description="Full verification with QR & status"
-                  variant="cyan"
-                />
-                <DraggableSpecial
-                  id="api-step"
-                  label="API Step"
-                  icon={<Plug className="w-4 h-4" />}
-                  type="api_step"
-                  description="API submission between steps"
-                  variant="green"
-                />
-                <DraggableSpecial
-                  id="page-step"
-                  label="Page Step"
-                  icon={<FileText className="w-4 h-4" />}
-                  type="page_step"
-                  description="Custom display page with API data"
-                  variant="orange"
-                />
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Verification Paths Section */}
-        {!search && (
-          <div>
-            <button
-              onClick={() => setExpandedCategory(expandedCategory === 'paths' ? null : 'paths')}
-              className="w-full flex items-center justify-between py-1.5 px-2 text-sm font-medium text-muted-foreground hover:text-foreground rounded-md hover:bg-accent/50 transition-colors"
-            >
-              <span className="flex items-center gap-2">
-                <Workflow className="w-4 h-4" />
-                Verification Paths
-              </span>
-              <Badge variant="outline" className="text-xs">{VERIFICATION_PATHS.length}</Badge>
-            </button>
-            {expandedCategory === 'paths' && (
-              <div className="mt-2 space-y-1.5 pl-1">
-                {VERIFICATION_PATHS.map(path => (
-                  <DraggableSpecial
-                    key={path.id}
-                    id={`path-${path.id}`}
-                    label={path.name}
-                    icon={PATH_ICONS[path.id]}
-                    type="verification_path"
-                    pathId={path.id}
-                    description={path.description}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
         {/* Field Categories */}
         {Object.entries(groupedFields).map(([category, fields]) => (
           <div key={category}>
