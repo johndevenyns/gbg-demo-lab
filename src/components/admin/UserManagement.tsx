@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Plus, Trash2, UserPlus, Users, AlertCircle, Shield } from 'lucide-react';
+import { Loader2, Trash2, UserPlus, Users, AlertCircle, Shield, KeyRound } from 'lucide-react';
 
 interface UserRole {
   id: string;
@@ -28,34 +28,60 @@ export function UserManagement() {
   const [isAddingUser, setIsAddingUser] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
 
-  // Fetch admin users
+  // Fetch admin users with emails via edge function
   const { data: adminUsers = [], isLoading } = useQuery({
     queryKey: ['admin-users'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('user_roles')
-        .select('*')
-        .eq('role', 'admin')
-        .order('created_at', { ascending: false });
+      const { data, error } = await supabase.functions.invoke('manage-admin-users', {
+        body: { action: 'list' },
+      });
 
       if (error) throw error;
-      return data as UserRole[];
+      if (data?.error) throw new Error(data.error);
+      
+      return (data?.users || []) as UserRole[];
     },
   });
 
   // Remove admin role
   const removeAdminMutation = useMutation({
-    mutationFn: async (roleId: string) => {
-      const { error } = await supabase
-        .from('user_roles')
-        .delete()
-        .eq('id', roleId);
+    mutationFn: async (userId: string) => {
+      const { data, error } = await supabase.functions.invoke('manage-admin-users', {
+        body: { action: 'remove', userId },
+      });
       
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
       toast({ title: 'Admin removed', description: 'User no longer has admin access.' });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+
+  // Reset password mutation
+  const resetPasswordMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      const { data, error } = await supabase.functions.invoke('manage-admin-users', {
+        body: { action: 'resetPassword', userId },
+      });
+      
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: (data) => {
+      toast({ 
+        title: 'Password reset sent', 
+        description: data?.message || 'Password reset email has been sent.' 
+      });
     },
     onError: (error: Error) => {
       toast({
@@ -77,7 +103,6 @@ export function UserManagement() {
     setAddError(null);
 
     try {
-      // We need to use an edge function to look up user by email since we can't query auth.users directly
       const { data, error } = await supabase.functions.invoke('manage-admin-users', {
         body: { action: 'add', email: newUserEmail.trim() },
       });
@@ -188,17 +213,17 @@ export function UserManagement() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>User ID</TableHead>
+                <TableHead>Email</TableHead>
                 <TableHead>Role</TableHead>
                 <TableHead>Added</TableHead>
-                <TableHead className="w-[100px]">Actions</TableHead>
+                <TableHead className="w-[150px]">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {adminUsers.map((user) => (
                 <TableRow key={user.id}>
-                  <TableCell className="font-mono text-xs">
-                    {user.user_id}
+                  <TableCell className="font-medium">
+                    {user.email || 'Unknown'}
                   </TableCell>
                   <TableCell>
                     <Badge variant="secondary" className="bg-primary/10 text-primary">
@@ -209,15 +234,32 @@ export function UserManagement() {
                     {new Date(user.created_at).toLocaleDateString()}
                   </TableCell>
                   <TableCell>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                      onClick={() => removeAdminMutation.mutate(user.id)}
-                      disabled={removeAdminMutation.isPending}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-muted-foreground hover:text-primary hover:bg-primary/10"
+                        onClick={() => resetPasswordMutation.mutate(user.user_id)}
+                        disabled={resetPasswordMutation.isPending}
+                        title="Send password reset email"
+                      >
+                        {resetPasswordMutation.isPending ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <KeyRound className="w-4 h-4" />
+                        )}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                        onClick={() => removeAdminMutation.mutate(user.user_id)}
+                        disabled={removeAdminMutation.isPending}
+                        title="Remove admin access"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
