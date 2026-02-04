@@ -60,94 +60,33 @@ function LogoThumbnail({ url, size = 'md' }: { url?: string | null; size?: 'sm' 
 
 // Site Settings Section
 function SiteSettingsSection({ demo, onUpdate }: { demo: DemoEnvironment; onUpdate: (updates: Partial<DemoEnvironment>) => void }) {
-  const [copiedField, setCopiedField] = useState<'embed' | 'iframe' | null>(null);
-  
-  const baseUrl = window.location.origin;
-  const embedUrl = `${baseUrl}/embed/${demo.slug}`;
-  const iframeCode = `<iframe src="${embedUrl}" width="100%" height="600" frameborder="0" style="border: none;"></iframe>`;
-  
-  const handleCopy = async (text: string, field: 'embed' | 'iframe') => {
-    await navigator.clipboard.writeText(text);
-    setCopiedField(field);
-    setTimeout(() => setCopiedField(null), 2000);
-  };
-  
   return (
-    <div className="space-y-6">
-      <Card className="glass-card">
-        <CardHeader className="flex flex-row items-start justify-between space-y-0">
+    <Card className="glass-card">
+      <CardHeader className="flex flex-row items-start justify-between space-y-0">
+        <div>
+          <CardTitle>Site Settings</CardTitle>
+          <CardDescription>Core configuration for this demo environment</CardDescription>
+        </div>
+        <LogoThumbnail url={demo.logoUrl} size="md" />
+      </CardHeader>
+      <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-2">
+          <Label>Customer Name</Label>
+          <Input value={demo.customerName} onChange={(e) => onUpdate({ customerName: e.target.value })} />
+        </div>
+        <div className="space-y-2">
+          <Label>Reference ID Prefix</Label>
+          <Input value={demo.referenceIdPrefix || ""} onChange={(e) => onUpdate({ referenceIdPrefix: e.target.value })} />
+        </div>
+        <div className="md:col-span-2 flex items-center justify-between p-4 rounded-lg bg-muted/50">
           <div>
-            <CardTitle>Site Settings</CardTitle>
-            <CardDescription>Core configuration for this demo environment</CardDescription>
+            <Label>Active</Label>
+            <p className="text-sm text-muted-foreground">Demo is accessible to users</p>
           </div>
-          <LogoThumbnail url={demo.logoUrl} size="md" />
-        </CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <Label>Customer Name</Label>
-            <Input value={demo.customerName} onChange={(e) => onUpdate({ customerName: e.target.value })} />
-          </div>
-          <div className="space-y-2">
-            <Label>Reference ID Prefix</Label>
-            <Input value={demo.referenceIdPrefix || ""} onChange={(e) => onUpdate({ referenceIdPrefix: e.target.value })} />
-          </div>
-          <div className="md:col-span-2 flex items-center justify-between p-4 rounded-lg bg-muted/50">
-            <div>
-              <Label>Active</Label>
-              <p className="text-sm text-muted-foreground">Demo is accessible to users</p>
-            </div>
-            <Switch checked={demo.isActive} onCheckedChange={(v) => onUpdate({ isActive: v })} />
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Embed URLs Card */}
-      <Card className="glass-card">
-        <CardHeader>
-          <CardTitle>Embed Form</CardTitle>
-          <CardDescription>Use these URLs to embed the form on external sites without header/footer</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label>Embed URL</Label>
-            <div className="flex gap-2">
-              <Input 
-                value={embedUrl} 
-                readOnly 
-                className="font-mono text-sm bg-muted/50"
-              />
-              <Button 
-                variant="outline" 
-                size="icon"
-                onClick={() => handleCopy(embedUrl, 'embed')}
-              >
-                {copiedField === 'embed' ? <Check className="w-4 h-4 text-primary" /> : <Copy className="w-4 h-4" />}
-              </Button>
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label>Iframe Code</Label>
-            <div className="flex gap-2">
-              <Input 
-                value={iframeCode} 
-                readOnly 
-                className="font-mono text-xs bg-muted/50"
-              />
-              <Button 
-                variant="outline" 
-                size="icon"
-                onClick={() => handleCopy(iframeCode, 'iframe')}
-              >
-                {copiedField === 'iframe' ? <Check className="w-4 h-4 text-primary" /> : <Copy className="w-4 h-4" />}
-              </Button>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Paste this code into your HTML to embed the form. The form will inherit your configured styling.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+          <Switch checked={demo.isActive} onCheckedChange={(v) => onUpdate({ isActive: v })} />
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
