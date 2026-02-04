@@ -370,8 +370,8 @@ export function FormBuilderCanvas({ steps, onUpdateSteps }: FormBuilderCanvasPro
         stepType: 'form',
         fields: [],
       };
-    } else if (type.startsWith('verification_')) {
-      const pathType = type.replace('verification_', '') as 'docbio' | 'databio' | 'dataonly' | 'mdl';
+    } else if (type === 'verification') {
+      // Single verification option - defaults to docbio, user can change type in the step config
       newStep = {
         id: stepId,
         title,
@@ -379,13 +379,13 @@ export function FormBuilderCanvas({ steps, onUpdateSteps }: FormBuilderCanvasPro
         stepType: 'verification_flow',
         fields: [],
         verificationFlowConfig: {
-          pathType,
+          pathType: 'docbio',
           qrCodeEnabled: true,
           qrCodeTitle: 'Scan to Verify',
           qrCodeInstructions: 'Scan this QR code with your mobile device to complete verification',
           statusEnabled: true,
           statusPollingInterval: 5,
-          mobileIdEnabled: pathType === 'mdl',
+          mobileIdEnabled: false,
           autoAdvanceOnComplete: true,
           showBackButton: true,
           backButtonLabel: 'Back',
