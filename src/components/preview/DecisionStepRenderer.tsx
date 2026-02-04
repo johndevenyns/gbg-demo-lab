@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { DecisionStepConfig, DecisionChoice, DecisionChoiceIcon } from '@/types/demo';
+import { DecisionStepConfig, DecisionChoice, DecisionChoiceIcon, MdlProvider } from '@/types/demo';
 import { FormStyleConfig } from '@/types/formStyle';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { 
   FileCheck, Smartphone, Database, Shield, User, Fingerprint, Camera, CreditCard,
-  ChevronDown, ChevronUp, ArrowLeft
+  ChevronDown, ChevronUp, ArrowLeft, ChevronRight, Globe
 } from 'lucide-react';
 
 const getIconComponent = (iconId?: DecisionChoiceIcon, className: string = "w-6 h-6") => {
@@ -27,7 +27,7 @@ interface DecisionStepRendererProps {
   formStyle: FormStyleConfig;
   buttonColor: string;
   isFirstStep: boolean;
-  onSelectChoice: (choice: DecisionChoice) => void;
+  onSelectChoice: (choice: DecisionChoice, provider?: MdlProvider) => void;
   onBack: () => void;
 }
 
@@ -47,6 +47,9 @@ export function DecisionStepRenderer({
     return new Set(config.choices.filter(c => !c.collapsedByDefault).map(c => c.id));
   });
 
+  // Track if we're showing mDL provider selection for a specific choice
+  const [showingMdlProvidersFor, setShowingMdlProvidersFor] = useState<DecisionChoice | null>(null);
+
   const toggleExpanded = (choiceId: string) => {
     setExpandedChoices(prev => {
       const next = new Set(prev);
@@ -59,7 +62,94 @@ export function DecisionStepRenderer({
     });
   };
 
+  const handleChoiceClick = (choice: DecisionChoice) => {
+    // If mDL and has providers, show provider selection
+    if (choice.verificationType === 'mdl' && choice.mobileIdProviders && choice.mobileIdProviders.length > 0) {
+      setShowingMdlProvidersFor(choice);
+    } else {
+      // Direct selection
+      onSelectChoice(choice);
+    }
+  };
+
+  const handleProviderSelect = (provider: MdlProvider) => {
+    if (showingMdlProvidersFor) {
+      onSelectChoice(showingMdlProvidersFor, provider);
+    }
+  };
+
   const showBackButton = config.showBackButton !== false && !isFirstStep;
+
+  // If showing mDL providers, render that view
+  if (showingMdlProvidersFor) {
+    const enabledProviders = showingMdlProvidersFor.mobileIdProviders?.filter(p => p.enabled) || [];
+
+    return (
+      <div className="space-y-6" style={{ fontFamily: formStyle.fontFamily }}>
+        {/* Title and Subtitle */}
+        <div className="text-center space-y-2">
+          <h2 className="text-2xl font-semibold text-foreground">
+            Select Your ID Provider
+          </h2>
+          <p className="text-muted-foreground">Choose which mobile ID to use for verification</p>
+        </div>
+
+        {/* Provider Cards */}
+        <div className="space-y-2">
+          {enabledProviders.map((provider) => (
+            <button
+              key={provider.id}
+              onClick={() => handleProviderSelect(provider)}
+              className="w-full flex items-center gap-4 p-3 rounded-xl border transition-all hover:shadow-sm hover:scale-[1.005] active:scale-[0.995] bg-card"
+              style={{
+                borderColor: 'hsl(var(--border))',
+              }}
+            >
+              {/* Provider logo */}
+              <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center p-1.5 shrink-0 border shadow-sm">
+                <img
+                  src={provider.logoUrl}
+                  alt={provider.name}
+                  className="max-w-full max-h-full object-contain"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+              </div>
+
+              {/* Provider info */}
+              <div className="flex-1 text-left">
+                <div className="font-semibold text-sm text-foreground">
+                  {provider.name}
+                </div>
+                <div className="text-xs text-muted-foreground flex items-center gap-1">
+                  <Globe className="w-3 h-3" />
+                  {provider.domain}
+                </div>
+              </div>
+
+              {/* Arrow */}
+              <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
+            </button>
+          ))}
+        </div>
+
+        {enabledProviders.length === 0 && (
+          <div className="text-center py-8 text-muted-foreground">
+            <p>No ID providers configured for this option.</p>
+          </div>
+        )}
+
+        {/* Back Button */}
+        <div className="pt-4">
+          <Button variant="outline" onClick={() => setShowingMdlProvidersFor(null)} className="w-full">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Options
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6" style={{ fontFamily: formStyle.fontFamily }}>
@@ -82,7 +172,7 @@ export function DecisionStepRenderer({
             <Card 
               key={choice.id}
               className="cursor-pointer transition-all hover:border-primary/50 hover:shadow-md"
-              onClick={() => onSelectChoice(choice)}
+              onClick={() => handleChoiceClick(choice)}
             >
               <CardContent className="p-4">
                 <div className="flex items-start gap-4">

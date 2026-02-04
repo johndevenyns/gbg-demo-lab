@@ -8,8 +8,9 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { FormStep, DecisionStepConfig as DecisionStepConfigType, DecisionChoice, DecisionChoiceIcon, DecisionDestinationType } from '@/types/demo';
+import { FormStep, DecisionStepConfig as DecisionStepConfigType, DecisionChoice, DecisionChoiceIcon, DecisionDestinationType, AVAILABLE_MDL_PROVIDERS } from '@/types/demo';
 import { ResultPageConfig } from '@/components/preview/ResultPage';
+import { MdlProviderConfig } from './MdlProviderConfig';
 import { 
   Plus, Trash2, ChevronDown, ChevronUp, GripVertical, 
   FileCheck, Smartphone, Database, Shield, User, Fingerprint, Camera, CreditCard,
@@ -75,6 +76,7 @@ export function DecisionStepConfig({ step, allSteps, onUpdateStep }: DecisionSte
       destinationType: 'verification',
       verificationType: 'docbio',
       useCustomResultPages: false,
+      mobileIdProviders: [],
     };
     
     handleConfigUpdate({ choices: [...config.choices, newChoice] });
@@ -324,7 +326,13 @@ export function DecisionStepConfig({ step, allSteps, onUpdateStep }: DecisionSte
                     {choice.destinationType === 'verification' && (
                       <Select
                         value={choice.verificationType || 'docbio'}
-                        onValueChange={(v) => handleUpdateChoice(choice.id, { verificationType: v as 'docbio' | 'databio' | 'dataonly' | 'mdl' })}
+                        onValueChange={(v) => handleUpdateChoice(choice.id, { 
+                          verificationType: v as 'docbio' | 'databio' | 'dataonly' | 'mdl',
+                          // Initialize mDL providers with all available when switching to mDL
+                          ...(v === 'mdl' && !choice.mobileIdProviders?.length ? {
+                            mobileIdProviders: AVAILABLE_MDL_PROVIDERS.map(p => ({ ...p, enabled: true }))
+                          } : {})
+                        })}
                       >
                         <SelectTrigger className="bg-background">
                           <SelectValue />
@@ -340,6 +348,16 @@ export function DecisionStepConfig({ step, allSteps, onUpdateStep }: DecisionSte
                           ))}
                         </SelectContent>
                       </Select>
+                    )}
+
+                    {/* mDL Provider Selection - show when mDL is selected */}
+                    {choice.destinationType === 'verification' && choice.verificationType === 'mdl' && (
+                      <div className="mt-2">
+                        <MdlProviderConfig
+                          enabledProviders={choice.mobileIdProviders || []}
+                          onChange={(providers) => handleUpdateChoice(choice.id, { mobileIdProviders: providers })}
+                        />
+                      </div>
                     )}
 
                     {choice.destinationType === 'step' && (
