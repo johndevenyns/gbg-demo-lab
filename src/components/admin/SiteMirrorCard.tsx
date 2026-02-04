@@ -1,13 +1,13 @@
 import { useState, useMemo } from "react";
-import { Globe, Loader2, Check, X, ExternalLink } from "lucide-react";
+import { Globe, Loader2, Check, X, ExternalLink, Paintbrush } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { scrapingApi, ScrapedBranding } from "@/lib/api/scraping";
+import { scrapingApi, ScrapedBranding, FormElementStyles } from "@/lib/api/scraping";
 import { useToast } from "@/hooks/use-toast";
 import { DemoEnvironment } from "@/types/demo";
-import { DEFAULT_FORM_STYLE } from "@/types/formStyle";
+import { DEFAULT_FORM_STYLE, FormStyleConfig } from "@/types/formStyle";
 import {
   Dialog,
   DialogContent,
@@ -184,6 +184,12 @@ export function SiteMirrorCard({ demo, onApplyBranding }: SiteMirrorCardProps) {
   const handleApply = () => {
     if (!scrapedData) return;
 
+    // Build form style config from extracted form styles
+    let formStyleConfig: FormStyleConfig | undefined;
+    if (scrapedData.formStyles) {
+      formStyleConfig = formElementStylesToConfig(scrapedData.formStyles);
+    }
+
     const updates: Partial<DemoEnvironment> = {
       customerSiteUrl: url,
       logoUrl: scrapedData.logoUrl || demo.logoUrl,
@@ -193,6 +199,8 @@ export function SiteMirrorCard({ demo, onApplyBranding }: SiteMirrorCardProps) {
       scrapedHeaderHtml: scrapedData.headerHtml,
       scrapedFooterHtml: scrapedData.footerHtml,
       scrapedCss: scrapedData.cssContent,
+      // Apply form styles if extracted
+      ...(formStyleConfig && { formStyle: formStyleConfig }),
     };
 
     // Pass true to indicate this should auto-save
@@ -201,9 +209,84 @@ export function SiteMirrorCard({ demo, onApplyBranding }: SiteMirrorCardProps) {
     setShowPreview(false);
     toast({
       title: "Branding Applied & Saving...",
-      description: "The scraped branding, CSS, and layout are being saved",
+      description: formStyleConfig 
+        ? "Site branding, CSS, and form styling are being saved" 
+        : "The scraped branding, CSS, and layout are being saved",
     });
   };
+
+  // Convert FormElementStyles to FormStyleConfig
+  function formElementStylesToConfig(styles: FormElementStyles): FormStyleConfig {
+    const config: FormStyleConfig = {
+      ...DEFAULT_FORM_STYLE,
+      source: 'mirrored',
+    };
+
+    // Map input colors
+    if (styles.inputBgColor) config.inputBgColor = styles.inputBgColor;
+    if (styles.inputTextColor) config.inputTextColor = styles.inputTextColor;
+    if (styles.inputBorderColor) config.inputBorderColor = styles.inputBorderColor;
+    if (styles.inputFocusBorderColor) config.inputFocusBorderColor = styles.inputFocusBorderColor;
+    if (styles.inputPlaceholderColor) config.inputPlaceholderColor = styles.inputPlaceholderColor;
+
+    // Map label styles
+    if (styles.labelColor) config.labelColor = styles.labelColor;
+    if (styles.labelFontWeight) {
+      const weight = parseInt(styles.labelFontWeight);
+      if (weight >= 600) config.labelWeight = 'semibold';
+      else if (weight >= 500) config.labelWeight = 'medium';
+      else config.labelWeight = 'normal';
+    }
+
+    // Map font family
+    if (styles.inputFontFamily || styles.labelFontFamily) {
+      config.fontFamily = styles.inputFontFamily || styles.labelFontFamily || DEFAULT_FORM_STYLE.fontFamily;
+    }
+
+    // Map font size
+    if (styles.inputFontSize) {
+      const size = parseInt(styles.inputFontSize);
+      if (size <= 14) config.fontSize = 'sm';
+      else if (size >= 18) config.fontSize = 'lg';
+      else config.fontSize = 'base';
+    }
+
+    // Map border radius
+    if (styles.inputBorderRadius) {
+      const radius = styles.inputBorderRadius.toLowerCase();
+      if (radius === '0' || radius === '0px' || radius === 'none') config.borderRadius = 'none';
+      else if (radius.includes('999') || radius.includes('9999') || radius.includes('50%') || radius.includes('full')) config.borderRadius = 'full';
+      else {
+        const px = parseInt(radius);
+        if (px <= 4) config.borderRadius = 'sm';
+        else if (px >= 12) config.borderRadius = 'lg';
+        else config.borderRadius = 'md';
+      }
+    }
+
+    // Map border width
+    if (styles.inputBorderWidth) {
+      const width = parseInt(styles.inputBorderWidth);
+      if (width === 0) config.borderWidth = '0';
+      else if (width >= 2) config.borderWidth = '2';
+      else config.borderWidth = '1';
+    }
+
+    // Map padding
+    if (styles.inputPadding) {
+      const padding = styles.inputPadding;
+      const values = padding.split(/\s+/).map(v => parseInt(v));
+      const avgPadding = values.reduce((a, b) => a + b, 0) / values.length;
+      if (avgPadding <= 8) config.inputPadding = 'sm';
+      else if (avgPadding >= 16) config.inputPadding = 'lg';
+      else config.inputPadding = 'md';
+    }
+
+    // Map error color
+    if (styles.errorColor) config.errorColor = styles.errorColor;
+
+    return config;
+  }
 
   return (
     <>
@@ -358,6 +441,112 @@ export function SiteMirrorCard({ demo, onApplyBranding }: SiteMirrorCardProps) {
                   </div>
                 </div>
               </div>
+
+              {/* Form Styles Preview */}
+              {scrapedData.formStyles && (
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <Paintbrush className="w-4 h-4" />
+                    Extracted Form Styling
+                  </Label>
+                  <div className="p-4 rounded-lg bg-primary/5 border border-primary/20">
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
+                      {/* Input preview */}
+                      <div className="space-y-1">
+                        <span className="text-xs text-muted-foreground">Input Field</span>
+                        <div
+                          className="h-10 rounded flex items-center px-3 text-sm"
+                          style={{
+                            backgroundColor: scrapedData.formStyles.inputBgColor,
+                            color: scrapedData.formStyles.inputTextColor,
+                            border: `${scrapedData.formStyles.inputBorderWidth} solid ${scrapedData.formStyles.inputBorderColor}`,
+                            borderRadius: scrapedData.formStyles.inputBorderRadius,
+                            fontFamily: scrapedData.formStyles.inputFontFamily,
+                          }}
+                        >
+                          Sample text
+                        </div>
+                      </div>
+                      
+                      {/* Focus state preview */}
+                      <div className="space-y-1">
+                        <span className="text-xs text-muted-foreground">Focus State</span>
+                        <div
+                          className="h-10 rounded flex items-center px-3 text-sm"
+                          style={{
+                            backgroundColor: scrapedData.formStyles.inputBgColor,
+                            color: scrapedData.formStyles.inputTextColor,
+                            border: `2px solid ${scrapedData.formStyles.inputFocusBorderColor}`,
+                            borderRadius: scrapedData.formStyles.inputBorderRadius,
+                            boxShadow: scrapedData.formStyles.inputFocusBoxShadow,
+                            fontFamily: scrapedData.formStyles.inputFontFamily,
+                          }}
+                        >
+                          Focused
+                        </div>
+                      </div>
+                      
+                      {/* Button preview */}
+                      <div className="space-y-1">
+                        <span className="text-xs text-muted-foreground">Button</span>
+                        <div
+                          className="h-10 rounded flex items-center justify-center px-4 text-sm"
+                          style={{
+                            backgroundColor: scrapedData.formStyles.buttonBgColor,
+                            color: scrapedData.formStyles.buttonTextColor,
+                            borderRadius: scrapedData.formStyles.buttonBorderRadius,
+                            fontWeight: scrapedData.formStyles.buttonFontWeight,
+                          }}
+                        >
+                          Submit
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Color swatches */}
+                    <div className="flex flex-wrap gap-3 pt-3 border-t border-border">
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="w-5 h-5 rounded border"
+                          style={{ backgroundColor: scrapedData.formStyles.inputBorderColor }}
+                        />
+                        <span className="text-xs text-muted-foreground">Border</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="w-5 h-5 rounded border"
+                          style={{ backgroundColor: scrapedData.formStyles.inputFocusBorderColor }}
+                        />
+                        <span className="text-xs text-muted-foreground">Focus</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="w-5 h-5 rounded border"
+                          style={{ backgroundColor: scrapedData.formStyles.labelColor }}
+                        />
+                        <span className="text-xs text-muted-foreground">Label</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="w-5 h-5 rounded border"
+                          style={{ backgroundColor: scrapedData.formStyles.buttonBgColor }}
+                        />
+                        <span className="text-xs text-muted-foreground">Button</span>
+                      </div>
+                      {scrapedData.formStyles.inputFontFamily && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium" style={{ fontFamily: scrapedData.formStyles.inputFontFamily }}>
+                            Aa
+                          </span>
+                          <span className="text-xs text-muted-foreground truncate max-w-24">
+                            {scrapedData.formStyles.inputFontFamily.split(',')[0]}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Logo Preview */}
               {scrapedData.logoUrl && (

@@ -3,6 +3,31 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+interface FormElementStyles {
+  inputBgColor: string;
+  inputTextColor: string;
+  inputBorderColor: string;
+  inputBorderWidth: string;
+  inputBorderRadius: string;
+  inputPadding: string;
+  inputFontSize: string;
+  inputFontFamily: string;
+  inputPlaceholderColor: string;
+  inputFocusBorderColor: string;
+  inputFocusBoxShadow: string;
+  labelColor: string;
+  labelFontSize: string;
+  labelFontWeight: string;
+  labelFontFamily: string;
+  buttonBgColor: string;
+  buttonTextColor: string;
+  buttonBorderRadius: string;
+  buttonFontWeight: string;
+  containerBgColor: string;
+  containerPadding: string;
+  errorColor: string;
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -47,7 +72,7 @@ Deno.serve(async (req) => {
         url: formattedUrl,
         formats: ['html', 'rawHtml', 'screenshot', 'branding'],
         onlyMainContent: false,
-        waitFor: 2000,
+        waitFor: 3000, // Increased wait for dynamic content
       }),
     });
 
@@ -77,6 +102,11 @@ Deno.serve(async (req) => {
     const cssContent = await extractAndInlineCss(rawHtml, baseUrl);
     console.log(`Extracted ${cssContent.length} characters of CSS`);
     
+    // Extract form styles from the page
+    console.log('Extracting form styles...');
+    const formStyles = extractFormElementStyles(rawHtml, cssContent, branding);
+    console.log('Form styles extracted:', Object.keys(formStyles).filter(k => formStyles[k as keyof FormElementStyles]).length, 'properties');
+    
     // Extract logo from branding or metadata
     const logoUrl = branding?.images?.logo || 
                     branding?.logo || 
@@ -89,7 +119,7 @@ Deno.serve(async (req) => {
     const headerTextColor = colors.textPrimary || '#ffffff';
     const buttonColor = colors.primary || colors.accent || '#6366f1';
 
-    console.log('Scrape successful, extracted branding and inlined CSS');
+    console.log('Scrape successful, extracted branding, CSS, and form styles');
 
     return new Response(
       JSON.stringify({
@@ -106,6 +136,7 @@ Deno.serve(async (req) => {
             buttonColor,
           },
           branding,
+          formStyles, // NEW: Include extracted form styles
           sourceUrl: formattedUrl,
         },
       }),
@@ -121,25 +152,445 @@ Deno.serve(async (req) => {
   }
 });
 
+// Extract form element styles from HTML and CSS
+function extractFormElementStyles(html: string, css: string, branding: { colors?: Record<string, string>; fonts?: Array<{ family: string }> } | null): FormElementStyles {
+  const styles: Partial<FormElementStyles> = {};
+  
+  // Parse CSS for common form selectors
+  const cssRules = parseCssRules(css);
+  
+  // Common input selectors to look for
+  const inputSelectors = [
+    'input[type="text"]',
+    'input[type="email"]',
+    'input[type="password"]',
+    'input',
+    '.form-control',
+    '.input',
+    '[class*="input"]',
+    '[class*="field"]',
+    '[class*="text-input"]',
+  ];
+  
+  // Find matching input styles
+  for (const inputSel of inputSelectors) {
+    const inputRules = findMatchingRules(cssRules, inputSel);
+    if (inputRules.length > 0) {
+      const merged = mergeRules(inputRules);
+      if (merged['background-color'] || merged['background']) {
+        styles.inputBgColor = merged['background-color'] || extractBgColor(merged['background']);
+      }
+      if (merged['color']) {
+        styles.inputTextColor = merged['color'];
+      }
+      if (merged['border-color']) {
+        styles.inputBorderColor = merged['border-color'];
+      }
+      if (merged['border']) {
+        const borderParts = parseBorderShorthand(merged['border']);
+        if (borderParts.color) styles.inputBorderColor = borderParts.color;
+        if (borderParts.width) styles.inputBorderWidth = borderParts.width;
+      }
+      if (merged['border-radius']) {
+        styles.inputBorderRadius = merged['border-radius'];
+      }
+      if (merged['padding']) {
+        styles.inputPadding = merged['padding'];
+      }
+      if (merged['font-size']) {
+        styles.inputFontSize = merged['font-size'];
+      }
+      if (merged['font-family']) {
+        styles.inputFontFamily = merged['font-family'];
+      }
+      break;
+    }
+  }
+  
+  // Find focus state styles
+  const focusSelectors = inputSelectors.map(s => `${s}:focus`);
+  for (const focusSel of focusSelectors) {
+    const focusRules = findMatchingRules(cssRules, focusSel);
+    if (focusRules.length > 0) {
+      const merged = mergeRules(focusRules);
+      if (merged['border-color']) {
+        styles.inputFocusBorderColor = merged['border-color'];
+      }
+      if (merged['box-shadow']) {
+        styles.inputFocusBoxShadow = merged['box-shadow'];
+        if (!styles.inputFocusBorderColor) {
+          const shadowColor = extractColorFromBoxShadow(merged['box-shadow']);
+          if (shadowColor) styles.inputFocusBorderColor = shadowColor;
+        }
+      }
+      if (merged['outline-color']) {
+        styles.inputFocusBorderColor = styles.inputFocusBorderColor || merged['outline-color'];
+      }
+      break;
+    }
+  }
+  
+  // Find label styles
+  const labelSelectors = ['label', '.label', '.form-label', '[class*="label"]'];
+  for (const labelSel of labelSelectors) {
+    const labelRules = findMatchingRules(cssRules, labelSel);
+    if (labelRules.length > 0) {
+      const merged = mergeRules(labelRules);
+      if (merged['color']) {
+        styles.labelColor = merged['color'];
+      }
+      if (merged['font-size']) {
+        styles.labelFontSize = merged['font-size'];
+      }
+      if (merged['font-weight']) {
+        styles.labelFontWeight = merged['font-weight'];
+      }
+      if (merged['font-family']) {
+        styles.labelFontFamily = merged['font-family'];
+      }
+      break;
+    }
+  }
+  
+  // Find button styles
+  const buttonSelectors = [
+    'button[type="submit"]',
+    '.btn-primary',
+    '.btn',
+    'button',
+    '[class*="button"]',
+    '[class*="submit"]',
+    '[class*="cta"]',
+  ];
+  
+  for (const btnSel of buttonSelectors) {
+    const btnRules = findMatchingRules(cssRules, btnSel);
+    if (btnRules.length > 0) {
+      const merged = mergeRules(btnRules);
+      if (merged['background-color'] || merged['background']) {
+        styles.buttonBgColor = merged['background-color'] || extractBgColor(merged['background']);
+      }
+      if (merged['color']) {
+        styles.buttonTextColor = merged['color'];
+      }
+      if (merged['border-radius']) {
+        styles.buttonBorderRadius = merged['border-radius'];
+      }
+      if (merged['font-weight']) {
+        styles.buttonFontWeight = merged['font-weight'];
+      }
+      break;
+    }
+  }
+  
+  // Find container/form styles
+  const containerSelectors = ['form', '.form', '[class*="form"]', '[class*="card"]'];
+  for (const containerSel of containerSelectors) {
+    const containerRules = findMatchingRules(cssRules, containerSel);
+    if (containerRules.length > 0) {
+      const merged = mergeRules(containerRules);
+      if (merged['background-color'] || merged['background']) {
+        styles.containerBgColor = merged['background-color'] || extractBgColor(merged['background']);
+      }
+      if (merged['padding']) {
+        styles.containerPadding = merged['padding'];
+      }
+      break;
+    }
+  }
+  
+  // Find error styles
+  const errorSelectors = ['.error', '.invalid', '[class*="error"]', '[class*="invalid"]', '.text-danger'];
+  for (const errorSel of errorSelectors) {
+    const errorRules = findMatchingRules(cssRules, errorSel);
+    if (errorRules.length > 0) {
+      const merged = mergeRules(errorRules);
+      if (merged['color']) {
+        styles.errorColor = merged['color'];
+      }
+      break;
+    }
+  }
+  
+  // Extract inline styles from form elements in HTML
+  extractInlineStyles(html, styles);
+  
+  // Merge with branding-based defaults
+  return mergeWithBrandingDefaults(styles, branding);
+}
+
+// Parse CSS into rules
+function parseCssRules(css: string): Array<{ selector: string; properties: Record<string, string> }> {
+  const rules: Array<{ selector: string; properties: Record<string, string> }> = [];
+  
+  // Remove comments
+  css = css.replace(/\/\*[\s\S]*?\*\//g, '');
+  
+  // Match CSS rules: selector { properties }
+  const ruleRegex = /([^{}]+)\{([^{}]+)\}/g;
+  let match;
+  
+  while ((match = ruleRegex.exec(css)) !== null) {
+    const selectors = match[1].split(',').map(s => s.trim()).filter(s => s);
+    const propsString = match[2];
+    
+    const properties: Record<string, string> = {};
+    const propPairs = propsString.split(';').filter(p => p.trim());
+    
+    for (const pair of propPairs) {
+      const colonIndex = pair.indexOf(':');
+      if (colonIndex > 0) {
+        const prop = pair.substring(0, colonIndex).trim().toLowerCase();
+        const value = pair.substring(colonIndex + 1).trim();
+        if (prop && value) {
+          properties[prop] = value;
+        }
+      }
+    }
+    
+    for (const selector of selectors) {
+      if (Object.keys(properties).length > 0) {
+        rules.push({ selector, properties });
+      }
+    }
+  }
+  
+  return rules;
+}
+
+// Find rules matching a selector pattern
+function findMatchingRules(rules: Array<{ selector: string; properties: Record<string, string> }>, targetSelector: string): Array<Record<string, string>> {
+  const matching: Array<Record<string, string>> = [];
+  const targetLower = targetSelector.toLowerCase();
+  
+  for (const rule of rules) {
+    const ruleSel = rule.selector.toLowerCase();
+    
+    if (ruleSel === targetLower || 
+        ruleSel.includes(targetLower) ||
+        targetLower.includes(ruleSel) ||
+        selectorMatches(ruleSel, targetLower)) {
+      matching.push(rule.properties);
+    }
+  }
+  
+  return matching;
+}
+
+// Check if selectors match
+function selectorMatches(ruleSelector: string, target: string): boolean {
+  const targetParts = target.split(/\s+/);
+  const ruleParts = ruleSelector.split(/\s+/);
+  
+  for (const tp of targetParts) {
+    for (const rp of ruleParts) {
+      if (tp === rp || rp.includes(tp) || tp.includes(rp)) {
+        return true;
+      }
+    }
+  }
+  
+  return false;
+}
+
+// Merge multiple rule objects
+function mergeRules(rules: Array<Record<string, string>>): Record<string, string> {
+  const merged: Record<string, string> = {};
+  for (const rule of rules) {
+    Object.assign(merged, rule);
+  }
+  return merged;
+}
+
+// Extract background color from background shorthand
+function extractBgColor(bg: string): string | undefined {
+  if (!bg) return undefined;
+  
+  const hexMatch = bg.match(/#[0-9a-fA-F]{3,8}/);
+  if (hexMatch) return hexMatch[0];
+  
+  const rgbMatch = bg.match(/rgba?\([^)]+\)/);
+  if (rgbMatch) return rgbMatch[0];
+  
+  const colorNames = ['white', 'black', 'red', 'blue', 'green', 'gray', 'grey', 'transparent'];
+  for (const name of colorNames) {
+    if (bg.includes(name)) return name;
+  }
+  
+  return undefined;
+}
+
+// Parse border shorthand
+function parseBorderShorthand(border: string): { width?: string; style?: string; color?: string } {
+  const parts: { width?: string; style?: string; color?: string } = {};
+  
+  const widthMatch = border.match(/(\d+(?:\.\d+)?(?:px|em|rem))/i);
+  if (widthMatch) parts.width = widthMatch[1];
+  
+  const styles = ['solid', 'dashed', 'dotted', 'double', 'none'];
+  for (const style of styles) {
+    if (border.includes(style)) {
+      parts.style = style;
+      break;
+    }
+  }
+  
+  const hexMatch = border.match(/#[0-9a-fA-F]{3,8}/);
+  if (hexMatch) {
+    parts.color = hexMatch[0];
+  } else {
+    const rgbMatch = border.match(/rgba?\([^)]+\)/);
+    if (rgbMatch) parts.color = rgbMatch[0];
+  }
+  
+  return parts;
+}
+
+// Extract color from box-shadow
+function extractColorFromBoxShadow(shadow: string): string | undefined {
+  const rgbMatch = shadow.match(/rgba?\([^)]+\)/);
+  if (rgbMatch) return rgbMatch[0];
+  
+  const hexMatch = shadow.match(/#[0-9a-fA-F]{3,8}/);
+  if (hexMatch) return hexMatch[0];
+  
+  return undefined;
+}
+
+// Extract inline styles from HTML elements
+function extractInlineStyles(html: string, styles: Partial<FormElementStyles>): void {
+  const inputStyleRegex = /<input[^>]*style=["']([^"']+)["'][^>]*>/gi;
+  let match;
+  
+  while ((match = inputStyleRegex.exec(html)) !== null) {
+    const inlineStyle = match[1];
+    parseInlineStyleToFormStyles(inlineStyle, styles, 'input');
+  }
+  
+  const labelStyleRegex = /<label[^>]*style=["']([^"']+)["'][^>]*>/gi;
+  while ((match = labelStyleRegex.exec(html)) !== null) {
+    const inlineStyle = match[1];
+    parseInlineStyleToFormStyles(inlineStyle, styles, 'label');
+  }
+  
+  const buttonStyleRegex = /<button[^>]*style=["']([^"']+)["'][^>]*>/gi;
+  while ((match = buttonStyleRegex.exec(html)) !== null) {
+    const inlineStyle = match[1];
+    parseInlineStyleToFormStyles(inlineStyle, styles, 'button');
+  }
+}
+
+// Parse inline style string to form styles
+function parseInlineStyleToFormStyles(inlineStyle: string, styles: Partial<FormElementStyles>, elementType: 'input' | 'label' | 'button'): void {
+  const props: Record<string, string> = {};
+  const pairs = inlineStyle.split(';').filter(p => p.trim());
+  
+  for (const pair of pairs) {
+    const colonIndex = pair.indexOf(':');
+    if (colonIndex > 0) {
+      const prop = pair.substring(0, colonIndex).trim().toLowerCase();
+      const value = pair.substring(colonIndex + 1).trim();
+      if (prop && value) {
+        props[prop] = value;
+      }
+    }
+  }
+  
+  if (elementType === 'input') {
+    if (props['background-color'] && !styles.inputBgColor) styles.inputBgColor = props['background-color'];
+    if (props['color'] && !styles.inputTextColor) styles.inputTextColor = props['color'];
+    if (props['border-color'] && !styles.inputBorderColor) styles.inputBorderColor = props['border-color'];
+    if (props['border-radius'] && !styles.inputBorderRadius) styles.inputBorderRadius = props['border-radius'];
+    if (props['font-family'] && !styles.inputFontFamily) styles.inputFontFamily = props['font-family'];
+  } else if (elementType === 'label') {
+    if (props['color'] && !styles.labelColor) styles.labelColor = props['color'];
+    if (props['font-weight'] && !styles.labelFontWeight) styles.labelFontWeight = props['font-weight'];
+    if (props['font-family'] && !styles.labelFontFamily) styles.labelFontFamily = props['font-family'];
+  } else if (elementType === 'button') {
+    if (props['background-color'] && !styles.buttonBgColor) styles.buttonBgColor = props['background-color'];
+    if (props['color'] && !styles.buttonTextColor) styles.buttonTextColor = props['color'];
+    if (props['border-radius'] && !styles.buttonBorderRadius) styles.buttonBorderRadius = props['border-radius'];
+  }
+}
+
+// Merge extracted styles with branding defaults
+function mergeWithBrandingDefaults(
+  styles: Partial<FormElementStyles>,
+  branding: { colors?: Record<string, string>; fonts?: Array<{ family: string }> } | null
+): FormElementStyles {
+  const defaults: FormElementStyles = {
+    inputBgColor: '#ffffff',
+    inputTextColor: '#1a1a2e',
+    inputBorderColor: '#e2e8f0',
+    inputBorderWidth: '1px',
+    inputBorderRadius: '6px',
+    inputPadding: '12px 16px',
+    inputFontSize: '16px',
+    inputFontFamily: 'system-ui, -apple-system, sans-serif',
+    inputPlaceholderColor: '#9ca3af',
+    inputFocusBorderColor: '#6366f1',
+    inputFocusBoxShadow: '0 0 0 3px rgba(99, 102, 241, 0.1)',
+    labelColor: '#374151',
+    labelFontSize: '14px',
+    labelFontWeight: '500',
+    labelFontFamily: 'system-ui, -apple-system, sans-serif',
+    buttonBgColor: '#6366f1',
+    buttonTextColor: '#ffffff',
+    buttonBorderRadius: '6px',
+    buttonFontWeight: '600',
+    containerBgColor: '#ffffff',
+    containerPadding: '24px',
+    errorColor: '#ef4444',
+  };
+  
+  // Apply branding colors as fallbacks
+  if (branding?.colors) {
+    if (branding.colors.primary && !styles.inputFocusBorderColor) {
+      defaults.inputFocusBorderColor = branding.colors.primary;
+    }
+    if (branding.colors.primary && !styles.buttonBgColor) {
+      defaults.buttonBgColor = branding.colors.primary;
+    }
+    if (branding.colors.textPrimary && !styles.inputTextColor) {
+      defaults.inputTextColor = branding.colors.textPrimary;
+    }
+    if (branding.colors.textPrimary && !styles.labelColor) {
+      defaults.labelColor = branding.colors.textPrimary;
+    }
+  }
+  
+  // Apply branding fonts as fallbacks
+  if (branding?.fonts && branding.fonts.length > 0) {
+    const fontFamily = branding.fonts.map(f => f.family).join(', ') + ', sans-serif';
+    if (!styles.inputFontFamily) {
+      defaults.inputFontFamily = fontFamily;
+    }
+    if (!styles.labelFontFamily) {
+      defaults.labelFontFamily = fontFamily;
+    }
+  }
+  
+  return {
+    ...defaults,
+    ...Object.fromEntries(Object.entries(styles).filter(([_, v]) => v !== undefined && v !== null)),
+  } as FormElementStyles;
+}
+
 // Convert relative URLs to absolute in HTML content
 function convertRelativeUrls(html: string, baseUrl: URL): string {
   if (!html) return html;
   
-  // Convert src attributes
   html = html.replace(/src=["']([^"']+)["']/gi, (match, url) => {
     return `src="${makeAbsoluteUrl(url, baseUrl)}"`;
   });
   
-  // Convert href attributes
   html = html.replace(/href=["']([^"']+)["']/gi, (match, url) => {
-    // Skip anchor links and javascript
     if (url.startsWith('#') || url.startsWith('javascript:')) {
       return match;
     }
     return `href="${makeAbsoluteUrl(url, baseUrl)}"`;
   });
   
-  // Convert background-image in inline styles
   html = html.replace(/url\(["']?([^"')]+)["']?\)/gi, (match, url) => {
     return `url("${makeAbsoluteUrl(url, baseUrl)}")`;
   });
@@ -165,7 +616,6 @@ function makeAbsoluteUrl(url: string, baseUrl: URL): string {
     return baseUrl.origin + url;
   }
   
-  // Relative URL
   return baseUrl.origin + '/' + url;
 }
 
@@ -173,7 +623,6 @@ function makeAbsoluteUrl(url: string, baseUrl: URL): string {
 async function extractAndInlineCss(html: string, baseUrl: URL): Promise<string> {
   const cssFragments: string[] = [];
   
-  // Extract inline <style> tags first
   const styleTagRegex = /<style[^>]*>([\s\S]*?)<\/style>/gi;
   let styleMatch;
   while ((styleMatch = styleTagRegex.exec(html)) !== null) {
@@ -183,13 +632,10 @@ async function extractAndInlineCss(html: string, baseUrl: URL): Promise<string> 
     }
   }
   
-  // Extract linked stylesheet URLs
   const stylesheetUrls = new Set<string>();
   
-  // Match <link rel="stylesheet" href="...">
   const linkRegex1 = /<link[^>]*rel=["']stylesheet["'][^>]*href=["']([^"']+)["'][^>]*>/gi;
   const linkRegex2 = /<link[^>]*href=["']([^"']+)["'][^>]*rel=["']stylesheet["'][^>]*>/gi;
-  // Also match <link href="..." type="text/css">
   const linkRegex3 = /<link[^>]*href=["']([^"']+\.css[^"']*)["'][^>]*>/gi;
   
   for (const regex of [linkRegex1, linkRegex2, linkRegex3]) {
@@ -203,7 +649,6 @@ async function extractAndInlineCss(html: string, baseUrl: URL): Promise<string> 
   
   console.log(`Found ${stylesheetUrls.size} external stylesheets to fetch`);
   
-  // Fetch all external stylesheets in parallel
   const fetchPromises = Array.from(stylesheetUrls).map(async (href) => {
     try {
       const absoluteUrl = makeAbsoluteUrl(href, baseUrl);
@@ -218,9 +663,7 @@ async function extractAndInlineCss(html: string, baseUrl: URL): Promise<string> 
       
       if (response.ok) {
         const cssText = await response.text();
-        // Process the CSS to convert relative URLs
         const processedCss = convertCssUrls(cssText, new URL(absoluteUrl));
-        // Handle @import rules recursively (one level deep)
         const withImports = await resolveImports(processedCss, new URL(absoluteUrl));
         return `/* From: ${absoluteUrl} */\n${withImports}`;
       } else {
@@ -235,13 +678,11 @@ async function extractAndInlineCss(html: string, baseUrl: URL): Promise<string> 
   
   const fetchedStyles = await Promise.all(fetchPromises);
   
-  // Add fetched stylesheets before inline styles (so inline styles can override)
   return [...fetchedStyles, ...cssFragments].join('\n\n');
 }
 
 // Convert relative URLs within CSS to absolute
 function convertCssUrls(css: string, baseUrl: URL): string {
-  // Convert url() references
   return css.replace(/url\(["']?([^"')]+)["']?\)/gi, (match, url) => {
     const absoluteUrl = makeAbsoluteUrl(url.trim(), baseUrl);
     return `url("${absoluteUrl}")`;
@@ -264,7 +705,6 @@ async function resolveImports(css: string, baseUrl: URL): Promise<string> {
   
   console.log(`Resolving ${imports.length} @import rules`);
   
-  // Fetch imported stylesheets
   const importedCss: string[] = [];
   for (const imp of imports) {
     try {
@@ -285,48 +725,38 @@ async function resolveImports(css: string, baseUrl: URL): Promise<string> {
       console.warn(`Error resolving @import ${imp.url}:`, error);
     }
     
-    // Remove the @import rule from original CSS
     css = css.replace(imp.match, '');
   }
   
-  // Prepend imported CSS
   return importedCss.join('\n\n') + '\n\n' + css;
 }
 
 function extractHeader(html: string): string {
   const parts: string[] = [];
   
-  // Extract ALL nav elements (top navigation bars)
   const navRegex = /<nav[^>]*>[\s\S]*?<\/nav>/gi;
   let navMatch;
   while ((navMatch = navRegex.exec(html)) !== null) {
     parts.push(navMatch[0]);
   }
   
-  // Extract header element
   const headerMatch = html.match(/<header[^>]*>[\s\S]*?<\/header>/i);
   if (headerMatch) {
-    // Check if header already contains the navs we found
     const headerHasNav = parts.some(nav => headerMatch[0].includes(nav));
     if (headerHasNav) {
-      // Header contains nav, just use header
       return headerMatch[0];
     } else {
-      // Add header after navs
       parts.push(headerMatch[0]);
     }
   }
   
-  // If no semantic elements found, try div-based patterns
   if (parts.length === 0) {
-    // Look for top bar / announcement bar divs
     const topBarRegex = /<div[^>]*class="[^"]*(?:top-bar|announcement|promo-bar|utility-nav)[^"]*"[^>]*>[\s\S]*?<\/div>/gi;
     let topBarMatch;
     while ((topBarMatch = topBarRegex.exec(html)) !== null) {
       parts.push(topBarMatch[0]);
     }
     
-    // Look for navbar/header divs
     const navbarDivRegex = /<div[^>]*class="[^"]*(?:navbar|nav-bar|navigation|header|site-header|main-header)[^"]*"[^>]*>[\s\S]*?<\/div>/gi;
     let navbarMatch;
     while ((navbarMatch = navbarDivRegex.exec(html)) !== null) {
@@ -340,13 +770,11 @@ function extractHeader(html: string): string {
 function extractFooter(html: string): string {
   const parts: string[] = [];
   
-  // Extract footer element
   const footerMatch = html.match(/<footer[^>]*>[\s\S]*?<\/footer>/i);
   if (footerMatch) {
     parts.push(footerMatch[0]);
   }
   
-  // If no semantic footer, try div-based patterns
   if (parts.length === 0) {
     const footerDivRegex = /<div[^>]*class="[^"]*(?:footer|site-footer|main-footer|bottom-bar)[^"]*"[^>]*>[\s\S]*?<\/div>/gi;
     let footerMatch;
