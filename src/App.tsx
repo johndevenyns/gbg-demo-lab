@@ -7,6 +7,7 @@ import { ProtectedRoute } from "@/components/admin/ProtectedRoute";
 import AdminDashboard from "./pages/AdminDashboard";
 import DemoConfig from "./pages/DemoConfig";
 import DemoPreview from "./pages/DemoPreview";
+import DemoEmbed from "./pages/DemoEmbed";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -38,6 +39,7 @@ const App = () => (
             }
           />
           <Route path="/demo/:slug" element={<DemoPreview />} />
+          <Route path="/embed/:slug" element={<DemoEmbed />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
