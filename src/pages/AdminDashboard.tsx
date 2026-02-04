@@ -1,13 +1,16 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Search, Settings, ExternalLink, Trash2, Copy, Building2, Car, Gamepad2, Shield, Landmark, Layers, Heart, ShoppingBag, ImageOff } from "lucide-react";
+import { Plus, Search, Settings, ExternalLink, Trash2, Copy, Building2, Car, Gamepad2, Shield, Landmark, Layers, Heart, ShoppingBag, ImageOff, LogOut, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useDemos, useDeleteDemo } from "@/hooks/useDemos";
+import { useAuth } from "@/hooks/useAuth";
 import { IndustryTemplate } from "@/types/demo";
 import { CreateDemoDialog } from "@/components/admin/CreateDemoDialog";
+import { UserManagement } from "@/components/admin/UserManagement";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -70,12 +73,19 @@ function DemoLogo({ url, fallbackColor, fallbackIcon }: { url?: string | null; f
 export default function AdminDashboard() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user, signOut } = useAuth();
   const { data: demos = [], isLoading } = useDemos();
   const deleteDemo = useDeleteDemo();
   const [searchQuery, setSearchQuery] = useState("");
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [demoToDelete, setDemoToDelete] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<"demos" | "users">("demos");
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/auth");
+  };
 
   const filteredDemos = demos.filter(demo => 
     demo.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -111,182 +121,206 @@ export default function AdminDashboard() {
               </div>
               <div>
                 <h1 className="text-xl font-bold text-foreground">Demo Manager</h1>
-                <p className="text-sm text-muted-foreground">Identity Verification Demo Environments</p>
+                <p className="text-sm text-muted-foreground">{user?.email}</p>
               </div>
             </div>
-            <Button onClick={() => setCreateDialogOpen(true)} className="gradient-primary glow-primary">
-              <Plus className="w-4 h-4 mr-2" />
-              New Demo
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button onClick={() => setCreateDialogOpen(true)} className="gradient-primary glow-primary">
+                <Plus className="w-4 h-4 mr-2" />
+                New Demo
+              </Button>
+              <Button variant="ghost" size="icon" onClick={handleSignOut} title="Sign out">
+                <LogOut className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
       <main className="admin-container py-8">
-        {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <Card className="glass-card">
-            <CardContent className="pt-6">
-              <div className="text-3xl font-bold text-foreground">{demos.length}</div>
-              <div className="text-sm text-muted-foreground">Total Demos</div>
-            </CardContent>
-          </Card>
-          <Card className="glass-card">
-            <CardContent className="pt-6">
-              <div className="text-3xl font-bold text-success">{demos.filter(d => d.isActive).length}</div>
-              <div className="text-sm text-muted-foreground">Active</div>
-            </CardContent>
-          </Card>
-          <Card className="glass-card">
-            <CardContent className="pt-6">
-              <div className="text-3xl font-bold text-foreground">{new Set(demos.map(d => d.industryTemplate)).size}</div>
-              <div className="text-sm text-muted-foreground">Industries</div>
-            </CardContent>
-          </Card>
-          <Card className="glass-card">
-            <CardContent className="pt-6">
-              <div className="text-3xl font-bold text-accent">{demos.filter(d => d.includeQr).length}</div>
-              <div className="text-sm text-muted-foreground">With QR Code</div>
-            </CardContent>
-          </Card>
-        </div>
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "demos" | "users")}>
+          <TabsList className="mb-6">
+            <TabsTrigger value="demos" className="flex items-center gap-2">
+              <Layers className="w-4 h-4" />
+              Demos
+            </TabsTrigger>
+            <TabsTrigger value="users" className="flex items-center gap-2">
+              <Users className="w-4 h-4" />
+              User Management
+            </TabsTrigger>
+          </TabsList>
 
-        {/* Search and Filter */}
-        <div className="flex items-center gap-4 mb-6">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input 
-              placeholder="Search demos..." 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-        </div>
-
-        {/* Demo List */}
-        {filteredDemos.length === 0 ? (
-          <Card className="glass-card">
-            <CardContent className="py-16 text-center">
-              <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
-                <Layers className="w-8 h-8 text-muted-foreground" />
-              </div>
-              <h3 className="text-lg font-semibold text-foreground mb-2">No demo environments yet</h3>
-              <p className="text-muted-foreground mb-4">Create your first demo to get started</p>
-              <Button onClick={() => setCreateDialogOpen(true)} className="gradient-primary">
-                <Plus className="w-4 h-4 mr-2" />
-                Create Demo
-              </Button>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredDemos.map((demo, index) => (
-              <Card 
-                key={demo.id} 
-                className="glass-card group animate-in-up"
-                style={{ animationDelay: `${index * 50}ms` }}
-              >
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                      <DemoLogo 
-                        url={demo.logoUrl} 
-                        fallbackColor={demo.buttonColor}
-                        fallbackIcon={industryIcons[demo.industryTemplate]}
-                      />
-                      <div>
-                        <CardTitle className="text-lg">{demo.customerName}</CardTitle>
-                        <CardDescription className="font-mono text-xs">/demo/{demo.slug}</CardDescription>
-                      </div>
-                    </div>
-                    <Badge variant={demo.isActive ? "default" : "secondary"}>
-                      {demo.isActive ? "Active" : "Inactive"}
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Industry</span>
-                      <span className="font-medium">{industryLabels[demo.industryTemplate]}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Verification</span>
-                      <Badge variant="outline" className="font-mono text-xs">
-                        {demo.verificationType}
-                      </Badge>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Form Steps</span>
-                      <span className="font-medium">{demo.formSteps.length}</span>
-                    </div>
-                    <div className="flex items-center gap-2 pt-3 border-t border-border">
-                      <div 
-                        className="w-6 h-6 rounded border border-border"
-                        style={{ backgroundColor: demo.headerBgColor }}
-                        title="Header Background"
-                      />
-                      <div 
-                        className="w-6 h-6 rounded border border-border"
-                        style={{ backgroundColor: demo.headerTextColor }}
-                        title="Header Text"
-                      />
-                      <div 
-                        className="w-6 h-6 rounded border border-border"
-                        style={{ backgroundColor: demo.buttonColor }}
-                        title="Button Color"
-                      />
-                      <div className="flex-1" />
-                      <span className="text-xs text-muted-foreground">
-                        {new Date(demo.updatedAt).toLocaleDateString()}
-                      </span>
-                    </div>
-                  </div>
-                  
-                  {/* Actions */}
-                  <div className="flex items-center gap-2 mt-4 pt-4 border-t border-border">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="flex-1"
-                      onClick={() => navigate(`/admin/demo/${demo.id}`)}
-                    >
-                      <Settings className="w-4 h-4 mr-1" />
-                      Configure
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="icon"
-                      onClick={() => window.open(`/demo/${demo.slug}`, '_blank')}
-                    >
-                      <ExternalLink className="w-4 h-4" />
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="icon"
-                      onClick={() => copyDemoUrl(demo.slug)}
-                    >
-                      <Copy className="w-4 h-4" />
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="icon"
-                      className="text-destructive hover:text-destructive"
-                      onClick={() => {
-                        setDemoToDelete(demo.id);
-                        setDeleteDialogOpen(true);
-                      }}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
+          <TabsContent value="demos">
+            {/* Stats Overview */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+              <Card className="glass-card">
+                <CardContent className="pt-6">
+                  <div className="text-3xl font-bold text-foreground">{demos.length}</div>
+                  <div className="text-sm text-muted-foreground">Total Demos</div>
                 </CardContent>
               </Card>
-            ))}
-          </div>
-        )}
+              <Card className="glass-card">
+                <CardContent className="pt-6">
+                  <div className="text-3xl font-bold text-success">{demos.filter(d => d.isActive).length}</div>
+                  <div className="text-sm text-muted-foreground">Active</div>
+                </CardContent>
+              </Card>
+              <Card className="glass-card">
+                <CardContent className="pt-6">
+                  <div className="text-3xl font-bold text-foreground">{new Set(demos.map(d => d.industryTemplate)).size}</div>
+                  <div className="text-sm text-muted-foreground">Industries</div>
+                </CardContent>
+              </Card>
+              <Card className="glass-card">
+                <CardContent className="pt-6">
+                  <div className="text-3xl font-bold text-accent">{demos.filter(d => d.includeQr).length}</div>
+                  <div className="text-sm text-muted-foreground">With QR Code</div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Search and Filter */}
+            <div className="flex items-center gap-4 mb-6">
+              <div className="relative flex-1 max-w-md">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input 
+                  placeholder="Search demos..." 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+
+            {/* Demo List */}
+            {filteredDemos.length === 0 ? (
+              <Card className="glass-card">
+                <CardContent className="py-16 text-center">
+                  <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
+                    <Layers className="w-8 h-8 text-muted-foreground" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-foreground mb-2">No demo environments yet</h3>
+                  <p className="text-muted-foreground mb-4">Create your first demo to get started</p>
+                  <Button onClick={() => setCreateDialogOpen(true)} className="gradient-primary">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Create Demo
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredDemos.map((demo, index) => (
+                  <Card 
+                    key={demo.id} 
+                    className="glass-card group animate-in-up"
+                    style={{ animationDelay: `${index * 50}ms` }}
+                  >
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-3">
+                          <DemoLogo 
+                            url={demo.logoUrl} 
+                            fallbackColor={demo.buttonColor}
+                            fallbackIcon={industryIcons[demo.industryTemplate]}
+                          />
+                          <div>
+                            <CardTitle className="text-lg">{demo.customerName}</CardTitle>
+                            <CardDescription className="font-mono text-xs">/demo/{demo.slug}</CardDescription>
+                          </div>
+                        </div>
+                        <Badge variant={demo.isActive ? "default" : "secondary"}>
+                          {demo.isActive ? "Active" : "Inactive"}
+                        </Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">Industry</span>
+                          <span className="font-medium">{industryLabels[demo.industryTemplate]}</span>
+                        </div>
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">Verification</span>
+                          <Badge variant="outline" className="font-mono text-xs">
+                            {demo.verificationType}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">Form Steps</span>
+                          <span className="font-medium">{demo.formSteps.length}</span>
+                        </div>
+                        <div className="flex items-center gap-2 pt-3 border-t border-border">
+                          <div 
+                            className="w-6 h-6 rounded border border-border"
+                            style={{ backgroundColor: demo.headerBgColor }}
+                            title="Header Background"
+                          />
+                          <div 
+                            className="w-6 h-6 rounded border border-border"
+                            style={{ backgroundColor: demo.headerTextColor }}
+                            title="Header Text"
+                          />
+                          <div 
+                            className="w-6 h-6 rounded border border-border"
+                            style={{ backgroundColor: demo.buttonColor }}
+                            title="Button Color"
+                          />
+                          <div className="flex-1" />
+                          <span className="text-xs text-muted-foreground">
+                            {new Date(demo.updatedAt).toLocaleDateString()}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      {/* Actions */}
+                      <div className="flex items-center gap-2 mt-4 pt-4 border-t border-border">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="flex-1"
+                          onClick={() => navigate(`/admin/demo/${demo.id}`)}
+                        >
+                          <Settings className="w-4 h-4 mr-1" />
+                          Configure
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="icon"
+                          onClick={() => window.open(`/demo/${demo.slug}`, '_blank')}
+                        >
+                          <ExternalLink className="w-4 h-4" />
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="icon"
+                          onClick={() => copyDemoUrl(demo.slug)}
+                        >
+                          <Copy className="w-4 h-4" />
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="icon"
+                          className="text-destructive hover:text-destructive"
+                          onClick={() => {
+                            setDemoToDelete(demo.id);
+                            setDeleteDialogOpen(true);
+                          }}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="users">
+            <UserManagement />
+          </TabsContent>
+        </Tabs>
       </main>
 
       {/* Create Dialog */}

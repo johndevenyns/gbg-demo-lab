@@ -1,5 +1,6 @@
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { useDemoBySlug } from "@/hooks/useDemos";
+import { useAuth } from "@/hooks/useAuth";
 import { Loader2, ArrowLeft, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useCallback } from "react";
@@ -8,7 +9,7 @@ import { DEFAULT_SUCCESS_CONFIG, DEFAULT_FAILURE_CONFIG } from "@/components/pre
 
 export default function DemoPreview() {
   const { slug } = useParams<{ slug: string }>();
-  const navigate = useNavigate();
+  const { isAdmin, isLoading: authLoading } = useAuth();
   const { data: demo, isLoading, error } = useDemoBySlug(slug || "");
 
   // Inject scraped CSS into the page
@@ -117,34 +118,38 @@ export default function DemoPreview() {
         />
       )}
 
-      {/* Admin Exit Bar */}
-      <div className="fixed bottom-0 left-0 right-0 bg-muted/95 backdrop-blur-sm border-t border-border py-2 px-4 z-50">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <span>Preview Mode</span>
-            <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">
-              {demo.customerName}
-            </span>
+      {/* Admin Exit Bar - Only show for authenticated admins */}
+      {!authLoading && isAdmin && (
+        <>
+          <div className="fixed bottom-0 left-0 right-0 bg-muted/95 backdrop-blur-sm border-t border-border py-2 px-4 z-50">
+            <div className="max-w-4xl mx-auto flex items-center justify-between">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <span>Preview Mode</span>
+                <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">
+                  {demo.customerName}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="sm" asChild>
+                  <Link to="/admin">
+                    <ArrowLeft className="w-4 h-4 mr-1" />
+                    Dashboard
+                  </Link>
+                </Button>
+                <Button variant="outline" size="sm" asChild>
+                  <Link to={`/admin/demo/${demo.id}`}>
+                    <Settings className="w-4 h-4 mr-1" />
+                    Configure
+                  </Link>
+                </Button>
+              </div>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" asChild>
-              <Link to="/admin">
-                <ArrowLeft className="w-4 h-4 mr-1" />
-                Dashboard
-              </Link>
-            </Button>
-            <Button variant="outline" size="sm" asChild>
-              <Link to={`/admin/demo/${demo.id}`}>
-                <Settings className="w-4 h-4 mr-1" />
-                Configure
-              </Link>
-            </Button>
-          </div>
-        </div>
-      </div>
 
-      {/* Spacer for fixed bar */}
-      <div className="h-12" />
+          {/* Spacer for fixed bar */}
+          <div className="h-12" />
+        </>
+      )}
     </div>
   );
 }
