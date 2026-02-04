@@ -120,7 +120,7 @@ export default function AdminDashboard() {
                 <Settings className="w-5 h-5 text-primary-foreground" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-foreground">Demo Manager</h1>
+                <h1 className="text-xl font-bold text-foreground">GBG Demo Manager</h1>
                 <p className="text-sm text-muted-foreground">{user?.email}</p>
               </div>
             </div>

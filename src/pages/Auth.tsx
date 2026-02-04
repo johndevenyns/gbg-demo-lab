@@ -93,7 +93,7 @@ export default function Auth() {
           <div className="w-16 h-16 rounded-xl gradient-primary flex items-center justify-center mx-auto mb-4">
             <Shield className="w-8 h-8 text-primary-foreground" />
           </div>
-          <CardTitle className="text-2xl">Demo Manager</CardTitle>
+          <CardTitle className="text-2xl">GBG Demo Manager</CardTitle>
           <CardDescription>Sign in to manage demo environments</CardDescription>
         </CardHeader>
         <CardContent>
