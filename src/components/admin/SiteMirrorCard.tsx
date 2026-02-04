@@ -27,11 +27,52 @@ function generateFormPreviewHtml(demo: DemoEnvironment): string {
   const style = demo.formStyle || DEFAULT_FORM_STYLE;
   const buttonColor = demo.buttonColor || '#3B82F6';
   
+  // Map style config values to CSS
+  const borderRadiusMap: Record<string, string> = {
+    none: '0px',
+    sm: '4px',
+    md: '8px',
+    lg: '12px',
+    full: '9999px',
+  };
+  
+  const paddingMap: Record<string, string> = {
+    sm: '8px 12px',
+    md: '10px 14px',
+    lg: '14px 18px',
+  };
+  
+  const fontSizeMap: Record<string, string> = {
+    sm: '14px',
+    base: '16px',
+    lg: '18px',
+  };
+  
+  const labelWeightMap: Record<string, number> = {
+    normal: 400,
+    medium: 500,
+    semibold: 600,
+  };
+
+  // Get actual style values
+  const inputBgColor = style.inputBgColor || '#ffffff';
+  const inputTextColor = style.inputTextColor || '#1f2937';
+  const inputBorderColor = style.inputBorderColor || '#d1d5db';
+  const inputFocusBorderColor = style.inputFocusBorderColor || buttonColor;
+  const labelColor = style.labelColor || '#333333';
+  const labelWeight = labelWeightMap[style.labelWeight || 'medium'];
+  const borderRadius = borderRadiusMap[style.borderRadius || 'md'];
+  const borderWidth = style.borderWidth || '1';
+  const padding = paddingMap[style.inputPadding || 'md'];
+  const fontSize = fontSizeMap[style.fontSize || 'base'];
+  const fontFamily = style.fontFamily || 'system-ui, sans-serif';
+  const errorColor = style.errorColor || '#ef4444';
+  
   // Get the first form step's fields (or show placeholder if none)
   const formSteps = demo.formSteps?.filter(s => s.stepType === 'form') || [];
   const firstFormStep = formSteps[0];
   
-  // Build field HTML
+  // Build field HTML with proper styling
   let fieldsHtml = '';
   if (firstFormStep?.fields && firstFormStep.fields.length > 0) {
     firstFormStep.fields.forEach(field => {
@@ -40,50 +81,76 @@ function generateFormPreviewHtml(demo: DemoEnvironment): string {
           <label style="
             display: block;
             margin-bottom: 6px;
-            font-weight: 500;
-            color: ${style.labelColor || '#333'};
-            font-size: 14px;
+            font-weight: ${labelWeight};
+            color: ${labelColor};
+            font-size: ${fontSize};
+            font-family: ${fontFamily};
           ">
-            ${field.label}${field.required ? '<span style="color: #ef4444; margin-left: 4px;">*</span>' : ''}
+            ${field.label}${field.required ? `<span style="color: ${errorColor}; margin-left: 4px;">*</span>` : ''}
           </label>
           <input 
             type="${field.type === 'email' ? 'email' : field.type === 'phone' ? 'tel' : 'text'}"
             placeholder="${field.placeholder || ''}"
             style="
               width: 100%;
-              padding: 10px 14px;
-              border: 1px solid ${style.inputBorderColor || '#d1d5db'};
-              border-radius: 8px;
-              font-size: 14px;
-              background: ${style.inputBgColor || '#ffffff'};
-              color: ${style.inputTextColor || '#1f2937'};
+              padding: ${padding};
+              border: ${borderWidth}px solid ${inputBorderColor};
+              border-radius: ${borderRadius};
+              font-size: ${fontSize};
+              font-family: ${fontFamily};
+              background: ${inputBgColor};
+              color: ${inputTextColor};
               outline: none;
+              box-sizing: border-box;
             "
+            onfocus="this.style.borderColor='${inputFocusBorderColor}'; this.style.boxShadow='0 0 0 3px ${inputFocusBorderColor}20';"
+            onblur="this.style.borderColor='${inputBorderColor}'; this.style.boxShadow='none';"
           />
         </div>
       `;
     });
   } else {
-    fieldsHtml = `
-      <div style="margin-bottom: 16px;">
-        <label style="display: block; margin-bottom: 6px; font-weight: 500; color: #333; font-size: 14px;">
-          First Name<span style="color: #ef4444; margin-left: 4px;">*</span>
-        </label>
-        <input type="text" placeholder="John" style="width: 100%; padding: 10px 14px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; background: #fff; outline: none;" />
-      </div>
-      <div style="margin-bottom: 16px;">
-        <label style="display: block; margin-bottom: 6px; font-weight: 500; color: #333; font-size: 14px;">
-          Last Name<span style="color: #ef4444; margin-left: 4px;">*</span>
-        </label>
-        <input type="text" placeholder="Smith" style="width: 100%; padding: 10px 14px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; background: #fff; outline: none;" />
-      </div>
-      <div style="margin-bottom: 16px;">
-        <label style="display: block; margin-bottom: 6px; font-weight: 500; color: #333; font-size: 14px;">
-          Email<span style="color: #ef4444; margin-left: 4px;">*</span>
-        </label>
-        <input type="email" placeholder="john@example.com" style="width: 100%; padding: 10px 14px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; background: #fff; outline: none;" />
-      </div>
-    `;
+    // Placeholder fields with proper styling
+    const placeholderFields = [
+      { label: 'First Name', placeholder: 'John', required: true },
+      { label: 'Last Name', placeholder: 'Smith', required: true },
+      { label: 'Email', placeholder: 'john@example.com', required: true },
+    ];
+    
+    placeholderFields.forEach(field => {
+      fieldsHtml += `
+        <div style="margin-bottom: 16px;">
+          <label style="
+            display: block;
+            margin-bottom: 6px;
+            font-weight: ${labelWeight};
+            color: ${labelColor};
+            font-size: ${fontSize};
+            font-family: ${fontFamily};
+          ">
+            ${field.label}${field.required ? `<span style="color: ${errorColor}; margin-left: 4px;">*</span>` : ''}
+          </label>
+          <input 
+            type="text"
+            placeholder="${field.placeholder}"
+            style="
+              width: 100%;
+              padding: ${padding};
+              border: ${borderWidth}px solid ${inputBorderColor};
+              border-radius: ${borderRadius};
+              font-size: ${fontSize};
+              font-family: ${fontFamily};
+              background: ${inputBgColor};
+              color: ${inputTextColor};
+              outline: none;
+              box-sizing: border-box;
+            "
+            onfocus="this.style.borderColor='${inputFocusBorderColor}'; this.style.boxShadow='0 0 0 3px ${inputFocusBorderColor}20';"
+            onblur="this.style.borderColor='${inputBorderColor}'; this.style.boxShadow='none';"
+          />
+        </div>
+      `;
+    });
   }
 
   const stepTitle = firstFormStep?.title || 'Application Form';
@@ -96,7 +163,7 @@ function generateFormPreviewHtml(demo: DemoEnvironment): string {
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <style>
-          body { margin: 0; padding: 0; font-family: ${style.fontFamily || 'system-ui, sans-serif'}; }
+          body { margin: 0; padding: 0; font-family: ${fontFamily}; }
           * { box-sizing: border-box; }
         </style>
         ${demo.scrapedCss ? `<style>${demo.scrapedCss}</style>` : ''}
@@ -106,8 +173,8 @@ function generateFormPreviewHtml(demo: DemoEnvironment): string {
         <div style="padding: 40px 20px; background: #f5f5f5; min-height: 300px;">
           <div style="max-width: 480px; margin: 0 auto; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); padding: 32px; border: 1px solid #e5e7eb;">
             <div style="text-align: center; margin-bottom: 24px;">
-              <h2 style="margin: 0 0 8px 0; font-size: 20px; font-weight: 600; color: #1f2937;">${stepTitle}</h2>
-              <p style="margin: 0; color: #6b7280; font-size: 14px;">Step 1 of ${totalSteps}</p>
+              <h2 style="margin: 0 0 8px 0; font-size: 20px; font-weight: 600; color: ${labelColor}; font-family: ${fontFamily};">${stepTitle}</h2>
+              <p style="margin: 0; color: #6b7280; font-size: 14px; font-family: ${fontFamily};">Step 1 of ${totalSteps}</p>
             </div>
             ${fieldsHtml}
             <button style="
@@ -116,9 +183,10 @@ function generateFormPreviewHtml(demo: DemoEnvironment): string {
               background: ${buttonColor};
               color: white;
               border: none;
-              border-radius: 8px;
+              border-radius: ${borderRadius};
               font-size: 16px;
               font-weight: 500;
+              font-family: ${fontFamily};
               cursor: pointer;
               margin-top: 8px;
             ">
