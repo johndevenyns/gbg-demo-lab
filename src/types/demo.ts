@@ -319,6 +319,12 @@ export interface VerificationFlowConfig {
   autoAdvanceOnComplete?: boolean;
   completionRedirectUrl?: string;
   
+  // Result page settings
+  successPageMode?: 'default' | 'custom';
+  failurePageMode?: 'default' | 'custom';
+  customSuccessPage?: ResultPageConfig;
+  customFailurePage?: ResultPageConfig;
+  
   // Navigation buttons
   showBackButton?: boolean;
   backButtonLabel?: string;

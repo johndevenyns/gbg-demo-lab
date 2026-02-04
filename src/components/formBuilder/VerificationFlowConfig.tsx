@@ -7,12 +7,13 @@ import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { FormStep, VerificationFlowConfig as VerificationFlowConfigType, AVAILABLE_MDL_PROVIDERS } from '@/types/demo';
+import { FormStep, VerificationFlowConfig as VerificationFlowConfigType, AVAILABLE_MDL_PROVIDERS, DemoEnvironment } from '@/types/demo';
 import { VERIFICATION_PATHS } from '@/types/formBuilder';
 import { MdlProviderConfig } from './MdlProviderConfig';
+import { CompletionBehaviorConfig, CompletionBehaviorSettings } from './CompletionBehaviorConfig';
 import { 
   QrCode, Activity, Smartphone, ChevronDown, ChevronUp, Settings2, 
-  Clock, ArrowRight, FileCheck, Database, Workflow
+  Clock, ArrowRight, FileCheck, Database, Workflow, CheckCircle2
 } from 'lucide-react';
 
 const PATH_ICONS: Record<string, React.ReactNode> = {
@@ -50,10 +51,12 @@ const DEFAULT_CONFIG: VerificationFlowConfigType = {
 interface VerificationFlowConfigProps {
   step: FormStep;
   onUpdateStep: (updates: Partial<FormStep>) => void;
+  demo?: DemoEnvironment; // For accessing default result pages
 }
 
-export function VerificationFlowConfig({ step, onUpdateStep }: VerificationFlowConfigProps) {
+export function VerificationFlowConfig({ step, onUpdateStep, demo }: VerificationFlowConfigProps) {
   const [isDisplayOpen, setIsDisplayOpen] = useState(true);
+  const [isCompletionOpen, setIsCompletionOpen] = useState(false);
   
   const config = step.verificationFlowConfig || DEFAULT_CONFIG;
   const currentPath = VERIFICATION_PATHS.find(p => p.id === config.pathType) || VERIFICATION_PATHS[0];
@@ -407,7 +410,7 @@ export function VerificationFlowConfig({ step, onUpdateStep }: VerificationFlowC
             {/* Completion Behavior */}
             <div className="space-y-3 pt-2 border-t border-border">
               <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
-                <ArrowRight className="w-3 h-3" />
+                <CheckCircle2 className="w-3 h-3" />
                 Completion Behavior
               </Label>
               
@@ -435,8 +438,30 @@ export function VerificationFlowConfig({ step, onUpdateStep }: VerificationFlowC
                     className="h-8 text-sm"
                   />
                   <p className="text-xs text-muted-foreground">
-                    Redirect to this URL instead of advancing to next step
+                    Redirect to this URL instead of showing result page
                   </p>
+                </div>
+
+                {/* Result Page Settings */}
+                <div className="pt-3 border-t border-border/50">
+                  <CompletionBehaviorConfig
+                    settings={{
+                      successPageMode: config.successPageMode || 'default',
+                      failurePageMode: config.failurePageMode || 'default',
+                      customSuccessPage: config.customSuccessPage,
+                      customFailurePage: config.customFailurePage,
+                    }}
+                    onChange={(settings: CompletionBehaviorSettings) => {
+                      handleConfigUpdate({
+                        successPageMode: settings.successPageMode,
+                        failurePageMode: settings.failurePageMode,
+                        customSuccessPage: settings.customSuccessPage,
+                        customFailurePage: settings.customFailurePage,
+                      });
+                    }}
+                    defaultSuccessPage={demo?.successPageConfig}
+                    defaultFailurePage={demo?.failurePageConfig}
+                  />
                 </div>
               </div>
             </div>

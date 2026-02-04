@@ -2,11 +2,19 @@ import { supabase } from "@/integrations/supabase/client";
 import { DemoEnvironment, FormStep, INDUSTRY_TEMPLATES, IndustryTemplate, StoredTestData } from "@/types/demo";
 import { TablesInsert } from "@/integrations/supabase/types";
 import { FormStyleConfig, DEFAULT_FORM_STYLE } from "@/types/formStyle";
+import { ResultPageConfig } from "@/components/preview/ResultPage";
+import { generateIndustryResultPages } from "@/lib/resultPageDefaults";
 
 // Helper to convert database row to DemoEnvironment
 const rowToDemo = (row: any): DemoEnvironment => {
   // Parse storedTestData from its dedicated column
   const storedTestData = row.stored_test_data as StoredTestData | null;
+  
+  // Parse result page configs from form_style (stored together for now)
+  const formStyle = row.form_style as (FormStyleConfig & { 
+    successPageConfig?: ResultPageConfig; 
+    failurePageConfig?: ResultPageConfig;
+  }) | null;
   
   return {
     id: row.id,
@@ -33,7 +41,9 @@ const rowToDemo = (row: any): DemoEnvironment => {
     scrapedHeaderHtml: row.scraped_header_html || '',
     scrapedFooterHtml: row.scraped_footer_html || '',
     scrapedCss: row.scraped_css || '',
-    formStyle: (row.form_style as FormStyleConfig) || DEFAULT_FORM_STYLE,
+    formStyle: formStyle ? { ...DEFAULT_FORM_STYLE, ...formStyle } : DEFAULT_FORM_STYLE,
+    successPageConfig: formStyle?.successPageConfig,
+    failurePageConfig: formStyle?.failurePageConfig,
     storedTestData: storedTestData || undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -67,7 +77,15 @@ const demoToRow = (demo: Partial<DemoEnvironment>) => {
   if (demo.scrapedHeaderHtml !== undefined) row.scraped_header_html = demo.scrapedHeaderHtml;
   if (demo.scrapedFooterHtml !== undefined) row.scraped_footer_html = demo.scrapedFooterHtml;
   if (demo.scrapedCss !== undefined) row.scraped_css = demo.scrapedCss;
-  if (demo.formStyle !== undefined) row.form_style = demo.formStyle;
+  // Store result page configs inside form_style to avoid new DB columns
+  if (demo.formStyle !== undefined || demo.successPageConfig !== undefined || demo.failurePageConfig !== undefined) {
+    const existingStyle = demo.formStyle || {};
+    row.form_style = {
+      ...existingStyle,
+      ...(demo.successPageConfig !== undefined && { successPageConfig: demo.successPageConfig }),
+      ...(demo.failurePageConfig !== undefined && { failurePageConfig: demo.failurePageConfig }),
+    };
+  }
   if (demo.storedTestData !== undefined) row.stored_test_data = demo.storedTestData;
   if (demo.isActive !== undefined) row.is_active = demo.isActive;
   return row;
@@ -113,6 +131,10 @@ export const demosApi = {
   async create(customerName: string, template: IndustryTemplate): Promise<DemoEnvironment> {
     const templateData = INDUSTRY_TEMPLATES[template];
     const slug = generateSlug(customerName);
+    const buttonColor = templateData.buttonColor || '#6366f1';
+
+    // Generate branded default result pages
+    const { successPage, failurePage } = generateIndustryResultPages(customerName, template, buttonColor);
 
     const newDemo: TablesInsert<'demo_environments'> = {
       slug,
@@ -125,10 +147,15 @@ export const demosApi = {
       resource_id: '',
       header_bg_color: templateData.headerBgColor || '#1a1a2e',
       header_text_color: templateData.headerTextColor || '#ffffff',
-      button_color: templateData.buttonColor || '#6366f1',
+      button_color: buttonColor,
       include_qr: true,
       include_address_verification: templateData.includeAddressVerification || false,
       form_steps: JSON.parse(JSON.stringify(templateData.formSteps || [])),
+      form_style: JSON.parse(JSON.stringify({
+        ...DEFAULT_FORM_STYLE,
+        successPageConfig: successPage,
+        failurePageConfig: failurePage,
+      })),
       is_active: true,
     };
 
