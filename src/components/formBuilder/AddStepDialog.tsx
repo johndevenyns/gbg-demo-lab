@@ -11,12 +11,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { 
-  LayoutList, Workflow, Plug, FileText
+  LayoutList, Workflow, Plug, FileText, SplitSquareVertical
 } from 'lucide-react';
 
 export type StepTypeOption = 
   | 'form' 
   | 'verification'
+  | 'decision'
   | 'api' 
   | 'page';
 
@@ -25,7 +26,7 @@ interface StepTypeInfo {
   label: string;
   description: string;
   icon: React.ReactNode;
-  category: 'form' | 'verification' | 'other';
+  category: 'form' | 'verification' | 'branching' | 'other';
 }
 
 const STEP_TYPES: StepTypeInfo[] = [
@@ -42,6 +43,13 @@ const STEP_TYPES: StepTypeInfo[] = [
     description: 'Identity verification step with configurable type (Doc+Bio, Data+Bio, Data Only, or mDL)',
     icon: <Workflow className="w-5 h-5" />,
     category: 'verification',
+  },
+  {
+    id: 'decision',
+    label: 'Decision / Branch',
+    description: 'Let users choose a path (up to 4 options) with custom results per branch',
+    icon: <SplitSquareVertical className="w-5 h-5" />,
+    category: 'branching',
   },
   {
     id: 'api',
@@ -73,6 +81,7 @@ export function AddStepDialog({ open, onOpenChange, onAddStep }: AddStepDialogPr
     const defaultTitles: Record<StepTypeOption, string> = {
       form: 'Form Step',
       verification: 'Identity Verification',
+      decision: 'Choose Your Path',
       api: 'API Submission',
       page: 'Display Page',
     };
@@ -86,6 +95,7 @@ export function AddStepDialog({ open, onOpenChange, onAddStep }: AddStepDialogPr
 
   const formTypes = STEP_TYPES.filter(t => t.category === 'form');
   const verificationTypes = STEP_TYPES.filter(t => t.category === 'verification');
+  const branchingTypes = STEP_TYPES.filter(t => t.category === 'branching');
   const otherTypes = STEP_TYPES.filter(t => t.category === 'other');
 
   return (
@@ -162,6 +172,37 @@ export function AddStepDialog({ open, onOpenChange, onAddStep }: AddStepDialogPr
                   >
                     <RadioGroupItem value={type.id} className="sr-only" />
                     <div className={`p-2 rounded-md ${selectedType === type.id ? 'bg-cyan-500 text-white' : 'bg-cyan-500/10 text-cyan-600'}`}>
+                      {type.icon}
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium">{type.label}</p>
+                      <p className="text-sm text-muted-foreground">{type.description}</p>
+                    </div>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* Branching Section */}
+            <div>
+              <h4 className="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-2">
+                <SplitSquareVertical className="w-4 h-4" />
+                Branching
+              </h4>
+              <div className="space-y-2">
+                {branchingTypes.map((type) => (
+                  <label
+                    key={type.id}
+                    className={`
+                      flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors
+                      ${selectedType === type.id 
+                        ? 'border-amber-500 bg-amber-500/5' 
+                        : 'border-border hover:border-amber-500/50 hover:bg-accent/50'
+                      }
+                    `}
+                  >
+                    <RadioGroupItem value={type.id} className="sr-only" />
+                    <div className={`p-2 rounded-md ${selectedType === type.id ? 'bg-amber-500 text-white' : 'bg-amber-500/10 text-amber-600'}`}>
                       {type.icon}
                     </div>
                     <div className="flex-1">
