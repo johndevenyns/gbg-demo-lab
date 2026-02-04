@@ -585,6 +585,7 @@ export function FormBuilderCanvas({ steps, onUpdateSteps }: FormBuilderCanvasPro
                 stepNumber={index + 1}
                 totalSteps={steps.length}
                 isExpanded={expandedSteps.has(step.id)}
+                allSteps={steps}
                 onToggleExpand={() => toggleExpand(step.id)}
                 onUpdateStep={(updates) => updateStep(step.id, updates)}
                 onRemoveStep={() => removeStep(step.id)}

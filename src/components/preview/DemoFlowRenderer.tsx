@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { FormStep, PageElement, StepApiResponse, MdlProvider, VerificationType, StoredTestData, FormField, VerificationFlowConfig as VerificationFlowConfigType } from '@/types/demo';
+import { FormStep, PageElement, StepApiResponse, MdlProvider, VerificationType, StoredTestData, FormField, VerificationFlowConfig as VerificationFlowConfigType, DecisionChoice } from '@/types/demo';
 import { FormStyleConfig, DEFAULT_FORM_STYLE } from '@/types/formStyle';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { ResultPage, ResultPageConfig, DEFAULT_SUCCESS_CONFIG, DEFAULT_FAILURE_CONFIG } from './ResultPage';
 import { VerificationMethodSelector } from './VerificationMethodSelector';
 import { AddressValidationDialog } from './AddressValidationDialog';
+import { DecisionStepRenderer } from './DecisionStepRenderer';
 
 // Helper to determine if a color is light or dark and return contrasting text color
 const getContrastTextColor = (hexColor: string): string => {
@@ -259,6 +260,7 @@ export function DemoFlowRenderer({
   const [flowComplete, setFlowComplete] = useState<'success' | 'failure' | null>(null);
   const [referenceId, setReferenceId] = useState<string | null>(null);
   const [selectedVerificationType, setSelectedVerificationType] = useState<VerificationType | null>(null);
+  const [selectedDecisionChoice, setSelectedDecisionChoice] = useState<DecisionChoice | null>(null);
   const [verificationSessionId, setVerificationSessionId] = useState<string | null>(null);
   const [pollingStatus, setPollingStatus] = useState<string | null>(null);
   // Use ref for verification session data to avoid race condition with state updates
@@ -872,6 +874,36 @@ export function DemoFlowRenderer({
     createVerificationSession('dataBio');
   }, [createVerificationSession]);
 
+  // Handle decision step choice selection
+  const handleDecisionChoice = useCallback((choice: DecisionChoice) => {
+    console.log('Decision choice selected:', choice);
+    setSelectedDecisionChoice(choice);
+    
+    if (choice.destinationType === 'verification') {
+      // Map verification type string to VerificationType
+      const verificationTypeMap: Record<string, VerificationType> = {
+        'docbio': 'docBio',
+        'databio': 'dataBio',
+        'dataonly': 'dataOnly',
+        'mdl': 'dataBio', // mDL falls back to dataBio for now
+      };
+      const vType = verificationTypeMap[choice.verificationType || 'docbio'] || 'docBio';
+      setSelectedVerificationType(vType);
+      createVerificationSession(vType);
+    } else if (choice.destinationType === 'step') {
+      // Jump to specific step
+      const targetIndex = steps.findIndex(s => s.id === choice.targetStepId);
+      if (targetIndex !== -1) {
+        setCurrentStepIndex(targetIndex);
+      } else {
+        toast.error('Target step not found');
+      }
+    } else {
+      // 'next' - continue to next step
+      goToNextStep();
+    }
+  }, [createVerificationSession, steps, goToNextStep]);
+
   // Handle step-specific rendering and actions
   useEffect(() => {
     if (currentStep?.stepType === 'api' && !apiResponses.find(r => r.stepId === currentStep.id)) {
@@ -1304,6 +1336,25 @@ export function DemoFlowRenderer({
           />
         );
 
+      case 'decision':
+        return (
+          <DecisionStepRenderer
+            config={currentStep.decisionStepConfig || {
+              title: 'Choose Your Path',
+              subtitle: 'Select how you would like to proceed',
+              choices: [],
+              defaultExpanded: true,
+              showBackButton: true,
+              backButtonLabel: 'Back',
+            }}
+            formStyle={style}
+            buttonColor={buttonColor}
+            isFirstStep={isFirstStep}
+            onSelectChoice={handleDecisionChoice}
+            onBack={goToPrevStep}
+          />
+        );
+
       case 'page':
         return (
           <div className={`py-6 space-y-4 ${currentStep.pageStepConfig?.layout === 'centered' ? 'max-w-md mx-auto' : ''}`}>
@@ -1328,7 +1379,7 @@ export function DemoFlowRenderer({
   };
 
   // Don't show nav buttons for certain step types
-  const showNavButtons = !['api'].includes(currentStep?.stepType || '') || !isLoading;
+  const showNavButtons = !['api', 'decision'].includes(currentStep?.stepType || '') || !isLoading;
 
   // Handle result page button clicks
   const handleResultButtonClick = (isSuccess: boolean) => {
@@ -1341,9 +1392,23 @@ export function DemoFlowRenderer({
   // If flow is complete, show result page
   if (flowComplete) {
     const isSuccess = flowComplete === 'success';
+    
+    // Check if we have custom result pages from a decision choice
+    let customSuccessPage: ResultPageConfig | undefined;
+    let customFailurePage: ResultPageConfig | undefined;
+    
+    if (selectedDecisionChoice?.useCustomResultPages) {
+      if (selectedDecisionChoice.customSuccessPage?.title) {
+        customSuccessPage = selectedDecisionChoice.customSuccessPage;
+      }
+      if (selectedDecisionChoice.customFailurePage?.title) {
+        customFailurePage = selectedDecisionChoice.customFailurePage;
+      }
+    }
+    
     const config: ResultPageConfig = isSuccess 
-      ? { ...DEFAULT_SUCCESS_CONFIG, ...successPageConfig, referenceId: referenceId || undefined }
-      : { ...DEFAULT_FAILURE_CONFIG, ...failurePageConfig, referenceId: referenceId || undefined };
+      ? { ...DEFAULT_SUCCESS_CONFIG, ...successPageConfig, ...customSuccessPage, referenceId: referenceId || undefined }
+      : { ...DEFAULT_FAILURE_CONFIG, ...failurePageConfig, ...customFailurePage, referenceId: referenceId || undefined };
     
     return (
       <ResultPage

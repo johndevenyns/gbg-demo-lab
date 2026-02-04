@@ -198,6 +198,7 @@ interface FormStepCardProps {
   stepNumber: number;
   totalSteps: number;
   isExpanded: boolean;
+  allSteps: FormStep[];
   onToggleExpand: () => void;
   onUpdateStep: (updates: Partial<FormStep>) => void;
   onRemoveStep: () => void;
@@ -212,6 +213,7 @@ export function FormStepCard({
   stepNumber,
   totalSteps,
   isExpanded,
+  allSteps,
   onToggleExpand,
   onUpdateStep,
   onRemoveStep,
@@ -536,7 +538,7 @@ export function FormStepCard({
             </div>
           ) : step.stepType === 'decision' ? (
             /* Decision Step Type */
-            <DecisionStepConfig step={step} allSteps={[]} onUpdateStep={onUpdateStep} />
+            <DecisionStepConfig step={step} allSteps={allSteps} onUpdateStep={onUpdateStep} />
           ) : (
             <>
               {/* Regular Form Step */}
