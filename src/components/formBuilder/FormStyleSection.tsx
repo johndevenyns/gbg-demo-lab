@@ -24,6 +24,7 @@ interface FormStyleSectionProps {
   formStyle: FormStyleConfig;
   onUpdateStyle: (style: FormStyleConfig) => void;
   scrapedBranding?: ScrapedBranding | null;
+  embedded?: boolean; // When true, renders without Card wrapper
 }
 
 // Helper to convert extracted form styles to FormStyleConfig
@@ -98,7 +99,7 @@ function formElementStylesToConfig(styles: FormElementStyles): Partial<FormStyle
   return config;
 }
 
-export function FormStyleSection({ demo, formStyle, onUpdateStyle, scrapedBranding }: FormStyleSectionProps) {
+export function FormStyleSection({ demo, formStyle, onUpdateStyle, scrapedBranding, embedded = false }: FormStyleSectionProps) {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<FormStyleSource>(formStyle.source);
   const [isScraping, setIsScraping] = useState(false);
@@ -243,19 +244,9 @@ export function FormStyleSection({ demo, formStyle, onUpdateStyle, scrapedBrandi
   // Show mirrored data if we have either scraped branding, extracted form styles, or stored demo colors
   const hasMirroredData = !!demo.customerSiteUrl || !!scrapedBranding?.branding || !!demo.scrapedCss || !!demo.buttonColor || !!extractedStyles;
 
-  return (
-    <Card className="glass-card">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Paintbrush className="w-5 h-5" />
-          Form Styling
-        </CardTitle>
-        <CardDescription>
-          Customize the appearance of form fields, fonts, and colors
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+  const content = (
+    <>
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
           <TabsList className="grid w-full grid-cols-3 mb-6">
             <TabsTrigger value="mirrored" className="flex items-center gap-2">
               <Globe className="w-4 h-4" />
@@ -851,6 +842,26 @@ export function FormStyleSection({ demo, formStyle, onUpdateStyle, scrapedBrandi
             scrapedBranding={scrapedBranding}
           />
         </div>
+    </>
+  );
+
+  if (embedded) {
+    return content;
+  }
+
+  return (
+    <Card className="glass-card">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Paintbrush className="w-5 h-5" />
+          Form Styling
+        </CardTitle>
+        <CardDescription>
+          Customize the appearance of form fields, fonts, and colors
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {content}
       </CardContent>
     </Card>
   );

@@ -1,5 +1,5 @@
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Save, Eye, Loader2, ImageOff, Settings, Globe, Palette, Paintbrush, Layout, PlayCircle, Copy, Check } from "lucide-react";
+import { ArrowLeft, Save, Eye, Loader2, ImageOff, Settings, Globe, Palette, Layout, PlayCircle, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,18 +11,17 @@ import { FormStyleConfig, DEFAULT_FORM_STYLE } from "@/types/formStyle";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
 import { SiteMirrorCard } from "@/components/admin/SiteMirrorCard";
-import { FormBuilderSection, FormStyleSection } from "@/components/formBuilder";
+import { FormBuilderSection } from "@/components/formBuilder";
 import { FormPreviewPanel } from "@/components/formBuilder/FormPreviewPanel";
 import { cn } from "@/lib/utils";
 
 // Navigation sections
-type ConfigSection = 'settings' | 'mirror' | 'branding' | 'form-style' | 'form-builder' | 'preview';
+type ConfigSection = 'settings' | 'mirror' | 'branding' | 'form-builder' | 'preview';
 
 const sections: { id: ConfigSection; label: string; icon: React.ElementType; description: string }[] = [
   { id: 'settings', label: 'Site Settings', icon: Settings, description: 'Core configuration' },
-  { id: 'mirror', label: 'Site Mirror', icon: Globe, description: 'Scrape customer site' },
+  { id: 'mirror', label: 'Site Mirror', icon: Globe, description: 'Branding & form styling' },
   { id: 'branding', label: 'Branding', icon: Palette, description: 'Colors & logo' },
-  { id: 'form-style', label: 'Form Styling', icon: Paintbrush, description: 'Input appearance' },
   { id: 'form-builder', label: 'Form Builder', icon: Layout, description: 'Steps & fields' },
   { id: 'preview', label: 'Live Preview', icon: PlayCircle, description: 'Test the flow' },
 ];
@@ -205,17 +204,15 @@ export default function DemoConfig() {
       case 'settings':
         return <SiteSettingsSection demo={localDemo} onUpdate={handleUpdate} />;
       case 'mirror':
-        return <SiteMirrorCard demo={localDemo} onApplyBranding={handleUpdate} />;
-      case 'branding':
-        return <BrandingSection demo={localDemo} onUpdate={handleUpdate} />;
-      case 'form-style':
         return (
-          <FormStyleSection
-            demo={localDemo}
-            formStyle={localDemo.formStyle || DEFAULT_FORM_STYLE}
-            onUpdateStyle={(style: FormStyleConfig) => handleUpdate({ formStyle: style })}
+          <SiteMirrorCard 
+            demo={localDemo} 
+            onApplyBranding={handleUpdate}
+            onUpdateFormStyle={(style: FormStyleConfig) => handleUpdate({ formStyle: style })}
           />
         );
+      case 'branding':
+        return <BrandingSection demo={localDemo} onUpdate={handleUpdate} />;
       case 'form-builder':
         return <FormBuilderSection demo={localDemo} onUpdate={handleUpdate} />;
       case 'preview':
