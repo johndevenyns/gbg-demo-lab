@@ -1,15 +1,13 @@
 import { useState, useMemo } from "react";
-import { Globe, Loader2, Check, X, ExternalLink, Paintbrush, ChevronDown } from "lucide-react";
+import { Globe, Loader2, Check, X, ExternalLink, Paintbrush } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { scrapingApi, ScrapedBranding, FormElementStyles } from "@/lib/api/scraping";
 import { useToast } from "@/hooks/use-toast";
 import { DemoEnvironment } from "@/types/demo";
 import { DEFAULT_FORM_STYLE, FormStyleConfig } from "@/types/formStyle";
-import { FormStyleSection } from "@/components/formBuilder/FormStyleSection";
 import {
   Dialog,
   DialogContent,
@@ -22,7 +20,6 @@ import {
 interface SiteMirrorCardProps {
   demo: DemoEnvironment;
   onApplyBranding: (updates: Partial<DemoEnvironment>, autoSave?: boolean) => void;
-  onUpdateFormStyle?: (style: FormStyleConfig) => void;
 }
 
 // Generate form preview HTML for the iframe
@@ -203,13 +200,12 @@ function generateFormPreviewHtml(demo: DemoEnvironment): string {
   `;
 }
 
-export function SiteMirrorCard({ demo, onApplyBranding, onUpdateFormStyle }: SiteMirrorCardProps) {
+export function SiteMirrorCard({ demo, onApplyBranding }: SiteMirrorCardProps) {
   const { toast } = useToast();
   const [url, setUrl] = useState(demo.customerSiteUrl || "");
   const [isLoading, setIsLoading] = useState(false);
   const [scrapedData, setScrapedData] = useState<ScrapedBranding | null>(null);
   const [showPreview, setShowPreview] = useState(false);
-  const [formStyleOpen, setFormStyleOpen] = useState(false);
 
   const handleMirror = async () => {
     if (!url.trim()) {
@@ -446,29 +442,6 @@ export function SiteMirrorCard({ demo, onApplyBranding, onUpdateFormStyle }: Sit
                 </div>
               </div>
             </div>
-          )}
-
-          {/* Form Styling Section - Collapsible */}
-          {onUpdateFormStyle && (
-            <Collapsible open={formStyleOpen} onOpenChange={setFormStyleOpen} className="mt-6">
-              <CollapsibleTrigger asChild>
-                <Button variant="outline" className="w-full justify-between">
-                  <span className="flex items-center gap-2">
-                    <Paintbrush className="w-4 h-4" />
-                    Form Styling
-                  </span>
-                  <ChevronDown className={`w-4 h-4 transition-transform ${formStyleOpen ? 'rotate-180' : ''}`} />
-                </Button>
-              </CollapsibleTrigger>
-              <CollapsibleContent className="pt-4">
-                <FormStyleSection
-                  demo={demo}
-                  formStyle={demo.formStyle || DEFAULT_FORM_STYLE}
-                  onUpdateStyle={onUpdateFormStyle}
-                  embedded
-                />
-              </CollapsibleContent>
-            </Collapsible>
           )}
         </CardContent>
       </Card>

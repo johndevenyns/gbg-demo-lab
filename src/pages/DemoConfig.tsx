@@ -11,6 +11,7 @@ import { FormStyleConfig, DEFAULT_FORM_STYLE } from "@/types/formStyle";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
 import { SiteMirrorCard } from "@/components/admin/SiteMirrorCard";
+import { FormStyleCard } from "@/components/admin/FormStyleCard";
 import { FormBuilderSection } from "@/components/formBuilder";
 import { FormPreviewPanel } from "@/components/formBuilder/FormPreviewPanel";
 import { cn } from "@/lib/utils";
@@ -205,11 +206,17 @@ export default function DemoConfig() {
         return <SiteSettingsSection demo={localDemo} onUpdate={handleUpdate} />;
       case 'mirror':
         return (
-          <SiteMirrorCard 
-            demo={localDemo} 
-            onApplyBranding={handleUpdate}
-            onUpdateFormStyle={(style: FormStyleConfig) => handleUpdate({ formStyle: style })}
-          />
+          <div className="space-y-6">
+            <SiteMirrorCard 
+              demo={localDemo} 
+              onApplyBranding={handleUpdate}
+            />
+            <FormStyleCard
+              demo={localDemo}
+              formStyle={localDemo.formStyle || DEFAULT_FORM_STYLE}
+              onUpdateStyle={(style: FormStyleConfig) => handleUpdate({ formStyle: style })}
+            />
+          </div>
         );
       case 'branding':
         return <BrandingSection demo={localDemo} onUpdate={handleUpdate} />;
