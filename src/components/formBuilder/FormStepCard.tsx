@@ -17,6 +17,7 @@ import { PathStepConfig } from './PathStepConfig';
 import { VerificationFlowConfig } from './VerificationFlowConfig';
 import { PageStepConfig } from './PageStepConfig';
 import { MethodSelectionStepConfig } from './MethodSelectionStepConfig';
+import { DecisionStepConfig } from './DecisionStepConfig';
 import { 
   GripVertical, Trash2, ChevronDown, ChevronUp, Edit2, Check, X,
   User, Mail, Phone, Calendar, Hash, MapPin, Building, DollarSign, 
@@ -370,6 +371,12 @@ export function FormStepCard({
               Page
             </Badge>
           )}
+          {step.stepType === 'decision' && (
+            <Badge variant="outline" className="text-xs bg-amber-500/10 text-amber-600 border-amber-500/30">
+              <SplitSquareVertical className="w-3 h-3 mr-1" />
+              Decision ({step.decisionStepConfig?.choices?.length || 0} choices)
+            </Badge>
+          )}
           {step.stepType === 'method_selection' && (
             <Badge variant="outline" className="text-xs bg-indigo-500/10 text-indigo-600 border-indigo-500/30">
               <SplitSquareVertical className="w-3 h-3 mr-1" />
@@ -527,6 +534,9 @@ export function FormStepCard({
               {/* Method Selection Configuration */}
               <MethodSelectionStepConfig step={step} onUpdateStep={onUpdateStep} />
             </div>
+          ) : step.stepType === 'decision' ? (
+            /* Decision Step Type */
+            <DecisionStepConfig step={step} allSteps={[]} onUpdateStep={onUpdateStep} />
           ) : (
             <>
               {/* Regular Form Step */}

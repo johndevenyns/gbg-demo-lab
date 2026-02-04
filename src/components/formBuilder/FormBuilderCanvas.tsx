@@ -432,6 +432,43 @@ export function FormBuilderCanvas({ steps, onUpdateSteps }: FormBuilderCanvasPro
           ],
         },
       };
+    } else if (type === 'decision') {
+      newStep = {
+        id: stepId,
+        title,
+        order: steps.length + 1,
+        stepType: 'decision',
+        fields: [],
+        decisionStepConfig: {
+          title: 'Choose Your Path',
+          subtitle: 'Select how you would like to proceed',
+          choices: [
+            {
+              id: generateId(),
+              label: 'Document Scan',
+              description: 'Scan your ID and take a selfie',
+              icon: 'document',
+              collapsedByDefault: false,
+              destinationType: 'verification',
+              verificationType: 'docbio',
+              useCustomResultPages: false,
+            },
+            {
+              id: generateId(),
+              label: 'Mobile ID',
+              description: 'Use your mobile driver\'s license',
+              icon: 'smartphone',
+              collapsedByDefault: false,
+              destinationType: 'verification',
+              verificationType: 'mdl',
+              useCustomResultPages: false,
+            },
+          ],
+          defaultExpanded: true,
+          showBackButton: true,
+          backButtonLabel: 'Back',
+        },
+      };
     } else {
       // Fallback to form step
       newStep = {

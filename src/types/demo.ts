@@ -203,7 +203,53 @@ export interface VerificationStepConfig {
 
 // Step type enumeration
 // Note: 'verification' step type is deprecated - use 'verification_flow' instead
-export type FormStepType = 'form' | 'verification' | 'api' | 'path' | 'verification_flow' | 'page' | 'method_selection';
+export type FormStepType = 'form' | 'verification' | 'api' | 'path' | 'verification_flow' | 'page' | 'method_selection' | 'decision';
+
+// Decision step choice destination types
+export type DecisionDestinationType = 'verification' | 'step' | 'next';
+
+// Icon options for decision choices
+export type DecisionChoiceIcon = 'document' | 'smartphone' | 'database' | 'shield' | 'user' | 'fingerprint' | 'camera' | 'id-card';
+
+// Decision step choice configuration
+export interface DecisionChoice {
+  id: string;
+  label: string;
+  description?: string;
+  icon?: DecisionChoiceIcon;
+  collapsedByDefault?: boolean;
+  
+  // Destination configuration
+  destinationType: DecisionDestinationType;
+  
+  // For verification destination
+  verificationType?: 'docbio' | 'databio' | 'dataonly' | 'mdl';
+  
+  // For step destination - target step ID
+  targetStepId?: string;
+  
+  // Custom result pages for this choice (optional - falls back to demo's global result pages)
+  customSuccessPage?: ResultPageConfig;
+  customFailurePage?: ResultPageConfig;
+  useCustomResultPages?: boolean;
+}
+
+// Decision Step configuration
+export interface DecisionStepConfig {
+  // Display settings
+  title?: string;
+  subtitle?: string;
+  
+  // Choices (up to 4)
+  choices: DecisionChoice[];
+  
+  // Display style settings
+  defaultExpanded?: boolean; // Whether choice cards start expanded or collapsed
+  
+  // Navigation
+  showBackButton?: boolean;
+  backButtonLabel?: string;
+}
 
 // API Step configuration (standalone API call step)
 export interface ApiStepConfig {
@@ -368,6 +414,8 @@ export interface FormStep {
   pageStepConfig?: PageStepConfig;
   // Method selection step configuration (only used when stepType = 'method_selection')
   methodSelectionConfig?: MethodSelectionStepConfig;
+  // Decision step configuration (only used when stepType = 'decision')
+  decisionStepConfig?: DecisionStepConfig;
 }
 
 export interface FormField {
