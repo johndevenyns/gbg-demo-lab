@@ -875,8 +875,8 @@ export function DemoFlowRenderer({
   }, [createVerificationSession]);
 
   // Handle decision step choice selection
-  const handleDecisionChoice = useCallback((choice: DecisionChoice) => {
-    console.log('Decision choice selected:', choice);
+  const handleDecisionChoice = useCallback((choice: DecisionChoice, provider?: MdlProvider) => {
+    console.log('Decision choice selected:', choice, 'provider:', provider);
     setSelectedDecisionChoice(choice);
     
     if (choice.destinationType === 'verification') {
@@ -889,6 +889,13 @@ export function DemoFlowRenderer({
       };
       const vType = verificationTypeMap[choice.verificationType || 'docbio'] || 'docBio';
       setSelectedVerificationType(vType);
+      
+      // Log the selected provider for mDL if provided
+      if (provider) {
+        console.log('mDL provider selected:', provider.name, provider.providerKey);
+        toast.info(`${provider.name} selected - starting verification...`);
+      }
+      
       createVerificationSession(vType);
     } else if (choice.destinationType === 'step') {
       // Jump to specific step

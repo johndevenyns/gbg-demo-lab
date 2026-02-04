@@ -225,6 +225,9 @@ export interface DecisionChoice {
   // For verification destination
   verificationType?: 'docbio' | 'databio' | 'dataonly' | 'mdl';
   
+  // For mDL verification - which providers are available
+  mobileIdProviders?: MdlProvider[];
+  
   // For step destination - target step ID
   targetStepId?: string;
   
