@@ -11,16 +11,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { 
-  LayoutList, Workflow, Plug, FileText, SplitSquareVertical,
-  FileCheck, Database, Smartphone
+  LayoutList, Workflow, Plug, FileText
 } from 'lucide-react';
 
 export type StepTypeOption = 
   | 'form' 
-  | 'verification_docbio'
-  | 'verification_databio'
-  | 'verification_dataonly'
-  | 'verification_mdl'
+  | 'verification'
   | 'api' 
   | 'page';
 
@@ -41,31 +37,10 @@ const STEP_TYPES: StepTypeInfo[] = [
     category: 'form',
   },
   {
-    id: 'verification_docbio',
-    label: 'Document + Biometric',
-    description: 'Full verification with ID scan and selfie match',
-    icon: <FileCheck className="w-5 h-5" />,
-    category: 'verification',
-  },
-  {
-    id: 'verification_databio',
-    label: 'Data + Biometric',
-    description: 'Existing data verified with selfie capture',
-    icon: <Database className="w-5 h-5" />,
-    category: 'verification',
-  },
-  {
-    id: 'verification_dataonly',
-    label: 'Data Only',
-    description: 'Backend verification without user interaction',
-    icon: <Database className="w-5 h-5" />,
-    category: 'verification',
-  },
-  {
-    id: 'verification_mdl',
-    label: 'Mobile Driver\'s License',
-    description: 'Mobile credential verification (iOS/Android)',
-    icon: <Smartphone className="w-5 h-5" />,
+    id: 'verification',
+    label: 'Verification',
+    description: 'Identity verification step with configurable type (Doc+Bio, Data+Bio, Data Only, or mDL)',
+    icon: <Workflow className="w-5 h-5" />,
     category: 'verification',
   },
   {
@@ -97,10 +72,7 @@ export function AddStepDialog({ open, onOpenChange, onAddStep }: AddStepDialogPr
   const handleSubmit = () => {
     const defaultTitles: Record<StepTypeOption, string> = {
       form: 'Form Step',
-      verification_docbio: 'Identity Verification',
-      verification_databio: 'Identity Verification',
-      verification_dataonly: 'Data Verification',
-      verification_mdl: 'Mobile ID Verification',
+      verification: 'Identity Verification',
       api: 'API Submission',
       page: 'Display Page',
     };
@@ -174,7 +146,7 @@ export function AddStepDialog({ open, onOpenChange, onAddStep }: AddStepDialogPr
             <div>
               <h4 className="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-2">
                 <Workflow className="w-4 h-4" />
-                Verification Types
+                Verification
               </h4>
               <div className="space-y-2">
                 {verificationTypes.map((type) => (
