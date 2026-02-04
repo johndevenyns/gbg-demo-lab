@@ -283,6 +283,28 @@ export function SiteMirrorCard({ demo, onApplyBranding }: SiteMirrorCardProps) {
     });
   };
 
+  const handleClearMirror = () => {
+    // Clear all mirrored content
+    const updates: Partial<DemoEnvironment> = {
+      customerSiteUrl: undefined,
+      scrapedHeaderHtml: undefined,
+      scrapedFooterHtml: undefined,
+      scrapedCss: undefined,
+      // Reset form style to template if it was mirrored
+      ...(demo.formStyle?.source === 'mirrored' && { formStyle: { ...DEFAULT_FORM_STYLE, source: 'template' } }),
+    };
+
+    onApplyBranding(updates, true);
+    setUrl('');
+    setScrapedData(null);
+    setShowPreview(false);
+    
+    toast({
+      title: "Mirror Cleared",
+      description: "Site mirror has been removed. You can now enter a new URL or use default styling.",
+    });
+  };
+
   // Convert FormElementStyles to FormStyleConfig
   function formElementStylesToConfig(styles: FormElementStyles): FormStyleConfig {
     const config: FormStyleConfig = {
@@ -401,14 +423,25 @@ export function SiteMirrorCard({ demo, onApplyBranding }: SiteMirrorCardProps) {
             </Button>
             
             {demo.customerSiteUrl && (
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => window.open(demo.customerSiteUrl, '_blank')}
-                title="Open original site"
-              >
-                <ExternalLink className="w-4 h-4" />
-              </Button>
+              <>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => window.open(demo.customerSiteUrl, '_blank')}
+                  title="Open original site"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  onClick={handleClearMirror}
+                  className="text-destructive hover:text-destructive"
+                >
+                  <X className="w-4 h-4 mr-2" />
+                  Clear Mirror
+                </Button>
+              </>
             )}
           </div>
 
