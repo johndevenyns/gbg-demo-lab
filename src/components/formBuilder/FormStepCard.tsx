@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { FormStep, FormField } from '@/types/demo';
+import { FormStep, FormField, DemoEnvironment } from '@/types/demo';
 import { VERIFICATION_PATHS } from '@/types/formBuilder';
 import { ADDRESS_VALIDATION_FIELDS, ADDRESS_FIELD_LABELS } from './FieldPalette';
 import { StepActionsConfig } from './StepActionsConfig';
@@ -199,6 +199,7 @@ interface FormStepCardProps {
   totalSteps: number;
   isExpanded: boolean;
   allSteps: FormStep[];
+  demo?: DemoEnvironment;
   onToggleExpand: () => void;
   onUpdateStep: (updates: Partial<FormStep>) => void;
   onRemoveStep: () => void;
@@ -214,6 +215,7 @@ export function FormStepCard({
   totalSteps,
   isExpanded,
   allSteps,
+  demo,
   onToggleExpand,
   onUpdateStep,
   onRemoveStep,
@@ -497,7 +499,7 @@ export function FormStepCard({
             <PathStepConfig step={step} onUpdateStep={onUpdateStep} />
           ) : step.stepType === 'verification_flow' ? (
             /* Verification Flow Step Type */
-            <VerificationFlowConfig step={step} onUpdateStep={onUpdateStep} />
+            <VerificationFlowConfig step={step} onUpdateStep={onUpdateStep} demo={demo} />
           ) : step.stepType === 'page' ? (
             /* Page Step Type */
             <PageStepConfig step={step} onUpdateStep={onUpdateStep} />

@@ -19,7 +19,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { Button } from '@/components/ui/button';
-import { FormStep, FormField } from '@/types/demo';
+import { FormStep, FormField, DemoEnvironment } from '@/types/demo';
 import { FormStepCard } from './FormStepCard';
 import { FieldPalette } from './FieldPalette';
 import { AddStepDialog, StepTypeOption } from './AddStepDialog';
@@ -28,9 +28,10 @@ import { Plus, GripVertical } from 'lucide-react';
 interface FormBuilderCanvasProps {
   steps: FormStep[];
   onUpdateSteps: (steps: FormStep[]) => void;
+  demo?: DemoEnvironment;
 }
 
-export function FormBuilderCanvas({ steps, onUpdateSteps }: FormBuilderCanvasProps) {
+export function FormBuilderCanvas({ steps, onUpdateSteps, demo }: FormBuilderCanvasProps) {
   const [expandedSteps, setExpandedSteps] = useState<Set<string>>(
     new Set(steps.map(s => s.id))
   );
@@ -586,6 +587,7 @@ export function FormBuilderCanvas({ steps, onUpdateSteps }: FormBuilderCanvasPro
                 totalSteps={steps.length}
                 isExpanded={expandedSteps.has(step.id)}
                 allSteps={steps}
+                demo={demo}
                 onToggleExpand={() => toggleExpand(step.id)}
                 onUpdateStep={(updates) => updateStep(step.id, updates)}
                 onRemoveStep={() => removeStep(step.id)}
