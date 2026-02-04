@@ -357,7 +357,11 @@ export function FormStepCard({
           {step.stepType === 'verification_flow' && (
             <Badge variant="outline" className="text-xs bg-cyan-500/10 text-cyan-600 border-cyan-500/30">
               <Workflow className="w-3 h-3 mr-1" />
-              Verification Flow
+              {step.verificationFlowConfig?.pathType === 'docbio' && 'Doc + Bio'}
+              {step.verificationFlowConfig?.pathType === 'databio' && 'Data + Bio'}
+              {step.verificationFlowConfig?.pathType === 'dataonly' && 'Data Only'}
+              {step.verificationFlowConfig?.pathType === 'mdl' && 'Mobile ID'}
+              {!step.verificationFlowConfig?.pathType && 'Verification'}
             </Badge>
           )}
           {step.stepType === 'page' && (

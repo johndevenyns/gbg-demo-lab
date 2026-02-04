@@ -239,7 +239,7 @@ export function FormBuilderSection({ demo, onUpdate }: FormBuilderSectionProps) 
             </TabsTrigger>
             <TabsTrigger value="paths" className="flex items-center gap-2">
               <Workflow className="w-4 h-4" />
-              <span className="hidden sm:inline">Paths</span>
+              <span className="hidden sm:inline">Verification Types</span>
             </TabsTrigger>
             <TabsTrigger value="results" className="flex items-center gap-2">
               <ExternalLink className="w-4 h-4" />
