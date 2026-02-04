@@ -23,6 +23,7 @@ import { FormStep, FormField, DemoEnvironment } from '@/types/demo';
 import { FormStepCard } from './FormStepCard';
 import { FieldPalette } from './FieldPalette';
 import { AddStepDialog, StepTypeOption } from './AddStepDialog';
+import { DecisionBranchesView } from './DecisionBranchesView';
 import { Plus, GripVertical } from 'lucide-react';
 
 interface FormBuilderCanvasProps {
@@ -580,22 +581,48 @@ export function FormBuilderCanvas({ steps, onUpdateSteps, demo }: FormBuilderCan
             strategy={verticalListSortingStrategy}
           >
             {steps.map((step, index) => (
-              <FormStepCard
-                key={step.id}
-                step={step}
-                stepNumber={index + 1}
-                totalSteps={steps.length}
-                isExpanded={expandedSteps.has(step.id)}
-                allSteps={steps}
-                demo={demo}
-                onToggleExpand={() => toggleExpand(step.id)}
-                onUpdateStep={(updates) => updateStep(step.id, updates)}
-                onRemoveStep={() => removeStep(step.id)}
-                onRemoveField={(fieldId) => removeField(step.id, fieldId)}
-                onToggleFieldRequired={(fieldId) => toggleFieldRequired(step.id, fieldId)}
-                onUpdateFieldLabel={(fieldId, label) => updateFieldLabel(step.id, fieldId, label)}
-                canDelete={steps.length > 1}
-              />
+              step.stepType === 'decision' ? (
+                <div key={step.id} className="space-y-4">
+                  {/* Decision step rendered as branching view */}
+                  <DecisionBranchesView
+                    step={step}
+                    allSteps={steps}
+                    demo={demo}
+                    onUpdateStep={(updates) => updateStep(step.id, updates)}
+                  />
+                  
+                  {/* Option to remove the decision step */}
+                  {steps.length > 1 && (
+                    <div className="flex justify-center">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-destructive hover:text-destructive text-xs"
+                        onClick={() => removeStep(step.id)}
+                      >
+                        Remove Decision Point
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <FormStepCard
+                  key={step.id}
+                  step={step}
+                  stepNumber={index + 1}
+                  totalSteps={steps.length}
+                  isExpanded={expandedSteps.has(step.id)}
+                  allSteps={steps}
+                  demo={demo}
+                  onToggleExpand={() => toggleExpand(step.id)}
+                  onUpdateStep={(updates) => updateStep(step.id, updates)}
+                  onRemoveStep={() => removeStep(step.id)}
+                  onRemoveField={(fieldId) => removeField(step.id, fieldId)}
+                  onToggleFieldRequired={(fieldId) => toggleFieldRequired(step.id, fieldId)}
+                  onUpdateFieldLabel={(fieldId, label) => updateFieldLabel(step.id, fieldId, label)}
+                  canDelete={steps.length > 1}
+                />
+              )
             ))}
           </SortableContext>
 
