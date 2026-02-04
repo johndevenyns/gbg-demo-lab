@@ -16,6 +16,8 @@ export { PathStepConfig } from './PathStepConfig';
 export { PageStepConfig } from './PageStepConfig';
 export { MethodSelectionStepConfig } from './MethodSelectionStepConfig';
 export { DecisionStepConfig } from './DecisionStepConfig';
+export { DecisionBranchesView } from './DecisionBranchesView';
+export { BranchCanvas } from './BranchCanvas';
 export { SaveTemplateDialog } from './SaveTemplateDialog';
 export { StoredUserDataConfig } from './StoredUserDataConfig';
 export { FormPreviewPanel } from './FormPreviewPanel';

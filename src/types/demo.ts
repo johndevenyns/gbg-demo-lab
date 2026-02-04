@@ -231,6 +231,9 @@ export interface DecisionChoice {
   // For step destination - target step ID
   targetStepId?: string;
   
+  // Inline branch steps - steps that execute within this branch before reaching destination
+  branchSteps?: FormStep[];
+  
   // Custom result pages for this choice (optional - falls back to demo's global result pages)
   customSuccessPage?: ResultPageConfig;
   customFailurePage?: ResultPageConfig;
