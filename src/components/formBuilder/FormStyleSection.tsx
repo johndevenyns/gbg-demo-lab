@@ -328,119 +328,187 @@ export function FormStyleSection({ demo, formStyle, onUpdateStyle, scrapedBrandi
               </p>
             </div>
 
-            {/* Extracted Styles Preview */}
-            {extractedStyles && (
-              <div className="p-4 rounded-lg bg-primary/5 border border-primary/20">
-                <h4 className="text-sm font-semibold mb-3 text-primary">Extracted Form Styles</h4>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  {/* Input preview */}
-                  <div className="space-y-1">
-                    <span className="text-xs text-muted-foreground">Input Field</span>
-                    <div
-                      className="h-10 rounded flex items-center px-3 text-sm"
-                      style={{
-                        backgroundColor: extractedStyles.inputBgColor,
-                        color: extractedStyles.inputTextColor,
-                        border: `${extractedStyles.inputBorderWidth} solid ${extractedStyles.inputBorderColor}`,
-                        borderRadius: extractedStyles.inputBorderRadius,
-                        fontFamily: extractedStyles.inputFontFamily,
-                      }}
-                    >
-                      Sample text
-                    </div>
-                  </div>
-                  
-                  {/* Focus state preview */}
-                  <div className="space-y-1">
-                    <span className="text-xs text-muted-foreground">Focus State</span>
-                    <div
-                      className="h-10 rounded flex items-center px-3 text-sm"
-                      style={{
-                        backgroundColor: extractedStyles.inputBgColor,
-                        color: extractedStyles.inputTextColor,
-                        border: `2px solid ${extractedStyles.inputFocusBorderColor}`,
-                        borderRadius: extractedStyles.inputBorderRadius,
-                        boxShadow: extractedStyles.inputFocusBoxShadow,
-                        fontFamily: extractedStyles.inputFontFamily,
-                      }}
-                    >
-                      Focused
-                    </div>
-                  </div>
-                  
-                  {/* Button preview */}
-                  <div className="space-y-1">
-                    <span className="text-xs text-muted-foreground">Button</span>
-                    <div
-                      className="h-10 rounded flex items-center justify-center px-4 text-sm"
-                      style={{
-                        backgroundColor: extractedStyles.buttonBgColor,
-                        color: extractedStyles.buttonTextColor,
-                        borderRadius: extractedStyles.buttonBorderRadius,
-                        fontWeight: extractedStyles.buttonFontWeight,
-                      }}
-                    >
-                      Submit
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Color swatches */}
-                <div className="flex flex-wrap gap-3 mt-4 pt-3 border-t border-border">
-                  <div className="flex items-center gap-2">
-                    <div
-                      className="w-5 h-5 rounded border"
-                      style={{ backgroundColor: extractedStyles.inputBorderColor }}
-                    />
-                    <span className="text-xs text-muted-foreground">Border</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div
-                      className="w-5 h-5 rounded border"
-                      style={{ backgroundColor: extractedStyles.inputFocusBorderColor }}
-                    />
-                    <span className="text-xs text-muted-foreground">Focus</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div
-                      className="w-5 h-5 rounded border"
-                      style={{ backgroundColor: extractedStyles.labelColor }}
-                    />
-                    <span className="text-xs text-muted-foreground">Label</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div
-                      className="w-5 h-5 rounded border"
-                      style={{ backgroundColor: extractedStyles.buttonBgColor }}
-                    />
-                    <span className="text-xs text-muted-foreground">Button</span>
-                  </div>
-                  {extractedStyles.inputFontFamily && (
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium" style={{ fontFamily: extractedStyles.inputFontFamily }}>
-                        Aa
-                      </span>
-                      <span className="text-xs text-muted-foreground truncate max-w-24">
-                        {extractedStyles.inputFontFamily.split(',')[0]}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
 
-            {hasMirroredData ? (
+
+            {hasMirroredData || formStyle.source === 'mirrored' ? (
               <div className="space-y-4">
-                <div className="p-4 rounded-lg bg-muted/50 border border-border">
-                  <p className="text-sm text-muted-foreground mb-3">
-                    {extractedStyles 
-                      ? 'Form styles extracted and ready to apply'
-                      : `Apply styling from mirrored site${demo.customerSiteUrl ? `: ${demo.customerSiteUrl}` : ''}`
-                    }
-                  </p>
-                  
-                  {/* Fallback: Show demo colors if no extracted styles */}
-                  {!extractedStyles && (
+                {/* Show currently applied mirrored style */}
+                {formStyle.source === 'mirrored' && !extractedStyles && (
+                  <div className="p-4 rounded-lg bg-primary/5 border border-primary/20">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="text-sm font-semibold text-primary flex items-center gap-2">
+                        <Check className="w-4 h-4" />
+                        Currently Applied Mirrored Style
+                      </h4>
+                      <Badge variant="default" className="bg-success">Active</Badge>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                      {/* Input preview */}
+                      <div className="space-y-1">
+                        <span className="text-xs text-muted-foreground">Input Field</span>
+                        <div
+                          className="h-10 rounded flex items-center px-3 text-sm"
+                          style={{
+                            backgroundColor: formStyle.inputBgColor,
+                            color: formStyle.inputTextColor,
+                            border: `${formStyle.borderWidth}px solid ${formStyle.inputBorderColor}`,
+                            borderRadius: formStyle.borderRadius === 'none' ? '0px' : formStyle.borderRadius === 'sm' ? '4px' : formStyle.borderRadius === 'lg' ? '12px' : formStyle.borderRadius === 'full' ? '9999px' : '8px',
+                            fontFamily: formStyle.fontFamily,
+                          }}
+                        >
+                          Sample text
+                        </div>
+                      </div>
+                      
+                      {/* Focus state preview */}
+                      <div className="space-y-1">
+                        <span className="text-xs text-muted-foreground">Focus State</span>
+                        <div
+                          className="h-10 rounded flex items-center px-3 text-sm"
+                          style={{
+                            backgroundColor: formStyle.inputBgColor,
+                            color: formStyle.inputTextColor,
+                            border: `2px solid ${formStyle.inputFocusBorderColor}`,
+                            borderRadius: formStyle.borderRadius === 'none' ? '0px' : formStyle.borderRadius === 'sm' ? '4px' : formStyle.borderRadius === 'lg' ? '12px' : formStyle.borderRadius === 'full' ? '9999px' : '8px',
+                            boxShadow: `0 0 0 3px ${formStyle.inputFocusBorderColor}20`,
+                            fontFamily: formStyle.fontFamily,
+                          }}
+                        >
+                          Focused
+                        </div>
+                      </div>
+                      
+                      {/* Button preview */}
+                      <div className="space-y-1">
+                        <span className="text-xs text-muted-foreground">Button</span>
+                        <div
+                          className="h-10 rounded flex items-center justify-center px-4 text-sm"
+                          style={{
+                            backgroundColor: demo.buttonColor || formStyle.inputFocusBorderColor,
+                            color: '#ffffff',
+                            borderRadius: formStyle.borderRadius === 'none' ? '0px' : formStyle.borderRadius === 'sm' ? '4px' : formStyle.borderRadius === 'lg' ? '12px' : formStyle.borderRadius === 'full' ? '9999px' : '8px',
+                            fontWeight: 500,
+                          }}
+                        >
+                          Submit
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Color swatches */}
+                    <div className="flex flex-wrap gap-3 mt-4 pt-3 border-t border-border">
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="w-5 h-5 rounded border"
+                          style={{ backgroundColor: formStyle.inputBorderColor }}
+                        />
+                        <span className="text-xs text-muted-foreground">Border</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="w-5 h-5 rounded border"
+                          style={{ backgroundColor: formStyle.inputFocusBorderColor }}
+                        />
+                        <span className="text-xs text-muted-foreground">Focus</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="w-5 h-5 rounded border"
+                          style={{ backgroundColor: formStyle.labelColor }}
+                        />
+                        <span className="text-xs text-muted-foreground">Label</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="w-5 h-5 rounded border"
+                          style={{ backgroundColor: demo.buttonColor }}
+                        />
+                        <span className="text-xs text-muted-foreground">Button</span>
+                      </div>
+                      {formStyle.fontFamily && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium" style={{ fontFamily: formStyle.fontFamily }}>
+                            Aa
+                          </span>
+                          <span className="text-xs text-muted-foreground truncate max-w-24">
+                            {formStyle.fontFamily.split(',')[0]}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Extracted styles preview (from manual Fetch Styles) */}
+                {extractedStyles && (
+                  <div className="p-4 rounded-lg bg-primary/5 border border-primary/20">
+                    <h4 className="text-sm font-semibold mb-3 text-primary">Newly Extracted Form Styles</h4>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                      {/* Input preview */}
+                      <div className="space-y-1">
+                        <span className="text-xs text-muted-foreground">Input Field</span>
+                        <div
+                          className="h-10 rounded flex items-center px-3 text-sm"
+                          style={{
+                            backgroundColor: extractedStyles.inputBgColor,
+                            color: extractedStyles.inputTextColor,
+                            border: `${extractedStyles.inputBorderWidth} solid ${extractedStyles.inputBorderColor}`,
+                            borderRadius: extractedStyles.inputBorderRadius,
+                            fontFamily: extractedStyles.inputFontFamily,
+                          }}
+                        >
+                          Sample text
+                        </div>
+                      </div>
+                      
+                      {/* Focus state preview */}
+                      <div className="space-y-1">
+                        <span className="text-xs text-muted-foreground">Focus State</span>
+                        <div
+                          className="h-10 rounded flex items-center px-3 text-sm"
+                          style={{
+                            backgroundColor: extractedStyles.inputBgColor,
+                            color: extractedStyles.inputTextColor,
+                            border: `2px solid ${extractedStyles.inputFocusBorderColor}`,
+                            borderRadius: extractedStyles.inputBorderRadius,
+                            boxShadow: extractedStyles.inputFocusBoxShadow,
+                            fontFamily: extractedStyles.inputFontFamily,
+                          }}
+                        >
+                          Focused
+                        </div>
+                      </div>
+                      
+                      {/* Button preview */}
+                      <div className="space-y-1">
+                        <span className="text-xs text-muted-foreground">Button</span>
+                        <div
+                          className="h-10 rounded flex items-center justify-center px-4 text-sm"
+                          style={{
+                            backgroundColor: extractedStyles.buttonBgColor,
+                            color: extractedStyles.buttonTextColor,
+                            borderRadius: extractedStyles.buttonBorderRadius,
+                            fontWeight: extractedStyles.buttonFontWeight,
+                          }}
+                        >
+                          Submit
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <Button onClick={applyMirroredStyle} className="gradient-primary mt-4">
+                      Apply Extracted Styles
+                    </Button>
+                  </div>
+                )}
+
+                {/* Fallback for sites without form style applied yet */}
+                {formStyle.source !== 'mirrored' && !extractedStyles && (
+                  <div className="p-4 rounded-lg bg-muted/50 border border-border">
+                    <p className="text-sm text-muted-foreground mb-3">
+                      {`Apply styling from mirrored site${demo.customerSiteUrl ? `: ${demo.customerSiteUrl}` : ''}`}
+                    </p>
+                    
                     <div className="flex flex-wrap items-center gap-4 mb-4">
                       {demo.buttonColor && (
                         <div className="flex items-center gap-2">
@@ -469,37 +537,12 @@ export function FormStyleSection({ demo, formStyle, onUpdateStyle, scrapedBrandi
                           <span className="text-xs text-muted-foreground">Text</span>
                         </div>
                       )}
-                      {scrapedBranding?.branding?.colors?.primary && (
-                        <div className="flex items-center gap-2">
-                          <div
-                            className="w-6 h-6 rounded border"
-                            style={{ backgroundColor: scrapedBranding.branding.colors.primary }}
-                          />
-                          <span className="text-xs text-muted-foreground">Primary</span>
-                        </div>
-                      )}
-                      {scrapedBranding?.branding?.fonts?.[0] && (
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium" style={{ fontFamily: scrapedBranding.branding.fonts[0].family }}>
-                            Aa
-                          </span>
-                          <span className="text-xs text-muted-foreground">
-                            {scrapedBranding.branding.fonts[0].family}
-                          </span>
-                        </div>
-                      )}
                     </div>
-                  )}
-                  
-                  <Button onClick={applyMirroredStyle} className="gradient-primary">
-                    {extractedStyles ? 'Apply Extracted Styles' : 'Apply Mirrored Style'}
-                  </Button>
-                </div>
-                {formStyle.source === 'mirrored' && (
-                  <Badge variant="default" className="bg-success">
-                    <Check className="w-3 h-3 mr-1" />
-                    Mirrored style applied
-                  </Badge>
+                    
+                    <Button onClick={applyMirroredStyle} className="gradient-primary">
+                      Apply Mirrored Style
+                    </Button>
+                  </div>
                 )}
               </div>
             ) : (
