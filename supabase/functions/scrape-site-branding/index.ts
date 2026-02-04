@@ -734,33 +734,47 @@ async function resolveImports(css: string, baseUrl: URL): Promise<string> {
 function extractHeader(html: string): string {
   const parts: string[] = [];
   
+  // First, try to extract the entire <header> element if it exists
+  const headerMatch = html.match(/<header[^>]*>[\s\S]*?<\/header>/i);
+  if (headerMatch) {
+    return headerMatch[0];
+  }
+  
+  // Look for common header wrapper divs
+  const headerDivPatterns = [
+    /<div[^>]*(?:id|class)=["'][^"']*(?:header|site-header|main-header|page-header)[^"']*["'][^>]*>[\s\S]*?<\/div>/gi,
+    /<div[^>]*(?:id|class)=["'][^"']*(?:masthead|top-header|global-header)[^"']*["'][^>]*>[\s\S]*?<\/div>/gi,
+  ];
+  
+  for (const pattern of headerDivPatterns) {
+    const match = html.match(pattern);
+    if (match) {
+      return match[0];
+    }
+  }
+  
+  // Extract navigation elements
   const navRegex = /<nav[^>]*>[\s\S]*?<\/nav>/gi;
   let navMatch;
   while ((navMatch = navRegex.exec(html)) !== null) {
     parts.push(navMatch[0]);
   }
   
-  const headerMatch = html.match(/<header[^>]*>[\s\S]*?<\/header>/i);
-  if (headerMatch) {
-    const headerHasNav = parts.some(nav => headerMatch[0].includes(nav));
-    if (headerHasNav) {
-      return headerMatch[0];
-    } else {
-      parts.push(headerMatch[0]);
+  // Look for top bar / announcement bar
+  const topBarRegex = /<div[^>]*class="[^"]*(?:top-bar|announcement|promo-bar|utility-nav|secondary-menu)[^"]*"[^>]*>[\s\S]*?<\/div>/gi;
+  let topBarMatch: RegExpExecArray | null;
+  while ((topBarMatch = topBarRegex.exec(html)) !== null) {
+    if (!parts.some(p => p.includes(topBarMatch![0]))) {
+      parts.unshift(topBarMatch[0]); // Add at the beginning
     }
   }
   
-  if (parts.length === 0) {
-    const topBarRegex = /<div[^>]*class="[^"]*(?:top-bar|announcement|promo-bar|utility-nav)[^"]*"[^>]*>[\s\S]*?<\/div>/gi;
-    let topBarMatch;
-    while ((topBarMatch = topBarRegex.exec(html)) !== null) {
-      parts.push(topBarMatch[0]);
-    }
-    
-    const navbarDivRegex = /<div[^>]*class="[^"]*(?:navbar|nav-bar|navigation|header|site-header|main-header)[^"]*"[^>]*>[\s\S]*?<\/div>/gi;
-    let navbarMatch;
-    while ((navbarMatch = navbarDivRegex.exec(html)) !== null) {
-      parts.push(navbarMatch[0]);
+  // Look for logo/branding section if not already captured
+  const logoRegex = /<(?:div|a)[^>]*class="[^"]*(?:logo|brand|site-branding)[^"]*"[^>]*>[\s\S]*?<\/(?:div|a)>/gi;
+  let logoMatch: RegExpExecArray | null;
+  while ((logoMatch = logoRegex.exec(html)) !== null) {
+    if (!parts.some(p => p.includes(logoMatch![0]))) {
+      parts.unshift(logoMatch[0]);
     }
   }
   
