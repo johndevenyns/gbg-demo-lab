@@ -1,29 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
 
-export interface ScrapedBranding {
-  headerHtml: string;
-  footerHtml: string;
-  cssContent: string;
-  logoUrl: string | null;
-  screenshot: string | null;
-  colors: {
-    headerBgColor: string;
-    headerTextColor: string;
-    buttonColor: string;
-  };
-  branding: {
-    colorScheme?: string;
-    logo?: string;
-    colors?: Record<string, string>;
-    fonts?: Array<{ family: string }>;
-    typography?: Record<string, unknown>;
-    spacing?: Record<string, unknown>;
-    components?: Record<string, unknown>;
-    images?: Record<string, string>;
-  } | null;
-  sourceUrl: string;
-}
-
 export interface FormElementStyles {
   // Input styles
   inputBgColor: string;
@@ -60,7 +36,32 @@ export interface FormElementStyles {
   errorColor: string;
   
   // Raw CSS that can be injected
-  rawFormCss: string;
+  rawFormCss?: string;
+}
+
+export interface ScrapedBranding {
+  headerHtml: string;
+  footerHtml: string;
+  cssContent: string;
+  logoUrl: string | null;
+  screenshot: string | null;
+  colors: {
+    headerBgColor: string;
+    headerTextColor: string;
+    buttonColor: string;
+  };
+  branding: {
+    colorScheme?: string;
+    logo?: string;
+    colors?: Record<string, string>;
+    fonts?: Array<{ family: string }>;
+    typography?: Record<string, unknown>;
+    spacing?: Record<string, unknown>;
+    components?: Record<string, unknown>;
+    images?: Record<string, string>;
+  } | null;
+  formStyles?: FormElementStyles; // NEW: Form styles extracted from initial scrape
+  sourceUrl: string;
 }
 
 export interface ScrapedFormStyles {
