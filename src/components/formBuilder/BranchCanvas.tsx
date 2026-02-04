@@ -42,6 +42,7 @@ interface BranchCanvasProps {
   choice: DecisionChoice;
   choiceIndex: number;
   allSteps: FormStep[];
+  stepsAfterDecision: FormStep[]; // Steps that come after the decision point
   demo?: DemoEnvironment;
   onUpdateChoice: (updates: Partial<DecisionChoice>) => void;
   onRemoveChoice: () => void;
@@ -50,7 +51,8 @@ interface BranchCanvasProps {
 export function BranchCanvas({ 
   choice, 
   choiceIndex, 
-  allSteps, 
+  allSteps,
+  stepsAfterDecision,
   demo, 
   onUpdateChoice, 
   onRemoveChoice 
@@ -65,8 +67,10 @@ export function BranchCanvas({
 
   const generateId = () => crypto.randomUUID();
 
-  // Get available steps for "Go to step" destination (exclude current decision and steps in branches)
-  const availableMainSteps = allSteps.filter(s => s.stepType !== 'decision');
+  // Use steps after decision for destination selection, fallback to non-decision steps
+  const availableDestinationSteps = stepsAfterDecision.length > 0 
+    ? stepsAfterDecision.filter(s => s.stepType !== 'decision')
+    : allSteps.filter(s => s.stepType !== 'decision');
 
   const handleAddStep = useCallback((type: StepTypeOption, title: string) => {
     const stepId = generateId();
@@ -264,8 +268,8 @@ export function BranchCanvas({
                   <p className="text-xs text-muted-foreground truncate">
                     {branchSteps.length} step{branchSteps.length !== 1 ? 's' : ''} → 
                     {choice.destinationType === 'verification' && ` ${VERIFICATION_TYPES.find(v => v.id === choice.verificationType)?.label || 'Verification'}`}
-                    {choice.destinationType === 'step' && ` Step: ${availableMainSteps.find(s => s.id === choice.targetStepId)?.title || 'Select step'}`}
-                    {choice.destinationType === 'next' && ' Next step'}
+                    {choice.destinationType === 'step' && ` Step: ${availableDestinationSteps.find(s => s.id === choice.targetStepId)?.title || 'Select step'}`}
+                    {choice.destinationType === 'next' && (stepsAfterDecision[0] ? ` ${stepsAfterDecision[0].title}` : ' Next step')}
                   </p>
                 </div>
 
@@ -390,11 +394,11 @@ export function BranchCanvas({
                 />
               </div>
 
-              {/* Destination */}
+              {/* Destination - Next Step Selection */}
               <div className="space-y-3 pt-3 border-t border-border">
                 <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
                   <ArrowRight className="w-3 h-3" />
-                  After Branch Completes
+                  After Branch → Next Step
                 </Label>
 
                 <Select
@@ -405,11 +409,40 @@ export function BranchCanvas({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-background border z-50">
-                    <SelectItem value="verification">Go to verification</SelectItem>
-                    <SelectItem value="step">Go to specific step</SelectItem>
-                    <SelectItem value="next">Continue to next step</SelectItem>
+                    <SelectItem value="next">
+                      <div className="flex items-center gap-2">
+                        <ArrowRight className="w-3 h-3" />
+                        <span>Continue to next step after decision</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="step">
+                      <div className="flex items-center gap-2">
+                        <ArrowRight className="w-3 h-3" />
+                        <span>Go to specific step</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="verification">
+                      <div className="flex items-center gap-2">
+                        <ArrowRight className="w-3 h-3" />
+                        <span>Go directly to verification</span>
+                      </div>
+                    </SelectItem>
                   </SelectContent>
                 </Select>
+
+                {/* Show which step "next" means */}
+                {choice.destinationType === 'next' && stepsAfterDecision.length > 0 && (
+                  <div className="px-3 py-2 rounded-md bg-muted/50 text-sm">
+                    <span className="text-muted-foreground">Will go to: </span>
+                    <span className="font-medium">{stepsAfterDecision[0]?.title || 'Next Step'}</span>
+                  </div>
+                )}
+
+                {choice.destinationType === 'next' && stepsAfterDecision.length === 0 && (
+                  <div className="px-3 py-2 rounded-md bg-amber-500/10 text-sm text-amber-700">
+                    No steps after this decision. Add a step after the decision point to enable continuation.
+                  </div>
+                )}
 
                 {choice.destinationType === 'verification' && (
                   <Select
@@ -443,12 +476,12 @@ export function BranchCanvas({
                       <SelectValue placeholder="Select target step" />
                     </SelectTrigger>
                     <SelectContent className="bg-background border z-50">
-                      {availableMainSteps.map(s => (
+                      {availableDestinationSteps.map(s => (
                         <SelectItem key={s.id} value={s.id}>
                           Step {s.order}: {s.title}
                         </SelectItem>
                       ))}
-                      {availableMainSteps.length === 0 && (
+                      {availableDestinationSteps.length === 0 && (
                         <div className="px-2 py-1 text-sm text-muted-foreground">No available steps</div>
                       )}
                     </SelectContent>
