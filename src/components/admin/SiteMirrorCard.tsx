@@ -252,8 +252,14 @@ export function SiteMirrorCard({ demo, onApplyBranding }: SiteMirrorCardProps) {
   const handleApply = () => {
     if (!scrapedData) return;
 
+    // Extract form styles regardless of capture mode
+    let formStyleConfig: FormStyleConfig | undefined;
+    if (scrapedData.formStyles) {
+      formStyleConfig = formElementStylesToConfig(scrapedData.formStyles);
+    }
+
     if (captureMode === 'screenshot') {
-      // Screenshot mode: use screenshot as header image, clear HTML content
+      // Screenshot mode: use screenshot as header image, but still apply form styles
       const updates: Partial<DemoEnvironment> = {
         customerSiteUrl: url,
         logoUrl: scrapedData.logoUrl || demo.logoUrl,
@@ -266,21 +272,20 @@ export function SiteMirrorCard({ demo, onApplyBranding }: SiteMirrorCardProps) {
           : '',
         scrapedFooterHtml: '', // No footer in screenshot mode
         scrapedCss: '', // No CSS needed for screenshot
+        // Still apply form styles if extracted
+        ...(formStyleConfig && { formStyle: formStyleConfig }),
       };
 
       onApplyBranding(updates, true);
       setShowPreview(false);
       toast({
         title: "Screenshot Header Applied & Saving...",
-        description: "The site screenshot is being used as the header image",
+        description: formStyleConfig 
+          ? "Screenshot header and form styling are being saved"
+          : "The site screenshot is being used as the header image",
       });
     } else {
       // HTML mode: use full HTML/CSS extraction (original behavior)
-      let formStyleConfig: FormStyleConfig | undefined;
-      if (scrapedData.formStyles) {
-        formStyleConfig = formElementStylesToConfig(scrapedData.formStyles);
-      }
-
       const updates: Partial<DemoEnvironment> = {
         customerSiteUrl: url,
         logoUrl: scrapedData.logoUrl || demo.logoUrl,
