@@ -125,12 +125,17 @@ export default function DemoPreview() {
       )}
 
       {/* Main Form Content */}
-      <main className="flex-1 py-12" style={{ backgroundColor: '#f5f5f5' }}>
+      <main
+        className="flex-1 py-12"
+        style={{
+          backgroundColor: (previewDocument?.formStyle?.contentAreaBgColor || '#f5f5f5'),
+        }}
+      >
         <div className="max-w-xl mx-auto px-4">
           <div 
             className="rounded-xl shadow-lg p-8 border"
             style={{
-              backgroundColor: 'white',
+              backgroundColor: (previewDocument?.formStyle?.formBgColor || 'white'),
               borderColor: '#e5e7eb',
             }}
           >
