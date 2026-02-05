@@ -1,5 +1,5 @@
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Save, Eye, Loader2, ImageOff, Settings, Globe, Palette, Layout, PlayCircle, Copy, Check } from "lucide-react";
+import { ArrowLeft, Save, Eye, Loader2, Settings, Globe, Palette, Layout, PlayCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,6 +14,7 @@ import { SiteMirrorCard } from "@/components/admin/SiteMirrorCard";
 import { FormStyleCard } from "@/components/admin/FormStyleCard";
 import { FormBuilderSection } from "@/components/formBuilder";
 import { FormPreviewPanel } from "@/components/formBuilder/FormPreviewPanel";
+import { LogoUploadSection } from "@/components/admin/LogoUploadSection";
 import { cn } from "@/lib/utils";
 
 // Navigation sections
@@ -27,47 +28,13 @@ const sections: { id: ConfigSection; label: string; icon: React.ElementType; des
   { id: 'preview', label: 'Live Preview', icon: PlayCircle, description: 'Test the flow' },
 ];
 
-// Reusable Logo Thumbnail component
-function LogoThumbnail({ url, size = 'md' }: { url?: string | null; size?: 'sm' | 'md' }) {
-  const [hasError, setHasError] = useState(false);
-  
-  useEffect(() => {
-    setHasError(false);
-  }, [url]);
-  
-  const sizeClasses = size === 'sm' ? 'w-10 h-10' : 'w-16 h-16';
-  
-  if (!url || hasError) {
-    return (
-      <div className={`${sizeClasses} rounded-md border border-border bg-muted/50 flex flex-col items-center justify-center shrink-0`}>
-        <ImageOff className="w-4 h-4 text-muted-foreground" />
-        <span className="text-[10px] text-muted-foreground mt-0.5">No image</span>
-      </div>
-    );
-  }
-  
-  return (
-    <div className={`${sizeClasses} rounded-md border border-border bg-muted/50 flex items-center justify-center overflow-hidden shrink-0`}>
-      <img 
-        src={url} 
-        alt="Logo preview" 
-        className="max-w-full max-h-full object-contain"
-        onError={() => setHasError(true)}
-      />
-    </div>
-  );
-}
-
 // Site Settings Section
 function SiteSettingsSection({ demo, onUpdate }: { demo: DemoEnvironment; onUpdate: (updates: Partial<DemoEnvironment>) => void }) {
   return (
     <Card className="glass-card">
-      <CardHeader className="flex flex-row items-start justify-between space-y-0">
-        <div>
-          <CardTitle>Site Settings</CardTitle>
-          <CardDescription>Core configuration for this demo environment</CardDescription>
-        </div>
-        <LogoThumbnail url={demo.logoUrl} size="md" />
+      <CardHeader>
+        <CardTitle>Site Settings</CardTitle>
+        <CardDescription>Core configuration for this demo environment</CardDescription>
       </CardHeader>
       <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-2">
@@ -93,46 +60,51 @@ function SiteSettingsSection({ demo, onUpdate }: { demo: DemoEnvironment; onUpda
 // Branding Section
 function BrandingSection({ demo, onUpdate }: { demo: DemoEnvironment; onUpdate: (updates: Partial<DemoEnvironment>) => void }) {
   return (
-    <Card className="glass-card">
-      <CardHeader>
-        <CardTitle>Branding</CardTitle>
-        <CardDescription>Customize the appearance of the verification interface</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="space-y-2">
-          <Label>Logo URL</Label>
-          <div className="flex items-start gap-4">
-            <div className="flex-1">
-              <Input value={demo.logoUrl || ""} onChange={(e) => onUpdate({ logoUrl: e.target.value })} placeholder="https://..." />
+    <div className="space-y-6">
+      {/* Logo Section */}
+      <Card className="glass-card">
+        <CardHeader>
+          <CardTitle>Logo</CardTitle>
+          <CardDescription>Upload a logo or link to an external image</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <LogoUploadSection demo={demo} onUpdate={onUpdate} />
+        </CardContent>
+      </Card>
+      
+      {/* Colors Section */}
+      <Card className="glass-card">
+        <CardHeader>
+          <CardTitle>Colors</CardTitle>
+          <CardDescription>Customize the color scheme of the verification interface</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="space-y-2">
+              <Label>Header Background</Label>
+              <div className="flex items-center gap-2">
+                <input type="color" value={demo.headerBgColor} onChange={(e) => onUpdate({ headerBgColor: e.target.value })} className="color-picker-swatch" />
+                <Input value={demo.headerBgColor} onChange={(e) => onUpdate({ headerBgColor: e.target.value })} className="font-mono" />
+              </div>
             </div>
-            <LogoThumbnail url={demo.logoUrl} size="md" />
-          </div>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="space-y-2">
-            <Label>Header Background</Label>
-            <div className="flex items-center gap-2">
-              <input type="color" value={demo.headerBgColor} onChange={(e) => onUpdate({ headerBgColor: e.target.value })} className="color-picker-swatch" />
-              <Input value={demo.headerBgColor} onChange={(e) => onUpdate({ headerBgColor: e.target.value })} className="font-mono" />
+            <div className="space-y-2">
+              <Label>Header Text</Label>
+              <div className="flex items-center gap-2">
+                <input type="color" value={demo.headerTextColor} onChange={(e) => onUpdate({ headerTextColor: e.target.value })} className="color-picker-swatch" />
+                <Input value={demo.headerTextColor} onChange={(e) => onUpdate({ headerTextColor: e.target.value })} className="font-mono" />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Button Color</Label>
+              <div className="flex items-center gap-2">
+                <input type="color" value={demo.buttonColor} onChange={(e) => onUpdate({ buttonColor: e.target.value })} className="color-picker-swatch" />
+                <Input value={demo.buttonColor} onChange={(e) => onUpdate({ buttonColor: e.target.value })} className="font-mono" />
+              </div>
             </div>
           </div>
-          <div className="space-y-2">
-            <Label>Header Text</Label>
-            <div className="flex items-center gap-2">
-              <input type="color" value={demo.headerTextColor} onChange={(e) => onUpdate({ headerTextColor: e.target.value })} className="color-picker-swatch" />
-              <Input value={demo.headerTextColor} onChange={(e) => onUpdate({ headerTextColor: e.target.value })} className="font-mono" />
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label>Button Color</Label>
-            <div className="flex items-center gap-2">
-              <input type="color" value={demo.buttonColor} onChange={(e) => onUpdate({ buttonColor: e.target.value })} className="color-picker-swatch" />
-              <Input value={demo.buttonColor} onChange={(e) => onUpdate({ buttonColor: e.target.value })} className="font-mono" />
-            </div>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
 

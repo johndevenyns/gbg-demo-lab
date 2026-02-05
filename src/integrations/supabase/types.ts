@@ -44,6 +44,8 @@ export type Database = {
           slug: string
           stored_test_data: Json | null
           updated_at: string | null
+          uploaded_logo_url: string | null
+          use_uploaded_logo: boolean | null
           verification_type: Database["public"]["Enums"]["verification_type"]
         }
         Insert: {
@@ -75,6 +77,8 @@ export type Database = {
           slug: string
           stored_test_data?: Json | null
           updated_at?: string | null
+          uploaded_logo_url?: string | null
+          use_uploaded_logo?: boolean | null
           verification_type?: Database["public"]["Enums"]["verification_type"]
         }
         Update: {
@@ -106,6 +110,8 @@ export type Database = {
           slug?: string
           stored_test_data?: Json | null
           updated_at?: string | null
+          uploaded_logo_url?: string | null
+          use_uploaded_logo?: boolean | null
           verification_type?: Database["public"]["Enums"]["verification_type"]
         }
         Relationships: []
