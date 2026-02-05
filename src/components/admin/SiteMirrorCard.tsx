@@ -20,6 +20,14 @@ import {
 
 type CaptureMode = 'html' | 'screenshot';
 
+function getScreenshotSrc(screenshot: string): string {
+  const s = screenshot.trim();
+  if (!s) return '';
+  // Firecrawl commonly returns a public URL; older implementations may return raw base64.
+  if (s.startsWith('http://') || s.startsWith('https://') || s.startsWith('data:')) return s;
+  return `data:image/png;base64,${s}`;
+}
+
 interface SiteMirrorCardProps {
   demo: DemoEnvironment;
   onApplyBranding: (updates: Partial<DemoEnvironment>, autoSave?: boolean) => void;
@@ -221,12 +229,36 @@ function generateScrapedPreviewHtml(
   // Build header content based on capture mode
   let headerContent = '';
   if (captureMode === 'screenshot' && scrapedData.screenshot) {
-    headerContent = `<div style="width: 100%; overflow: hidden;"><img src="data:image/png;base64,${scrapedData.screenshot}" style="width: 100%; display: block;" alt="Site header" /></div>`;
+    const screenshotSrc = getScreenshotSrc(scrapedData.screenshot);
+    headerContent = `
+      <div style="width: 100%; height: 180px; overflow: hidden;">
+        <img
+          src="${screenshotSrc}"
+          style="width: 100%; height: 100%; display: block; object-fit: cover; object-position: top;"
+          alt="Site header"
+        />
+      </div>
+    `;
   } else {
     headerContent = scrapedData.headerHtml || '';
   }
-  
-  const footerContent = captureMode === 'screenshot' ? '' : (scrapedData.footerHtml || '');
+
+  const footerContent = (() => {
+    if (captureMode === 'screenshot' && scrapedData.screenshot) {
+      const screenshotSrc = getScreenshotSrc(scrapedData.screenshot);
+      return `
+        <div style="width: 100%; height: 180px; overflow: hidden;">
+          <img
+            src="${screenshotSrc}"
+            style="width: 100%; height: 100%; display: block; object-fit: cover; object-position: bottom;"
+            alt="Site footer"
+          />
+        </div>
+      `;
+    }
+    return scrapedData.footerHtml || '';
+  })();
+
   const cssContent = captureMode === 'screenshot' ? '' : (scrapedData.cssContent || '');
   
   const fieldsHtml = `
@@ -353,17 +385,20 @@ export function SiteMirrorCard({ demo, onApplyBranding }: SiteMirrorCardProps) {
 
     if (captureMode === 'screenshot') {
       // Screenshot mode: use screenshot as header image, but still apply form styles
+      const screenshotSrc = scrapedData.screenshot ? getScreenshotSrc(scrapedData.screenshot) : '';
       const updates: Partial<DemoEnvironment> = {
         customerSiteUrl: url,
         logoUrl: scrapedData.logoUrl || demo.logoUrl,
         headerBgColor: scrapedData.colors.headerBgColor,
         headerTextColor: scrapedData.colors.headerTextColor,
         buttonColor: scrapedData.colors.buttonColor,
-        // Store screenshot as a data URL in headerHtml (wrapped in img tag)
-        scrapedHeaderHtml: scrapedData.screenshot 
-          ? `<div style="width: 100%; overflow: hidden;"><img src="data:image/png;base64,${scrapedData.screenshot}" style="width: 100%; display: block;" alt="Site header" /></div>`
+        // Store screenshot as HTML in both header + footer.
+        scrapedHeaderHtml: screenshotSrc
+          ? `<div style="width: 100%; height: 180px; overflow: hidden;"><img src="${screenshotSrc}" style="width: 100%; height: 100%; display: block; object-fit: cover; object-position: top;" alt="Site header" /></div>`
           : '',
-        scrapedFooterHtml: '', // No footer in screenshot mode
+        scrapedFooterHtml: screenshotSrc
+          ? `<div style="width: 100%; height: 180px; overflow: hidden;"><img src="${screenshotSrc}" style="width: 100%; height: 100%; display: block; object-fit: cover; object-position: bottom;" alt="Site footer" /></div>`
+          : '',
         scrapedCss: '', // No CSS needed for screenshot
         // Still apply form styles if extracted
         ...(formStyleConfig && { formStyle: formStyleConfig }),
