@@ -1,5 +1,5 @@
  import { useState, useCallback } from 'react';
- import { Paintbrush, Globe, LayoutTemplate, Palette, Check, Loader2, AlertCircle, CheckCircle, Eye, Save } from 'lucide-react';
+ import { Paintbrush, Globe, LayoutTemplate, Palette, Check, Loader2, AlertCircle, CheckCircle, Eye, Save, Upload, Camera, Sparkles } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
@@ -16,7 +16,7 @@ import {
   DEFAULT_FORM_STYLE,
 } from '@/types/formStyle';
 import { DemoEnvironment } from '@/types/demo';
-import { ScrapedBranding, scrapingApi, FormElementStyles } from '@/lib/api/scraping';
+import { ScrapedBranding, scrapingApi, FormElementStyles, formAnalysisApi } from '@/lib/api/scraping';
 import { useToast } from '@/hooks/use-toast';
 
 interface FormStyleCardProps {
@@ -101,6 +101,8 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, scrapedBranding 
   const [selectorMessage, setSelectorMessage] = useState<string>('');
  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [triggerSelector, setTriggerSelector] = useState<string>('');
+  const [isAnalyzingScreenshot, setIsAnalyzingScreenshot] = useState(false);
+  const [uploadedScreenshot, setUploadedScreenshot] = useState<string | null>(null);
 
   const handleTabChange = (value: string) => {
     setActiveTab(value as FormStyleSource);
@@ -270,6 +272,127 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, scrapedBranding 
      description: 'Your color and typography settings have been applied.',
    });
  }, [toast]);
+
+  // Handle screenshot upload and AI analysis
+  const handleScreenshotUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: 'Invalid file',
+        description: 'Please upload an image file (PNG, JPG, etc.)',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      toast({
+        title: 'File too large',
+        description: 'Please upload an image smaller than 10MB',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsAnalyzingScreenshot(true);
+
+    try {
+      // Convert to base64
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const dataUrl = e.target?.result as string;
+        const base64 = dataUrl.split(',')[1];
+        setUploadedScreenshot(dataUrl);
+
+        // Call AI analysis
+        const response = await formAnalysisApi.analyzeFormScreenshot(base64, file.type);
+
+        if (!response.success || !response.data) {
+          throw new Error(response.error || 'Failed to analyze screenshot');
+        }
+
+        const { styles } = response.data;
+
+        // Map AI-extracted styles to FormStyleConfig
+        const newStyle: Partial<FormStyleConfig> = {
+          source: 'custom',
+        };
+
+        if (styles.inputBgColor) newStyle.inputBgColor = styles.inputBgColor;
+        if (styles.inputTextColor) newStyle.inputTextColor = styles.inputTextColor;
+        if (styles.inputBorderColor) newStyle.inputBorderColor = styles.inputBorderColor;
+        if (styles.inputFocusBorderColor) newStyle.inputFocusBorderColor = styles.inputFocusBorderColor;
+        if (styles.labelColor) newStyle.labelColor = styles.labelColor;
+        if (styles.errorColor) newStyle.errorColor = styles.errorColor;
+        if (styles.fontFamily) newStyle.fontFamily = styles.fontFamily;
+
+        // Map border radius
+        if (styles.inputBorderRadius) {
+          const radius = styles.inputBorderRadius.toLowerCase();
+          if (['none', 'sm', 'md', 'lg', 'full'].includes(radius)) {
+            newStyle.borderRadius = radius as 'none' | 'sm' | 'md' | 'lg' | 'full';
+          }
+        }
+
+        // Map border width
+        if (styles.inputBorderWidth) {
+          const width = parseInt(styles.inputBorderWidth);
+          if (width === 0) newStyle.borderWidth = '0';
+          else if (width >= 2) newStyle.borderWidth = '2';
+          else newStyle.borderWidth = '1';
+        }
+
+        // Map font size
+        if (styles.fontSize) {
+          const size = styles.fontSize.toLowerCase();
+          if (['sm', 'base', 'lg'].includes(size)) {
+            newStyle.fontSize = size as 'sm' | 'base' | 'lg';
+          }
+        }
+
+        // Map label weight
+        if (styles.labelFontWeight) {
+          const weight = styles.labelFontWeight.toLowerCase();
+          if (['normal', 'medium', 'semibold'].includes(weight)) {
+            newStyle.labelWeight = weight as 'normal' | 'medium' | 'semibold';
+          }
+        }
+
+        onUpdateStyle({
+          ...DEFAULT_FORM_STYLE,
+          ...newStyle,
+        });
+
+        toast({
+          title: 'Screenshot Analyzed',
+          description: `Extracted ${Object.keys(styles).length} style properties from your form screenshot`,
+        });
+
+        setIsAnalyzingScreenshot(false);
+      };
+
+      reader.onerror = () => {
+        throw new Error('Failed to read image file');
+      };
+
+      reader.readAsDataURL(file);
+    } catch (error) {
+      console.error('Screenshot analysis error:', error);
+      toast({
+        title: 'Analysis Failed',
+        description: error instanceof Error ? error.message : 'Could not analyze the screenshot',
+        variant: 'destructive',
+      });
+      setIsAnalyzingScreenshot(false);
+    }
+
+    // Reset file input
+    event.target.value = '';
+  }, [onUpdateStyle, toast]);
 
   const hasMirroredData = !!demo.customerSiteUrl || !!scrapedBranding?.branding || !!demo.scrapedCss || !!demo.buttonColor || !!extractedStyles;
  
@@ -646,6 +769,90 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, scrapedBranding 
                 If the form opens in a pop-out or modal, enter the CSS selector of the button/link that opens it.
                 The scraper will click this element first before capturing styles.
               </p>
+            </div>
+
+            {/* Divider with "OR" */}
+            <div className="relative py-2">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">Or upload a screenshot</span>
+              </div>
+            </div>
+
+            {/* Screenshot Upload */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Camera className="w-4 h-4 text-muted-foreground" />
+                <Label>AI Form Style Detection</Label>
+                <Badge variant="secondary" className="text-xs">
+                  <Sparkles className="w-3 h-3 mr-1" />
+                  AI-Powered
+                </Badge>
+              </div>
+              
+              <div className="relative border-2 border-dashed rounded-lg p-6 text-center hover:border-primary/50 transition-colors">
+                {uploadedScreenshot ? (
+                  <div className="space-y-3">
+                    <img 
+                      src={uploadedScreenshot} 
+                      alt="Uploaded form screenshot" 
+                      className="max-h-32 mx-auto rounded-md border"
+                    />
+                    <p className="text-sm text-muted-foreground">
+                      {isAnalyzingScreenshot ? 'Analyzing...' : 'Screenshot analyzed'}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <Upload className="w-8 h-8 mx-auto text-muted-foreground" />
+                    <p className="text-sm text-muted-foreground">
+                      Upload a screenshot of a form to extract styling
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      AI will detect colors, fonts, borders, and spacing
+                    </p>
+                  </div>
+                )}
+                
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleScreenshotUpload}
+                  disabled={isAnalyzingScreenshot}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                />
+              </div>
+
+              <Button
+                variant="outline"
+                className="w-full"
+                disabled={isAnalyzingScreenshot}
+                onClick={() => document.querySelector<HTMLInputElement>('input[type="file"][accept="image/*"]')?.click()}
+              >
+                {isAnalyzingScreenshot ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Analyzing with AI...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="w-4 h-4 mr-2" />
+                    Upload Form Screenshot
+                  </>
+                )}
+              </Button>
+            </div>
+
+            {/* Divider */}
+            <div className="relative py-2">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">Or fetch from URL</span>
+              </div>
             </div>
 
             {/* Fetch Styles Button */}

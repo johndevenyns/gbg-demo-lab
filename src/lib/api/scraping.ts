@@ -126,3 +126,39 @@ export const scrapingApi = {
     return data;
   },
 };
+
+export interface AnalyzeScreenshotResponse {
+  success: boolean;
+  error?: string;
+  data?: {
+    styles: {
+      inputBgColor?: string;
+      inputTextColor?: string;
+      inputBorderColor?: string;
+      inputBorderWidth?: string;
+      inputBorderRadius?: string;
+      inputFocusBorderColor?: string;
+      labelColor?: string;
+      labelFontWeight?: string;
+      fontFamily?: string;
+      fontSize?: string;
+      errorColor?: string;
+      buttonBgColor?: string;
+      buttonTextColor?: string;
+    };
+  };
+}
+
+export const formAnalysisApi = {
+  async analyzeFormScreenshot(imageBase64: string, mimeType: string): Promise<AnalyzeScreenshotResponse> {
+    const { data, error } = await supabase.functions.invoke('analyze-form-screenshot', {
+      body: { imageBase64, mimeType },
+    });
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+    
+    return data;
+  },
+};
