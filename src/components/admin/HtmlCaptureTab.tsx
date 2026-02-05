@@ -338,15 +338,75 @@
  
        {/* Current Applied State */}
        {isConfigured && !scrapedData && (
-         <Card className="border-green-500/30 bg-green-500/5">
-           <CardContent className="pt-4">
-             <div className="flex items-center gap-2 text-green-600">
-               <Check className="w-4 h-4" />
-               <span className="font-medium">HTML capture is configured</span>
+         <Card className="border-primary/30">
+           <CardContent className="pt-4 space-y-4">
+             <div className="flex items-center justify-between">
+               <div className="flex items-center gap-2 text-primary">
+                 <Check className="w-4 h-4" />
+                 <span className="font-medium">Currently Applied HTML Capture</span>
+               </div>
+               <span className="text-xs text-muted-foreground">
+                 From: {demo.customerSiteUrl}
+               </span>
              </div>
-             <p className="text-sm text-muted-foreground mt-1">
-               Header and footer HTML from {demo.customerSiteUrl} is applied.
-             </p>
+ 
+             {/* Live Preview of Saved Content */}
+             <div className="space-y-2">
+               <Label className="flex items-center gap-2">
+                 <Eye className="w-4 h-4" />
+                 Saved HTML Preview
+               </Label>
+               <div className="border rounded-lg overflow-hidden bg-background">
+                 <iframe
+                   srcDoc={`
+                     <!DOCTYPE html>
+                     <html>
+                       <head>
+                         <meta charset="utf-8">
+                         <style>
+                           body { margin: 0; padding: 0; font-family: system-ui, sans-serif; }
+                           * { box-sizing: border-box; }
+                         </style>
+                         ${demo.mirrorHtmlCss ? `<style>${demo.mirrorHtmlCss}</style>` : ''}
+                       </head>
+                       <body>
+                         ${demo.mirrorHtmlHeaderHtml || '<div style="padding: 20px; background: #f0f0f0; text-align: center; color: #666;">No header captured</div>'}
+                         <div style="padding: 40px 20px; background: #f5f5f5; min-height: 150px;">
+                           <div style="max-width: 480px; margin: 0 auto; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); padding: 32px; border: 1px solid #e5e7eb;">
+                             <h2 style="margin: 0 0 24px 0; font-size: 20px; font-weight: 600; text-align: center;">Application Form</h2>
+                             <div style="margin-bottom: 16px;">
+                               <label style="display: block; margin-bottom: 6px; font-weight: 500;">First Name</label>
+                               <input type="text" placeholder="John" style="width: 100%; padding: 10px 14px; border: 1px solid #d1d5db; border-radius: 8px;" />
+                             </div>
+                             <button style="width: 100%; padding: 12px 24px; background: ${demo.buttonColor || '#3b82f6'}; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 500; cursor: pointer;">Continue</button>
+                           </div>
+                         </div>
+                         ${demo.mirrorHtmlFooterHtml || '<div style="padding: 20px; background: #f0f0f0; text-align: center; color: #666;">No footer captured</div>'}
+                       </body>
+                     </html>
+                   `}
+                   className="w-full h-[350px] border-0"
+                   title="Saved HTML capture preview"
+                   sandbox="allow-same-origin"
+                 />
+               </div>
+             </div>
+ 
+             {/* Content Stats */}
+             <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
+               <div className="flex items-center gap-1">
+                 <span className="font-medium">Header:</span>
+                 <span>{demo.mirrorHtmlHeaderHtml ? `${demo.mirrorHtmlHeaderHtml.length} chars` : 'None'}</span>
+               </div>
+               <div className="flex items-center gap-1">
+                 <span className="font-medium">Footer:</span>
+                 <span>{demo.mirrorHtmlFooterHtml ? `${demo.mirrorHtmlFooterHtml.length} chars` : 'None'}</span>
+               </div>
+               <div className="flex items-center gap-1">
+                 <span className="font-medium">CSS:</span>
+                 <span>{demo.mirrorHtmlCss ? `${demo.mirrorHtmlCss.length} chars` : 'None'}</span>
+               </div>
+             </div>
            </CardContent>
          </Card>
        )}
