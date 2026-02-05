@@ -84,24 +84,14 @@
     </div>
    `;
  
-   const formHtml = generateFormHtml(formStyle, buttonColor);
- 
-   return `
-     <!DOCTYPE html>
-     <html>
-       <head>
-         <meta charset="utf-8">
-         <style>body { margin: 0; font-family: ${formStyle.fontFamily}; } * { box-sizing: border-box; }</style>
-       </head>
-       <body>
-         ${headerContent}
-         <div style="padding: 40px 20px; background: #f5f5f5; min-height: 200px;">
-           ${formHtml}
-         </div>
-         ${footerContent}
-       </body>
-     </html>
-   `;
+    return generatePreviewDocument({
+      formStyle,
+      buttonColor,
+      headerHtml: headerContent,
+      footerHtml: footerContent,
+      // Prefer explicit content bg from form style when present
+      contentBgColor: formStyle.contentAreaBgColor,
+    });
  }
  
  interface ScreenshotCaptureTabProps {
