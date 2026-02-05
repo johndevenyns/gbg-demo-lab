@@ -53,6 +53,15 @@ export interface DemoEnvironment {
   scrapedFooterHtml?: string;
   scrapedCss?: string;
   
+  // Separate storage for HTML vs Screenshot mirror captures
+  mirrorActiveMethod?: 'html' | 'screenshot';
+  mirrorHtmlHeaderHtml?: string;
+  mirrorHtmlFooterHtml?: string;
+  mirrorHtmlCss?: string;
+  mirrorScreenshotHeaderHtml?: string;
+  mirrorScreenshotFooterHtml?: string;
+  mirrorScreenshotCss?: string;
+  
   // Form styling
   formStyle?: FormStyleConfig;
   

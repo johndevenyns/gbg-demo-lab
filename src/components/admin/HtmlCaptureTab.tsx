@@ -178,9 +178,10 @@
        headerBgColor: scrapedData.colors.headerBgColor,
        headerTextColor: scrapedData.colors.headerTextColor,
        buttonColor: scrapedData.colors.buttonColor,
-       scrapedHeaderHtml: scrapedData.headerHtml,
-       scrapedFooterHtml: scrapedData.footerHtml,
-       scrapedCss: scrapedData.cssContent,
+      // Store in dedicated HTML capture fields (won't overwrite screenshot capture)
+      mirrorHtmlHeaderHtml: scrapedData.headerHtml,
+      mirrorHtmlFooterHtml: scrapedData.footerHtml,
+      mirrorHtmlCss: scrapedData.cssContent,
        ...(formStyleConfig && { formStyle: formStyleConfig }),
      };
  

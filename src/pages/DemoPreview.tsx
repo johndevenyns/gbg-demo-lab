@@ -53,8 +53,21 @@ export default function DemoPreview() {
     );
   }
 
-  const hasScrapedHeader = demo.scrapedHeaderHtml && demo.scrapedHeaderHtml.trim().length > 0;
-  const hasScrapedFooter = demo.scrapedFooterHtml && demo.scrapedFooterHtml.trim().length > 0;
+  // Select active header/footer based on mirrorActiveMethod
+  const activeMethod = demo.mirrorActiveMethod || 'html';
+  const activeHeaderHtml = activeMethod === 'screenshot'
+    ? demo.mirrorScreenshotHeaderHtml
+    : demo.mirrorHtmlHeaderHtml;
+  const activeFooterHtml = activeMethod === 'screenshot'
+    ? demo.mirrorScreenshotFooterHtml
+    : demo.mirrorHtmlFooterHtml;
+  // Fallback to legacy fields if new fields are empty
+  const hasScrapedHeader = (activeHeaderHtml && activeHeaderHtml.trim().length > 0)
+    || (demo.scrapedHeaderHtml && demo.scrapedHeaderHtml.trim().length > 0);
+  const hasScrapedFooter = (activeFooterHtml && activeFooterHtml.trim().length > 0)
+    || (demo.scrapedFooterHtml && demo.scrapedFooterHtml.trim().length > 0);
+  const finalHeaderHtml = (activeHeaderHtml && activeHeaderHtml.trim()) || demo.scrapedHeaderHtml || '';
+  const finalFooterHtml = (activeFooterHtml && activeFooterHtml.trim()) || demo.scrapedFooterHtml || '';
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -62,7 +75,7 @@ export default function DemoPreview() {
       {hasScrapedHeader ? (
         <div 
           className="scraped-header"
-          dangerouslySetInnerHTML={{ __html: demo.scrapedHeaderHtml }} 
+          dangerouslySetInnerHTML={{ __html: finalHeaderHtml }} 
         />
       ) : (
         <header className="py-4 px-6" style={{ backgroundColor: demo.headerBgColor, color: demo.headerTextColor }}>
@@ -112,10 +125,10 @@ export default function DemoPreview() {
       </main>
 
       {/* Scraped Footer */}
-      {hasScrapedFooter && (
+      {hasScrapedFooter && finalFooterHtml && (
         <div 
           className="scraped-footer"
-          dangerouslySetInnerHTML={{ __html: demo.scrapedFooterHtml }} 
+          dangerouslySetInnerHTML={{ __html: finalFooterHtml }} 
         />
       )}
 

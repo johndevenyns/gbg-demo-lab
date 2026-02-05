@@ -2,12 +2,14 @@
  import { Globe, X } from "lucide-react";
  import { Button } from "@/components/ui/button";
  import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
- import { SiteMirrorTabs, CaptureMode } from "./SiteMirrorTabs";
+import { SiteMirrorTabs } from "./SiteMirrorTabs";
  import { HtmlCaptureTab } from "./HtmlCaptureTab";
  import { ScreenshotCaptureTab } from "./ScreenshotCaptureTab";
  import { useToast } from "@/hooks/use-toast";
  import { DemoEnvironment } from "@/types/demo";
  import { DEFAULT_FORM_STYLE } from "@/types/formStyle";
+
+export type CaptureMode = 'html' | 'screenshot';
  
  interface SiteMirrorCardProps {
    demo: DemoEnvironment;
@@ -18,19 +20,31 @@
    const { toast } = useToast();
    const [url, setUrl] = useState(demo.customerSiteUrl || "");
    
-   // Track which method is active for the demo AND which tab user is viewing
-   const [activeMethod, setActiveMethod] = useState<CaptureMode>('html');
+  // Track which method is active for the demo (persisted) AND which tab user is viewing
+  const [activeMethod, setActiveMethod] = useState<CaptureMode>(demo.mirrorActiveMethod || 'html');
    const [currentTab, setCurrentTab] = useState<CaptureMode>('html');
    
    // Determine if each method is configured based on content type
-   const htmlConfigured = Boolean(demo.scrapedHeaderHtml && !demo.scrapedHeaderHtml.includes('<img src='));
-   const screenshotConfigured = Boolean(demo.scrapedHeaderHtml && demo.scrapedHeaderHtml.includes('<img src='));
+  const htmlConfigured = Boolean(demo.mirrorHtmlHeaderHtml && demo.mirrorHtmlHeaderHtml.trim().length > 0);
+  const screenshotConfigured = Boolean(demo.mirrorScreenshotHeaderHtml && demo.mirrorScreenshotHeaderHtml.trim().length > 0);
+
+  const handleActiveMethodChange = (method: CaptureMode) => {
+    setActiveMethod(method);
+    // Persist the active method to the database
+    onApplyBranding({ mirrorActiveMethod: method }, true);
+  };
  
    const handleClearMirror = () => {
      const updates: Partial<DemoEnvironment> = {
        scrapedHeaderHtml: '',
        scrapedFooterHtml: '',
        scrapedCss: '',
+      mirrorHtmlHeaderHtml: '',
+      mirrorHtmlFooterHtml: '',
+      mirrorHtmlCss: '',
+      mirrorScreenshotHeaderHtml: '',
+      mirrorScreenshotFooterHtml: '',
+      mirrorScreenshotCss: '',
        ...(demo.formStyle?.source === 'mirrored' && { formStyle: { ...DEFAULT_FORM_STYLE, source: 'template' } }),
      };
      onApplyBranding(updates, true);
@@ -70,7 +84,7 @@
        <CardContent>
          <SiteMirrorTabs
            activeMethod={activeMethod}
-           onActiveMethodChange={setActiveMethod}
+          onActiveMethodChange={handleActiveMethodChange}
            currentTab={currentTab}
            onTabChange={setCurrentTab}
            htmlConfigured={htmlConfigured}

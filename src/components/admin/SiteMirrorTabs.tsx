@@ -4,8 +4,7 @@
  import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
  import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
  import { cn } from "@/lib/utils";
- 
- export type CaptureMode = 'html' | 'screenshot';
+import { CaptureMode } from "./SiteMirrorCard";
  
  interface SiteMirrorTabsProps {
    activeMethod: CaptureMode;

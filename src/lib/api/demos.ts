@@ -43,6 +43,13 @@ const rowToDemo = (row: any): DemoEnvironment => {
     scrapedHeaderHtml: row.scraped_header_html || '',
     scrapedFooterHtml: row.scraped_footer_html || '',
     scrapedCss: row.scraped_css || '',
+    mirrorActiveMethod: (row.mirror_active_method as 'html' | 'screenshot') || 'html',
+    mirrorHtmlHeaderHtml: row.mirror_html_header_html || '',
+    mirrorHtmlFooterHtml: row.mirror_html_footer_html || '',
+    mirrorHtmlCss: row.mirror_html_css || '',
+    mirrorScreenshotHeaderHtml: row.mirror_screenshot_header_html || '',
+    mirrorScreenshotFooterHtml: row.mirror_screenshot_footer_html || '',
+    mirrorScreenshotCss: row.mirror_screenshot_css || '',
     formStyle: formStyle ? { ...DEFAULT_FORM_STYLE, ...formStyle } : DEFAULT_FORM_STYLE,
     successPageConfig: formStyle?.successPageConfig,
     failurePageConfig: formStyle?.failurePageConfig,
@@ -81,6 +88,13 @@ const demoToRow = (demo: Partial<DemoEnvironment>) => {
   if (demo.scrapedHeaderHtml !== undefined) row.scraped_header_html = demo.scrapedHeaderHtml;
   if (demo.scrapedFooterHtml !== undefined) row.scraped_footer_html = demo.scrapedFooterHtml;
   if (demo.scrapedCss !== undefined) row.scraped_css = demo.scrapedCss;
+  if (demo.mirrorActiveMethod !== undefined) row.mirror_active_method = demo.mirrorActiveMethod;
+  if (demo.mirrorHtmlHeaderHtml !== undefined) row.mirror_html_header_html = demo.mirrorHtmlHeaderHtml;
+  if (demo.mirrorHtmlFooterHtml !== undefined) row.mirror_html_footer_html = demo.mirrorHtmlFooterHtml;
+  if (demo.mirrorHtmlCss !== undefined) row.mirror_html_css = demo.mirrorHtmlCss;
+  if (demo.mirrorScreenshotHeaderHtml !== undefined) row.mirror_screenshot_header_html = demo.mirrorScreenshotHeaderHtml;
+  if (demo.mirrorScreenshotFooterHtml !== undefined) row.mirror_screenshot_footer_html = demo.mirrorScreenshotFooterHtml;
+  if (demo.mirrorScreenshotCss !== undefined) row.mirror_screenshot_css = demo.mirrorScreenshotCss;
   // Store result page configs inside form_style to avoid new DB columns
   if (demo.formStyle !== undefined || demo.successPageConfig !== undefined || demo.failurePageConfig !== undefined) {
     const existingStyle = demo.formStyle || {};
