@@ -80,8 +80,15 @@ Deno.serve(async (req) => {
     
     console.log('Scraping branding from URL:', formattedUrl);
 
-    // Request branding, HTML (raw to get CSS), and screenshot formats
-    const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
+    // Define viewport sizes for screenshots
+    const viewports = [
+      { name: 'desktop', width: 1440, height: 900 },
+      { name: 'tablet', width: 768, height: 1024 },
+      { name: 'mobile', width: 390, height: 844 },
+    ];
+
+    // Main request for HTML, branding, and desktop screenshot
+    const mainRequest = fetch('https://api.firecrawl.dev/v1/scrape', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
@@ -91,26 +98,92 @@ Deno.serve(async (req) => {
         url: formattedUrl,
         formats: ['html', 'rawHtml', 'screenshot', 'branding'],
         onlyMainContent: false,
-        waitFor: 3000, // Increased wait for dynamic content
+        waitFor: 3000,
       }),
     });
 
-    const data = await response.json();
+    // Parallel requests for tablet and mobile screenshots
+    const tabletRequest = fetch('https://api.firecrawl.dev/v1/scrape', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        url: formattedUrl,
+        formats: ['screenshot'],
+        onlyMainContent: false,
+        waitFor: 2000,
+        actions: [
+          { type: 'viewport', width: viewports[1].width, height: viewports[1].height }
+        ]
+      }),
+    });
 
-    if (!response.ok) {
-      console.error('Firecrawl API error:', data);
+    const mobileRequest = fetch('https://api.firecrawl.dev/v1/scrape', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        url: formattedUrl,
+        formats: ['screenshot'],
+        onlyMainContent: false,
+        waitFor: 2000,
+        actions: [
+          { type: 'viewport', width: viewports[2].width, height: viewports[2].height }
+        ]
+      }),
+    });
+
+    console.log('Fetching screenshots for desktop, tablet, and mobile viewports...');
+
+    // Execute all requests in parallel
+    const [mainResponse, tabletResponse, mobileResponse] = await Promise.all([
+      mainRequest,
+      tabletRequest,
+      mobileRequest,
+    ]);
+
+    const mainData = await mainResponse.json();
+
+    if (!mainResponse.ok) {
+      console.error('Firecrawl API error:', mainData);
       return new Response(
-        JSON.stringify({ success: false, error: data.error || `Request failed with status ${response.status}` }),
-        { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ success: false, error: mainData.error || `Request failed with status ${mainResponse.status}` }),
+        { status: mainResponse.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Extract data from response
-    const html = data.data?.html || data.html || '';
-    const rawHtml = data.data?.rawHtml || data.rawHtml || html;
-    const branding = data.data?.branding || data.branding || null;
-    const screenshot = data.data?.screenshot || data.screenshot || null;
-    const metadata = data.data?.metadata || data.metadata || {};
+    // Parse tablet and mobile responses (don't fail if they error)
+    let tabletScreenshot: string | null = null;
+    let mobileScreenshot: string | null = null;
+
+    try {
+      const tabletData = await tabletResponse.json();
+      tabletScreenshot = tabletData.data?.screenshot || tabletData.screenshot || null;
+      console.log('Tablet screenshot captured:', !!tabletScreenshot);
+    } catch (e) {
+      console.warn('Failed to get tablet screenshot:', e);
+    }
+
+    try {
+      const mobileData = await mobileResponse.json();
+      mobileScreenshot = mobileData.data?.screenshot || mobileData.screenshot || null;
+      console.log('Mobile screenshot captured:', !!mobileScreenshot);
+    } catch (e) {
+      console.warn('Failed to get mobile screenshot:', e);
+    }
+
+    // Extract data from main response
+    const html = mainData.data?.html || mainData.html || '';
+    const rawHtml = mainData.data?.rawHtml || mainData.rawHtml || html;
+    const branding = mainData.data?.branding || mainData.branding || null;
+    const desktopScreenshot = mainData.data?.screenshot || mainData.screenshot || null;
+    const metadata = mainData.data?.metadata || mainData.metadata || {};
+
+    console.log('Desktop screenshot captured:', !!desktopScreenshot);
 
     // Parse header and footer from HTML
     const headerHtml = convertRelativeUrls(extractHeader(html), baseUrl);
@@ -148,7 +221,12 @@ Deno.serve(async (req) => {
           footerHtml,
           cssContent,
           logoUrl,
-          screenshot,
+          screenshot: desktopScreenshot,
+          screenshots: {
+            desktop: desktopScreenshot,
+            tablet: tabletScreenshot,
+            mobile: mobileScreenshot,
+          },
           colors: {
             headerBgColor,
             headerTextColor,

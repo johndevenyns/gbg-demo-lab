@@ -45,6 +45,11 @@ export interface ScrapedBranding {
   cssContent: string;
   logoUrl: string | null;
   screenshot: string | null;
+  screenshots?: {
+    desktop: string | null;
+    tablet: string | null;
+    mobile: string | null;
+  };
   colors: {
     headerBgColor: string;
     headerTextColor: string;
