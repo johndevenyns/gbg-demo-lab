@@ -284,9 +284,8 @@ export function SiteMirrorCard({ demo, onApplyBranding }: SiteMirrorCardProps) {
   };
 
   const handleClearMirror = () => {
-    // Clear all mirrored content
+    // Clear scraped content but keep the URL
     const updates: Partial<DemoEnvironment> = {
-      customerSiteUrl: undefined,
       scrapedHeaderHtml: undefined,
       scrapedFooterHtml: undefined,
       scrapedCss: undefined,
@@ -295,13 +294,12 @@ export function SiteMirrorCard({ demo, onApplyBranding }: SiteMirrorCardProps) {
     };
 
     onApplyBranding(updates, true);
-    setUrl('');
     setScrapedData(null);
     setShowPreview(false);
     
     toast({
       title: "Mirror Cleared",
-      description: "Site mirror has been removed. You can now enter a new URL or use default styling.",
+      description: "Scraped branding has been cleared. You can re-mirror the site or use default styling.",
     });
   };
 
