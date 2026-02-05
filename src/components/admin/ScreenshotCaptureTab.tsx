@@ -1,4 +1,4 @@
- import { useState, useRef, useMemo } from "react";
+ import { useState, useMemo } from "react";
  import { Camera, Loader2, ExternalLink, Eye, Check, Monitor, Tablet, Smartphone, Paintbrush, RefreshCw, Crop } from "lucide-react";
  import { Button } from "@/components/ui/button";
  import { Input } from "@/components/ui/input";
@@ -9,54 +9,7 @@
  import { useToast } from "@/hooks/use-toast";
  import { DemoEnvironment } from "@/types/demo";
  import { DEFAULT_FORM_STYLE, FormStyleConfig } from "@/types/formStyle";
- 
- // Helper functions for form style values
- function getBorderRadiusValue(radius: string = 'md'): string {
-   switch (radius) {
-     case 'none': return '0px';
-     case 'sm': return '4px';
-     case 'lg': return '12px';
-     case 'full': return '9999px';
-     default: return '8px';
-   }
- }
- 
- function getPaddingValue(padding: string = 'md'): string {
-   switch (padding) {
-     case 'sm': return '8px 12px';
-     case 'lg': return '14px 18px';
-     default: return '10px 14px';
-   }
- }
- 
- function getFontSizeValue(size: string = 'base'): string {
-   switch (size) {
-     case 'sm': return '14px';
-     case 'lg': return '18px';
-     default: return '16px';
-   }
- }
- 
- function getLabelWeightValue(weight: string = 'medium'): number {
-   switch (weight) {
-     case 'semibold': return 600;
-     case 'medium': return 500;
-     default: return 400;
-   }
- }
- 
- // Generate form HTML using demo's form style
- function generateStyledFormHtml(formStyle: FormStyleConfig, buttonColor: string): string {
-   const borderRadius = getBorderRadiusValue(formStyle.borderRadius);
-   const padding = getPaddingValue(formStyle.inputPadding);
-   const fontSize = getFontSizeValue(formStyle.fontSize);
-   const labelWeight = getLabelWeightValue(formStyle.labelWeight);
-   
-   const inputStyle = `width: 100%; padding: ${padding}; border: ${formStyle.borderWidth}px solid ${formStyle.inputBorderColor}; border-radius: ${borderRadius}; background: ${formStyle.inputBgColor}; color: ${formStyle.inputTextColor}; font-family: ${formStyle.fontFamily}; font-size: ${fontSize}; box-sizing: border-box; outline: none;`;
-   const labelStyle = `display: block; margin-bottom: 6px; font-weight: ${labelWeight}; color: ${formStyle.labelColor}; font-family: ${formStyle.fontFamily}; font-size: ${fontSize};`;
-   
-   return `<div style="max-width: 480px; margin: 0 auto; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); padding: 32px; border: 1px solid #e5e7eb;"><h2 style="margin: 0 0 24px 0; font-size: 20px; font-weight: 600; color: ${formStyle.labelColor}; font-family: ${formStyle.fontFamily}; text-align: center;">Application Form</h2><div style="margin-bottom: 16px;"><label style="${labelStyle}">First Name<span style="color: ${formStyle.errorColor}; margin-left: 4px;">*</span></label><input type="text" placeholder="John" style="${inputStyle}" /></div><div style="margin-bottom: 16px;"><label style="${labelStyle}">Email<span style="color: ${formStyle.errorColor}; margin-left: 4px;">*</span></label><input type="email" placeholder="john@example.com" style="${inputStyle}" /></div><button style="width: 100%; padding: 12px 24px; background: ${buttonColor}; color: white; border: none; border-radius: ${borderRadius}; font-size: ${fontSize}; font-weight: 600; cursor: pointer; font-family: ${formStyle.fontFamily};">Continue</button></div>`;
- }
+ import { generateFormHtml, generatePreviewDocument } from "@/lib/formStyleUtils";
  
  type ViewportSize = 'desktop' | 'tablet' | 'mobile';
  
@@ -96,18 +49,10 @@
  // Generate preview HTML with screenshot crops
  function generateScreenshotPreviewHtml(
    screenshotSrc: string,
-   formStyles: FormElementStyles | undefined,
+   formStyle: FormStyleConfig,
    buttonColor: string,
    cropSettings: CropSettings
  ): string {
-   const fontFamily = formStyles?.inputFontFamily || 'system-ui, sans-serif';
-   const labelColor = formStyles?.labelColor || '#333333';
-   const inputBgColor = formStyles?.inputBgColor || '#ffffff';
-   const inputTextColor = formStyles?.inputTextColor || '#1f2937';
-   const inputBorderColor = formStyles?.inputBorderColor || '#d1d5db';
-   const inputBorderRadius = formStyles?.inputBorderRadius || '8px';
-   const inputBorderWidth = formStyles?.inputBorderWidth || '1px';
- 
    const headerContent = `
      <div style="width: 100%; height: ${cropSettings.headerHeight}px; overflow: hidden;">
         <img src="${screenshotSrc}" style="width: 100%; display: block; object-fit: cover; object-position: center -${cropSettings.headerOffsetY}px;" alt="Header" />
@@ -120,24 +65,19 @@
      </div>
    `;
  
+   const formHtml = generateFormHtml(formStyle, buttonColor);
+ 
    return `
      <!DOCTYPE html>
      <html>
        <head>
          <meta charset="utf-8">
-         <style>body { margin: 0; font-family: ${fontFamily}; } * { box-sizing: border-box; }</style>
+         <style>body { margin: 0; font-family: ${formStyle.fontFamily}; } * { box-sizing: border-box; }</style>
        </head>
        <body>
          ${headerContent}
          <div style="padding: 40px 20px; background: #f5f5f5; min-height: 200px;">
-           <div style="max-width: 480px; margin: 0 auto; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); padding: 32px; border: 1px solid #e5e7eb;">
-             <h2 style="margin: 0 0 24px 0; font-size: 20px; font-weight: 600; color: ${labelColor}; text-align: center;">Application Form</h2>
-             <div style="margin-bottom: 16px;">
-               <label style="display: block; margin-bottom: 6px; font-weight: 500; color: ${labelColor};">First Name</label>
-               <input type="text" placeholder="John" style="width: 100%; padding: 10px 14px; border: ${inputBorderWidth} solid ${inputBorderColor}; border-radius: ${inputBorderRadius}; background: ${inputBgColor}; color: ${inputTextColor};" />
-             </div>
-             <button style="width: 100%; padding: 12px 24px; background: ${buttonColor}; color: white; border: none; border-radius: ${inputBorderRadius}; font-size: 16px; font-weight: 500; cursor: pointer;">Continue</button>
-           </div>
+           ${formHtml}
          </div>
          ${footerContent}
        </body>
@@ -393,7 +333,7 @@
                   key={previewKey}
                    srcDoc={generateScreenshotPreviewHtml(
                      getScreenshotSrc(selectedScreenshot),
-                     scrapedData.formStyles,
+                    demo.formStyle || DEFAULT_FORM_STYLE,
                      scrapedData.colors.buttonColor,
                      cropSettings
                    )}
@@ -521,26 +461,12 @@
                    key={savedPreviewKey}
                    srcDoc={(() => {
                      const formStyle = demo.formStyle || DEFAULT_FORM_STYLE;
-                     return `
-                     <!DOCTYPE html>
-                     <html>
-                       <head>
-                         <meta charset="utf-8">
-                         <style>
-                           body { margin: 0; padding: 0; font-family: ${formStyle.fontFamily}; }
-                           * { box-sizing: border-box; }
-                           img { max-width: 100%; display: block; }
-                         </style>
-                       </head>
-                       <body>
-                         ${demo.mirrorScreenshotHeaderHtml || '<div style="padding: 20px; background: #f0f0f0; text-align: center; color: #666;">No header screenshot captured</div>'}
-                         <div style="padding: 40px 20px; background: #f5f5f5; min-height: 150px;">
-                           ${generateStyledFormHtml(formStyle, demo.buttonColor || '#3b82f6')}
-                         </div>
-                         ${demo.mirrorScreenshotFooterHtml || '<div style="padding: 20px; background: #f0f0f0; text-align: center; color: #666;">No footer screenshot captured</div>'}
-                       </body>
-                     </html>
-                   `;
+                   return generatePreviewDocument({
+                     formStyle,
+                     buttonColor: demo.buttonColor || '#3b82f6',
+                     headerHtml: demo.mirrorScreenshotHeaderHtml || '<div style="padding: 20px; background: #f0f0f0; text-align: center; color: #666;">No header screenshot captured</div>',
+                     footerHtml: demo.mirrorScreenshotFooterHtml || '<div style="padding: 20px; background: #f0f0f0; text-align: center; color: #666;">No footer screenshot captured</div>',
+                   });
                    })()}
                    className="w-full h-[350px] border-0"
                    title="Saved screenshot capture preview"
