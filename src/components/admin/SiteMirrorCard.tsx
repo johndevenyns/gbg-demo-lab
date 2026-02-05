@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Slider } from "@/components/ui/slider";
 import { scrapingApi, ScrapedBranding, FormElementStyles } from "@/lib/api/scraping";
 import { useToast } from "@/hooks/use-toast";
 import { DemoEnvironment } from "@/types/demo";
@@ -20,6 +21,20 @@ import {
 
 type CaptureMode = 'html' | 'screenshot';
 type ViewportSize = 'desktop' | 'tablet' | 'mobile';
+
+interface CropSettings {
+  headerHeight: number;     // Height in pixels
+  headerOffsetY: number;    // Y offset from top (0 = start at top)
+  footerHeight: number;     // Height in pixels  
+  footerOffsetY: number;    // Y offset from bottom (0 = start at bottom)
+}
+
+const DEFAULT_CROP_SETTINGS: CropSettings = {
+  headerHeight: 180,
+  headerOffsetY: 0,
+  footerHeight: 180,
+  footerOffsetY: 0,
+};
 
 function getScreenshotSrc(screenshot: string): string {
   const s = screenshot.trim();
@@ -218,7 +233,8 @@ function generateScrapedPreviewHtml(
   formStyles: FormElementStyles | undefined,
   buttonColor: string,
   captureMode: 'html' | 'screenshot',
-  selectedScreenshotUrl?: string | null
+  selectedScreenshotUrl?: string | null,
+  cropSettings?: CropSettings
 ): string {
   const fontFamily = formStyles?.inputFontFamily || 'system-ui, sans-serif';
   const labelColor = formStyles?.labelColor || '#333333';
@@ -230,16 +246,17 @@ function generateScrapedPreviewHtml(
   
   // Use the selected screenshot or fallback to default
   const screenshotToUse = selectedScreenshotUrl || scrapedData.screenshot;
+  const crop = cropSettings || DEFAULT_CROP_SETTINGS;
   
   // Build header content based on capture mode
   let headerContent = '';
   if (captureMode === 'screenshot' && screenshotToUse) {
     const screenshotSrc = getScreenshotSrc(screenshotToUse);
     headerContent = `
-      <div style="width: 100%; height: 180px; overflow: hidden;">
+      <div style="width: 100%; height: ${crop.headerHeight}px; overflow: hidden;">
         <img
           src="${screenshotSrc}"
-          style="width: 100%; height: 100%; display: block; object-fit: cover; object-position: top;"
+          style="width: 100%; display: block; object-fit: cover; object-position: center ${crop.headerOffsetY}px;"
           alt="Site header"
         />
       </div>
@@ -252,10 +269,10 @@ function generateScrapedPreviewHtml(
     if (captureMode === 'screenshot' && screenshotToUse) {
       const screenshotSrc = getScreenshotSrc(screenshotToUse);
       return `
-        <div style="width: 100%; height: 180px; overflow: hidden;">
+        <div style="width: 100%; height: ${crop.footerHeight}px; overflow: hidden;">
           <img
             src="${screenshotSrc}"
-            style="width: 100%; height: 100%; display: block; object-fit: cover; object-position: bottom;"
+            style="width: 100%; display: block; object-fit: cover; object-position: center calc(100% - ${crop.footerOffsetY}px);"
             alt="Site footer"
           />
         </div>
@@ -341,6 +358,7 @@ export function SiteMirrorCard({ demo, onApplyBranding }: SiteMirrorCardProps) {
   const [showPreview, setShowPreview] = useState(false);
   const [captureMode, setCaptureMode] = useState<CaptureMode>('html');
   const [selectedViewport, setSelectedViewport] = useState<ViewportSize>('desktop');
+  const [cropSettings, setCropSettings] = useState<CropSettings>(DEFAULT_CROP_SETTINGS);
 
   // Get the screenshot for the selected viewport
   const getSelectedScreenshot = (): string | null => {
@@ -410,10 +428,10 @@ export function SiteMirrorCard({ demo, onApplyBranding }: SiteMirrorCardProps) {
         buttonColor: scrapedData.colors.buttonColor,
         // Store screenshot as HTML in both header + footer.
         scrapedHeaderHtml: screenshotSrc
-          ? `<div style="width: 100%; height: 180px; overflow: hidden;"><img src="${screenshotSrc}" style="width: 100%; height: 100%; display: block; object-fit: cover; object-position: top;" alt="Site header" /></div>`
+          ? `<div style="width: 100%; height: ${cropSettings.headerHeight}px; overflow: hidden;"><img src="${screenshotSrc}" style="width: 100%; display: block; object-fit: cover; object-position: center ${cropSettings.headerOffsetY}px;" alt="Site header" /></div>`
           : '',
         scrapedFooterHtml: screenshotSrc
-          ? `<div style="width: 100%; height: 180px; overflow: hidden;"><img src="${screenshotSrc}" style="width: 100%; height: 100%; display: block; object-fit: cover; object-position: bottom;" alt="Site footer" /></div>`
+          ? `<div style="width: 100%; height: ${cropSettings.footerHeight}px; overflow: hidden;"><img src="${screenshotSrc}" style="width: 100%; display: block; object-fit: cover; object-position: center calc(100% - ${cropSettings.footerOffsetY}px);" alt="Site footer" /></div>`
           : '',
         scrapedCss: '', // No CSS needed for screenshot
         // Still apply form styles if extracted
@@ -713,7 +731,8 @@ export function SiteMirrorCard({ demo, onApplyBranding }: SiteMirrorCardProps) {
                       scrapedData.formStyles,
                       scrapedData.colors.buttonColor,
                       captureMode,
-                      getSelectedScreenshot()
+                      getSelectedScreenshot(),
+                      cropSettings
                     )}
                     className="w-full h-[500px] border-0"
                     title="Scraped branding preview"
@@ -725,6 +744,135 @@ export function SiteMirrorCard({ demo, onApplyBranding }: SiteMirrorCardProps) {
               {/* Screenshot Mode: Show screenshot as header preview */}
               {captureMode === 'screenshot' && (scrapedData.screenshot || scrapedData.screenshots) && (
                 <div className="space-y-3">
+                  {/* Crop Settings */}
+                  <div className="space-y-4 p-4 rounded-lg bg-muted/50 border border-border">
+                    <Label className="text-base font-semibold">Crop Settings</Label>
+                    
+                    {/* Header Crop Controls */}
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-primary" />
+                        <Label className="font-medium">Header Crop</Label>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <div className="flex justify-between items-center">
+                            <Label className="text-xs text-muted-foreground">Height</Label>
+                            <span className="text-xs font-mono">{cropSettings.headerHeight}px</span>
+                          </div>
+                          <Slider
+                            value={[cropSettings.headerHeight]}
+                            onValueChange={([v]) => setCropSettings(prev => ({ ...prev, headerHeight: v }))}
+                            min={60}
+                            max={400}
+                            step={10}
+                            className="w-full"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <div className="flex justify-between items-center">
+                            <Label className="text-xs text-muted-foreground">Offset from Top</Label>
+                            <span className="text-xs font-mono">{cropSettings.headerOffsetY}px</span>
+                          </div>
+                          <Slider
+                            value={[cropSettings.headerOffsetY]}
+                            onValueChange={([v]) => setCropSettings(prev => ({ ...prev, headerOffsetY: v }))}
+                            min={0}
+                            max={500}
+                            step={10}
+                            className="w-full"
+                          />
+                        </div>
+                      </div>
+                      {/* Header Preview Strip */}
+                      <div 
+                        className="relative border rounded overflow-hidden"
+                        style={{ height: `${Math.min(cropSettings.headerHeight, 150)}px` }}
+                      >
+                        {getSelectedScreenshot() && (
+                          <img
+                            src={getScreenshotSrc(getSelectedScreenshot()!)}
+                            alt="Header crop preview"
+                            className="w-full"
+                            style={{
+                              objectFit: 'cover',
+                              objectPosition: `center ${cropSettings.headerOffsetY}px`,
+                              height: '100%',
+                            }}
+                          />
+                        )}
+                        <div className="absolute inset-0 border-2 border-primary/50 border-dashed pointer-events-none" />
+                      </div>
+                    </div>
+                    
+                    {/* Footer Crop Controls */}
+                    <div className="space-y-3 pt-3 border-t border-border">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-secondary" />
+                        <Label className="font-medium">Footer Crop</Label>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <div className="flex justify-between items-center">
+                            <Label className="text-xs text-muted-foreground">Height</Label>
+                            <span className="text-xs font-mono">{cropSettings.footerHeight}px</span>
+                          </div>
+                          <Slider
+                            value={[cropSettings.footerHeight]}
+                            onValueChange={([v]) => setCropSettings(prev => ({ ...prev, footerHeight: v }))}
+                            min={60}
+                            max={400}
+                            step={10}
+                            className="w-full"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <div className="flex justify-between items-center">
+                            <Label className="text-xs text-muted-foreground">Offset from Bottom</Label>
+                            <span className="text-xs font-mono">{cropSettings.footerOffsetY}px</span>
+                          </div>
+                          <Slider
+                            value={[cropSettings.footerOffsetY]}
+                            onValueChange={([v]) => setCropSettings(prev => ({ ...prev, footerOffsetY: v }))}
+                            min={0}
+                            max={500}
+                            step={10}
+                            className="w-full"
+                          />
+                        </div>
+                      </div>
+                      {/* Footer Preview Strip */}
+                      <div 
+                        className="relative border rounded overflow-hidden"
+                        style={{ height: `${Math.min(cropSettings.footerHeight, 150)}px` }}
+                      >
+                        {getSelectedScreenshot() && (
+                          <img
+                            src={getScreenshotSrc(getSelectedScreenshot()!)}
+                            alt="Footer crop preview"
+                            className="w-full"
+                            style={{
+                              objectFit: 'cover',
+                              objectPosition: `center calc(100% - ${cropSettings.footerOffsetY}px)`,
+                              height: '100%',
+                            }}
+                          />
+                        )}
+                        <div className="absolute inset-0 border-2 border-secondary/50 border-dashed pointer-events-none" />
+                      </div>
+                    </div>
+                    
+                    {/* Reset Button */}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCropSettings(DEFAULT_CROP_SETTINGS)}
+                      className="mt-2"
+                    >
+                      Reset to Defaults
+                    </Button>
+                  </div>
+
                   <div className="flex items-center justify-between flex-wrap gap-2">
                     <Label>Select Viewport for Header/Footer</Label>
                     <div className="flex gap-1">
