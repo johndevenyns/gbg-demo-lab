@@ -537,18 +537,46 @@ export function SiteMirrorCard({ demo, onApplyBranding }: SiteMirrorCardProps) {
       <Dialog open={showPreview} onOpenChange={setShowPreview}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Preview Scraped Branding</DialogTitle>
+            <DialogTitle>
+              {captureMode === 'screenshot' 
+                ? 'Preview Screenshot Capture' 
+                : 'Preview Scraped Branding'}
+            </DialogTitle>
             <DialogDescription>
-              Review the extracted branding from {url}
+              {captureMode === 'screenshot'
+                ? `Screenshot header and form styling from ${url}`
+                : `Review the extracted branding from ${url}`}
             </DialogDescription>
           </DialogHeader>
 
           {scrapedData && (
             <div className="space-y-6">
-              {/* Screenshot Preview */}
-              {scrapedData.screenshot && (
+              {/* Screenshot Mode: Show screenshot as header preview */}
+              {captureMode === 'screenshot' && scrapedData.screenshot && (
                 <div className="space-y-2">
-                  <Label>Site Screenshot</Label>
+                  <Label className="flex items-center gap-2">
+                    <Camera className="w-4 h-4" />
+                    Header Screenshot (will be used as header)
+                  </Label>
+                  <div className="border rounded-lg overflow-hidden bg-muted">
+                    <div className="bg-background">
+                      <img
+                        src={`data:image/png;base64,${scrapedData.screenshot}`}
+                        alt="Site header screenshot"
+                        className="w-full"
+                      />
+                    </div>
+                    <div className="p-4 bg-muted/50 text-center text-sm text-muted-foreground">
+                      This screenshot will be displayed as the header image
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* HTML Mode: Show full screenshot as reference */}
+              {captureMode === 'html' && scrapedData.screenshot && (
+                <div className="space-y-2">
+                  <Label>Site Screenshot (Reference)</Label>
                   <div className="border rounded-lg overflow-hidden">
                     <img
                       src={`data:image/png;base64,${scrapedData.screenshot}`}
@@ -603,8 +631,13 @@ export function SiteMirrorCard({ demo, onApplyBranding }: SiteMirrorCardProps) {
                 <div className="space-y-2">
                   <Label className="flex items-center gap-2">
                     <Paintbrush className="w-4 h-4" />
-                    Extracted Form Styling
+                    Extracted Form Styling {captureMode === 'screenshot' && '(will be applied)'}
                   </Label>
+                  {captureMode === 'screenshot' && (
+                    <p className="text-xs text-muted-foreground">
+                      These form styles will be applied alongside the screenshot header
+                    </p>
+                  )}
                   <div className="p-4 rounded-lg bg-primary/5 border border-primary/20">
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
                       {/* Input preview */}
@@ -707,7 +740,7 @@ export function SiteMirrorCard({ demo, onApplyBranding }: SiteMirrorCardProps) {
               {/* Logo Preview */}
               {scrapedData.logoUrl && (
                 <div className="space-y-2">
-                  <Label>Detected Logo</Label>
+                  <Label>Detected Logo {captureMode === 'screenshot' && '(for reference)'}</Label>
                   <div className="p-4 bg-muted rounded-lg inline-block">
                     <img
                       src={scrapedData.logoUrl}
@@ -718,8 +751,8 @@ export function SiteMirrorCard({ demo, onApplyBranding }: SiteMirrorCardProps) {
                 </div>
               )}
 
-              {/* Header Preview */}
-              {scrapedData.headerHtml && (
+              {/* Header Preview - Only show in HTML mode */}
+              {captureMode === 'html' && scrapedData.headerHtml && (
                 <div className="space-y-2">
                   <Label>Extracted Header HTML</Label>
                   <div className="bg-muted/50 rounded-lg p-3 max-h-32 overflow-y-auto">
@@ -731,8 +764,8 @@ export function SiteMirrorCard({ demo, onApplyBranding }: SiteMirrorCardProps) {
                 </div>
               )}
 
-              {/* Footer Preview */}
-              {scrapedData.footerHtml && (
+              {/* Footer Preview - Only show in HTML mode */}
+              {captureMode === 'html' && scrapedData.footerHtml && (
                 <div className="space-y-2">
                   <Label>Extracted Footer HTML</Label>
                   <div className="bg-muted/50 rounded-lg p-3 max-h-32 overflow-y-auto">
@@ -744,8 +777,8 @@ export function SiteMirrorCard({ demo, onApplyBranding }: SiteMirrorCardProps) {
                 </div>
               )}
 
-              {/* CSS Preview */}
-              {scrapedData.cssContent && (
+              {/* CSS Preview - Only show in HTML mode */}
+              {captureMode === 'html' && scrapedData.cssContent && (
                 <div className="space-y-2">
                   <Label>Extracted CSS ({scrapedData.cssContent.length} chars)</Label>
                   <div className="bg-muted/50 rounded-lg p-3 max-h-32 overflow-y-auto">
