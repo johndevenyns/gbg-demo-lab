@@ -3,36 +3,63 @@ import { useDemoBySlug } from "@/hooks/useDemos";
 import { useAuth } from "@/hooks/useAuth";
 import { Loader2, ArrowLeft, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useMemo } from "react";
 import { DemoFlowRenderer } from "@/components/preview/DemoFlowRenderer";
 import { DEFAULT_SUCCESS_CONFIG, DEFAULT_FAILURE_CONFIG } from "@/components/preview/ResultPage";
+import { DEFAULT_FORM_STYLE } from "@/types/formStyle";
 
 export default function DemoPreview() {
   const { slug } = useParams<{ slug: string }>();
   const { isAdmin, isLoading: authLoading } = useAuth();
   const { data: demo, isLoading, error } = useDemoBySlug(slug || "");
 
-  // Inject scraped CSS into the page
-  useEffect(() => {
-    if (demo?.scrapedCss) {
-      const styleElement = document.createElement('style');
-      styleElement.id = 'scraped-css';
-      styleElement.textContent = demo.scrapedCss;
-      document.head.appendChild(styleElement);
-
-      return () => {
-        const existingStyle = document.getElementById('scraped-css');
-        if (existingStyle) {
-          existingStyle.remove();
-        }
-      };
-    }
-  }, [demo?.scrapedCss]);
-
   const handleFlowComplete = useCallback((success: boolean, referenceId?: string) => {
     console.log('Flow complete:', { success, referenceId });
     // The result page handles the redirect via its button
   }, []);
+
+  // Build full HTML document for the preview iframe - handles all mirroring methods properly
+  const previewDocument = useMemo(() => {
+    if (!demo) return null;
+
+    const activeMethod = demo.mirrorActiveMethod || 'html';
+    const formStyle = demo.formStyle || DEFAULT_FORM_STYLE;
+    
+    // Get the correct header/footer HTML based on active method
+    let headerHtml = '';
+    let footerHtml = '';
+    let cssContent = '';
+
+    if (activeMethod === 'screenshot') {
+      headerHtml = demo.mirrorScreenshotHeaderHtml || '';
+      footerHtml = demo.mirrorScreenshotFooterHtml || '';
+      cssContent = ''; // Screenshot method uses img tags, no external CSS
+    } else {
+      // HTML capture method
+      headerHtml = demo.mirrorHtmlHeaderHtml || demo.scrapedHeaderHtml || '';
+      footerHtml = demo.mirrorHtmlFooterHtml || demo.scrapedFooterHtml || '';
+      cssContent = demo.mirrorHtmlCss || demo.scrapedCss || '';
+    }
+
+    // Fallback header if nothing is configured
+    if (!headerHtml.trim()) {
+      headerHtml = `
+        <header style="padding: 16px 24px; background: ${demo.headerBgColor || '#1a1a2e'}; color: ${demo.headerTextColor || '#ffffff'};">
+          <div style="max-width: 1200px; margin: 0 auto; display: flex; align-items: center; gap: 16px;">
+            ${demo.logoUrl ? `<img src="${demo.logoUrl}" alt="${demo.customerName}" style="height: 32px;" />` : ''}
+            <span style="font-weight: 600; font-size: 18px;">${demo.customerName}</span>
+          </div>
+        </header>
+      `;
+    }
+
+    return {
+      headerHtml,
+      footerHtml,
+      cssContent,
+      formStyle,
+    };
+  }, [demo]);
   
   if (isLoading) {
     return (
@@ -53,43 +80,60 @@ export default function DemoPreview() {
     );
   }
 
-  // Select active header/footer based on mirrorActiveMethod
-  const activeMethod = demo.mirrorActiveMethod || 'html';
-  const activeHeaderHtml = activeMethod === 'screenshot'
-    ? demo.mirrorScreenshotHeaderHtml
-    : demo.mirrorHtmlHeaderHtml;
-  const activeFooterHtml = activeMethod === 'screenshot'
-    ? demo.mirrorScreenshotFooterHtml
-    : demo.mirrorHtmlFooterHtml;
-  // Fallback to legacy fields if new fields are empty
-  const hasScrapedHeader = (activeHeaderHtml && activeHeaderHtml.trim().length > 0)
-    || (demo.scrapedHeaderHtml && demo.scrapedHeaderHtml.trim().length > 0);
-  const hasScrapedFooter = (activeFooterHtml && activeFooterHtml.trim().length > 0)
-    || (demo.scrapedFooterHtml && demo.scrapedFooterHtml.trim().length > 0);
-  const finalHeaderHtml = (activeHeaderHtml && activeHeaderHtml.trim()) || demo.scrapedHeaderHtml || '';
-  const finalFooterHtml = (activeFooterHtml && activeFooterHtml.trim()) || demo.scrapedFooterHtml || '';
+  // Check if we have mirrored content
+  const hasMirroredHeader = Boolean(previewDocument?.headerHtml?.trim());
+  const hasMirroredFooter = Boolean(previewDocument?.footerHtml?.trim());
 
   return (
-    <div className="min-h-screen flex flex-col">
-      {/* Scraped Header/Nav or Fallback */}
-      {hasScrapedHeader ? (
-        <div 
-          className="scraped-header"
-          dangerouslySetInnerHTML={{ __html: finalHeaderHtml }} 
+    <div className="min-h-screen flex flex-col bg-background">
+      {/* Mirrored Header - using iframe for CSS isolation */}
+      {hasMirroredHeader && previewDocument && (
+        <iframe
+          srcDoc={`
+            <!DOCTYPE html>
+            <html>
+              <head>
+                <meta charset="utf-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1">
+                <style>
+                  body { margin: 0; padding: 0; }
+                  * { box-sizing: border-box; }
+                  a { pointer-events: none; }
+                </style>
+                ${previewDocument.cssContent ? `<style>${previewDocument.cssContent}</style>` : ''}
+              </head>
+              <body>
+                ${previewDocument.headerHtml}
+              </body>
+            </html>
+          `}
+          className="w-full border-0"
+          style={{ height: 'auto', minHeight: '60px' }}
+          title="Site header"
+          sandbox="allow-same-origin"
+          onLoad={(e) => {
+            // Auto-resize iframe to content height
+            const iframe = e.target as HTMLIFrameElement;
+            try {
+              const height = iframe.contentDocument?.body?.scrollHeight || 80;
+              iframe.style.height = `${height}px`;
+            } catch {
+              iframe.style.height = '80px';
+            }
+          }}
         />
-      ) : (
-        <header className="py-4 px-6" style={{ backgroundColor: demo.headerBgColor, color: demo.headerTextColor }}>
-          <div className="max-w-4xl mx-auto flex items-center gap-4">
-            {demo.logoUrl && <img src={demo.logoUrl} alt={demo.customerName} className="h-8" />}
-            <span className="font-semibold text-lg">{demo.customerName}</span>
-          </div>
-        </header>
       )}
-      
-      {/* Main Content */}
-      <main className="flex-1 bg-background py-12">
+
+      {/* Main Form Content */}
+      <main className="flex-1 py-12" style={{ backgroundColor: '#f5f5f5' }}>
         <div className="max-w-xl mx-auto px-4">
-          <div className="bg-card rounded-xl shadow-lg p-8 border border-border">
+          <div 
+            className="rounded-xl shadow-lg p-8 border"
+            style={{
+              backgroundColor: 'white',
+              borderColor: '#e5e7eb',
+            }}
+          >
             {demo.formSteps.length > 0 ? (
               <DemoFlowRenderer
                 key={demo.id}
@@ -124,11 +168,41 @@ export default function DemoPreview() {
         </div>
       </main>
 
-      {/* Scraped Footer */}
-      {hasScrapedFooter && finalFooterHtml && (
-        <div 
-          className="scraped-footer"
-          dangerouslySetInnerHTML={{ __html: finalFooterHtml }} 
+      {/* Mirrored Footer - using iframe for CSS isolation */}
+      {hasMirroredFooter && previewDocument && (
+        <iframe
+          srcDoc={`
+            <!DOCTYPE html>
+            <html>
+              <head>
+                <meta charset="utf-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1">
+                <style>
+                  body { margin: 0; padding: 0; }
+                  * { box-sizing: border-box; }
+                  a { pointer-events: none; }
+                </style>
+                ${previewDocument.cssContent ? `<style>${previewDocument.cssContent}</style>` : ''}
+              </head>
+              <body>
+                ${previewDocument.footerHtml}
+              </body>
+            </html>
+          `}
+          className="w-full border-0"
+          style={{ height: 'auto', minHeight: '60px' }}
+          title="Site footer"
+          sandbox="allow-same-origin"
+          onLoad={(e) => {
+            // Auto-resize iframe to content height
+            const iframe = e.target as HTMLIFrameElement;
+            try {
+              const height = iframe.contentDocument?.body?.scrollHeight || 200;
+              iframe.style.height = `${height}px`;
+            } catch {
+              iframe.style.height = '200px';
+            }
+          }}
         />
       )}
 
