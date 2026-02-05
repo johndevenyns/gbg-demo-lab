@@ -286,9 +286,9 @@ export function SiteMirrorCard({ demo, onApplyBranding }: SiteMirrorCardProps) {
   const handleClearMirror = () => {
     // Clear scraped content but keep the URL
     const updates: Partial<DemoEnvironment> = {
-      scrapedHeaderHtml: undefined,
-      scrapedFooterHtml: undefined,
-      scrapedCss: undefined,
+      scrapedHeaderHtml: '',
+      scrapedFooterHtml: '',
+      scrapedCss: '',
       // Reset form style to template if it was mirrored
       ...(demo.formStyle?.source === 'mirrored' && { formStyle: { ...DEFAULT_FORM_STYLE, source: 'template' } }),
     };
