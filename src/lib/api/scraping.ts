@@ -102,9 +102,21 @@ export const scrapingApi = {
     return data;
   },
 
-  async scrapeFormStyles(url: string, selector?: string): Promise<ScrapeFormStylesResponse> {
+  async scrapeFormStyles(
+    url: string, 
+    selector?: string,
+    options?: {
+      triggerSelector?: string;
+      waitTime?: number;
+    }
+  ): Promise<ScrapeFormStylesResponse> {
     const { data, error } = await supabase.functions.invoke('scrape-form-styles', {
-      body: { url, selector },
+      body: { 
+        url, 
+        selector,
+        triggerSelector: options?.triggerSelector,
+        waitTime: options?.waitTime,
+      },
     });
 
     if (error) {

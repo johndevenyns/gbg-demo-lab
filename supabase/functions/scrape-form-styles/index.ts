@@ -3,6 +3,13 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+interface ScrapeOptions {
+  url: string;
+  selector?: string;
+  triggerSelector?: string; // CSS selector for button/link to click to open modal
+  waitTime?: number; // Custom wait time in ms
+}
+
 interface FormElementStyles {
   // Input styles
   inputBgColor: string;
@@ -48,7 +55,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { url, selector } = await req.json();
+    const { url, selector, triggerSelector, waitTime } = await req.json() as ScrapeOptions;
 
     if (!url) {
       return new Response(
@@ -75,26 +82,21 @@ Deno.serve(async (req) => {
     const baseUrl = new URL(formattedUrl);
     console.log('Scraping form styles from URL:', formattedUrl);
     console.log('Target selector:', selector || '(auto-detect)');
+    console.log('Trigger selector:', triggerSelector || '(none)');
+    console.log('Wait time:', waitTime || 3000, 'ms');
 
-    // Use Firecrawl with JSON extraction to get computed styles
-    // We'll ask the AI to extract specific form styling information
-    const extractionPrompt = selector 
-      ? `Extract the exact CSS styles for the form container matching "${selector}" and all its form elements. Include:
-         - Input field styles (background, border, padding, font, colors)
-         - Input focus/active state styles
-         - Label styles
-         - Button styles
-         - Container background and spacing
-         - Any error state styling
-         Return the actual CSS property values as they appear computed on the page.`
-      : `Find the main application form, contact form, or signup form on this page. Extract its exact CSS styles including:
-         - Input field styles (background, border, padding, font, colors)
-         - Input focus/active state styles
-         - Label styles  
-         - Button styles
-         - Container background and spacing
-         - Any error state styling
-         Return the actual CSS property values as they appear computed on the page.`;
+    // Build actions array for triggering modals/pop-outs
+    const actions: Array<{ type: string; selector?: string; milliseconds?: number }> = [];
+    
+    if (triggerSelector) {
+      // Click the trigger element to open modal/pop-out
+      actions.push({ type: 'click', selector: triggerSelector });
+      // Wait for modal animation
+      actions.push({ type: 'wait', milliseconds: 1500 });
+    }
+    
+    // Always wait for dynamic content
+    actions.push({ type: 'wait', milliseconds: waitTime || 3000 });
 
     const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
       method: 'POST',
@@ -106,7 +108,8 @@ Deno.serve(async (req) => {
         url: formattedUrl,
         formats: ['rawHtml', 'html'],
         onlyMainContent: false,
-        waitFor: 3000, // Wait for dynamic content
+        waitFor: waitTime || 3000,
+        actions: actions.length > 0 ? actions : undefined,
       }),
     });
 
