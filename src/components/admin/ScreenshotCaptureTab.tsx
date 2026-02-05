@@ -27,6 +27,19 @@
    footerOffsetY: 0,
  };
  
+ // Crop settings per viewport
+ interface ViewportCropSettings {
+   desktop: CropSettings;
+   tablet: CropSettings;
+   mobile: CropSettings;
+ }
+ 
+ const DEFAULT_VIEWPORT_CROP_SETTINGS: ViewportCropSettings = {
+   desktop: { ...DEFAULT_CROP_SETTINGS },
+   tablet: { ...DEFAULT_CROP_SETTINGS },
+   mobile: { ...DEFAULT_CROP_SETTINGS },
+ };
+ 
  function getScreenshotSrc(screenshot: string): string {
    const s = screenshot.trim();
    if (!s) return '';
@@ -98,7 +111,7 @@
    const [isLoading, setIsLoading] = useState(false);
    const [scrapedData, setScrapedData] = useState<ScrapedBranding | null>(null);
    const [selectedViewport, setSelectedViewport] = useState<ViewportSize>('desktop');
-   const [cropSettings, setCropSettings] = useState<CropSettings>(DEFAULT_CROP_SETTINGS);
+   const [viewportCropSettings, setViewportCropSettings] = useState<ViewportCropSettings>(DEFAULT_VIEWPORT_CROP_SETTINGS);
   const [previewKey, setPreviewKey] = useState(0);
   const [showSavedCropEditor, setShowSavedCropEditor] = useState(false);
   const [savedCropSettings, setSavedCropSettings] = useState<CropSettings>(DEFAULT_CROP_SETTINGS);
@@ -107,6 +120,17 @@
   const refreshPreview = () => {
     setPreviewKey((k) => k + 1);
   };
+ 
+   // Get current viewport's crop settings
+   const cropSettings = viewportCropSettings[selectedViewport];
+   
+   // Update current viewport's crop settings
+   const setCropSettings = (settings: CropSettings | ((prev: CropSettings) => CropSettings)) => {
+     setViewportCropSettings(prev => ({
+       ...prev,
+       [selectedViewport]: typeof settings === 'function' ? settings(prev[selectedViewport]) : settings,
+     }));
+   };
  
   // Extract the screenshot source from saved HTML if available
   const savedScreenshotSrc = useMemo(() => {
@@ -162,8 +186,25 @@
    const handleApply = () => {
      if (!scrapedData) return;
  
-     const selectedScreenshotUrl = getSelectedScreenshot();
-     const screenshotSrc = selectedScreenshotUrl ? getScreenshotSrc(selectedScreenshotUrl) : '';
+     // Get all viewport screenshots
+     const desktopScreenshot = scrapedData.screenshots?.desktop || scrapedData.screenshot || '';
+     const tabletScreenshot = scrapedData.screenshots?.tablet || '';
+     const mobileScreenshot = scrapedData.screenshots?.mobile || '';
+     
+     const desktopSrc = desktopScreenshot ? getScreenshotSrc(desktopScreenshot) : '';
+     const tabletSrc = tabletScreenshot ? getScreenshotSrc(tabletScreenshot) : '';
+     const mobileSrc = mobileScreenshot ? getScreenshotSrc(mobileScreenshot) : '';
+     
+     // Generate HTML for each viewport
+     const generateHeaderHtml = (src: string, settings: CropSettings) => {
+       if (!src) return '';
+       return `<div style="width: 100%; height: ${settings.headerHeight}px; overflow: hidden;"><img src="${src}" style="width: 100%; display: block; object-fit: cover; object-position: center -${settings.headerOffsetY}px;" alt="Site header" /></div>`;
+     };
+     
+     const generateFooterHtml = (src: string, settings: CropSettings) => {
+       if (!src) return '';
+       return `<div style="width: 100%; height: ${settings.footerHeight}px; overflow: hidden;"><img src="${src}" style="width: 100%; display: block; object-fit: cover; object-position: center calc(100% + ${settings.footerOffsetY}px);" alt="Site footer" /></div>`;
+     };
  
      let formStyleConfig: FormStyleConfig | undefined;
      if (scrapedData.formStyles) {
@@ -176,19 +217,21 @@
        headerBgColor: scrapedData.colors.headerBgColor,
        headerTextColor: scrapedData.colors.headerTextColor,
        buttonColor: scrapedData.colors.buttonColor,
-      // Store in dedicated screenshot capture fields (won't overwrite HTML capture)
-      mirrorScreenshotHeaderHtml: screenshotSrc
-          ? `<div style="width: 100%; height: ${cropSettings.headerHeight}px; overflow: hidden;"><img src="${screenshotSrc}" style="width: 100%; display: block; object-fit: cover; object-position: center -${cropSettings.headerOffsetY}px;" alt="Site header" /></div>`
-         : '',
-      mirrorScreenshotFooterHtml: screenshotSrc
-          ? `<div style="width: 100%; height: ${cropSettings.footerHeight}px; overflow: hidden;"><img src="${screenshotSrc}" style="width: 100%; display: block; object-fit: cover; object-position: center calc(100% + ${cropSettings.footerOffsetY}px);" alt="Site footer" /></div>`
-         : '',
-      mirrorScreenshotCss: '',
+       // Store desktop as the primary (used in preview)
+       mirrorScreenshotHeaderHtml: generateHeaderHtml(desktopSrc, viewportCropSettings.desktop),
+       mirrorScreenshotFooterHtml: generateFooterHtml(desktopSrc, viewportCropSettings.desktop),
+       mirrorScreenshotCss: JSON.stringify({
+         viewportScreenshots: {
+           desktop: { src: desktopSrc, crop: viewportCropSettings.desktop },
+           tablet: { src: tabletSrc, crop: viewportCropSettings.tablet },
+           mobile: { src: mobileSrc, crop: viewportCropSettings.mobile },
+         }
+       }),
        ...(formStyleConfig && { formStyle: formStyleConfig }),
      };
  
      onApply(updates);
-     toast({ title: "Screenshot Capture Applied", description: "Header and footer screenshots have been saved" });
+     toast({ title: "Screenshot Capture Applied", description: "All viewport screenshots have been saved" });
    };
  
    const selectedScreenshot = getSelectedScreenshot();
@@ -260,11 +303,14 @@
                      variant={selectedViewport === key ? 'default' : 'outline'}
                      size="sm"
                      onClick={() => setSelectedViewport(key)}
-                     disabled={!scrapedData.screenshots?.[key] && key !== 'desktop'}
+                   disabled={!scrapedData.screenshots?.[key]}
                      className="gap-1"
                    >
                      <Icon className="w-4 h-4" />
                      {label}
+                   {scrapedData.screenshots?.[key] && (
+                     <span className="ml-1 w-2 h-2 rounded-full bg-green-500" title="Screenshot captured" />
+                   )}
                    </Button>
                  ))}
                </div>
@@ -312,9 +358,34 @@
                screenshotSrc={getScreenshotSrc(selectedScreenshot)}
                cropSettings={cropSettings}
                onCropChange={setCropSettings}
-               onReset={() => setCropSettings(DEFAULT_CROP_SETTINGS)}
+               onReset={() => setCropSettings(prev => ({ ...DEFAULT_CROP_SETTINGS }))}
                onApplyCrop={refreshPreview}
              />
+ 
+             {/* Per-viewport crop status */}
+             <div className="flex flex-wrap gap-2 text-xs">
+               {(['desktop', 'tablet', 'mobile'] as ViewportSize[]).map((vp) => {
+                 const hasScreenshot = !!scrapedData.screenshots?.[vp];
+                 const settings = viewportCropSettings[vp];
+                 const isModified = settings.headerHeight !== 180 || settings.headerOffsetY !== 0 ||
+                                    settings.footerHeight !== 180 || settings.footerOffsetY !== 0;
+                 return (
+                   <div 
+                     key={vp}
+                     className={`px-2 py-1 rounded border ${
+                       vp === selectedViewport 
+                         ? 'border-primary bg-primary/10' 
+                         : 'border-border bg-muted/50'
+                     } ${!hasScreenshot ? 'opacity-50' : ''}`}
+                   >
+                     <span className="capitalize">{vp}</span>
+                     {hasScreenshot && isModified && (
+                       <span className="ml-1 text-primary">✓</span>
+                     )}
+                   </div>
+                 );
+               })}
+             </div>
  
              {/* Live Preview */}
              <div className="space-y-2">
