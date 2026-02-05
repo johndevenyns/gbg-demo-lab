@@ -38,6 +38,22 @@ export interface FormStyleConfig {
   // Background colors
   formBgColor?: string;        // Background color of the form container itself
   contentAreaBgColor?: string; // Background color of the area surrounding the form
+  
+  // Form container styling
+  formBorderWidth?: '0' | '1' | '2' | '3';
+  formBorderColor?: string;
+  formBorderRadius?: 'none' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+  formShadow?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
+  
+  // Title text styling (form heading)
+  titleFontSize?: 'sm' | 'base' | 'lg' | 'xl' | '2xl';
+  titleFontWeight?: 'normal' | 'medium' | 'semibold' | 'bold';
+  titleColor?: string;
+  titleAlignment?: 'left' | 'center' | 'right';
+  
+  // Body text styling (descriptions, helper text)
+  bodyFontSize?: 'xs' | 'sm' | 'base';
+  bodyColor?: string;
 }
 
 // Default form style
@@ -60,6 +76,16 @@ export const DEFAULT_FORM_STYLE: FormStyleConfig = {
   fieldSpacing: 'normal',
   formBgColor: '#ffffff',
   contentAreaBgColor: '#f5f5f5',
+  formBorderWidth: '1',
+  formBorderColor: '#e5e7eb',
+  formBorderRadius: 'lg',
+  formShadow: 'lg',
+  titleFontSize: 'xl',
+  titleFontWeight: 'semibold',
+  titleColor: '#1f2937',
+  titleAlignment: 'center',
+  bodyFontSize: 'sm',
+  bodyColor: '#6b7280',
 };
 
 // Predefined form style templates

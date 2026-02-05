@@ -8,6 +8,30 @@ import { DemoFlowRenderer } from "@/components/preview/DemoFlowRenderer";
 import { DEFAULT_SUCCESS_CONFIG, DEFAULT_FAILURE_CONFIG } from "@/components/preview/ResultPage";
 import { DEFAULT_FORM_STYLE } from "@/types/formStyle";
 
+// Helper functions for form styling
+function getFormBorderRadius(radius?: string): string {
+  switch (radius) {
+    case 'none': return '0px';
+    case 'sm': return '6px';
+    case 'md': return '8px';
+    case 'lg': return '12px';
+    case 'xl': return '16px';
+    case '2xl': return '24px';
+    default: return '12px';
+  }
+}
+
+function getFormShadow(shadow?: string): string {
+  switch (shadow) {
+    case 'none': return 'none';
+    case 'sm': return '0 1px 2px rgba(0,0,0,0.05)';
+    case 'md': return '0 4px 6px -1px rgba(0,0,0,0.1)';
+    case 'lg': return '0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1)';
+    case 'xl': return '0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1)';
+    default: return '0 10px 15px -3px rgba(0,0,0,0.1)';
+  }
+}
+
 export default function DemoPreview() {
   const { slug } = useParams<{ slug: string }>();
   const { isAdmin, isLoading: authLoading } = useAuth();
@@ -133,10 +157,12 @@ export default function DemoPreview() {
       >
         <div className="max-w-xl mx-auto px-4">
           <div 
-            className="rounded-xl shadow-lg p-8 border"
+            className="p-8"
             style={{
               backgroundColor: (previewDocument?.formStyle?.formBgColor || 'white'),
-              borderColor: '#e5e7eb',
+              borderRadius: getFormBorderRadius(previewDocument?.formStyle?.formBorderRadius),
+              boxShadow: getFormShadow(previewDocument?.formStyle?.formShadow),
+              border: `${previewDocument?.formStyle?.formBorderWidth || '1'}px solid ${previewDocument?.formStyle?.formBorderColor || '#e5e7eb'}`,
             }}
           >
             {demo.formSteps.length > 0 ? (
