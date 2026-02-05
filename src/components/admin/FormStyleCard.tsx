@@ -425,8 +425,14 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, scrapedBranding 
          </p>
        </CardHeader>
        <CardContent>
-         <div className="p-6 rounded-lg border bg-white">
-           <div className="max-w-md mx-auto space-y-5">
+          <div 
+            className="p-6 rounded-lg border"
+            style={{ backgroundColor: formStyle.contentAreaBgColor || '#f5f5f5' }}
+          >
+            <div 
+              className="max-w-md mx-auto space-y-5 rounded-lg p-6 shadow-sm"
+              style={{ backgroundColor: formStyle.formBgColor || '#ffffff' }}
+            >
              <h3 
                style={{
                  color: formStyle.labelColor,
@@ -1308,6 +1314,58 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, scrapedBranding 
                 </div>
               </div>
             </div>
+
+            {/* Background Colors */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h4 className="font-semibold text-sm">Background Colors</h4>
+                <p className="text-xs text-muted-foreground">Controls the form and content area backgrounds</p>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Form Background</Label>
+                  <p className="text-xs text-muted-foreground">Background of the form container itself</p>
+                  <div className="flex items-center gap-2">
+                    <div 
+                      className="w-6 h-6 rounded border-2 border-border shrink-0"
+                      style={{ backgroundColor: formStyle.formBgColor || '#ffffff' }}
+                    />
+                    <input
+                      type="color"
+                      value={formStyle.formBgColor || '#ffffff'}
+                      onChange={(e) => updateCustomStyle({ formBgColor: e.target.value })}
+                      className="color-picker-swatch"
+                    />
+                    <Input
+                      value={formStyle.formBgColor || '#ffffff'}
+                      onChange={(e) => updateCustomStyle({ formBgColor: e.target.value })}
+                      className="font-mono text-xs"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Content Area Background</Label>
+                  <p className="text-xs text-muted-foreground">Background surrounding the form</p>
+                  <div className="flex items-center gap-2">
+                    <div 
+                      className="w-6 h-6 rounded border-2 border-border shrink-0"
+                      style={{ backgroundColor: formStyle.contentAreaBgColor || '#f5f5f5' }}
+                    />
+                    <input
+                      type="color"
+                      value={formStyle.contentAreaBgColor || '#f5f5f5'}
+                      onChange={(e) => updateCustomStyle({ contentAreaBgColor: e.target.value })}
+                      className="color-picker-swatch"
+                    />
+                    <Input
+                      value={formStyle.contentAreaBgColor || '#f5f5f5'}
+                      onChange={(e) => updateCustomStyle({ contentAreaBgColor: e.target.value })}
+                      className="font-mono text-xs"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
  
            {/* Save Button */}
            <div className="pt-4 border-t border-border">
@@ -1324,7 +1382,14 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, scrapedBranding 
             {/* Live Preview */}
             <div className="space-y-4">
               <h4 className="font-semibold text-sm">Preview</h4>
-              <div className="p-6 rounded-lg border bg-white">
+              <div 
+                className="p-6 rounded-lg border" 
+                style={{ backgroundColor: formStyle.contentAreaBgColor || '#f5f5f5' }}
+              >
+                <div 
+                  className="max-w-sm mx-auto rounded-lg p-6 shadow-sm"
+                  style={{ backgroundColor: formStyle.formBgColor || '#ffffff' }}
+                >
                 <div className="space-y-4 max-w-sm">
                   <div className="space-y-2">
                     <label
@@ -1368,6 +1433,7 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, scrapedBranding 
                   >
                     Continue
                   </button>
+                </div>
                 </div>
               </div>
             </div>

@@ -34,6 +34,10 @@ export interface FormStyleConfig {
   // Additional styling
   inputPadding?: 'sm' | 'md' | 'lg';
   fieldSpacing?: 'compact' | 'normal' | 'relaxed';
+  
+  // Background colors
+  formBgColor?: string;        // Background color of the form container itself
+  contentAreaBgColor?: string; // Background color of the area surrounding the form
 }
 
 // Default form style
@@ -54,6 +58,8 @@ export const DEFAULT_FORM_STYLE: FormStyleConfig = {
   successColor: '#22c55e',
   inputPadding: 'md',
   fieldSpacing: 'normal',
+  formBgColor: '#ffffff',
+  contentAreaBgColor: '#f5f5f5',
 };
 
 // Predefined form style templates
