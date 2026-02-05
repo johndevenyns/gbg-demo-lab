@@ -1,9 +1,10 @@
 import { useState, useMemo } from "react";
-import { Globe, Loader2, Check, X, ExternalLink, Paintbrush } from "lucide-react";
+import { Globe, Loader2, Check, X, ExternalLink, Paintbrush, Camera, Code } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { scrapingApi, ScrapedBranding, FormElementStyles } from "@/lib/api/scraping";
 import { useToast } from "@/hooks/use-toast";
 import { DemoEnvironment } from "@/types/demo";
@@ -16,6 +17,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+
+type CaptureMode = 'html' | 'screenshot';
 
 interface SiteMirrorCardProps {
   demo: DemoEnvironment;
@@ -206,6 +209,7 @@ export function SiteMirrorCard({ demo, onApplyBranding }: SiteMirrorCardProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [scrapedData, setScrapedData] = useState<ScrapedBranding | null>(null);
   const [showPreview, setShowPreview] = useState(false);
+  const [captureMode, setCaptureMode] = useState<CaptureMode>('html');
 
   const handleMirror = async () => {
     if (!url.trim()) {
@@ -248,35 +252,57 @@ export function SiteMirrorCard({ demo, onApplyBranding }: SiteMirrorCardProps) {
   const handleApply = () => {
     if (!scrapedData) return;
 
-    // Build form style config from extracted form styles
-    let formStyleConfig: FormStyleConfig | undefined;
-    if (scrapedData.formStyles) {
-      formStyleConfig = formElementStylesToConfig(scrapedData.formStyles);
+    if (captureMode === 'screenshot') {
+      // Screenshot mode: use screenshot as header image, clear HTML content
+      const updates: Partial<DemoEnvironment> = {
+        customerSiteUrl: url,
+        logoUrl: scrapedData.logoUrl || demo.logoUrl,
+        headerBgColor: scrapedData.colors.headerBgColor,
+        headerTextColor: scrapedData.colors.headerTextColor,
+        buttonColor: scrapedData.colors.buttonColor,
+        // Store screenshot as a data URL in headerHtml (wrapped in img tag)
+        scrapedHeaderHtml: scrapedData.screenshot 
+          ? `<div style="width: 100%; overflow: hidden;"><img src="data:image/png;base64,${scrapedData.screenshot}" style="width: 100%; display: block;" alt="Site header" /></div>`
+          : '',
+        scrapedFooterHtml: '', // No footer in screenshot mode
+        scrapedCss: '', // No CSS needed for screenshot
+      };
+
+      onApplyBranding(updates, true);
+      setShowPreview(false);
+      toast({
+        title: "Screenshot Header Applied & Saving...",
+        description: "The site screenshot is being used as the header image",
+      });
+    } else {
+      // HTML mode: use full HTML/CSS extraction (original behavior)
+      let formStyleConfig: FormStyleConfig | undefined;
+      if (scrapedData.formStyles) {
+        formStyleConfig = formElementStylesToConfig(scrapedData.formStyles);
+      }
+
+      const updates: Partial<DemoEnvironment> = {
+        customerSiteUrl: url,
+        logoUrl: scrapedData.logoUrl || demo.logoUrl,
+        headerBgColor: scrapedData.colors.headerBgColor,
+        headerTextColor: scrapedData.colors.headerTextColor,
+        buttonColor: scrapedData.colors.buttonColor,
+        scrapedHeaderHtml: scrapedData.headerHtml,
+        scrapedFooterHtml: scrapedData.footerHtml,
+        scrapedCss: scrapedData.cssContent,
+        // Apply form styles if extracted
+        ...(formStyleConfig && { formStyle: formStyleConfig }),
+      };
+
+      onApplyBranding(updates, true);
+      setShowPreview(false);
+      toast({
+        title: "Branding Applied & Saving...",
+        description: formStyleConfig 
+          ? "Site branding, CSS, and form styling are being saved" 
+          : "The scraped branding, CSS, and layout are being saved",
+      });
     }
-
-    const updates: Partial<DemoEnvironment> = {
-      customerSiteUrl: url,
-      logoUrl: scrapedData.logoUrl || demo.logoUrl,
-      headerBgColor: scrapedData.colors.headerBgColor,
-      headerTextColor: scrapedData.colors.headerTextColor,
-      buttonColor: scrapedData.colors.buttonColor,
-      scrapedHeaderHtml: scrapedData.headerHtml,
-      scrapedFooterHtml: scrapedData.footerHtml,
-      scrapedCss: scrapedData.cssContent,
-      // Apply form styles if extracted
-      ...(formStyleConfig && { formStyle: formStyleConfig }),
-    };
-
-    // Pass true to indicate this should auto-save
-    onApplyBranding(updates, true);
-
-    setShowPreview(false);
-    toast({
-      title: "Branding Applied & Saving...",
-      description: formStyleConfig 
-        ? "Site branding, CSS, and form styling are being saved" 
-        : "The scraped branding, CSS, and layout are being saved",
-    });
   };
 
   const handleClearMirror = () => {
@@ -385,6 +411,36 @@ export function SiteMirrorCard({ demo, onApplyBranding }: SiteMirrorCardProps) {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Capture Mode Selection */}
+          <div className="space-y-2">
+            <Label>Capture Method</Label>
+            <RadioGroup 
+              value={captureMode} 
+              onValueChange={(v) => setCaptureMode(v as CaptureMode)}
+              className="flex gap-4"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="html" id="mode-html" />
+                <Label htmlFor="mode-html" className="flex items-center gap-2 cursor-pointer font-normal">
+                  <Code className="w-4 h-4" />
+                  HTML/CSS (Interactive)
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="screenshot" id="mode-screenshot" />
+                <Label htmlFor="mode-screenshot" className="flex items-center gap-2 cursor-pointer font-normal">
+                  <Camera className="w-4 h-4" />
+                  Screenshot (Visual Only)
+                </Label>
+              </div>
+            </RadioGroup>
+            <p className="text-xs text-muted-foreground">
+              {captureMode === 'html' 
+                ? 'Captures live HTML/CSS for header/footer. Links won\'t work but elements are real.'
+                : 'Captures a screenshot of the navigation bar. Simpler but purely visual.'}
+            </p>
+          </div>
+
           <div className="flex gap-2">
             <div className="flex-1 space-y-2">
               <Label>Customer Website URL</Label>
