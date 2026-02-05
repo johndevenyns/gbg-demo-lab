@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Globe, Loader2, Check, X, ExternalLink, Paintbrush, Camera, Code, Eye } from "lucide-react";
+import { Globe, Loader2, Check, X, ExternalLink, Paintbrush, Camera, Code, Eye, Monitor, Tablet, Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/dialog";
 
 type CaptureMode = 'html' | 'screenshot';
+type ViewportSize = 'desktop' | 'tablet' | 'mobile';
 
 function getScreenshotSrc(screenshot: string): string {
   const s = screenshot.trim();
@@ -216,7 +217,8 @@ function generateScrapedPreviewHtml(
   scrapedData: ScrapedBranding,
   formStyles: FormElementStyles | undefined,
   buttonColor: string,
-  captureMode: 'html' | 'screenshot'
+  captureMode: 'html' | 'screenshot',
+  selectedScreenshotUrl?: string | null
 ): string {
   const fontFamily = formStyles?.inputFontFamily || 'system-ui, sans-serif';
   const labelColor = formStyles?.labelColor || '#333333';
@@ -226,10 +228,13 @@ function generateScrapedPreviewHtml(
   const inputBorderRadius = formStyles?.inputBorderRadius || '8px';
   const inputBorderWidth = formStyles?.inputBorderWidth || '1px';
   
+  // Use the selected screenshot or fallback to default
+  const screenshotToUse = selectedScreenshotUrl || scrapedData.screenshot;
+  
   // Build header content based on capture mode
   let headerContent = '';
-  if (captureMode === 'screenshot' && scrapedData.screenshot) {
-    const screenshotSrc = getScreenshotSrc(scrapedData.screenshot);
+  if (captureMode === 'screenshot' && screenshotToUse) {
+    const screenshotSrc = getScreenshotSrc(screenshotToUse);
     headerContent = `
       <div style="width: 100%; height: 180px; overflow: hidden;">
         <img
@@ -244,8 +249,8 @@ function generateScrapedPreviewHtml(
   }
 
   const footerContent = (() => {
-    if (captureMode === 'screenshot' && scrapedData.screenshot) {
-      const screenshotSrc = getScreenshotSrc(scrapedData.screenshot);
+    if (captureMode === 'screenshot' && screenshotToUse) {
+      const screenshotSrc = getScreenshotSrc(screenshotToUse);
       return `
         <div style="width: 100%; height: 180px; overflow: hidden;">
           <img
@@ -335,6 +340,16 @@ export function SiteMirrorCard({ demo, onApplyBranding }: SiteMirrorCardProps) {
   const [scrapedData, setScrapedData] = useState<ScrapedBranding | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [captureMode, setCaptureMode] = useState<CaptureMode>('html');
+  const [selectedViewport, setSelectedViewport] = useState<ViewportSize>('desktop');
+
+  // Get the screenshot for the selected viewport
+  const getSelectedScreenshot = (): string | null => {
+    if (!scrapedData) return null;
+    if (scrapedData.screenshots) {
+      return scrapedData.screenshots[selectedViewport] || scrapedData.screenshot;
+    }
+    return scrapedData.screenshot;
+  };
 
   const handleMirror = async () => {
     if (!url.trim()) {
@@ -385,7 +400,8 @@ export function SiteMirrorCard({ demo, onApplyBranding }: SiteMirrorCardProps) {
 
     if (captureMode === 'screenshot') {
       // Screenshot mode: use screenshot as header image, but still apply form styles
-      const screenshotSrc = scrapedData.screenshot ? getScreenshotSrc(scrapedData.screenshot) : '';
+      const selectedScreenshotUrl = getSelectedScreenshot();
+      const screenshotSrc = selectedScreenshotUrl ? getScreenshotSrc(selectedScreenshotUrl) : '';
       const updates: Partial<DemoEnvironment> = {
         customerSiteUrl: url,
         logoUrl: scrapedData.logoUrl || demo.logoUrl,
@@ -696,7 +712,8 @@ export function SiteMirrorCard({ demo, onApplyBranding }: SiteMirrorCardProps) {
                       scrapedData,
                       scrapedData.formStyles,
                       scrapedData.colors.buttonColor,
-                      captureMode
+                      captureMode,
+                      getSelectedScreenshot()
                     )}
                     className="w-full h-[500px] border-0"
                     title="Scraped branding preview"
@@ -706,16 +723,111 @@ export function SiteMirrorCard({ demo, onApplyBranding }: SiteMirrorCardProps) {
               </div>
 
               {/* Screenshot Mode: Show screenshot as header preview */}
-              {scrapedData.screenshot && (
+              {captureMode === 'screenshot' && (scrapedData.screenshot || scrapedData.screenshots) && (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <Label>Select Viewport for Header/Footer</Label>
+                    <div className="flex gap-1">
+                      <Button
+                        variant={selectedViewport === 'desktop' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setSelectedViewport('desktop')}
+                        className="gap-1"
+                      >
+                        <Monitor className="w-4 h-4" />
+                        Desktop
+                      </Button>
+                      <Button
+                        variant={selectedViewport === 'tablet' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setSelectedViewport('tablet')}
+                        className="gap-1"
+                        disabled={!scrapedData.screenshots?.tablet}
+                      >
+                        <Tablet className="w-4 h-4" />
+                        Tablet
+                      </Button>
+                      <Button
+                        variant={selectedViewport === 'mobile' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setSelectedViewport('mobile')}
+                        className="gap-1"
+                        disabled={!scrapedData.screenshots?.mobile}
+                      >
+                        <Smartphone className="w-4 h-4" />
+                        Mobile
+                      </Button>
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    The selected viewport screenshot will be used for the header and footer images.
+                  </p>
+                  <div className="border rounded-lg overflow-hidden">
+                    {getSelectedScreenshot() ? (
+                      <img
+                        src={getScreenshotSrc(getSelectedScreenshot()!)}
+                        alt={`Site screenshot - ${selectedViewport}`}
+                        className="w-full"
+                      />
+                    ) : (
+                      <div className="p-8 text-center text-muted-foreground">
+                        No screenshot available for {selectedViewport} viewport
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Show all viewport thumbnails */}
+                  {scrapedData.screenshots && (
+                    <div className="grid grid-cols-3 gap-2 mt-4">
+                      {[
+                        { key: 'desktop' as ViewportSize, label: 'Desktop', icon: Monitor },
+                        { key: 'tablet' as ViewportSize, label: 'Tablet', icon: Tablet },
+                        { key: 'mobile' as ViewportSize, label: 'Mobile', icon: Smartphone },
+                      ].map(({ key, label, icon: Icon }) => {
+                        const screenshot = scrapedData.screenshots?.[key];
+                        return (
+                          <button
+                            key={key}
+                            onClick={() => screenshot && setSelectedViewport(key)}
+                            className={`p-2 rounded-lg border transition-all ${
+                              selectedViewport === key 
+                                ? 'border-primary ring-2 ring-primary/20' 
+                                : 'border-border hover:border-primary/50'
+                            } ${!screenshot ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                            disabled={!screenshot}
+                          >
+                            <div className="flex items-center justify-center gap-1 mb-2 text-xs font-medium">
+                              <Icon className="w-3 h-3" />
+                              {label}
+                            </div>
+                            <div className="aspect-video bg-muted rounded overflow-hidden">
+                              {screenshot ? (
+                                <img 
+                                  src={getScreenshotSrc(screenshot)} 
+                                  alt={`${label} preview`}
+                                  className="w-full h-full object-cover object-top"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">
+                                  N/A
+                                </div>
+                              )}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              {/* HTML Mode: Show screenshot as reference only */}
+              {captureMode === 'html' && scrapedData.screenshot && (
                 <div className="space-y-2">
-                  <Label>
-                    {captureMode === 'screenshot' 
-                      ? 'Original Screenshot (used as header)' 
-                      : 'Site Screenshot (Reference)'}
-                  </Label>
+                  <Label>Site Screenshot (Reference)</Label>
                   <div className="border rounded-lg overflow-hidden">
                     <img
-                      src={`data:image/png;base64,${scrapedData.screenshot}`}
+                      src={getScreenshotSrc(scrapedData.screenshot)}
                       alt="Site screenshot"
                       className="w-full"
                     />
