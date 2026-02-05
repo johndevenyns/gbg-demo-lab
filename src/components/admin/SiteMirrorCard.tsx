@@ -2,31 +2,33 @@
  import { Globe, X } from "lucide-react";
  import { Button } from "@/components/ui/button";
  import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { SiteMirrorTabs } from "./SiteMirrorTabs";
+ import { SiteMirrorTabs, CaptureTab, CaptureMode } from "./SiteMirrorTabs";
  import { HtmlCaptureTab } from "./HtmlCaptureTab";
  import { ScreenshotCaptureTab } from "./ScreenshotCaptureTab";
  import { useToast } from "@/hooks/use-toast";
  import { DemoEnvironment } from "@/types/demo";
  import { DEFAULT_FORM_STYLE } from "@/types/formStyle";
 
-export type CaptureMode = 'html' | 'screenshot';
+ export type { CaptureMode } from "./SiteMirrorTabs";
  
  interface SiteMirrorCardProps {
    demo: DemoEnvironment;
    onApplyBranding: (updates: Partial<DemoEnvironment>, autoSave?: boolean) => void;
+   formStyleContent?: React.ReactNode;
  }
  
- export function SiteMirrorCard({ demo, onApplyBranding }: SiteMirrorCardProps) {
+ export function SiteMirrorCard({ demo, onApplyBranding, formStyleContent }: SiteMirrorCardProps) {
    const { toast } = useToast();
    const [url, setUrl] = useState(demo.customerSiteUrl || "");
    
   // Track which method is active for the demo (persisted) AND which tab user is viewing
   const [activeMethod, setActiveMethod] = useState<CaptureMode>(demo.mirrorActiveMethod || 'html');
-   const [currentTab, setCurrentTab] = useState<CaptureMode>('html');
+   const [currentTab, setCurrentTab] = useState<CaptureTab>('html');
    
    // Determine if each method is configured based on content type
   const htmlConfigured = Boolean(demo.mirrorHtmlHeaderHtml && demo.mirrorHtmlHeaderHtml.trim().length > 0);
   const screenshotConfigured = Boolean(demo.mirrorScreenshotHeaderHtml && demo.mirrorScreenshotHeaderHtml.trim().length > 0);
+   const formStylingConfigured = Boolean(demo.formStyle && demo.formStyle.source !== 'template');
 
   const handleActiveMethodChange = (method: CaptureMode) => {
     setActiveMethod(method);
@@ -107,6 +109,8 @@ export type CaptureMode = 'html' | 'screenshot';
                isConfigured={screenshotConfigured}
              />
            }
+           formStylingContent={formStyleContent}
+           formStylingConfigured={formStylingConfigured}
          />
        </CardContent>
      </Card>

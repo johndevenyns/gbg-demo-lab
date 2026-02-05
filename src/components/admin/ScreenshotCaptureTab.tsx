@@ -302,6 +302,7 @@ import { Camera, Loader2, ExternalLink, Eye, Check, Monitor, Tablet, Smartphone,
                cropSettings={cropSettings}
                onCropChange={setCropSettings}
                onReset={() => setCropSettings(DEFAULT_CROP_SETTINGS)}
+               onApplyCrop={refreshPreview}
              />
  
              {/* Live Preview */}
