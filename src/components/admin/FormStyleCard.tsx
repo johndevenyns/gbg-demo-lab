@@ -100,6 +100,7 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, scrapedBranding 
   const [selectorStatus, setSelectorStatus] = useState<SelectorValidationStatus>('idle');
   const [selectorMessage, setSelectorMessage] = useState<string>('');
  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [triggerSelector, setTriggerSelector] = useState<string>('');
 
   const handleTabChange = (value: string) => {
     setActiveTab(value as FormStyleSource);
@@ -122,7 +123,11 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, scrapedBranding 
     try {
       const response = await scrapingApi.scrapeFormStyles(
         formStyle.formStyleUrl,
-        formStyle.formContainerSelector || undefined
+        formStyle.formContainerSelector || undefined,
+        {
+          triggerSelector: triggerSelector || undefined,
+          waitTime: triggerSelector ? 5000 : 3000, // Wait longer if triggering a modal
+        }
       );
       
       if (!response.success || !response.data) {
@@ -619,6 +624,27 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, scrapedBranding 
               </div>
               <p className="text-xs text-muted-foreground">
                 CSS selector to target a specific form. Leave empty to extract all form styles from the page.
+              </p>
+            </div>
+
+            {/* Modal Trigger Selector */}
+            <div className="space-y-2">
+              <Label htmlFor="modal-trigger-selector">
+                Modal/Pop-out Trigger (Optional)
+              </Label>
+              <Input
+                id="modal-trigger-selector"
+                placeholder="e.g. button.open-form, #apply-btn, [data-modal='signup']"
+                value={triggerSelector}
+                onChange={(e) => {
+                  setTriggerSelector(e.target.value);
+                  setSelectorStatus('idle');
+                  setSelectorMessage('');
+                }}
+              />
+              <p className="text-xs text-muted-foreground">
+                If the form opens in a pop-out or modal, enter the CSS selector of the button/link that opens it.
+                The scraper will click this element first before capturing styles.
               </p>
             </div>
 
