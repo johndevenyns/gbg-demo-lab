@@ -18,6 +18,7 @@ import {
 import { DemoEnvironment } from '@/types/demo';
 import { ScrapedBranding, scrapingApi, FormElementStyles, formAnalysisApi } from '@/lib/api/scraping';
 import { useToast } from '@/hooks/use-toast';
+ import { getBorderRadius, getPadding, getFontSize, getLabelWeight } from '@/lib/formStyleUtils';
 
 interface FormStyleCardProps {
   demo: DemoEnvironment;
@@ -395,44 +396,6 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, scrapedBranding 
   }, [onUpdateStyle, toast]);
 
   const hasMirroredData = !!demo.customerSiteUrl || !!scrapedBranding?.branding || !!demo.scrapedCss || !!demo.buttonColor || !!extractedStyles;
- 
-   // Generate border radius style value
-   const getBorderRadius = (radius: string) => {
-     switch (radius) {
-       case 'none': return '0px';
-       case 'sm': return '4px';
-       case 'lg': return '12px';
-       case 'full': return '9999px';
-       default: return '8px';
-     }
-   };
- 
-   // Generate padding style value
-   const getPadding = (padding: string) => {
-     switch (padding) {
-       case 'sm': return '8px 12px';
-       case 'lg': return '14px 18px';
-       default: return '10px 14px';
-     }
-   };
- 
-   // Generate font size value
-   const getFontSize = (size: string) => {
-     switch (size) {
-       case 'sm': return '14px';
-       case 'lg': return '18px';
-       default: return '16px';
-     }
-   };
- 
-   // Generate label weight value
-   const getLabelWeight = (weight: string) => {
-     switch (weight) {
-       case 'semibold': return 600;
-       case 'medium': return 500;
-       default: return 400;
-     }
-   };
 
   const getSelectorStatusIcon = () => {
     switch (selectorStatus) {
