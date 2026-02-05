@@ -1,5 +1,5 @@
- import { useState } from 'react';
- import { Paintbrush, Globe, LayoutTemplate, Palette, Check, Loader2, AlertCircle, CheckCircle, Eye } from 'lucide-react';
+ import { useState, useCallback } from 'react';
+ import { Paintbrush, Globe, LayoutTemplate, Palette, Check, Loader2, AlertCircle, CheckCircle, Eye, Save } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
@@ -99,6 +99,7 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, scrapedBranding 
   const [extractedStyles, setExtractedStyles] = useState<FormElementStyles | null>(null);
   const [selectorStatus, setSelectorStatus] = useState<SelectorValidationStatus>('idle');
   const [selectorMessage, setSelectorMessage] = useState<string>('');
+ const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   const handleTabChange = (value: string) => {
     setActiveTab(value as FormStyleSource);
@@ -252,7 +253,18 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, scrapedBranding 
       ...updates,
       source: 'custom',
     });
+   setHasUnsavedChanges(true);
   };
+ 
+ const handleSaveCustomStyles = useCallback(() => {
+   // The styles are already being applied via onUpdateStyle
+   // This just provides user feedback
+   setHasUnsavedChanges(false);
+   toast({
+     title: 'Custom Styles Saved',
+     description: 'Your color and typography settings have been applied.',
+   });
+ }, [toast]);
 
   const hasMirroredData = !!demo.customerSiteUrl || !!scrapedBranding?.branding || !!demo.scrapedCss || !!demo.buttonColor || !!extractedStyles;
  
@@ -973,11 +985,18 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, scrapedBranding 
 
             {/* Colors */}
             <div className="space-y-4">
-              <h4 className="font-semibold text-sm">Colors</h4>
+             <div className="flex items-center justify-between">
+               <h4 className="font-semibold text-sm">Colors</h4>
+               <p className="text-xs text-muted-foreground">Click swatches to change colors</p>
+             </div>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label>Input Background</Label>
                   <div className="flex items-center gap-2">
+                   <div 
+                     className="w-6 h-6 rounded border-2 border-border shrink-0"
+                     style={{ backgroundColor: formStyle.inputBgColor }}
+                   />
                     <input
                       type="color"
                       value={formStyle.inputBgColor}
@@ -994,6 +1013,10 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, scrapedBranding 
                 <div className="space-y-2">
                   <Label>Input Text</Label>
                   <div className="flex items-center gap-2">
+                   <div 
+                     className="w-6 h-6 rounded border-2 border-border shrink-0"
+                     style={{ backgroundColor: formStyle.inputTextColor }}
+                   />
                     <input
                       type="color"
                       value={formStyle.inputTextColor}
@@ -1010,6 +1033,10 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, scrapedBranding 
                 <div className="space-y-2">
                   <Label>Input Border</Label>
                   <div className="flex items-center gap-2">
+                   <div 
+                     className="w-6 h-6 rounded border-2 border-border shrink-0"
+                     style={{ backgroundColor: formStyle.inputBorderColor }}
+                   />
                     <input
                       type="color"
                       value={formStyle.inputBorderColor}
@@ -1026,6 +1053,10 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, scrapedBranding 
                 <div className="space-y-2">
                   <Label>Focus Border</Label>
                   <div className="flex items-center gap-2">
+                   <div 
+                     className="w-6 h-6 rounded border-2 border-border shrink-0"
+                     style={{ backgroundColor: formStyle.inputFocusBorderColor }}
+                   />
                     <input
                       type="color"
                       value={formStyle.inputFocusBorderColor}
@@ -1042,6 +1073,10 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, scrapedBranding 
                 <div className="space-y-2">
                   <Label>Label Color</Label>
                   <div className="flex items-center gap-2">
+                   <div 
+                     className="w-6 h-6 rounded border-2 border-border shrink-0"
+                     style={{ backgroundColor: formStyle.labelColor }}
+                   />
                     <input
                       type="color"
                       value={formStyle.labelColor}
@@ -1058,6 +1093,10 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, scrapedBranding 
                 <div className="space-y-2">
                   <Label>Error Color</Label>
                   <div className="flex items-center gap-2">
+                   <div 
+                     className="w-6 h-6 rounded border-2 border-border shrink-0"
+                     style={{ backgroundColor: formStyle.errorColor }}
+                   />
                     <input
                       type="color"
                       value={formStyle.errorColor}
@@ -1073,6 +1112,18 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, scrapedBranding 
                 </div>
               </div>
             </div>
+ 
+           {/* Save Button */}
+           <div className="pt-4 border-t border-border">
+             <Button 
+               onClick={handleSaveCustomStyles} 
+               className="w-full gradient-primary"
+               disabled={!hasUnsavedChanges}
+             >
+               <Save className="w-4 h-4 mr-2" />
+               {hasUnsavedChanges ? 'Save Custom Styles' : 'Styles Saved'}
+             </Button>
+           </div>
 
             {/* Live Preview */}
             <div className="space-y-4">
