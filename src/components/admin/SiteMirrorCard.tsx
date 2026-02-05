@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Globe, Loader2, Check, X, ExternalLink, Paintbrush, Camera, Code } from "lucide-react";
+import { Globe, Loader2, Check, X, ExternalLink, Paintbrush, Camera, Code, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -198,6 +198,99 @@ function generateFormPreviewHtml(demo: DemoEnvironment): string {
           </div>
         </div>
         ${demo.scrapedFooterHtml || ''}
+      </body>
+    </html>
+  `;
+}
+
+// Generate preview HTML using scraped data (for preview dialog before applying)
+function generateScrapedPreviewHtml(
+  scrapedData: ScrapedBranding,
+  formStyles: FormElementStyles | undefined,
+  buttonColor: string,
+  captureMode: 'html' | 'screenshot'
+): string {
+  const fontFamily = formStyles?.inputFontFamily || 'system-ui, sans-serif';
+  const labelColor = formStyles?.labelColor || '#333333';
+  const inputBgColor = formStyles?.inputBgColor || '#ffffff';
+  const inputTextColor = formStyles?.inputTextColor || '#1f2937';
+  const inputBorderColor = formStyles?.inputBorderColor || '#d1d5db';
+  const inputBorderRadius = formStyles?.inputBorderRadius || '8px';
+  const inputBorderWidth = formStyles?.inputBorderWidth || '1px';
+  
+  // Build header content based on capture mode
+  let headerContent = '';
+  if (captureMode === 'screenshot' && scrapedData.screenshot) {
+    headerContent = `<div style="width: 100%; overflow: hidden;"><img src="data:image/png;base64,${scrapedData.screenshot}" style="width: 100%; display: block;" alt="Site header" /></div>`;
+  } else {
+    headerContent = scrapedData.headerHtml || '';
+  }
+  
+  const footerContent = captureMode === 'screenshot' ? '' : (scrapedData.footerHtml || '');
+  const cssContent = captureMode === 'screenshot' ? '' : (scrapedData.cssContent || '');
+  
+  const fieldsHtml = `
+    <div style="margin-bottom: 16px;">
+      <label style="display: block; margin-bottom: 6px; font-weight: 500; color: ${labelColor}; font-family: ${fontFamily};">
+        First Name<span style="color: #ef4444; margin-left: 4px;">*</span>
+      </label>
+      <input type="text" placeholder="John" style="
+        width: 100%; padding: 10px 14px; border: ${inputBorderWidth} solid ${inputBorderColor};
+        border-radius: ${inputBorderRadius}; background: ${inputBgColor}; color: ${inputTextColor};
+        font-family: ${fontFamily}; box-sizing: border-box;
+      " />
+    </div>
+    <div style="margin-bottom: 16px;">
+      <label style="display: block; margin-bottom: 6px; font-weight: 500; color: ${labelColor}; font-family: ${fontFamily};">
+        Last Name<span style="color: #ef4444; margin-left: 4px;">*</span>
+      </label>
+      <input type="text" placeholder="Smith" style="
+        width: 100%; padding: 10px 14px; border: ${inputBorderWidth} solid ${inputBorderColor};
+        border-radius: ${inputBorderRadius}; background: ${inputBgColor}; color: ${inputTextColor};
+        font-family: ${fontFamily}; box-sizing: border-box;
+      " />
+    </div>
+    <div style="margin-bottom: 16px;">
+      <label style="display: block; margin-bottom: 6px; font-weight: 500; color: ${labelColor}; font-family: ${fontFamily};">
+        Email<span style="color: #ef4444; margin-left: 4px;">*</span>
+      </label>
+      <input type="email" placeholder="john@example.com" style="
+        width: 100%; padding: 10px 14px; border: ${inputBorderWidth} solid ${inputBorderColor};
+        border-radius: ${inputBorderRadius}; background: ${inputBgColor}; color: ${inputTextColor};
+        font-family: ${fontFamily}; box-sizing: border-box;
+      " />
+    </div>
+  `;
+
+  return `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <style>
+          body { margin: 0; padding: 0; font-family: ${fontFamily}; }
+          * { box-sizing: border-box; }
+        </style>
+        ${cssContent ? `<style>${cssContent}</style>` : ''}
+      </head>
+      <body>
+        ${headerContent}
+        <div style="padding: 40px 20px; background: #f5f5f5; min-height: 300px;">
+          <div style="max-width: 480px; margin: 0 auto; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); padding: 32px; border: 1px solid #e5e7eb;">
+            <div style="text-align: center; margin-bottom: 24px;">
+              <h2 style="margin: 0 0 8px 0; font-size: 20px; font-weight: 600; color: ${labelColor}; font-family: ${fontFamily};">Application Form</h2>
+              <p style="margin: 0; color: #6b7280; font-size: 14px; font-family: ${fontFamily};">Step 1 of 3</p>
+            </div>
+            ${fieldsHtml}
+            <button style="
+              width: 100%; padding: 12px 24px; background: ${buttonColor}; color: white;
+              border: none; border-radius: ${inputBorderRadius}; font-size: 16px; font-weight: 500;
+              font-family: ${fontFamily}; cursor: pointer; margin-top: 8px;
+            ">Continue</button>
+          </div>
+        </div>
+        ${footerContent}
       </body>
     </html>
   `;
@@ -551,32 +644,40 @@ export function SiteMirrorCard({ demo, onApplyBranding }: SiteMirrorCardProps) {
 
           {scrapedData && (
             <div className="space-y-6">
-              {/* Screenshot Mode: Show screenshot as header preview */}
-              {captureMode === 'screenshot' && scrapedData.screenshot && (
-                <div className="space-y-2">
-                  <Label className="flex items-center gap-2">
-                    <Camera className="w-4 h-4" />
-                    Header Screenshot (will be used as header)
-                  </Label>
-                  <div className="border rounded-lg overflow-hidden bg-muted">
-                    <div className="bg-background">
-                      <img
-                        src={`data:image/png;base64,${scrapedData.screenshot}`}
-                        alt="Site header screenshot"
-                        className="w-full"
-                      />
-                    </div>
-                    <div className="p-4 bg-muted/50 text-center text-sm text-muted-foreground">
-                      This screenshot will be displayed as the header image
-                    </div>
-                  </div>
+              {/* Full Rendered Preview - Shows header, form with styling, and footer */}
+              <div className="space-y-2">
+                <Label className="text-base font-semibold flex items-center gap-2">
+                  <Eye className="w-4 h-4" />
+                  Live Preview (Header + Form + Footer)
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  {captureMode === 'screenshot'
+                    ? 'Shows how the screenshot header will appear with the styled form'
+                    : 'Shows how the scraped header/footer and CSS will render with the form'}
+                </p>
+                <div className="border rounded-lg overflow-hidden bg-background">
+                  <iframe
+                    srcDoc={generateScrapedPreviewHtml(
+                      scrapedData,
+                      scrapedData.formStyles,
+                      scrapedData.colors.buttonColor,
+                      captureMode
+                    )}
+                    className="w-full h-[500px] border-0"
+                    title="Scraped branding preview"
+                    sandbox="allow-same-origin"
+                  />
                 </div>
-              )}
-              
-              {/* HTML Mode: Show full screenshot as reference */}
-              {captureMode === 'html' && scrapedData.screenshot && (
+              </div>
+
+              {/* Screenshot Mode: Show screenshot as header preview */}
+              {scrapedData.screenshot && (
                 <div className="space-y-2">
-                  <Label>Site Screenshot (Reference)</Label>
+                  <Label>
+                    {captureMode === 'screenshot' 
+                      ? 'Original Screenshot (used as header)' 
+                      : 'Site Screenshot (Reference)'}
+                  </Label>
                   <div className="border rounded-lg overflow-hidden">
                     <img
                       src={`data:image/png;base64,${scrapedData.screenshot}`}
