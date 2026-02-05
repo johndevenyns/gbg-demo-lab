@@ -66,16 +66,22 @@
    buttonColor: string,
    cropSettings: CropSettings
  ): string {
+  // For the header: we want to show a slice starting at headerOffsetY with height headerHeight
+  // Use a wrapper with overflow:hidden, fixed height, and position the image with negative margin
    const headerContent = `
-     <div style="width: 100%; height: ${cropSettings.headerHeight}px; overflow: hidden;">
-        <img src="${screenshotSrc}" style="width: 100%; display: block; object-fit: cover; object-position: center -${cropSettings.headerOffsetY}px;" alt="Header" />
-     </div>
+    <div style="width: 100%; height: ${cropSettings.headerHeight}px; overflow: hidden; position: relative;">
+      <img src="${screenshotSrc}" style="width: 100%; display: block; margin-top: -${cropSettings.headerOffsetY}px;" alt="Header" />
+    </div>
    `;
  
+  // For the footer: we want to show the bottom portion of the image
+  // Calculate the position from the bottom and use a wrapper to clip it
    const footerContent = `
-     <div style="width: 100%; height: ${cropSettings.footerHeight}px; overflow: hidden;">
-        <img src="${screenshotSrc}" style="width: 100%; display: block; object-fit: cover; object-position: center calc(100% + ${cropSettings.footerOffsetY}px);" alt="Footer" />
-     </div>
+    <div style="width: 100%; height: ${cropSettings.footerHeight}px; overflow: hidden; position: relative;">
+      <div style="position: absolute; bottom: -${cropSettings.footerOffsetY}px; left: 0; right: 0;">
+        <img src="${screenshotSrc}" style="width: 100%; display: block;" alt="Footer" />
+      </div>
+    </div>
    `;
  
    const formHtml = generateFormHtml(formStyle, buttonColor);
@@ -143,8 +149,8 @@
     if (!savedScreenshotSrc) return;
     
     const updates: Partial<DemoEnvironment> = {
-      mirrorScreenshotHeaderHtml: `<div style="width: 100%; height: ${savedCropSettings.headerHeight}px; overflow: hidden;"><img src="${savedScreenshotSrc}" style="width: 100%; display: block; object-fit: cover; object-position: center -${savedCropSettings.headerOffsetY}px;" alt="Site header" /></div>`,
-      mirrorScreenshotFooterHtml: `<div style="width: 100%; height: ${savedCropSettings.footerHeight}px; overflow: hidden;"><img src="${savedScreenshotSrc}" style="width: 100%; display: block; object-fit: cover; object-position: center calc(100% + ${savedCropSettings.footerOffsetY}px);" alt="Site footer" /></div>`,
+      mirrorScreenshotHeaderHtml: `<div style="width: 100%; height: ${savedCropSettings.headerHeight}px; overflow: hidden; position: relative;"><img src="${savedScreenshotSrc}" style="width: 100%; display: block; margin-top: -${savedCropSettings.headerOffsetY}px;" alt="Site header" /></div>`,
+      mirrorScreenshotFooterHtml: `<div style="width: 100%; height: ${savedCropSettings.footerHeight}px; overflow: hidden; position: relative;"><div style="position: absolute; bottom: -${savedCropSettings.footerOffsetY}px; left: 0; right: 0;"><img src="${savedScreenshotSrc}" style="width: 100%; display: block;" alt="Site footer" /></div></div>`,
     };
     
     onApply(updates);
@@ -198,12 +204,12 @@
      // Generate HTML for each viewport
      const generateHeaderHtml = (src: string, settings: CropSettings) => {
        if (!src) return '';
-       return `<div style="width: 100%; height: ${settings.headerHeight}px; overflow: hidden;"><img src="${src}" style="width: 100%; display: block; object-fit: cover; object-position: center -${settings.headerOffsetY}px;" alt="Site header" /></div>`;
+        return `<div style="width: 100%; height: ${settings.headerHeight}px; overflow: hidden; position: relative;"><img src="${src}" style="width: 100%; display: block; margin-top: -${settings.headerOffsetY}px;" alt="Site header" /></div>`;
      };
      
      const generateFooterHtml = (src: string, settings: CropSettings) => {
        if (!src) return '';
-       return `<div style="width: 100%; height: ${settings.footerHeight}px; overflow: hidden;"><img src="${src}" style="width: 100%; display: block; object-fit: cover; object-position: center calc(100% + ${settings.footerOffsetY}px);" alt="Site footer" /></div>`;
+        return `<div style="width: 100%; height: ${settings.footerHeight}px; overflow: hidden; position: relative;"><div style="position: absolute; bottom: -${settings.footerOffsetY}px; left: 0; right: 0;"><img src="${src}" style="width: 100%; display: block;" alt="Site footer" /></div></div>`;
      };
  
      let formStyleConfig: FormStyleConfig | undefined;
