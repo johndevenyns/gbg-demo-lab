@@ -54,11 +54,30 @@ Deno.serve(async (req) => {
 
     // Format URL
     let formattedUrl = url.trim();
+    
+    // Fix common protocol typos
+    formattedUrl = formattedUrl
+      .replace(/^hhtps?:\/\//i, 'https://')  // hhtps -> https
+      .replace(/^htps:\/\//i, 'https://')    // htps -> https
+      .replace(/^htttp:\/\//i, 'http://')    // htttp -> http
+      .replace(/^hhtp:\/\//i, 'http://');    // hhtp -> http
+    
     if (!formattedUrl.startsWith('http://') && !formattedUrl.startsWith('https://')) {
       formattedUrl = `https://${formattedUrl}`;
     }
 
-    const baseUrl = new URL(formattedUrl);
+    // Validate URL before proceeding
+    let baseUrl: URL;
+    try {
+      baseUrl = new URL(formattedUrl);
+    } catch (urlError) {
+      console.error('Invalid URL format:', formattedUrl);
+      return new Response(
+        JSON.stringify({ success: false, error: `Invalid URL format: "${url}". Please enter a valid URL like "example.com" or "https://example.com"` }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
     console.log('Scraping branding from URL:', formattedUrl);
 
     // Request branding, HTML (raw to get CSS), and screenshot formats
