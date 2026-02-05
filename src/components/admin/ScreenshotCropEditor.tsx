@@ -15,6 +15,7 @@
    cropSettings: CropSettings;
    onCropChange: (settings: CropSettings) => void;
    onReset: () => void;
+   onApplyCrop?: () => void;
  }
  
  export function ScreenshotCropEditor({
@@ -22,6 +23,7 @@
    cropSettings,
    onCropChange,
    onReset,
+   onApplyCrop,
  }: ScreenshotCropEditorProps) {
    const containerRef = useRef<HTMLDivElement>(null);
    const imageRef = useRef<HTMLImageElement>(null);
@@ -323,10 +325,15 @@
        </div>
  
        {/* Reset Button */}
-       <div className="flex justify-end">
+       <div className="flex justify-end gap-2">
          <Button variant="outline" size="sm" onClick={onReset}>
            Reset to Defaults
          </Button>
+         {onApplyCrop && (
+           <Button size="sm" onClick={onApplyCrop} className="gradient-primary">
+             Apply Crop & Refresh Preview
+           </Button>
+         )}
        </div>
      </div>
    );

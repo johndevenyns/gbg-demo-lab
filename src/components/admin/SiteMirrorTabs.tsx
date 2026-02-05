@@ -1,20 +1,22 @@
- import { useState } from "react";
- import { Code, Camera, Check } from "lucide-react";
+ import { Code, Camera, Paintbrush, Check } from "lucide-react";
  import { Label } from "@/components/ui/label";
  import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
  import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
  import { cn } from "@/lib/utils";
-import { CaptureMode } from "./SiteMirrorCard";
+ export type CaptureTab = 'html' | 'screenshot' | 'form-styling';
+ export type CaptureMode = 'html' | 'screenshot';
  
  interface SiteMirrorTabsProps {
    activeMethod: CaptureMode;
    onActiveMethodChange: (method: CaptureMode) => void;
-   currentTab: CaptureMode;
-   onTabChange: (tab: CaptureMode) => void;
+   currentTab: CaptureTab;
+   onTabChange: (tab: CaptureTab) => void;
    htmlContent: React.ReactNode;
    screenshotContent: React.ReactNode;
+   formStylingContent: React.ReactNode;
    htmlConfigured: boolean;
    screenshotConfigured: boolean;
+   formStylingConfigured: boolean;
  }
  
  export function SiteMirrorTabs({
@@ -24,8 +26,10 @@ import { CaptureMode } from "./SiteMirrorCard";
    onTabChange,
    htmlContent,
    screenshotContent,
+   formStylingContent,
    htmlConfigured,
    screenshotConfigured,
+   formStylingConfigured,
  }: SiteMirrorTabsProps) {
    return (
      <div className="space-y-6">
@@ -95,8 +99,8 @@ import { CaptureMode } from "./SiteMirrorCard";
        </div>
  
        {/* Configuration Tabs */}
-       <Tabs value={currentTab} onValueChange={(v) => onTabChange(v as CaptureMode)} className="w-full">
-         <TabsList className="grid w-full grid-cols-2">
+       <Tabs value={currentTab} onValueChange={(v) => onTabChange(v as CaptureTab)} className="w-full">
+         <TabsList className="grid w-full grid-cols-3">
            <TabsTrigger value="html" className="flex items-center gap-2">
              <Code className="w-4 h-4" />
              HTML/CSS Setup
@@ -107,6 +111,11 @@ import { CaptureMode } from "./SiteMirrorCard";
              Screenshot Setup
              {screenshotConfigured && <Check className="w-3 h-3 text-green-500" />}
            </TabsTrigger>
+           <TabsTrigger value="form-styling" className="flex items-center gap-2">
+             <Paintbrush className="w-4 h-4" />
+             Form Styling
+             {formStylingConfigured && <Check className="w-3 h-3 text-green-500" />}
+           </TabsTrigger>
          </TabsList>
          
          <TabsContent value="html" className="mt-4">
@@ -115,6 +124,10 @@ import { CaptureMode } from "./SiteMirrorCard";
          
          <TabsContent value="screenshot" className="mt-4">
            {screenshotContent}
+         </TabsContent>
+         
+         <TabsContent value="form-styling" className="mt-4">
+           {formStylingContent}
          </TabsContent>
        </Tabs>
      </div>
