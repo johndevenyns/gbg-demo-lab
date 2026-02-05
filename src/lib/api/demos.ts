@@ -31,6 +31,8 @@ const rowToDemo = (row: any): DemoEnvironment => {
     resourceIdDocBio: row.resource_id_docbio || '',
     referenceIdPrefix: row.reference_id_prefix || '',
     logoUrl: row.logo_url || '',
+    uploadedLogoUrl: row.uploaded_logo_url || '',
+    useUploadedLogo: row.use_uploaded_logo ?? false,
     headerBgColor: row.header_bg_color || '#1a1a2e',
     headerTextColor: row.header_text_color || '#ffffff',
     buttonColor: row.button_color || '#6366f1',
@@ -67,6 +69,8 @@ const demoToRow = (demo: Partial<DemoEnvironment>) => {
   if (demo.resourceIdDocBio !== undefined) row.resource_id_docbio = demo.resourceIdDocBio;
   if (demo.referenceIdPrefix !== undefined) row.reference_id_prefix = demo.referenceIdPrefix;
   if (demo.logoUrl !== undefined) row.logo_url = demo.logoUrl;
+  if (demo.uploadedLogoUrl !== undefined) row.uploaded_logo_url = demo.uploadedLogoUrl;
+  if (demo.useUploadedLogo !== undefined) row.use_uploaded_logo = demo.useUploadedLogo;
   if (demo.headerBgColor !== undefined) row.header_bg_color = demo.headerBgColor;
   if (demo.headerTextColor !== undefined) row.header_text_color = demo.headerTextColor;
   if (demo.buttonColor !== undefined) row.button_color = demo.buttonColor;

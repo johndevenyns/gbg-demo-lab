@@ -22,6 +22,8 @@ export interface DemoEnvironment {
   customerName: string;
   industryTemplate: IndustryTemplate;
   logoUrl?: string;
+  uploadedLogoUrl?: string;
+  useUploadedLogo?: boolean;
   
   // Verification Settings
   verificationType: VerificationType;
