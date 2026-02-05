@@ -51,8 +51,11 @@ export function useUpdateDemo() {
     mutationFn: ({ id, updates }: { id: string; updates: Partial<DemoEnvironment> }) =>
       demosApi.update(id, updates),
     onSuccess: (data) => {
+      // Invalidate all demo queries including slug-based ones
       queryClient.invalidateQueries({ queryKey: ['demos'] });
       queryClient.setQueryData(['demos', data.id], data);
+      // Also update the slug-based cache so preview pages get the update
+      queryClient.setQueryData(['demos', 'slug', data.slug], data);
       toast.success("Demo updated successfully");
     },
     onError: (error) => {
