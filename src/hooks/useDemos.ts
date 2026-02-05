@@ -23,6 +23,8 @@ export function useDemoBySlug(slug: string | undefined) {
     queryKey: ['demos', 'slug', slug],
     queryFn: () => slug ? demosApi.getBySlug(slug) : null,
     enabled: !!slug,
+    staleTime: 5 * 60 * 1000, // 5 minutes - prevent refetches that cause form state loss
+    refetchOnWindowFocus: false,
   });
 }
 

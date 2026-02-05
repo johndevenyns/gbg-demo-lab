@@ -79,6 +79,7 @@ export default function DemoPreview() {
           <div className="bg-card rounded-xl shadow-lg p-8 border border-border">
             {demo.formSteps.length > 0 ? (
               <DemoFlowRenderer
+                key={demo.id}
                 steps={demo.formSteps}
                 buttonColor={demo.buttonColor}
                 formStyle={demo.formStyle}
