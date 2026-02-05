@@ -80,6 +80,49 @@ Deno.serve(async (req) => {
     
     console.log('Scraping branding from URL:', formattedUrl);
 
+    const firecrawlScrape = async (body: Record<string, unknown>) => {
+      const doRequest = async (b: Record<string, unknown>) => {
+        return fetch('https://api.firecrawl.dev/v1/scrape', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(b),
+        });
+      };
+
+      // Try request as-is first.
+      let res = await doRequest(body);
+      if (res.ok) return res;
+
+      // If Firecrawl rejects newer keys (e.g. screenshot options), retry without them.
+      // This preserves backwards compatibility while still allowing us to attempt enhanced options.
+      try {
+        const cloned = res.clone();
+        const data = await cloned.json();
+        const errText = (data?.error as string | undefined) || '';
+        const unrecognizedKeys: string[] =
+          (Array.isArray(data?.details)
+            ? data.details.flatMap((d: any) => Array.isArray(d?.keys) ? d.keys : [])
+            : [])
+            .filter((k: any) => typeof k === 'string');
+
+        if (res.status === 400 && (errText.includes('Unrecognized key') || unrecognizedKeys.length > 0)) {
+          if ('screenshot' in body || unrecognizedKeys.includes('screenshot')) {
+            const { screenshot: _s, ...rest } = body as any;
+            console.warn('Firecrawl rejected screenshot options; retrying without screenshot key');
+            res = await doRequest(rest);
+            return res;
+          }
+        }
+      } catch {
+        // ignore parse errors
+      }
+
+      return res;
+    };
+
     // Define viewport sizes for screenshots
     const viewports = [
       { name: 'desktop', width: 1440, height: 900 },
@@ -88,62 +131,42 @@ Deno.serve(async (req) => {
     ];
 
     // Main request for HTML, branding, and desktop screenshot
-    const mainRequest = fetch('https://api.firecrawl.dev/v1/scrape', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
+    const mainRequest = firecrawlScrape({
+      url: formattedUrl,
+      formats: ['html', 'rawHtml', 'screenshot', 'branding'],
+      onlyMainContent: false,
+      waitFor: 3000,
+      // Attempt full-page screenshots, but fall back automatically if Firecrawl rejects the key.
+      screenshot: {
+        fullPage: true,
       },
-      body: JSON.stringify({
-        url: formattedUrl,
-        formats: ['html', 'rawHtml', 'screenshot', 'branding'],
-        onlyMainContent: false,
-        waitFor: 3000,
-        screenshot: {
-          fullPage: true,
-        },
-      }),
     });
 
     // Parallel requests for tablet and mobile screenshots
-    const tabletRequest = fetch('https://api.firecrawl.dev/v1/scrape', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
+    const tabletRequest = firecrawlScrape({
+      url: formattedUrl,
+      formats: ['screenshot'],
+      onlyMainContent: false,
+      waitFor: 2000,
+      screenshot: {
+        fullPage: true,
       },
-      body: JSON.stringify({
-        url: formattedUrl,
-        formats: ['screenshot'],
-        onlyMainContent: false,
-        waitFor: 2000,
-        screenshot: {
-          fullPage: true,
-        },
-        actions: [
-          { type: 'viewport', width: viewports[1].width, height: viewports[1].height }
-        ]
-      }),
+      actions: [
+        { type: 'viewport', width: viewports[1].width, height: viewports[1].height }
+      ]
     });
 
-    const mobileRequest = fetch('https://api.firecrawl.dev/v1/scrape', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
+    const mobileRequest = firecrawlScrape({
+      url: formattedUrl,
+      formats: ['screenshot'],
+      onlyMainContent: false,
+      waitFor: 2000,
+      screenshot: {
+        fullPage: true,
       },
-      body: JSON.stringify({
-        url: formattedUrl,
-        formats: ['screenshot'],
-        onlyMainContent: false,
-        waitFor: 2000,
-        screenshot: {
-          fullPage: true,
-        },
-        actions: [
-          { type: 'viewport', width: viewports[2].width, height: viewports[2].height }
-        ]
-      }),
+      actions: [
+        { type: 'viewport', width: viewports[2].width, height: viewports[2].height }
+      ]
     });
 
     console.log('Fetching screenshots for desktop, tablet, and mobile viewports...');
