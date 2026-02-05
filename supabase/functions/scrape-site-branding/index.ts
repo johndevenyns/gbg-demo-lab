@@ -99,6 +99,9 @@ Deno.serve(async (req) => {
         formats: ['html', 'rawHtml', 'screenshot', 'branding'],
         onlyMainContent: false,
         waitFor: 3000,
+        screenshot: {
+          fullPage: true,
+        },
       }),
     });
 
@@ -114,6 +117,9 @@ Deno.serve(async (req) => {
         formats: ['screenshot'],
         onlyMainContent: false,
         waitFor: 2000,
+        screenshot: {
+          fullPage: true,
+        },
         actions: [
           { type: 'viewport', width: viewports[1].width, height: viewports[1].height }
         ]
@@ -131,6 +137,9 @@ Deno.serve(async (req) => {
         formats: ['screenshot'],
         onlyMainContent: false,
         waitFor: 2000,
+        screenshot: {
+          fullPage: true,
+        },
         actions: [
           { type: 'viewport', width: viewports[2].width, height: viewports[2].height }
         ]

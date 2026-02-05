@@ -1,5 +1,5 @@
- import { useState } from "react";
- import { Camera, Loader2, ExternalLink, Eye, Check, Monitor, Tablet, Smartphone, Paintbrush } from "lucide-react";
+import { useState, useRef } from "react";
+import { Camera, Loader2, ExternalLink, Eye, Check, Monitor, Tablet, Smartphone, Paintbrush, RefreshCw } from "lucide-react";
  import { Button } from "@/components/ui/button";
  import { Input } from "@/components/ui/input";
  import { Label } from "@/components/ui/label";
@@ -111,6 +111,11 @@
    const [scrapedData, setScrapedData] = useState<ScrapedBranding | null>(null);
    const [selectedViewport, setSelectedViewport] = useState<ViewportSize>('desktop');
    const [cropSettings, setCropSettings] = useState<CropSettings>(DEFAULT_CROP_SETTINGS);
+  const [previewKey, setPreviewKey] = useState(0);
+  
+  const refreshPreview = () => {
+    setPreviewKey((k) => k + 1);
+  };
  
    const getSelectedScreenshot = (): string | null => {
      if (!scrapedData) return null;
@@ -160,13 +165,14 @@
        headerBgColor: scrapedData.colors.headerBgColor,
        headerTextColor: scrapedData.colors.headerTextColor,
        buttonColor: scrapedData.colors.buttonColor,
-       scrapedHeaderHtml: screenshotSrc
+      // Store in dedicated screenshot capture fields (won't overwrite HTML capture)
+      mirrorScreenshotHeaderHtml: screenshotSrc
          ? `<div style="width: 100%; height: ${cropSettings.headerHeight}px; overflow: hidden;"><img src="${screenshotSrc}" style="width: 100%; display: block; object-fit: cover; object-position: center ${cropSettings.headerOffsetY}px;" alt="Site header" /></div>`
          : '',
-       scrapedFooterHtml: screenshotSrc
+      mirrorScreenshotFooterHtml: screenshotSrc
          ? `<div style="width: 100%; height: ${cropSettings.footerHeight}px; overflow: hidden;"><img src="${screenshotSrc}" style="width: 100%; display: block; object-fit: cover; object-position: center calc(100% - ${cropSettings.footerOffsetY}px);" alt="Site footer" /></div>`
          : '',
-       scrapedCss: '',
+      mirrorScreenshotCss: '',
        ...(formStyleConfig && { formStyle: formStyleConfig }),
      };
  
@@ -300,12 +306,19 @@
  
              {/* Live Preview */}
              <div className="space-y-2">
-               <Label className="flex items-center gap-2">
-                 <Eye className="w-4 h-4" />
-                 Live Preview
-               </Label>
+              <div className="flex items-center justify-between">
+                <Label className="flex items-center gap-2">
+                  <Eye className="w-4 h-4" />
+                  Live Preview
+                </Label>
+                <Button variant="outline" size="sm" onClick={refreshPreview}>
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Refresh Preview
+                </Button>
+              </div>
                <div className="border rounded-lg overflow-hidden bg-background">
                  <iframe
+                  key={previewKey}
                    srcDoc={generateScreenshotPreviewHtml(
                      getScreenshotSrc(selectedScreenshot),
                      scrapedData.formStyles,

@@ -31,6 +31,13 @@ export type Database = {
           industry_template: Database["public"]["Enums"]["industry_template"]
           is_active: boolean | null
           logo_url: string | null
+          mirror_active_method: string
+          mirror_html_css: string | null
+          mirror_html_footer_html: string | null
+          mirror_html_header_html: string | null
+          mirror_screenshot_css: string | null
+          mirror_screenshot_footer_html: string | null
+          mirror_screenshot_header_html: string | null
           reference_id_prefix: string | null
           rejected_url: string | null
           resource_id: string | null
@@ -64,6 +71,13 @@ export type Database = {
           industry_template?: Database["public"]["Enums"]["industry_template"]
           is_active?: boolean | null
           logo_url?: string | null
+          mirror_active_method?: string
+          mirror_html_css?: string | null
+          mirror_html_footer_html?: string | null
+          mirror_html_header_html?: string | null
+          mirror_screenshot_css?: string | null
+          mirror_screenshot_footer_html?: string | null
+          mirror_screenshot_header_html?: string | null
           reference_id_prefix?: string | null
           rejected_url?: string | null
           resource_id?: string | null
@@ -97,6 +111,13 @@ export type Database = {
           industry_template?: Database["public"]["Enums"]["industry_template"]
           is_active?: boolean | null
           logo_url?: string | null
+          mirror_active_method?: string
+          mirror_html_css?: string | null
+          mirror_html_footer_html?: string | null
+          mirror_html_header_html?: string | null
+          mirror_screenshot_css?: string | null
+          mirror_screenshot_footer_html?: string | null
+          mirror_screenshot_header_html?: string | null
           reference_id_prefix?: string | null
           rejected_url?: string | null
           resource_id?: string | null
