@@ -890,6 +890,14 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, scrapedBranding 
 
           {/* Custom Tab */}
           <TabsContent value="custom" className="space-y-6">
+           {/* Info Banner */}
+           <div className="p-3 rounded-lg bg-primary/5 border border-primary/20">
+             <p className="text-sm text-primary">
+               <strong>Custom styling mode:</strong> Changes here will override any mirrored or template styles. 
+               The current values below reflect your active form styling.
+             </p>
+           </div>
+           
             {/* Typography */}
             <div className="space-y-4">
               <h4 className="font-semibold text-sm">Typography</h4>

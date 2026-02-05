@@ -51,32 +51,10 @@
    const fontSize = getFontSize(formStyle.fontSize);
    const labelWeight = getLabelWeight(formStyle.labelWeight);
    
-   return `
-     <div style="max-width: 480px; margin: 0 auto; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); padding: 32px; border: 1px solid #e5e7eb;">
-       <h2 style="margin: 0 0 24px 0; font-size: 20px; font-weight: 600; color: ${formStyle.labelColor}; font-family: ${formStyle.fontFamily}; text-align: center;">Application Form</h2>
-       <div style="margin-bottom: 16px;">
-         <label style="display: block; margin-bottom: 6px; font-weight: ${labelWeight}; color: ${formStyle.labelColor}; font-family: ${formStyle.fontFamily}; font-size: ${fontSize};">
-           First Name<span style="color: ${formStyle.errorColor}; margin-left: 4px;">*</span>
-         </label>
-         <input type="text" placeholder="John" style="
-           width: 100%; padding: ${padding}; border: ${formStyle.borderWidth}px solid ${formStyle.inputBorderColor};
-           border-radius: ${borderRadius}; background: ${formStyle.inputBgColor}; color: ${formStyle.inputTextColor};
-           font-family: ${formStyle.fontFamily}; font-size: ${fontSize}; box-sizing: border-box; outline: none;
-         " />
-       </div>
-       <div style="margin-bottom: 16px;">
-         <label style="display: block; margin-bottom: 6px; font-weight: ${labelWeight}; color: ${formStyle.labelColor}; font-family: ${formStyle.fontFamily}; font-size: ${fontSize};">
-           Email<span style="color: ${formStyle.errorColor}; margin-left: 4px;">*</span>
-         </label>
-         <input type="email" placeholder="john@example.com" style="
-           width: 100%; padding: ${padding}; border: ${formStyle.borderWidth}px solid ${formStyle.inputBorderColor};
-           border-radius: ${borderRadius}; background: ${formStyle.inputBgColor}; color: ${formStyle.inputTextColor};
-           font-family: ${formStyle.fontFamily}; font-size: ${fontSize}; box-sizing: border-box; outline: none;
-         " />
-       </div>
-       <button style="width: 100%; padding: 12px 24px; background: ${buttonColor}; color: white; border: none; border-radius: ${borderRadius}; font-size: ${fontSize}; font-weight: 600; cursor: pointer; font-family: ${formStyle.fontFamily};">Continue</button>
-     </div>
-   `;
+   const inputStyle = `width: 100%; padding: ${padding}; border: ${formStyle.borderWidth}px solid ${formStyle.inputBorderColor}; border-radius: ${borderRadius}; background: ${formStyle.inputBgColor}; color: ${formStyle.inputTextColor}; font-family: ${formStyle.fontFamily}; font-size: ${fontSize}; box-sizing: border-box; outline: none;`;
+   const labelStyle = `display: block; margin-bottom: 6px; font-weight: ${labelWeight}; color: ${formStyle.labelColor}; font-family: ${formStyle.fontFamily}; font-size: ${fontSize};`;
+   
+   return `<div style="max-width: 480px; margin: 0 auto; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); padding: 32px; border: 1px solid #e5e7eb;"><h2 style="margin: 0 0 24px 0; font-size: 20px; font-weight: 600; color: ${formStyle.labelColor}; font-family: ${formStyle.fontFamily}; text-align: center;">Application Form</h2><div style="margin-bottom: 16px;"><label style="${labelStyle}">First Name<span style="color: ${formStyle.errorColor}; margin-left: 4px;">*</span></label><input type="text" placeholder="John" style="${inputStyle}" /></div><div style="margin-bottom: 16px;"><label style="${labelStyle}">Email<span style="color: ${formStyle.errorColor}; margin-left: 4px;">*</span></label><input type="email" placeholder="john@example.com" style="${inputStyle}" /></div><button style="width: 100%; padding: 12px 24px; background: ${buttonColor}; color: white; border: none; border-radius: ${borderRadius}; font-size: ${fontSize}; font-weight: 600; cursor: pointer; font-family: ${formStyle.fontFamily};">Continue</button></div>`;
  }
  
  interface HtmlCaptureTabProps {
