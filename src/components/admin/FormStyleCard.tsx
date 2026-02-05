@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react';
-import { Paintbrush, Globe, LayoutTemplate, Palette, Check, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
+ import { useState } from 'react';
+ import { Paintbrush, Globe, LayoutTemplate, Palette, Check, Loader2, AlertCircle, CheckCircle, Eye } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
@@ -255,6 +255,44 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, scrapedBranding 
   };
 
   const hasMirroredData = !!demo.customerSiteUrl || !!scrapedBranding?.branding || !!demo.scrapedCss || !!demo.buttonColor || !!extractedStyles;
+ 
+   // Generate border radius style value
+   const getBorderRadius = (radius: string) => {
+     switch (radius) {
+       case 'none': return '0px';
+       case 'sm': return '4px';
+       case 'lg': return '12px';
+       case 'full': return '9999px';
+       default: return '8px';
+     }
+   };
+ 
+   // Generate padding style value
+   const getPadding = (padding: string) => {
+     switch (padding) {
+       case 'sm': return '8px 12px';
+       case 'lg': return '14px 18px';
+       default: return '10px 14px';
+     }
+   };
+ 
+   // Generate font size value
+   const getFontSize = (size: string) => {
+     switch (size) {
+       case 'sm': return '14px';
+       case 'lg': return '18px';
+       default: return '16px';
+     }
+   };
+ 
+   // Generate label weight value
+   const getLabelWeight = (weight: string) => {
+     switch (weight) {
+       case 'semibold': return 600;
+       case 'medium': return 500;
+       default: return 400;
+     }
+   };
 
   const getSelectorStatusIcon = () => {
     switch (selectorStatus) {
@@ -271,7 +309,222 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, scrapedBranding 
   };
 
   return (
-    <Card className="glass-card">
+   <div className="space-y-6">
+     {/* Live Form Preview - Always visible at top */}
+     <Card className="glass-card border-2 border-primary/20">
+       <CardHeader className="pb-3">
+         <CardTitle className="flex items-center gap-2 text-base">
+           <Eye className="w-5 h-5" />
+           Live Form Preview
+         </CardTitle>
+         <p className="text-sm text-muted-foreground">
+           This shows how your form will look with the current styling applied
+         </p>
+       </CardHeader>
+       <CardContent>
+         <div className="p-6 rounded-lg border bg-white">
+           <div className="max-w-md mx-auto space-y-5">
+             <h3 
+               style={{
+                 color: formStyle.labelColor,
+                 fontFamily: formStyle.fontFamily,
+                 fontSize: '20px',
+                 fontWeight: 600,
+                 textAlign: 'center',
+                 marginBottom: '24px',
+               }}
+             >
+               Application Form
+             </h3>
+             
+             {/* First Name */}
+             <div className="space-y-2">
+               <label
+                 style={{
+                   display: 'block',
+                   color: formStyle.labelColor,
+                   fontWeight: getLabelWeight(formStyle.labelWeight),
+                   fontFamily: formStyle.fontFamily,
+                   fontSize: getFontSize(formStyle.fontSize),
+                   marginBottom: '6px',
+                 }}
+               >
+                 First Name <span style={{ color: formStyle.errorColor }}>*</span>
+               </label>
+               <input
+                 type="text"
+                 placeholder="John"
+                 style={{
+                   width: '100%',
+                   padding: getPadding(formStyle.inputPadding),
+                   backgroundColor: formStyle.inputBgColor,
+                   color: formStyle.inputTextColor,
+                   border: `${formStyle.borderWidth}px solid ${formStyle.inputBorderColor}`,
+                   borderRadius: getBorderRadius(formStyle.borderRadius),
+                   fontFamily: formStyle.fontFamily,
+                   fontSize: getFontSize(formStyle.fontSize),
+                   outline: 'none',
+                 }}
+               />
+             </div>
+ 
+             {/* Last Name */}
+             <div className="space-y-2">
+               <label
+                 style={{
+                   display: 'block',
+                   color: formStyle.labelColor,
+                   fontWeight: getLabelWeight(formStyle.labelWeight),
+                   fontFamily: formStyle.fontFamily,
+                   fontSize: getFontSize(formStyle.fontSize),
+                   marginBottom: '6px',
+                 }}
+               >
+                 Last Name <span style={{ color: formStyle.errorColor }}>*</span>
+               </label>
+               <input
+                 type="text"
+                 placeholder="Doe"
+                 style={{
+                   width: '100%',
+                   padding: getPadding(formStyle.inputPadding),
+                   backgroundColor: formStyle.inputBgColor,
+                   color: formStyle.inputTextColor,
+                   border: `${formStyle.borderWidth}px solid ${formStyle.inputBorderColor}`,
+                   borderRadius: getBorderRadius(formStyle.borderRadius),
+                   fontFamily: formStyle.fontFamily,
+                   fontSize: getFontSize(formStyle.fontSize),
+                   outline: 'none',
+                 }}
+               />
+             </div>
+ 
+             {/* Email - show focus state */}
+             <div className="space-y-2">
+               <label
+                 style={{
+                   display: 'block',
+                   color: formStyle.labelColor,
+                   fontWeight: getLabelWeight(formStyle.labelWeight),
+                   fontFamily: formStyle.fontFamily,
+                   fontSize: getFontSize(formStyle.fontSize),
+                   marginBottom: '6px',
+                 }}
+               >
+                 Email Address <span style={{ color: formStyle.errorColor }}>*</span>
+               </label>
+               <input
+                 type="email"
+                 placeholder="john.doe@example.com"
+                 style={{
+                   width: '100%',
+                   padding: getPadding(formStyle.inputPadding),
+                   backgroundColor: formStyle.inputBgColor,
+                   color: formStyle.inputTextColor,
+                   border: `2px solid ${formStyle.inputFocusBorderColor}`,
+                   borderRadius: getBorderRadius(formStyle.borderRadius),
+                   fontFamily: formStyle.fontFamily,
+                   fontSize: getFontSize(formStyle.fontSize),
+                   outline: 'none',
+                   boxShadow: `0 0 0 3px ${formStyle.inputFocusBorderColor}20`,
+                 }}
+               />
+               <span style={{ fontSize: '12px', color: formStyle.inputFocusBorderColor }}>
+                 ↑ This field shows the focus state styling
+               </span>
+             </div>
+ 
+             {/* Date of Birth */}
+             <div className="space-y-2">
+               <label
+                 style={{
+                   display: 'block',
+                   color: formStyle.labelColor,
+                   fontWeight: getLabelWeight(formStyle.labelWeight),
+                   fontFamily: formStyle.fontFamily,
+                   fontSize: getFontSize(formStyle.fontSize),
+                   marginBottom: '6px',
+                 }}
+               >
+                 Date of Birth
+               </label>
+               <input
+                 type="text"
+                 placeholder="MM/DD/YYYY"
+                 style={{
+                   width: '100%',
+                   padding: getPadding(formStyle.inputPadding),
+                   backgroundColor: formStyle.inputBgColor,
+                   color: formStyle.inputTextColor,
+                   border: `${formStyle.borderWidth}px solid ${formStyle.inputBorderColor}`,
+                   borderRadius: getBorderRadius(formStyle.borderRadius),
+                   fontFamily: formStyle.fontFamily,
+                   fontSize: getFontSize(formStyle.fontSize),
+                   outline: 'none',
+                 }}
+               />
+             </div>
+ 
+             {/* Submit Button */}
+             <button
+               style={{
+                 width: '100%',
+                 padding: '14px 24px',
+                 backgroundColor: demo.buttonColor || formStyle.inputFocusBorderColor,
+                 color: '#ffffff',
+                 border: 'none',
+                 borderRadius: getBorderRadius(formStyle.borderRadius),
+                 fontFamily: formStyle.fontFamily,
+                 fontWeight: 600,
+                 fontSize: getFontSize(formStyle.fontSize),
+                 cursor: 'pointer',
+                 marginTop: '8px',
+               }}
+             >
+               Continue
+             </button>
+           </div>
+         </div>
+ 
+         {/* Style Summary */}
+         <div className="mt-4 p-3 rounded-lg bg-muted/50 border">
+           <div className="flex flex-wrap gap-3 text-xs">
+             <div className="flex items-center gap-2">
+               <div className="w-4 h-4 rounded border" style={{ backgroundColor: formStyle.inputBgColor }} />
+               <span className="text-muted-foreground">Input BG</span>
+             </div>
+             <div className="flex items-center gap-2">
+               <div className="w-4 h-4 rounded border" style={{ backgroundColor: formStyle.inputBorderColor }} />
+               <span className="text-muted-foreground">Border</span>
+             </div>
+             <div className="flex items-center gap-2">
+               <div className="w-4 h-4 rounded border" style={{ backgroundColor: formStyle.inputFocusBorderColor }} />
+               <span className="text-muted-foreground">Focus</span>
+             </div>
+             <div className="flex items-center gap-2">
+               <div className="w-4 h-4 rounded border" style={{ backgroundColor: formStyle.labelColor }} />
+               <span className="text-muted-foreground">Label</span>
+             </div>
+             <div className="flex items-center gap-2">
+               <div className="w-4 h-4 rounded border" style={{ backgroundColor: demo.buttonColor || formStyle.inputFocusBorderColor }} />
+               <span className="text-muted-foreground">Button</span>
+             </div>
+             {formStyle.fontFamily && (
+               <div className="flex items-center gap-2">
+                 <span className="font-medium" style={{ fontFamily: formStyle.fontFamily }}>Aa</span>
+                 <span className="text-muted-foreground truncate max-w-20">{formStyle.fontFamily.split(',')[0]}</span>
+               </div>
+             )}
+             <Badge variant="outline" className="text-xs">
+               {formStyle.source === 'mirrored' ? 'Mirrored' : formStyle.source === 'template' ? 'Template' : 'Custom'}
+             </Badge>
+           </div>
+         </div>
+       </CardContent>
+     </Card>
+ 
+     {/* Style Configuration Card */}
+     <Card className="glass-card">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Paintbrush className="w-5 h-5" />
@@ -867,5 +1120,6 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, scrapedBranding 
         </Tabs>
       </CardContent>
     </Card>
-  );
-}
+   </div>
+   );
+ }
