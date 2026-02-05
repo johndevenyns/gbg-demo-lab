@@ -18,7 +18,7 @@ import {
 import { DemoEnvironment } from '@/types/demo';
 import { ScrapedBranding, scrapingApi, FormElementStyles, formAnalysisApi } from '@/lib/api/scraping';
 import { useToast } from '@/hooks/use-toast';
- import { getBorderRadius, getPadding, getFontSize, getLabelWeight } from '@/lib/formStyleUtils';
+ import { getBorderRadius, getPadding, getFontSize, getLabelWeight, getFormBorderRadius, getFormShadow, getTitleFontSize, getTitleFontWeight, getBodyFontSize } from '@/lib/formStyleUtils';
 
 interface FormStyleCardProps {
   demo: DemoEnvironment;
@@ -430,16 +430,21 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, scrapedBranding 
             style={{ backgroundColor: formStyle.contentAreaBgColor || '#f5f5f5' }}
           >
             <div 
-              className="max-w-md mx-auto space-y-5 rounded-lg p-6 shadow-sm"
-              style={{ backgroundColor: formStyle.formBgColor || '#ffffff' }}
+              className="max-w-md mx-auto space-y-5 p-6"
+              style={{ 
+                backgroundColor: formStyle.formBgColor || '#ffffff',
+                borderRadius: getFormBorderRadius(formStyle.formBorderRadius),
+                boxShadow: getFormShadow(formStyle.formShadow),
+                border: `${formStyle.formBorderWidth || '1'}px solid ${formStyle.formBorderColor || '#e5e7eb'}`,
+              }}
             >
              <h3 
                style={{
-                 color: formStyle.labelColor,
+                 color: formStyle.titleColor || formStyle.labelColor,
                  fontFamily: formStyle.fontFamily,
-                 fontSize: '20px',
-                 fontWeight: 600,
-                 textAlign: 'center',
+                 fontSize: getTitleFontSize(formStyle.titleFontSize),
+                 fontWeight: getTitleFontWeight(formStyle.titleFontWeight),
+                 textAlign: formStyle.titleAlignment || 'center',
                  marginBottom: '24px',
                }}
              >
@@ -1367,6 +1372,207 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, scrapedBranding 
               </div>
             </div>
  
+            {/* Form Container Styling */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h4 className="font-semibold text-sm">Form Container</h4>
+                <p className="text-xs text-muted-foreground">Border, corners, and shadow</p>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="space-y-2">
+                  <Label>Border Width</Label>
+                  <Select
+                    value={formStyle.formBorderWidth || '1'}
+                    onValueChange={(value) => updateCustomStyle({ formBorderWidth: value as '0' | '1' | '2' | '3' })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="0">None</SelectItem>
+                      <SelectItem value="1">1px</SelectItem>
+                      <SelectItem value="2">2px</SelectItem>
+                      <SelectItem value="3">3px</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Border Color</Label>
+                  <div className="flex items-center gap-2">
+                    <div 
+                      className="w-6 h-6 rounded border-2 border-border shrink-0"
+                      style={{ backgroundColor: formStyle.formBorderColor || '#e5e7eb' }}
+                    />
+                    <input
+                      type="color"
+                      value={formStyle.formBorderColor || '#e5e7eb'}
+                      onChange={(e) => updateCustomStyle({ formBorderColor: e.target.value })}
+                      className="color-picker-swatch"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Corner Radius</Label>
+                  <Select
+                    value={formStyle.formBorderRadius || 'lg'}
+                    onValueChange={(value) => updateCustomStyle({ formBorderRadius: value as 'none' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">None (0px)</SelectItem>
+                      <SelectItem value="sm">Small (6px)</SelectItem>
+                      <SelectItem value="md">Medium (8px)</SelectItem>
+                      <SelectItem value="lg">Large (12px)</SelectItem>
+                      <SelectItem value="xl">XL (16px)</SelectItem>
+                      <SelectItem value="2xl">2XL (24px)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Shadow</Label>
+                  <Select
+                    value={formStyle.formShadow || 'lg'}
+                    onValueChange={(value) => updateCustomStyle({ formShadow: value as 'none' | 'sm' | 'md' | 'lg' | 'xl' })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">None</SelectItem>
+                      <SelectItem value="sm">Small</SelectItem>
+                      <SelectItem value="md">Medium</SelectItem>
+                      <SelectItem value="lg">Large</SelectItem>
+                      <SelectItem value="xl">XL</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+
+            {/* Title Text Styling */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h4 className="font-semibold text-sm">Title Text</h4>
+                <p className="text-xs text-muted-foreground">Form heading style</p>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="space-y-2">
+                  <Label>Font Size</Label>
+                  <Select
+                    value={formStyle.titleFontSize || 'xl'}
+                    onValueChange={(value) => updateCustomStyle({ titleFontSize: value as 'sm' | 'base' | 'lg' | 'xl' | '2xl' })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="sm">Small (16px)</SelectItem>
+                      <SelectItem value="base">Base (18px)</SelectItem>
+                      <SelectItem value="lg">Large (20px)</SelectItem>
+                      <SelectItem value="xl">XL (24px)</SelectItem>
+                      <SelectItem value="2xl">2XL (30px)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Font Weight</Label>
+                  <Select
+                    value={formStyle.titleFontWeight || 'semibold'}
+                    onValueChange={(value) => updateCustomStyle({ titleFontWeight: value as 'normal' | 'medium' | 'semibold' | 'bold' })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="normal">Normal</SelectItem>
+                      <SelectItem value="medium">Medium</SelectItem>
+                      <SelectItem value="semibold">Semibold</SelectItem>
+                      <SelectItem value="bold">Bold</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Title Color</Label>
+                  <div className="flex items-center gap-2">
+                    <div 
+                      className="w-6 h-6 rounded border-2 border-border shrink-0"
+                      style={{ backgroundColor: formStyle.titleColor || '#1f2937' }}
+                    />
+                    <input
+                      type="color"
+                      value={formStyle.titleColor || '#1f2937'}
+                      onChange={(e) => updateCustomStyle({ titleColor: e.target.value })}
+                      className="color-picker-swatch"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Alignment</Label>
+                  <Select
+                    value={formStyle.titleAlignment || 'center'}
+                    onValueChange={(value) => updateCustomStyle({ titleAlignment: value as 'left' | 'center' | 'right' })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="left">Left</SelectItem>
+                      <SelectItem value="center">Center</SelectItem>
+                      <SelectItem value="right">Right</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+
+            {/* Body Text Styling */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h4 className="font-semibold text-sm">Body Text</h4>
+                <p className="text-xs text-muted-foreground">Helper text and descriptions</p>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Font Size</Label>
+                  <Select
+                    value={formStyle.bodyFontSize || 'sm'}
+                    onValueChange={(value) => updateCustomStyle({ bodyFontSize: value as 'xs' | 'sm' | 'base' })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="xs">X-Small (12px)</SelectItem>
+                      <SelectItem value="sm">Small (14px)</SelectItem>
+                      <SelectItem value="base">Base (16px)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Body Color</Label>
+                  <div className="flex items-center gap-2">
+                    <div 
+                      className="w-6 h-6 rounded border-2 border-border shrink-0"
+                      style={{ backgroundColor: formStyle.bodyColor || '#6b7280' }}
+                    />
+                    <input
+                      type="color"
+                      value={formStyle.bodyColor || '#6b7280'}
+                      onChange={(e) => updateCustomStyle({ bodyColor: e.target.value })}
+                      className="color-picker-swatch"
+                    />
+                    <Input
+                      value={formStyle.bodyColor || '#6b7280'}
+                      onChange={(e) => updateCustomStyle({ bodyColor: e.target.value })}
+                      className="font-mono text-xs"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
            {/* Save Button */}
            <div className="pt-4 border-t border-border">
              <Button 
@@ -1387,10 +1593,27 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, scrapedBranding 
                 style={{ backgroundColor: formStyle.contentAreaBgColor || '#f5f5f5' }}
               >
                 <div 
-                  className="max-w-sm mx-auto rounded-lg p-6 shadow-sm"
-                  style={{ backgroundColor: formStyle.formBgColor || '#ffffff' }}
+                  className="max-w-sm mx-auto p-6"
+                  style={{ 
+                    backgroundColor: formStyle.formBgColor || '#ffffff',
+                    borderRadius: getFormBorderRadius(formStyle.formBorderRadius),
+                    boxShadow: getFormShadow(formStyle.formShadow),
+                    border: `${formStyle.formBorderWidth || '1'}px solid ${formStyle.formBorderColor || '#e5e7eb'}`,
+                  }}
                 >
-                <div className="space-y-4 max-w-sm">
+                  {/* Title */}
+                  <h3 style={{
+                    fontSize: getTitleFontSize(formStyle.titleFontSize),
+                    fontWeight: getTitleFontWeight(formStyle.titleFontWeight),
+                    color: formStyle.titleColor || '#1f2937',
+                    textAlign: formStyle.titleAlignment || 'center',
+                    fontFamily: formStyle.fontFamily,
+                    marginBottom: '20px',
+                  }}>
+                    Application Form
+                  </h3>
+                  
+                  <div className="space-y-4">
                   <div className="space-y-2">
                     <label
                       style={{
@@ -1417,6 +1640,14 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, scrapedBranding 
                         outline: 'none',
                       }}
                     />
+                    <p style={{
+                      fontSize: getBodyFontSize(formStyle.bodyFontSize),
+                      color: formStyle.bodyColor || '#6b7280',
+                      fontFamily: formStyle.fontFamily,
+                      marginTop: '4px',
+                    }}>
+                      We'll send verification to this address
+                    </p>
                   </div>
                   <button
                     style={{

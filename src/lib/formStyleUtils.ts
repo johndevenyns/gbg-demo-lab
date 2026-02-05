@@ -49,6 +49,64 @@
    }
  }
  
+// Form container border radius mapper
+export function getFormBorderRadius(radius: string = 'lg'): string {
+  switch (radius) {
+    case 'none': return '0px';
+    case 'sm': return '6px';
+    case 'md': return '8px';
+    case 'lg': return '12px';
+    case 'xl': return '16px';
+    case '2xl': return '24px';
+    default: return '12px';
+  }
+}
+
+// Form container shadow mapper
+export function getFormShadow(shadow: string = 'lg'): string {
+  switch (shadow) {
+    case 'none': return 'none';
+    case 'sm': return '0 1px 2px rgba(0,0,0,0.05)';
+    case 'md': return '0 4px 6px -1px rgba(0,0,0,0.1)';
+    case 'lg': return '0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1)';
+    case 'xl': return '0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1)';
+    default: return '0 10px 15px -3px rgba(0,0,0,0.1)';
+  }
+}
+
+// Title font size mapper
+export function getTitleFontSize(size: string = 'xl'): string {
+  switch (size) {
+    case 'sm': return '16px';
+    case 'base': return '18px';
+    case 'lg': return '20px';
+    case 'xl': return '24px';
+    case '2xl': return '30px';
+    default: return '24px';
+  }
+}
+
+// Title font weight mapper
+export function getTitleFontWeight(weight: string = 'semibold'): number {
+  switch (weight) {
+    case 'normal': return 400;
+    case 'medium': return 500;
+    case 'semibold': return 600;
+    case 'bold': return 700;
+    default: return 600;
+  }
+}
+
+// Body font size mapper
+export function getBodyFontSize(size: string = 'sm'): string {
+  switch (size) {
+    case 'xs': return '12px';
+    case 'sm': return '14px';
+    case 'base': return '16px';
+    default: return '14px';
+  }
+}
+
  // ============ Style Object Generators ============
  
  export interface FormInputStyles {
@@ -69,11 +127,23 @@
    const padding = getPadding(formStyle.inputPadding);
    const fontSize = getFontSize(formStyle.fontSize);
    const labelWeight = getLabelWeight(formStyle.labelWeight);
+  
+  // Form container styling
   const formBgColor = formStyle.formBgColor || '#ffffff';
+  const formBorderRadius = getFormBorderRadius(formStyle.formBorderRadius);
+  const formShadow = getFormShadow(formStyle.formShadow);
+  const formBorderWidth = formStyle.formBorderWidth || '1';
+  const formBorderColor = formStyle.formBorderColor || '#e5e7eb';
+  
+  // Title styling
+  const titleFontSize = getTitleFontSize(formStyle.titleFontSize);
+  const titleFontWeight = getTitleFontWeight(formStyle.titleFontWeight);
+  const titleColor = formStyle.titleColor || formStyle.labelColor;
+  const titleAlignment = formStyle.titleAlignment || 'center';
  
    return {
-    container: `max-width: 480px; margin: 0 auto; background: ${formBgColor}; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); padding: 32px; border: 1px solid #e5e7eb;`,
-     title: `margin: 0 0 24px 0; font-size: 20px; font-weight: 600; color: ${formStyle.labelColor}; font-family: ${formStyle.fontFamily}; text-align: center;`,
+    container: `max-width: 480px; margin: 0 auto; background: ${formBgColor}; border-radius: ${formBorderRadius}; box-shadow: ${formShadow}; padding: 32px; border: ${formBorderWidth}px solid ${formBorderColor};`,
+    title: `margin: 0 0 24px 0; font-size: ${titleFontSize}; font-weight: ${titleFontWeight}; color: ${titleColor}; font-family: ${formStyle.fontFamily}; text-align: ${titleAlignment};`,
      label: `display: block; margin-bottom: 6px; font-weight: ${labelWeight}; color: ${formStyle.labelColor}; font-family: ${formStyle.fontFamily}; font-size: ${fontSize};`,
      input: `width: 100%; padding: ${padding}; border: ${formStyle.borderWidth}px solid ${formStyle.inputBorderColor}; border-radius: ${borderRadius}; background: ${formStyle.inputBgColor}; color: ${formStyle.inputTextColor}; font-family: ${formStyle.fontFamily}; font-size: ${fontSize}; box-sizing: border-box; outline: none;`,
      button: `width: 100%; padding: 12px 24px; background: ${buttonColor}; color: white; border: none; border-radius: ${borderRadius}; font-size: ${fontSize}; font-weight: 600; cursor: pointer; font-family: ${formStyle.fontFamily};`,
