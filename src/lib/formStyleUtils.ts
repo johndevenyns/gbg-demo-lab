@@ -69,9 +69,10 @@
    const padding = getPadding(formStyle.inputPadding);
    const fontSize = getFontSize(formStyle.fontSize);
    const labelWeight = getLabelWeight(formStyle.labelWeight);
+  const formBgColor = formStyle.formBgColor || '#ffffff';
  
    return {
-     container: `max-width: 480px; margin: 0 auto; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); padding: 32px; border: 1px solid #e5e7eb;`,
+    container: `max-width: 480px; margin: 0 auto; background: ${formBgColor}; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); padding: 32px; border: 1px solid #e5e7eb;`,
      title: `margin: 0 0 24px 0; font-size: 20px; font-weight: 600; color: ${formStyle.labelColor}; font-family: ${formStyle.fontFamily}; text-align: center;`,
      label: `display: block; margin-bottom: 6px; font-weight: ${labelWeight}; color: ${formStyle.labelColor}; font-family: ${formStyle.fontFamily}; font-size: ${fontSize};`,
      input: `width: 100%; padding: ${padding}; border: ${formStyle.borderWidth}px solid ${formStyle.inputBorderColor}; border-radius: ${borderRadius}; background: ${formStyle.inputBgColor}; color: ${formStyle.inputTextColor}; font-family: ${formStyle.fontFamily}; font-size: ${fontSize}; box-sizing: border-box; outline: none;`,
@@ -124,8 +125,9 @@
  }
  
  export function generatePreviewDocument(options: PreviewDocumentOptions): string {
-   const { formStyle, buttonColor, headerHtml, footerHtml, cssContent, contentBgColor = '#f5f5f5' } = options;
+  const { formStyle, buttonColor, headerHtml, footerHtml, cssContent, contentBgColor } = options;
    const formHtml = generateFormHtml(formStyle, buttonColor);
+  const bgColor = contentBgColor || formStyle.contentAreaBgColor || '#f5f5f5';
  
    return `
      <!DOCTYPE html>
@@ -140,7 +142,7 @@
        </head>
        <body>
          ${headerHtml || ''}
-         <div style="padding: 40px 20px; background: ${contentBgColor}; min-height: 150px;">
+        <div style="padding: 40px 20px; background: ${bgColor}; min-height: 150px;">
            ${formHtml}
          </div>
          ${footerHtml || ''}
