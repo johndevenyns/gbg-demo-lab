@@ -18,6 +18,8 @@
    headerOffsetY: number;
    footerHeight: number;
    footerOffsetY: number;
+  naturalHeight?: number;
+  naturalWidth?: number;
  }
  
  const DEFAULT_CROP_SETTINGS: CropSettings = {
@@ -66,23 +68,31 @@
    buttonColor: string,
    cropSettings: CropSettings
  ): string {
-  // For the header: we want to show a slice starting at headerOffsetY with height headerHeight
-  // Use a wrapper with overflow:hidden, fixed height, and position the image with negative margin
-   const headerContent = `
-    <div style="width: 100%; height: ${cropSettings.headerHeight}px; overflow: hidden; position: relative;">
-      <img src="${screenshotSrc}" style="width: 100%; display: block; margin-top: -${cropSettings.headerOffsetY}px;" alt="Header" />
+  const naturalHeight = cropSettings.naturalHeight || 1000;
+  
+  // Calculate percentages for responsive cropping
+  // The header shows headerHeight worth of content starting at headerOffsetY
+  const headerOffsetPercent = (cropSettings.headerOffsetY / naturalHeight) * 100;
+  const headerHeightPercent = (cropSettings.headerHeight / naturalHeight) * 100;
+  
+  // For the header: use aspect-ratio trick to maintain proportions
+  // paddingBottom as percentage creates a responsive height based on image aspect ratio
+  const headerContent = `
+    <div style="width: 100%; overflow: hidden; position: relative; height: 0; padding-bottom: ${headerHeightPercent}%;">
+      <img src="${screenshotSrc}" style="position: absolute; width: 100%; top: -${headerOffsetPercent}%; left: 0;" alt="Header" />
     </div>
-   `;
- 
-  // For the footer: we want to show the bottom portion of the image
-  // Calculate the position from the bottom and use a wrapper to clip it
-   const footerContent = `
-    <div style="width: 100%; height: ${cropSettings.footerHeight}px; overflow: hidden; position: relative;">
-      <div style="position: absolute; bottom: -${cropSettings.footerOffsetY}px; left: 0; right: 0;">
-        <img src="${screenshotSrc}" style="width: 100%; display: block;" alt="Footer" />
-      </div>
+  `;
+  
+  // For the footer: show footerHeight from the bottom, offset by footerOffsetY from bottom edge
+  const footerOffsetPercent = (cropSettings.footerOffsetY / naturalHeight) * 100;
+  const footerHeightPercent = (cropSettings.footerHeight / naturalHeight) * 100;
+  const footerTopPercent = 100 - footerHeightPercent - footerOffsetPercent;
+  
+  const footerContent = `
+    <div style="width: 100%; overflow: hidden; position: relative; height: 0; padding-bottom: ${footerHeightPercent}%;">
+      <img src="${screenshotSrc}" style="position: absolute; width: 100%; top: -${footerTopPercent}%; left: 0;" alt="Footer" />
     </div>
-   `;
+  `;
  
     return generatePreviewDocument({
       formStyle,
@@ -138,9 +148,16 @@
   const handleApplySavedCrop = () => {
     if (!savedScreenshotSrc) return;
     
+    const naturalHeight = savedCropSettings.naturalHeight || 1000;
+    const headerOffsetPercent = (savedCropSettings.headerOffsetY / naturalHeight) * 100;
+    const headerHeightPercent = (savedCropSettings.headerHeight / naturalHeight) * 100;
+    const footerOffsetPercent = (savedCropSettings.footerOffsetY / naturalHeight) * 100;
+    const footerHeightPercent = (savedCropSettings.footerHeight / naturalHeight) * 100;
+    const footerTopPercent = 100 - footerHeightPercent - footerOffsetPercent;
+    
     const updates: Partial<DemoEnvironment> = {
-      mirrorScreenshotHeaderHtml: `<div style="width: 100%; height: ${savedCropSettings.headerHeight}px; overflow: hidden; position: relative;"><img src="${savedScreenshotSrc}" style="width: 100%; display: block; margin-top: -${savedCropSettings.headerOffsetY}px;" alt="Site header" /></div>`,
-      mirrorScreenshotFooterHtml: `<div style="width: 100%; height: ${savedCropSettings.footerHeight}px; overflow: hidden; position: relative;"><div style="position: absolute; bottom: -${savedCropSettings.footerOffsetY}px; left: 0; right: 0;"><img src="${savedScreenshotSrc}" style="width: 100%; display: block;" alt="Site footer" /></div></div>`,
+      mirrorScreenshotHeaderHtml: `<div style="width: 100%; overflow: hidden; position: relative; height: 0; padding-bottom: ${headerHeightPercent}%;"><img src="${savedScreenshotSrc}" style="position: absolute; width: 100%; top: -${headerOffsetPercent}%; left: 0;" alt="Site header" /></div>`,
+      mirrorScreenshotFooterHtml: `<div style="width: 100%; overflow: hidden; position: relative; height: 0; padding-bottom: ${footerHeightPercent}%;"><img src="${savedScreenshotSrc}" style="position: absolute; width: 100%; top: -${footerTopPercent}%; left: 0;" alt="Site footer" /></div>`,
     };
     
     onApply(updates);
@@ -194,12 +211,19 @@
      // Generate HTML for each viewport
      const generateHeaderHtml = (src: string, settings: CropSettings) => {
        if (!src) return '';
-        return `<div style="width: 100%; height: ${settings.headerHeight}px; overflow: hidden; position: relative;"><img src="${src}" style="width: 100%; display: block; margin-top: -${settings.headerOffsetY}px;" alt="Site header" /></div>`;
+        const naturalHeight = settings.naturalHeight || 1000;
+        const headerOffsetPercent = (settings.headerOffsetY / naturalHeight) * 100;
+        const headerHeightPercent = (settings.headerHeight / naturalHeight) * 100;
+        return `<div style="width: 100%; overflow: hidden; position: relative; height: 0; padding-bottom: ${headerHeightPercent}%;"><img src="${src}" style="position: absolute; width: 100%; top: -${headerOffsetPercent}%; left: 0;" alt="Site header" /></div>`;
      };
      
      const generateFooterHtml = (src: string, settings: CropSettings) => {
        if (!src) return '';
-        return `<div style="width: 100%; height: ${settings.footerHeight}px; overflow: hidden; position: relative;"><div style="position: absolute; bottom: -${settings.footerOffsetY}px; left: 0; right: 0;"><img src="${src}" style="width: 100%; display: block;" alt="Site footer" /></div></div>`;
+        const naturalHeight = settings.naturalHeight || 1000;
+        const footerOffsetPercent = (settings.footerOffsetY / naturalHeight) * 100;
+        const footerHeightPercent = (settings.footerHeight / naturalHeight) * 100;
+        const footerTopPercent = 100 - footerHeightPercent - footerOffsetPercent;
+        return `<div style="width: 100%; overflow: hidden; position: relative; height: 0; padding-bottom: ${footerHeightPercent}%;"><img src="${src}" style="position: absolute; width: 100%; top: -${footerTopPercent}%; left: 0;" alt="Site footer" /></div>`;
      };
  
      let formStyleConfig: FormStyleConfig | undefined;

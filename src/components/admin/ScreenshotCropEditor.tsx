@@ -8,6 +8,9 @@
    headerOffsetY: number;
    footerHeight: number;
    footerOffsetY: number;
+  // Natural image dimensions for percentage-based calculations
+  naturalHeight?: number;
+  naturalWidth?: number;
  }
  
  interface ScreenshotCropEditorProps {
@@ -29,12 +32,14 @@
    const imageRef = useRef<HTMLImageElement>(null);
    const [imageHeight, setImageHeight] = useState(0);
    const [imageWidth, setImageWidth] = useState(0);
+  const [naturalHeight, setNaturalHeight] = useState(0);
    const [isDragging, setIsDragging] = useState<'header' | 'footer' | null>(null);
    const [dragStartY, setDragStartY] = useState(0);
    const [dragStartValue, setDragStartValue] = useState(0);
    
-   // Calculate scale factor between displayed image and actual crop values
-   const scaleFactor = imageHeight > 0 ? imageHeight / 1000 : 1; // Assume ~1000px reference height
+   // Calculate scale factor between displayed image and natural image size
+   // This ensures crop values are in "natural pixels" of the original image
+   const scaleFactor = imageHeight > 0 && naturalHeight > 0 ? imageHeight / naturalHeight : 1;
    
    // Convert crop settings to display pixels
    const displayHeaderHeight = Math.min(cropSettings.headerHeight * scaleFactor, imageHeight * 0.4);
@@ -47,8 +52,18 @@
      if (imageRef.current) {
        setImageHeight(imageRef.current.clientHeight);
        setImageWidth(imageRef.current.clientWidth);
+       // Capture natural dimensions of the original image
+       setNaturalHeight(imageRef.current.naturalHeight);
+       // Store natural height in crop settings for use in preview
+       if (!cropSettings.naturalHeight && imageRef.current.naturalHeight > 0) {
+         onCropChange({
+           ...cropSettings,
+           naturalHeight: imageRef.current.naturalHeight,
+           naturalWidth: imageRef.current.naturalWidth,
+         });
+       }
      }
-   }, []);
+   }, [cropSettings, onCropChange]);
  
    useEffect(() => {
      const handleResize = () => {
