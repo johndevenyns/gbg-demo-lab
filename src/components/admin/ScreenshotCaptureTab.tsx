@@ -110,13 +110,13 @@
  
    const headerContent = `
      <div style="width: 100%; height: ${cropSettings.headerHeight}px; overflow: hidden;">
-       <img src="${screenshotSrc}" style="width: 100%; display: block; object-fit: cover; object-position: center ${cropSettings.headerOffsetY}px;" alt="Header" />
+        <img src="${screenshotSrc}" style="width: 100%; display: block; object-fit: cover; object-position: center -${cropSettings.headerOffsetY}px;" alt="Header" />
      </div>
    `;
  
    const footerContent = `
      <div style="width: 100%; height: ${cropSettings.footerHeight}px; overflow: hidden;">
-       <img src="${screenshotSrc}" style="width: 100%; display: block; object-fit: cover; object-position: center calc(100% - ${cropSettings.footerOffsetY}px);" alt="Footer" />
+        <img src="${screenshotSrc}" style="width: 100%; display: block; object-fit: cover; object-position: center calc(100% + ${cropSettings.footerOffsetY}px);" alt="Footer" />
      </div>
    `;
  
@@ -179,8 +179,8 @@
     if (!savedScreenshotSrc) return;
     
     const updates: Partial<DemoEnvironment> = {
-      mirrorScreenshotHeaderHtml: `<div style="width: 100%; height: ${savedCropSettings.headerHeight}px; overflow: hidden;"><img src="${savedScreenshotSrc}" style="width: 100%; display: block; object-fit: cover; object-position: center ${savedCropSettings.headerOffsetY}px;" alt="Site header" /></div>`,
-      mirrorScreenshotFooterHtml: `<div style="width: 100%; height: ${savedCropSettings.footerHeight}px; overflow: hidden;"><img src="${savedScreenshotSrc}" style="width: 100%; display: block; object-fit: cover; object-position: center calc(100% - ${savedCropSettings.footerOffsetY}px);" alt="Site footer" /></div>`,
+      mirrorScreenshotHeaderHtml: `<div style="width: 100%; height: ${savedCropSettings.headerHeight}px; overflow: hidden;"><img src="${savedScreenshotSrc}" style="width: 100%; display: block; object-fit: cover; object-position: center -${savedCropSettings.headerOffsetY}px;" alt="Site header" /></div>`,
+      mirrorScreenshotFooterHtml: `<div style="width: 100%; height: ${savedCropSettings.footerHeight}px; overflow: hidden;"><img src="${savedScreenshotSrc}" style="width: 100%; display: block; object-fit: cover; object-position: center calc(100% + ${savedCropSettings.footerOffsetY}px);" alt="Site footer" /></div>`,
     };
     
     onApply(updates);
@@ -238,10 +238,10 @@
        buttonColor: scrapedData.colors.buttonColor,
       // Store in dedicated screenshot capture fields (won't overwrite HTML capture)
       mirrorScreenshotHeaderHtml: screenshotSrc
-         ? `<div style="width: 100%; height: ${cropSettings.headerHeight}px; overflow: hidden;"><img src="${screenshotSrc}" style="width: 100%; display: block; object-fit: cover; object-position: center ${cropSettings.headerOffsetY}px;" alt="Site header" /></div>`
+          ? `<div style="width: 100%; height: ${cropSettings.headerHeight}px; overflow: hidden;"><img src="${screenshotSrc}" style="width: 100%; display: block; object-fit: cover; object-position: center -${cropSettings.headerOffsetY}px;" alt="Site header" /></div>`
          : '',
       mirrorScreenshotFooterHtml: screenshotSrc
-         ? `<div style="width: 100%; height: ${cropSettings.footerHeight}px; overflow: hidden;"><img src="${screenshotSrc}" style="width: 100%; display: block; object-fit: cover; object-position: center calc(100% - ${cropSettings.footerOffsetY}px);" alt="Site footer" /></div>`
+          ? `<div style="width: 100%; height: ${cropSettings.footerHeight}px; overflow: hidden;"><img src="${screenshotSrc}" style="width: 100%; display: block; object-fit: cover; object-position: center calc(100% + ${cropSettings.footerOffsetY}px);" alt="Site footer" /></div>`
          : '',
       mirrorScreenshotCss: '',
        ...(formStyleConfig && { formStyle: formStyleConfig }),
