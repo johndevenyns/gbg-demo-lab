@@ -226,10 +226,6 @@ export function SiteMirrorCard({ demo, onApplyBranding }: SiteMirrorCardProps) {
       if (response.success && response.data) {
         setScrapedData(response.data);
         setShowPreview(true);
-        toast({
-          title: "Site Scraped",
-          description: "Preview the extracted branding below",
-        });
       } else {
         toast({
           title: "Scraping Failed",
