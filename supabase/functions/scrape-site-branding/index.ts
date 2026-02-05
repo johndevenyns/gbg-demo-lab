@@ -135,11 +135,19 @@ Deno.serve(async (req) => {
       url: formattedUrl,
       formats: ['html', 'rawHtml', 'screenshot', 'branding'],
       onlyMainContent: false,
-      waitFor: 3000,
+     waitFor: 4000,
       // Attempt full-page screenshots, but fall back automatically if Firecrawl rejects the key.
       screenshot: {
         fullPage: true,
       },
+     actions: [
+       // Scroll to bottom to ensure lazy-loaded footer content is captured
+       { type: 'scroll', direction: 'down', amount: 99999 },
+       { type: 'wait', milliseconds: 1500 },
+       // Scroll back to top for consistent header capture
+       { type: 'scroll', direction: 'up', amount: 99999 },
+       { type: 'wait', milliseconds: 500 },
+     ]
     });
 
     // Parallel requests for tablet and mobile screenshots
@@ -152,7 +160,11 @@ Deno.serve(async (req) => {
         fullPage: true,
       },
       actions: [
-        { type: 'viewport', width: viewports[1].width, height: viewports[1].height }
+       { type: 'viewport', width: viewports[1].width, height: viewports[1].height },
+       { type: 'scroll', direction: 'down', amount: 99999 },
+       { type: 'wait', milliseconds: 1000 },
+       { type: 'scroll', direction: 'up', amount: 99999 },
+       { type: 'wait', milliseconds: 300 },
       ]
     });
 
@@ -165,7 +177,11 @@ Deno.serve(async (req) => {
         fullPage: true,
       },
       actions: [
-        { type: 'viewport', width: viewports[2].width, height: viewports[2].height }
+       { type: 'viewport', width: viewports[2].width, height: viewports[2].height },
+       { type: 'scroll', direction: 'down', amount: 99999 },
+       { type: 'wait', milliseconds: 1000 },
+       { type: 'scroll', direction: 'up', amount: 99999 },
+       { type: 'wait', milliseconds: 300 },
       ]
     });
 

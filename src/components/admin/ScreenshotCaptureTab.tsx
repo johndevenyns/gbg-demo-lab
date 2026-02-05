@@ -1,5 +1,5 @@
-import { useState, useRef } from "react";
-import { Camera, Loader2, ExternalLink, Eye, Check, Monitor, Tablet, Smartphone, Paintbrush, RefreshCw } from "lucide-react";
+ import { useState, useRef, useMemo } from "react";
+ import { Camera, Loader2, ExternalLink, Eye, Check, Monitor, Tablet, Smartphone, Paintbrush, RefreshCw, Crop } from "lucide-react";
  import { Button } from "@/components/ui/button";
  import { Input } from "@/components/ui/input";
  import { Label } from "@/components/ui/label";
@@ -160,9 +160,32 @@ import { Camera, Loader2, ExternalLink, Eye, Check, Monitor, Tablet, Smartphone,
    const [selectedViewport, setSelectedViewport] = useState<ViewportSize>('desktop');
    const [cropSettings, setCropSettings] = useState<CropSettings>(DEFAULT_CROP_SETTINGS);
   const [previewKey, setPreviewKey] = useState(0);
+  const [showSavedCropEditor, setShowSavedCropEditor] = useState(false);
+  const [savedCropSettings, setSavedCropSettings] = useState<CropSettings>(DEFAULT_CROP_SETTINGS);
+  const [savedPreviewKey, setSavedPreviewKey] = useState(0);
   
   const refreshPreview = () => {
     setPreviewKey((k) => k + 1);
+  };
+ 
+  // Extract the screenshot source from saved HTML if available
+  const savedScreenshotSrc = useMemo(() => {
+    if (!demo.mirrorScreenshotHeaderHtml) return null;
+    const match = demo.mirrorScreenshotHeaderHtml.match(/src="([^"]+)"/);
+    return match ? match[1] : null;
+  }, [demo.mirrorScreenshotHeaderHtml]);
+ 
+  const handleApplySavedCrop = () => {
+    if (!savedScreenshotSrc) return;
+    
+    const updates: Partial<DemoEnvironment> = {
+      mirrorScreenshotHeaderHtml: `<div style="width: 100%; height: ${savedCropSettings.headerHeight}px; overflow: hidden;"><img src="${savedScreenshotSrc}" style="width: 100%; display: block; object-fit: cover; object-position: center ${savedCropSettings.headerOffsetY}px;" alt="Site header" /></div>`,
+      mirrorScreenshotFooterHtml: `<div style="width: 100%; height: ${savedCropSettings.footerHeight}px; overflow: hidden;"><img src="${savedScreenshotSrc}" style="width: 100%; display: block; object-fit: cover; object-position: center calc(100% - ${savedCropSettings.footerOffsetY}px);" alt="Site footer" /></div>`,
+    };
+    
+    onApply(updates);
+    setSavedPreviewKey((k) => k + 1);
+    toast({ title: "Crop Updated", description: "Header and footer crop settings have been saved" });
   };
  
    const getSelectedScreenshot = (): string | null => {
@@ -441,19 +464,61 @@ import { Camera, Loader2, ExternalLink, Eye, Check, Monitor, Tablet, Smartphone,
                  <Check className="w-4 h-4" />
                  <span className="font-medium">Currently Applied Screenshot Capture</span>
                </div>
-               <span className="text-xs text-muted-foreground">
-                 From: {demo.customerSiteUrl}
-               </span>
+               <div className="flex items-center gap-2">
+                 <span className="text-xs text-muted-foreground">
+                   From: {demo.customerSiteUrl}
+                 </span>
+                 {savedScreenshotSrc && (
+                   <Button
+                     variant="outline"
+                     size="sm"
+                     onClick={() => setShowSavedCropEditor(!showSavedCropEditor)}
+                   >
+                     <Crop className="w-4 h-4 mr-2" />
+                     {showSavedCropEditor ? 'Hide Crop Editor' : 'Adjust Crop'}
+                   </Button>
+                 )}
+               </div>
              </div>
+ 
+             {/* Crop Editor for Saved Screenshot */}
+             {showSavedCropEditor && savedScreenshotSrc && (
+               <div className="space-y-4 p-4 rounded-lg border bg-muted/30">
+                 <div className="flex items-center justify-between">
+                   <Label className="text-base font-semibold flex items-center gap-2">
+                     <Crop className="w-4 h-4" />
+                     Adjust Header & Footer Crop
+                   </Label>
+                   <Button onClick={handleApplySavedCrop} size="sm" className="gradient-primary">
+                     <Check className="w-4 h-4 mr-2" />
+                     Apply Crop Changes
+                   </Button>
+                 </div>
+                 <ScreenshotCropEditor
+                   screenshotSrc={savedScreenshotSrc}
+                   cropSettings={savedCropSettings}
+                   onCropChange={setSavedCropSettings}
+                   onReset={() => setSavedCropSettings(DEFAULT_CROP_SETTINGS)}
+                   onApplyCrop={handleApplySavedCrop}
+                 />
+               </div>
+             )}
  
              {/* Live Preview of Saved Content */}
              <div className="space-y-2">
-               <Label className="flex items-center gap-2">
-                 <Eye className="w-4 h-4" />
-                 Saved Screenshot Preview
-               </Label>
+               <div className="flex items-center justify-between">
+                 <Label className="flex items-center gap-2">
+                   <Eye className="w-4 h-4" />
+                   Saved Screenshot Preview
+                 </Label>
+                 <Button variant="outline" size="sm" onClick={() => setSavedPreviewKey((k) => k + 1)}>
+                   <RefreshCw className="w-4 h-4 mr-2" />
+                   Refresh
+                 </Button>
+               </div>
                <div className="border rounded-lg overflow-hidden bg-background">
                  <iframe
+                   key={savedPreviewKey}
                    srcDoc={(() => {
                      const formStyle = demo.formStyle || DEFAULT_FORM_STYLE;
                      return `
