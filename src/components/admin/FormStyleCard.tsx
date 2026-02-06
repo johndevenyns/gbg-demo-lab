@@ -1,5 +1,5 @@
- import { useState, useCallback } from 'react';
- import { Paintbrush, Globe, LayoutTemplate, Palette, Check, Loader2, AlertCircle, CheckCircle, Eye, Save, Upload, Camera, Sparkles } from 'lucide-react';
+import { useState, useCallback } from 'react';
+import { Paintbrush, Globe, LayoutTemplate, Palette, Check, Loader2, AlertCircle, CheckCircle, Eye, Save, Upload, Camera, Sparkles } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
@@ -18,7 +18,8 @@ import {
 import { DemoEnvironment } from '@/types/demo';
 import { ScrapedBranding, scrapingApi, FormElementStyles, formAnalysisApi, CapturedFormData } from '@/lib/api/scraping';
 import { useToast } from '@/hooks/use-toast';
- import { getBorderRadius, getPadding, getFontSize, getLabelWeight, getFormBorderRadius, getFormShadow, getTitleFontSize, getTitleFontWeight, getBodyFontSize } from '@/lib/formStyleUtils';
+import { getBorderRadius, getPadding, getFontSize, getLabelWeight, getFormBorderRadius, getFormShadow, getTitleFontSize, getTitleFontWeight, getBodyFontSize } from '@/lib/formStyleUtils';
+import CapturedFormRenderer from '@/components/preview/CapturedFormRenderer';
 
 interface FormStyleCardProps {
   demo: DemoEnvironment;
@@ -244,6 +245,7 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, onUpdateButtonCo
         source: 'captured',
         capturedFormHtml: response.data.formHtml,
         capturedFormCss: response.data.formCss,
+        capturedFormJs: response.data.formJs,
         capturedFormId: captureFormId,
         capturedSourceUrl: captureUrl,
       };
@@ -513,16 +515,31 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, onUpdateButtonCo
          <CardTitle className="flex items-center gap-2 text-base">
            <Eye className="w-5 h-5" />
            Live Form Preview
+           {formStyle.source === 'captured' && (
+             <Badge variant="default" className="ml-2">Captured Form</Badge>
+           )}
          </CardTitle>
          <p className="text-sm text-muted-foreground">
-           This shows how your form will look with the current styling applied
+           {formStyle.source === 'captured' 
+             ? 'Showing the exact captured form HTML/CSS/JS from the customer site'
+             : 'This shows how your form will look with the current styling applied'
+           }
          </p>
        </CardHeader>
        <CardContent>
-          <div 
-            className="p-6 rounded-lg border"
-            style={{ backgroundColor: formStyle.contentAreaBgColor || '#f5f5f5' }}
-          >
+         {/* Show captured form in iframe if source is 'captured' */}
+         {formStyle.source === 'captured' && formStyle.capturedFormHtml ? (
+           <CapturedFormRenderer 
+             formStyle={formStyle} 
+             minHeight={400}
+             className="rounded-lg border"
+           />
+         ) : (
+           /* Default mock form preview */
+           <div 
+             className="p-6 rounded-lg border"
+             style={{ backgroundColor: formStyle.contentAreaBgColor || '#f5f5f5' }}
+           >
             <div 
               className="max-w-md mx-auto space-y-5 p-6"
               style={{ 
@@ -692,7 +709,8 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, onUpdateButtonCo
                Continue
              </button>
            </div>
-         </div>
+          </div>
+         )}
  
          {/* Style Summary */}
          <div className="mt-4 p-3 rounded-lg bg-muted/50 border">
@@ -724,7 +742,7 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, onUpdateButtonCo
                </div>
              )}
              <Badge variant="outline" className="text-xs">
-               {formStyle.source === 'mirrored' ? 'Mirrored' : formStyle.source === 'template' ? 'Template' : 'Custom'}
+               {formStyle.source === 'captured' ? 'Captured' : formStyle.source === 'mirrored' ? 'Mirrored' : formStyle.source === 'template' ? 'Template' : 'Custom'}
              </Badge>
            </div>
          </div>

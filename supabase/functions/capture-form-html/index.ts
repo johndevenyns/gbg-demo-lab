@@ -13,6 +13,7 @@ interface CaptureOptions {
 interface CapturedFormData {
   formHtml: string;
   formCss: string;
+  formJs: string; // JavaScript for form interactions (floating labels, etc.)
   formId: string;
   sourceUrl: string;
   styles: Record<string, string>;
@@ -140,6 +141,11 @@ Deno.serve(async (req) => {
     const relevantCss = filterRelevantCss(allCss, formClasses, formIds, formElements, formId);
     console.log(`Filtered to ${relevantCss.length} chars of relevant CSS`);
 
+    // Extract JavaScript for form interactions (floating labels, validation, etc.)
+    console.log('Extracting JavaScript for form interactions...');
+    const formJs = extractFormJavaScript(rawHtml, formId, formClasses, formIds);
+    console.log(`Extracted ${formJs.length} chars of JavaScript`);
+
     // Also extract computed styles for fallback
     const styles = extractFormStyles(rawHtml, formId);
 
@@ -169,6 +175,7 @@ Deno.serve(async (req) => {
     const capturedData: CapturedFormData = {
       formHtml,
       formCss: relevantCss,
+      formJs,
       formId,
       sourceUrl: formattedUrl,
       styles,
@@ -581,4 +588,117 @@ function makeAbsoluteUrl(url: string, baseUrl: URL): string {
   }
   
   return baseUrl.origin + '/' + url;
+}
+
+// Extract JavaScript that might control form interactions (floating labels, validation, etc.)
+function extractFormJavaScript(
+  html: string,
+  formId: string,
+  formClasses: Set<string>,
+  formIds: Set<string>
+): string {
+  const jsFragments: string[] = [];
+  
+  // Extract inline <script> tags (not external ones)
+  const scriptPattern = /<script(?![^>]*\ssrc=)[^>]*>([\s\S]*?)<\/script>/gi;
+  let scriptMatch;
+  
+  while ((scriptMatch = scriptPattern.exec(html)) !== null) {
+    const scriptContent = scriptMatch[1].trim();
+    if (!scriptContent) continue;
+    
+    // Check if this script references our form or its elements
+    const isRelevant = isScriptRelevantToForm(scriptContent, formId, formClasses, formIds);
+    if (isRelevant) {
+      jsFragments.push(scriptContent);
+    }
+  }
+  
+  // If we didn't find any inline scripts, create a fallback floating label implementation
+  // since many forms use this pattern but implement it via external bundles
+  if (jsFragments.length === 0) {
+    jsFragments.push(generateFloatingLabelScript(formId));
+  }
+  
+  return jsFragments.join('\n\n');
+}
+
+// Check if a script is relevant to our form
+function isScriptRelevantToForm(
+  script: string,
+  formId: string,
+  formClasses: Set<string>,
+  formIds: Set<string>
+): boolean {
+  const scriptLower = script.toLowerCase();
+  
+  // Check for form ID reference
+  if (scriptLower.includes(formId.toLowerCase())) return true;
+  
+  // Check for form IDs
+  for (const id of formIds) {
+    if (scriptLower.includes(id.toLowerCase())) return true;
+  }
+  
+  // Check for class references (common patterns)
+  for (const cls of formClasses) {
+    if (scriptLower.includes(`.${cls.toLowerCase()}`)) return true;
+    if (scriptLower.includes(`'${cls.toLowerCase()}'`)) return true;
+    if (scriptLower.includes(`"${cls.toLowerCase()}"`)) return true;
+  }
+  
+  // Check for common form interaction patterns
+  const formPatterns = [
+    'floating', 'label', 'focus', 'blur', 'input',
+    'validate', 'error', 'field', 'form',
+    'addeventlistener', 'queryselector', 'getelementby'
+  ];
+  
+  let matchCount = 0;
+  for (const pattern of formPatterns) {
+    if (scriptLower.includes(pattern)) matchCount++;
+  }
+  
+  // If multiple form-related patterns are found, include it
+  return matchCount >= 3;
+}
+
+// Generate a floating label script as fallback
+function generateFloatingLabelScript(formId: string): string {
+  return `
+// Floating Label Implementation (auto-generated fallback)
+(function() {
+  const form = document.getElementById('${formId}') || document.querySelector('form');
+  if (!form) return;
+  
+  // Find all inputs and textareas
+  const inputs = form.querySelectorAll('input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]), textarea, select');
+  
+  inputs.forEach(function(input) {
+    const wrapper = input.closest('.form-group, .field-wrapper, .input-wrapper, .form-field') || input.parentElement;
+    const label = wrapper ? wrapper.querySelector('label') : null;
+    
+    if (!label) return;
+    
+    // Add floating class on focus
+    input.addEventListener('focus', function() {
+      wrapper.classList.add('focused', 'has-focus', 'is-focused');
+      if (label) label.classList.add('floating', 'active', 'shrink', 'label-active');
+    });
+    
+    // Check value on blur
+    input.addEventListener('blur', function() {
+      wrapper.classList.remove('focused', 'has-focus', 'is-focused');
+      if (!input.value) {
+        if (label) label.classList.remove('floating', 'active', 'shrink', 'label-active');
+      }
+    });
+    
+    // Check initial value
+    if (input.value) {
+      if (label) label.classList.add('floating', 'active', 'shrink', 'label-active');
+    }
+  });
+})();
+`.trim();
 }
