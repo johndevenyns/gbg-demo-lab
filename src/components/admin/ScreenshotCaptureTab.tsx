@@ -49,17 +49,67 @@
    return `data:image/png;base64,${s}`;
  }
  
- // Convert FormElementStyles to FormStyleConfig
- function formElementStylesToConfig(styles: FormElementStyles): FormStyleConfig {
-   const config: FormStyleConfig = { ...DEFAULT_FORM_STYLE, source: 'mirrored' };
-   if (styles.inputBgColor) config.inputBgColor = styles.inputBgColor;
-   if (styles.inputTextColor) config.inputTextColor = styles.inputTextColor;
-   if (styles.inputBorderColor) config.inputBorderColor = styles.inputBorderColor;
-   if (styles.inputFocusBorderColor) config.inputFocusBorderColor = styles.inputFocusBorderColor;
-   if (styles.labelColor) config.labelColor = styles.labelColor;
-   if (styles.errorColor) config.errorColor = styles.errorColor;
-   return config;
- }
+// Map AI-extracted border radius string to config enum
+function mapBorderRadius(radius: string | undefined): 'none' | 'sm' | 'md' | 'lg' | 'full' {
+  if (!radius) return 'md';
+  const lower = radius.toLowerCase();
+  if (lower.includes('none') || lower === '0' || lower === '0px') return 'none';
+  if (lower.includes('sm') || lower.includes('small') || lower === '4px') return 'sm';
+  if (lower.includes('lg') || lower.includes('large') || lower === '12px') return 'lg';
+  if (lower.includes('full') || lower.includes('pill') || lower === '9999px') return 'full';
+  return 'md';
+}
+
+// Map AI-extracted font size to config enum
+function mapFontSize(size: string | undefined): 'sm' | 'base' | 'lg' {
+  if (!size) return 'base';
+  const lower = size.toLowerCase();
+  if (lower.includes('sm') || lower.includes('small') || lower === '14px') return 'sm';
+  if (lower.includes('lg') || lower.includes('large') || lower === '18px') return 'lg';
+  return 'base';
+}
+
+// Map AI-extracted label weight to config enum
+function mapLabelWeight(weight: string | undefined): 'normal' | 'medium' | 'semibold' {
+  if (!weight) return 'medium';
+  const lower = weight.toLowerCase();
+  if (lower.includes('normal') || lower === '400') return 'normal';
+  if (lower.includes('semibold') || lower.includes('semi-bold') || lower === '600') return 'semibold';
+  return 'medium';
+}
+
+// Map AI-extracted border width to config value
+function mapBorderWidth(width: string | undefined): '0' | '1' | '2' {
+  if (!width) return '1';
+  if (width.includes('2')) return '2';
+  if (width.includes('0') && !width.includes('10')) return '0';
+  return '1';
+}
+
+// Convert FormElementStyles to FormStyleConfig with complete property mapping
+function formElementStylesToConfig(styles: FormElementStyles): FormStyleConfig {
+  const config: FormStyleConfig = { ...DEFAULT_FORM_STYLE, source: 'mirrored' };
+  
+  // Colors
+  if (styles.inputBgColor) config.inputBgColor = styles.inputBgColor;
+  if (styles.inputTextColor) config.inputTextColor = styles.inputTextColor;
+  if (styles.inputBorderColor) config.inputBorderColor = styles.inputBorderColor;
+  if (styles.inputFocusBorderColor) config.inputFocusBorderColor = styles.inputFocusBorderColor;
+  if (styles.inputPlaceholderColor) config.inputPlaceholderColor = styles.inputPlaceholderColor;
+  if (styles.labelColor) config.labelColor = styles.labelColor;
+  if (styles.errorColor) config.errorColor = styles.errorColor;
+  
+  // Typography
+  if (styles.inputFontFamily) config.fontFamily = styles.inputFontFamily;
+  config.fontSize = mapFontSize(styles.inputFontSize);
+  config.labelWeight = mapLabelWeight(styles.labelFontWeight);
+  
+  // Borders
+  config.borderRadius = mapBorderRadius(styles.inputBorderRadius);
+  config.borderWidth = mapBorderWidth(styles.inputBorderWidth);
+  
+  return config;
+}
  
  // Generate preview HTML with screenshot crops
  function generateScreenshotPreviewHtml(

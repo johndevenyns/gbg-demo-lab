@@ -184,11 +184,12 @@ export default function DemoConfig() {
            demo={localDemo} 
            onApplyBranding={handleUpdate}
            formStyleContent={
-             <FormStyleCard
-               demo={localDemo}
-               formStyle={localDemo.formStyle || DEFAULT_FORM_STYLE}
-               onUpdateStyle={(style: FormStyleConfig) => handleUpdate({ formStyle: style })}
-             />
+              <FormStyleCard
+                demo={localDemo}
+                formStyle={localDemo.formStyle || DEFAULT_FORM_STYLE}
+                onUpdateStyle={(style: FormStyleConfig) => handleUpdate({ formStyle: style })}
+                onUpdateButtonColor={(color: string) => handleUpdate({ buttonColor: color })}
+              />
            }
          />
         );
