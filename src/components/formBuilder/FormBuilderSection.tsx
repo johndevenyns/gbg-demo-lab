@@ -15,7 +15,7 @@ import { SaveTemplateDialog } from './SaveTemplateDialog';
 import { StoredUserDataConfig } from './StoredUserDataConfig';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
-  LayoutGrid, Settings2, Workflow, ExternalLink, RotateCcw, Bookmark, Users, CheckCircle2, XCircle, Copy, Check, Code2
+  LayoutGrid, Settings2, Workflow, ExternalLink, RotateCcw, Bookmark, Users, CheckCircle2, XCircle
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -314,73 +314,7 @@ export function FormBuilderSection({ demo, onUpdate }: FormBuilderSectionProps) 
             />
           </TabsContent>
         </Tabs>
-
-        {/* Embed Form Section */}
-        <EmbedFormSection slug={demo.slug} />
       </CardContent>
     </Card>
-  );
-}
-
-// Embed Form Section Component
-function EmbedFormSection({ slug }: { slug: string }) {
-  const [copiedField, setCopiedField] = useState<'embed' | 'iframe' | null>(null);
-  
-  const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
-  const embedUrl = `${baseUrl}/embed/${slug}`;
-  const iframeCode = `<iframe src="${embedUrl}" width="100%" height="600" frameborder="0" style="border: none;"></iframe>`;
-  
-  const handleCopy = async (text: string, field: 'embed' | 'iframe') => {
-    await navigator.clipboard.writeText(text);
-    setCopiedField(field);
-    setTimeout(() => setCopiedField(null), 2000);
-  };
-
-  return (
-    <div className="mt-8 pt-6 border-t border-border">
-      <div className="flex items-center gap-2 mb-4">
-        <Code2 className="w-5 h-5 text-muted-foreground" />
-        <h3 className="font-semibold">Embed Form</h3>
-      </div>
-      <p className="text-sm text-muted-foreground mb-4">
-        Use these URLs to embed the form on external sites without header/footer
-      </p>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label>Embed URL</Label>
-          <div className="flex gap-2">
-            <Input 
-              value={embedUrl} 
-              readOnly 
-              className="font-mono text-sm bg-muted/50"
-            />
-            <Button 
-              variant="outline" 
-              size="icon"
-              onClick={() => handleCopy(embedUrl, 'embed')}
-            >
-              {copiedField === 'embed' ? <Check className="w-4 h-4 text-primary" /> : <Copy className="w-4 h-4" />}
-            </Button>
-          </div>
-        </div>
-        <div className="space-y-2">
-          <Label>Iframe Code</Label>
-          <div className="flex gap-2">
-            <Input 
-              value={iframeCode} 
-              readOnly 
-              className="font-mono text-xs bg-muted/50"
-            />
-            <Button 
-              variant="outline" 
-              size="icon"
-              onClick={() => handleCopy(iframeCode, 'iframe')}
-            >
-              {copiedField === 'iframe' ? <Check className="w-4 h-4 text-primary" /> : <Copy className="w-4 h-4" />}
-            </Button>
-          </div>
-        </div>
-      </div>
-    </div>
   );
 }
