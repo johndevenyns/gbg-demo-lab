@@ -171,35 +171,6 @@ export function UnifiedVerificationStepConfig({ step, onUpdateStep, demo }: Unif
               </div>
             </div>
           </RadioGroup>
-
-          {/* User selection screen settings */}
-          {config.methodSelection === 'user_choice' && (
-            <div className="space-y-3 p-4 rounded-lg border border-dashed border-primary/30 bg-primary/5">
-              <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                Selection Screen Settings
-              </Label>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label className="text-sm">Title</Label>
-                  <Input
-                    value={config.userSelectionTitle || ''}
-                    onChange={(e) => handleConfigUpdate({ userSelectionTitle: e.target.value })}
-                    placeholder="Choose Verification Method"
-                    className="h-9"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-sm">Subtitle</Label>
-                  <Input
-                    value={config.userSelectionSubtitle || ''}
-                    onChange={(e) => handleConfigUpdate({ userSelectionSubtitle: e.target.value })}
-                    placeholder="Select how you'd like to verify..."
-                    className="h-9"
-                  />
-                </div>
-              </div>
-            </div>
-          )}
         </CardContent>
       </Card>
 
