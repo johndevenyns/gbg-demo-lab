@@ -37,8 +37,9 @@ export function ResultPage({ config, formStyle, buttonColor, onButtonClick }: Re
   // Get the computed button color - prefer explicit buttonColor, then style's focus color as brand
   const computedButtonColor = buttonColor || style.inputFocusBorderColor || '#3b82f6';
   
-  // Derive icon color from button color for consistent branding
-  const iconColor = computedButtonColor;
+  // Use standard success/failure colors for icons
+  const successColor = '#22c55e'; // green-500
+  const failureColor = '#ef4444'; // red-500
   
   // Get computed values using shared utilities
   const borderRadius = getFormBorderRadius(style.formBorderRadius);
@@ -85,24 +86,24 @@ export function ResultPage({ config, formStyle, buttonColor, onButtonClick }: Re
               <div 
                 className="w-20 h-20 rounded-full flex items-center justify-center"
                 style={{ 
-                  backgroundColor: `${iconColor}15`,
+                  backgroundColor: `${successColor}15`,
                 }}
               >
                 <CheckCircle2 
                   className="w-12 h-12" 
-                  style={{ color: iconColor }}
+                  style={{ color: successColor }}
                 />
               </div>
             ) : (
               <div 
                 className="w-20 h-20 rounded-full flex items-center justify-center"
                 style={{ 
-                  backgroundColor: `${iconColor}15`,
+                  backgroundColor: `${failureColor}15`,
                 }}
               >
                 <XCircle 
                   className="w-12 h-12" 
-                  style={{ color: iconColor }}
+                  style={{ color: failureColor }}
                 />
               </div>
             )}
