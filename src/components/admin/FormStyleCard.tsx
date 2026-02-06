@@ -779,17 +779,17 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, onUpdateButtonCo
       <CardContent>
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
           <TabsList className="grid w-full grid-cols-3 mb-6">
+            <TabsTrigger value="custom" className="flex items-center gap-2">
+              <Palette className="w-4 h-4" />
+              Customize
+            </TabsTrigger>
             <TabsTrigger value="mirrored" className="flex items-center gap-2">
               <Globe className="w-4 h-4" />
-              Mirrored
+              Form Mirroring
             </TabsTrigger>
             <TabsTrigger value="template" className="flex items-center gap-2">
               <LayoutTemplate className="w-4 h-4" />
               Templates
-            </TabsTrigger>
-            <TabsTrigger value="custom" className="flex items-center gap-2">
-              <Palette className="w-4 h-4" />
-              Custom
             </TabsTrigger>
           </TabsList>
 
