@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { FormStep, DemoEnvironment } from '@/types/demo';
@@ -37,14 +37,7 @@ const TYPE_COLORS: Record<string, string> = {
   mdl: 'data-[state=on]:bg-green-500/20 data-[state=on]:text-green-700 data-[state=on]:border-green-500',
 };
 
-const TAB_COLORS: Record<string, string> = {
-  docbio: 'data-[state=active]:border-purple-500 data-[state=active]:text-purple-700',
-  databio: 'data-[state=active]:border-blue-500 data-[state=active]:text-blue-700',
-  dataonly: 'data-[state=active]:border-cyan-500 data-[state=active]:text-cyan-700',
-  mdl: 'data-[state=active]:border-green-500 data-[state=active]:text-green-700',
-};
-
-const PANEL_COLORS: Record<string, string> = {
+const ACCORDION_COLORS: Record<string, string> = {
   docbio: 'border-purple-500/30 bg-purple-500/5',
   databio: 'border-blue-500/30 bg-blue-500/5',
   dataonly: 'border-cyan-500/30 bg-cyan-500/5',
@@ -52,7 +45,7 @@ const PANEL_COLORS: Record<string, string> = {
 };
 
 const DEFAULT_CONFIG: UnifiedVerificationConfig = {
-  methodSelection: 'user_choice',
+  methodSelection: 'admin_preselect',
   enabledTypes: ['docbio'],
   typeConfigs: {},
   successDestination: 'default',
@@ -76,17 +69,10 @@ export function UnifiedVerificationStepConfig({ step, onUpdateStep, demo }: Unif
   // Get config from step or use defaults
   const config: UnifiedVerificationConfig = step.unifiedVerificationConfig || DEFAULT_CONFIG;
   
-  // Track which tab is active
-  const [activeTab, setActiveTab] = useState<string>(
-    config.enabledTypes.length > 0 ? config.enabledTypes[0] : 'docbio'
+  // Track which accordion panel is open (single open at a time for accordion style)
+  const [openPanel, setOpenPanel] = useState<string | undefined>(
+    config.enabledTypes.length > 0 ? config.enabledTypes[0] : undefined
   );
-
-  // Sync activeTab when enabledTypes changes
-  useEffect(() => {
-    if (config.enabledTypes.length > 0 && !config.enabledTypes.includes(activeTab)) {
-      setActiveTab(config.enabledTypes[0]);
-    }
-  }, [config.enabledTypes, activeTab]);
 
   const handleConfigUpdate = (updates: Partial<UnifiedVerificationConfig>) => {
     onUpdateStep({
@@ -98,13 +84,10 @@ export function UnifiedVerificationStepConfig({ step, onUpdateStep, demo }: Unif
     // Ensure at least one type is always selected
     if (typeKeys.length === 0) return;
     
-    // Update enabled types and set the first newly added type as active tab
+    // Update enabled types and set the first newly added type as open
     const newTypes = typeKeys.filter(t => !config.enabledTypes.includes(t));
     if (newTypes.length > 0) {
-      setActiveTab(newTypes[0]);
-    } else if (!typeKeys.includes(activeTab)) {
-      // If active tab was removed, switch to first available
-      setActiveTab(typeKeys[0]);
+      setOpenPanel(newTypes[0]);
     }
     
     handleConfigUpdate({ enabledTypes: typeKeys });
@@ -144,7 +127,7 @@ export function UnifiedVerificationStepConfig({ step, onUpdateStep, demo }: Unif
         <CardContent className="pt-4 space-y-4">
           <Label className="text-sm font-semibold flex items-center gap-2">
             <Settings2 className="w-4 h-4" />
-            How is the verification method determined?
+            Verification Method Selection
           </Label>
           
           <RadioGroup
@@ -152,34 +135,38 @@ export function UnifiedVerificationStepConfig({ step, onUpdateStep, demo }: Unif
             onValueChange={(v) => handleConfigUpdate({ methodSelection: v as VerificationMethodSelection })}
             className="space-y-2"
           >
-            <div className={`flex items-start gap-3 p-3 rounded-lg border transition-colors cursor-pointer ${
-              config.methodSelection === 'user_choice'
-                ? 'border-primary bg-primary/5' 
-                : 'border-border hover:border-primary/30'
-            }`}>
-              <RadioGroupItem value="user_choice" id="user_choice" className="mt-1" />
+            <div className="flex items-start gap-3 p-3 rounded-lg border border-border hover:border-primary/30 transition-colors">
+              <RadioGroupItem value="admin_preselect" id="admin_preselect" className="mt-1" />
               <div className="flex-1">
-                <Label htmlFor="user_choice" className="font-medium cursor-pointer">
-                  User Selects Method
+                <Label htmlFor="admin_preselect" className="font-medium cursor-pointer">
+                  Admin Pre-selects
                 </Label>
                 <p className="text-sm text-muted-foreground">
-                  User sees a selection screen to choose from the enabled verification methods below
+                  System uses the first enabled verification type automatically
                 </p>
               </div>
             </div>
             
-            <div className={`flex items-start gap-3 p-3 rounded-lg border transition-colors cursor-pointer ${
-              config.methodSelection === 'auto_detect'
-                ? 'border-primary bg-primary/5' 
-                : 'border-border hover:border-primary/30'
-            }`}>
+            <div className="flex items-start gap-3 p-3 rounded-lg border border-border hover:border-primary/30 transition-colors">
+              <RadioGroupItem value="user_choice" id="user_choice" className="mt-1" />
+              <div className="flex-1">
+                <Label htmlFor="user_choice" className="font-medium cursor-pointer">
+                  User Chooses
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  User sees a selection screen to pick their verification method
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex items-start gap-3 p-3 rounded-lg border border-border hover:border-primary/30 transition-colors">
               <RadioGroupItem value="auto_detect" id="auto_detect" className="mt-1" />
               <div className="flex-1">
                 <Label htmlFor="auto_detect" className="font-medium cursor-pointer">
                   Auto-detect (Web/Mobile)
                 </Label>
                 <p className="text-sm text-muted-foreground">
-                  System automatically chooses the appropriate method based on device type
+                  System automatically chooses based on device type
                 </p>
               </div>
             </div>
@@ -266,25 +253,13 @@ export function UnifiedVerificationStepConfig({ step, onUpdateStep, demo }: Unif
             </Badge>
           </Label>
 
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="w-full h-auto flex-wrap gap-1 bg-muted/50 p-1">
-              {config.enabledTypes.map((typeKey) => {
-                const globalType = getGlobalTypeInfo(typeKey);
-                if (!globalType) return null;
-
-                return (
-                  <TabsTrigger
-                    key={typeKey}
-                    value={typeKey}
-                    className={`flex items-center gap-2 px-3 py-2 border-b-2 border-transparent ${TAB_COLORS[typeKey] || ''}`}
-                  >
-                    {TYPE_ICONS[typeKey]}
-                    <span className="font-medium">{globalType.displayName}</span>
-                  </TabsTrigger>
-                );
-              })}
-            </TabsList>
-
+          <Accordion
+            type="single"
+            collapsible
+            value={openPanel}
+            onValueChange={setOpenPanel}
+            className="space-y-2"
+          >
             {config.enabledTypes.map((typeKey) => {
               const globalType = getGlobalTypeInfo(typeKey);
               const typeConfig = getTypeConfig(typeKey);
@@ -292,31 +267,37 @@ export function UnifiedVerificationStepConfig({ step, onUpdateStep, demo }: Unif
               if (!globalType) return null;
 
               return (
-                <TabsContent
+                <AccordionItem
                   key={typeKey}
                   value={typeKey}
-                  className={`mt-3 p-4 rounded-lg border ${PANEL_COLORS[typeKey] || 'border-border'}`}
+                  className={`border rounded-lg overflow-hidden ${ACCORDION_COLORS[typeKey] || ''}`}
                 >
-                  <div className="mb-3">
-                    <p className="font-semibold flex items-center gap-2">
-                      {TYPE_ICONS[typeKey]}
-                      {globalType.displayName}
-                    </p>
-                    <p className="text-sm text-muted-foreground">{globalType.description}</p>
-                  </div>
-                  <VerificationTypePanel
-                    typeKey={typeKey}
-                    globalType={globalType}
-                    typeConfig={typeConfig}
-                    mdlProviders={mdlProviders}
-                    demo={demo}
-                    methodSelection={config.methodSelection}
-                    onUpdate={(updates) => handleTypeConfigUpdate(typeKey, updates)}
-                  />
-                </TabsContent>
+                  <AccordionTrigger className="px-4 py-3 hover:no-underline">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full flex items-center justify-center bg-background">
+                        {TYPE_ICONS[typeKey]}
+                      </div>
+                      <div className="text-left">
+                        <p className="font-semibold">{globalType.displayName}</p>
+                        <p className="text-xs text-muted-foreground">{globalType.description}</p>
+                      </div>
+                    </div>
+                  </AccordionTrigger>
+                  
+                  <AccordionContent className="px-4 pb-4">
+                    <VerificationTypePanel
+                      typeKey={typeKey}
+                      globalType={globalType}
+                      typeConfig={typeConfig}
+                      mdlProviders={mdlProviders}
+                      demo={demo}
+                      onUpdate={(updates) => handleTypeConfigUpdate(typeKey, updates)}
+                    />
+                  </AccordionContent>
+                </AccordionItem>
               );
             })}
-          </Tabs>
+          </Accordion>
         </div>
       )}
 
@@ -455,7 +436,6 @@ interface VerificationTypePanelProps {
   typeConfig: VerificationTypeOverride;
   mdlProviders: MdlProvider[];
   demo?: DemoEnvironment;
-  methodSelection: VerificationMethodSelection;
   onUpdate: (updates: Partial<VerificationTypeOverride>) => void;
 }
 
@@ -465,7 +445,6 @@ function VerificationTypePanel({
   typeConfig, 
   mdlProviders,
   demo,
-  methodSelection,
   onUpdate 
 }: VerificationTypePanelProps) {
   const isMdlType = typeKey === 'mdl';
@@ -505,49 +484,7 @@ function VerificationTypePanel({
         </p>
       </div>
 
-      {/* Selection Screen Display (only when User Selects mode) */}
-      {methodSelection === 'user_choice' && (
-        <div className="space-y-3 p-4 rounded-lg border border-dashed border-primary/30 bg-primary/5">
-          <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-            Selection Screen Display
-          </Label>
-          <p className="text-xs text-muted-foreground">
-            How this verification type appears when the user selects their method
-          </p>
-          <div className="grid grid-cols-3 gap-3">
-            <div className="space-y-2">
-              <Label className="text-sm">Icon</Label>
-              <Input
-                value={typeConfig.selectionIcon || ''}
-                onChange={(e) => onUpdate({ selectionIcon: e.target.value })}
-                placeholder={globalType.iconName || 'FileText'}
-                className="h-8 text-sm"
-              />
-              <p className="text-xs text-muted-foreground">Lucide icon name</p>
-            </div>
-            <div className="space-y-2">
-              <Label className="text-sm">Label</Label>
-              <Input
-                value={typeConfig.selectionLabel || ''}
-                onChange={(e) => onUpdate({ selectionLabel: e.target.value })}
-                placeholder={globalType.displayName}
-                className="h-8 text-sm"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-sm">Description</Label>
-              <Input
-                value={typeConfig.selectionDescription || ''}
-                onChange={(e) => onUpdate({ selectionDescription: e.target.value })}
-                placeholder={globalType.description || ''}
-                className="h-8 text-sm"
-              />
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Custom display settings (for verification flow) */}
+      {/* Custom display settings */}
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-2">
           <Label className="text-sm">Custom Title</Label>

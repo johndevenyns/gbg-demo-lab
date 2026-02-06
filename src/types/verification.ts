@@ -62,9 +62,7 @@ export interface MdlProviderFormData {
 }
 
 // Verification method selection mode for the unified verification step
-// - 'user_choice': User sees a selection screen to pick from enabled methods
-// - 'auto_detect': System automatically chooses based on device type (web vs mobile)
-export type VerificationMethodSelection = 'user_choice' | 'auto_detect';
+export type VerificationMethodSelection = 'admin_preselect' | 'user_choice' | 'auto_detect';
 
 // Unified Verification Step configuration (new design)
 export interface UnifiedVerificationConfig {
@@ -110,15 +108,9 @@ export interface VerificationTypeOverride {
   // Status polling
   statusPollingInterval?: number; // seconds
   
-  // Custom display settings (used in verification flow)
+  // Custom display settings
   customTitle?: string;
   customDescription?: string;
-  
-  // User selection screen display (when methodSelection = 'user_choice')
-  // These control how this type appears on the selection screen
-  selectionIcon?: string; // Lucide icon name
-  selectionLabel?: string; // Button/card label
-  selectionDescription?: string; // Description shown to user
   
   // Per-type result page overrides
   useCustomResultPages?: boolean;

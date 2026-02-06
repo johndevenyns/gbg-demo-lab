@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { FormStep, FormField, DemoEnvironment } from '@/types/demo';
 import { VERIFICATION_PATHS } from '@/types/formBuilder';
 import { ADDRESS_VALIDATION_FIELDS, ADDRESS_FIELD_LABELS } from './FieldPalette';
@@ -435,13 +434,11 @@ export function FormStepCard({
         <CardContent
           ref={setNodeRef}
           className={`
-            pt-0 pb-4 transition-colors
+            pt-0 pb-4 space-y-2 min-h-[100px] transition-colors
             ${isOver ? 'bg-primary/5' : ''}
           `}
         >
-          <ScrollArea className="max-h-[60vh]">
-            <div className="space-y-2 min-h-[100px] pr-3">
-              {/* Verification Step Type */}
+          {/* Verification Step Type */}
           {step.stepType === 'verification' ? (
             <div className="space-y-4">
               {/* Verification Preview */}
@@ -593,8 +590,6 @@ export function FormStepCard({
               </div>
             </>
           )}
-            </div>
-          </ScrollArea>
         </CardContent>
       )}
     </Card>

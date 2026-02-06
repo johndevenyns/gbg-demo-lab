@@ -295,7 +295,7 @@ export default function DemoConfig() {
 
         {/* Content Area */}
         <main className="flex-1 overflow-y-auto">
-          <div className="p-6 lg:p-8 pb-24 max-w-5xl">
+          <div className="p-6 lg:p-8 max-w-5xl">
             {renderSection()}
           </div>
         </main>

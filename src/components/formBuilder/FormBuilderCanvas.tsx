@@ -480,7 +480,7 @@ export function FormBuilderCanvas({ steps, onUpdateSteps, demo }: FormBuilderCan
         stepType: 'unified_verification',
         fields: [],
         unifiedVerificationConfig: {
-          methodSelection: 'user_choice',
+          methodSelection: 'admin_preselect',
           enabledTypes: ['docbio'],
           typeConfigs: {},
           successDestination: 'default',

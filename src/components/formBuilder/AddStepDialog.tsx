@@ -10,7 +10,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   LayoutList, Workflow, Plug, FileText, SplitSquareVertical
 } from 'lucide-react';
@@ -112,143 +111,141 @@ export function AddStepDialog({ open, onOpenChange, onAddStep }: AddStepDialogPr
           </DialogDescription>
         </DialogHeader>
         
-        <ScrollArea className="max-h-[60vh]">
-          <div className="space-y-4 py-4 pr-3">
-            <div className="space-y-2">
-              <Label htmlFor="step-title">Step Title (optional)</Label>
-              <Input
-                id="step-title"
-                placeholder="Enter step title..."
-                value={stepTitle}
-                onChange={(e) => setStepTitle(e.target.value)}
-              />
+        <div className="space-y-4 py-4">
+          <div className="space-y-2">
+            <Label htmlFor="step-title">Step Title (optional)</Label>
+            <Input
+              id="step-title"
+              placeholder="Enter step title..."
+              value={stepTitle}
+              onChange={(e) => setStepTitle(e.target.value)}
+            />
+          </div>
+
+          <RadioGroup
+            value={selectedType}
+            onValueChange={(v) => setSelectedType(v as StepTypeOption)}
+            className="space-y-4"
+          >
+            {/* Form Section */}
+            <div>
+              <h4 className="text-sm font-medium text-muted-foreground mb-2">Data Collection</h4>
+              <div className="space-y-2">
+                {formTypes.map((type) => (
+                  <label
+                    key={type.id}
+                    className={`
+                      flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors
+                      ${selectedType === type.id 
+                        ? 'border-primary bg-primary/5' 
+                        : 'border-border hover:border-primary/50 hover:bg-accent/50'
+                      }
+                    `}
+                  >
+                    <RadioGroupItem value={type.id} className="sr-only" />
+                    <div className={`p-2 rounded-md ${selectedType === type.id ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
+                      {type.icon}
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium">{type.label}</p>
+                      <p className="text-sm text-muted-foreground">{type.description}</p>
+                    </div>
+                  </label>
+                ))}
+              </div>
             </div>
 
-            <RadioGroup
-              value={selectedType}
-              onValueChange={(v) => setSelectedType(v as StepTypeOption)}
-              className="space-y-4"
-            >
-              {/* Form Section */}
-              <div>
-                <h4 className="text-sm font-medium text-muted-foreground mb-2">Data Collection</h4>
-                <div className="space-y-2">
-                  {formTypes.map((type) => (
-                    <label
-                      key={type.id}
-                      className={`
-                        flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors
-                        ${selectedType === type.id 
-                          ? 'border-primary bg-primary/5' 
-                          : 'border-border hover:border-primary/50 hover:bg-accent/50'
-                        }
-                      `}
-                    >
-                      <RadioGroupItem value={type.id} className="sr-only" />
-                      <div className={`p-2 rounded-md ${selectedType === type.id ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
-                        {type.icon}
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-medium">{type.label}</p>
-                        <p className="text-sm text-muted-foreground">{type.description}</p>
-                      </div>
-                    </label>
-                  ))}
-                </div>
+            {/* Verification Section */}
+            <div>
+              <h4 className="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-2">
+                <Workflow className="w-4 h-4" />
+                Verification
+              </h4>
+              <div className="space-y-2">
+                {verificationTypes.map((type) => (
+                  <label
+                    key={type.id}
+                    className={`
+                      flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors
+                      ${selectedType === type.id 
+                        ? 'border-cyan-500 bg-cyan-500/5' 
+                        : 'border-border hover:border-cyan-500/50 hover:bg-accent/50'
+                      }
+                    `}
+                  >
+                    <RadioGroupItem value={type.id} className="sr-only" />
+                    <div className={`p-2 rounded-md ${selectedType === type.id ? 'bg-cyan-500 text-white' : 'bg-cyan-500/10 text-cyan-600'}`}>
+                      {type.icon}
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium">{type.label}</p>
+                      <p className="text-sm text-muted-foreground">{type.description}</p>
+                    </div>
+                  </label>
+                ))}
               </div>
+            </div>
 
-              {/* Verification Section */}
-              <div>
-                <h4 className="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-2">
-                  <Workflow className="w-4 h-4" />
-                  Verification
-                </h4>
-                <div className="space-y-2">
-                  {verificationTypes.map((type) => (
-                    <label
-                      key={type.id}
-                      className={`
-                        flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors
-                        ${selectedType === type.id 
-                          ? 'border-cyan-500 bg-cyan-500/5' 
-                          : 'border-border hover:border-cyan-500/50 hover:bg-accent/50'
-                        }
-                      `}
-                    >
-                      <RadioGroupItem value={type.id} className="sr-only" />
-                      <div className={`p-2 rounded-md ${selectedType === type.id ? 'bg-cyan-500 text-white' : 'bg-cyan-500/10 text-cyan-600'}`}>
-                        {type.icon}
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-medium">{type.label}</p>
-                        <p className="text-sm text-muted-foreground">{type.description}</p>
-                      </div>
-                    </label>
-                  ))}
-                </div>
+            {/* Branching Section */}
+            <div>
+              <h4 className="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-2">
+                <SplitSquareVertical className="w-4 h-4" />
+                Branching
+              </h4>
+              <div className="space-y-2">
+                {branchingTypes.map((type) => (
+                  <label
+                    key={type.id}
+                    className={`
+                      flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors
+                      ${selectedType === type.id 
+                        ? 'border-amber-500 bg-amber-500/5' 
+                        : 'border-border hover:border-amber-500/50 hover:bg-accent/50'
+                      }
+                    `}
+                  >
+                    <RadioGroupItem value={type.id} className="sr-only" />
+                    <div className={`p-2 rounded-md ${selectedType === type.id ? 'bg-amber-500 text-white' : 'bg-amber-500/10 text-amber-600'}`}>
+                      {type.icon}
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium">{type.label}</p>
+                      <p className="text-sm text-muted-foreground">{type.description}</p>
+                    </div>
+                  </label>
+                ))}
               </div>
+            </div>
 
-              {/* Branching Section */}
-              <div>
-                <h4 className="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-2">
-                  <SplitSquareVertical className="w-4 h-4" />
-                  Branching
-                </h4>
-                <div className="space-y-2">
-                  {branchingTypes.map((type) => (
-                    <label
-                      key={type.id}
-                      className={`
-                        flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors
-                        ${selectedType === type.id 
-                          ? 'border-amber-500 bg-amber-500/5' 
-                          : 'border-border hover:border-amber-500/50 hover:bg-accent/50'
-                        }
-                      `}
-                    >
-                      <RadioGroupItem value={type.id} className="sr-only" />
-                      <div className={`p-2 rounded-md ${selectedType === type.id ? 'bg-amber-500 text-white' : 'bg-amber-500/10 text-amber-600'}`}>
-                        {type.icon}
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-medium">{type.label}</p>
-                        <p className="text-sm text-muted-foreground">{type.description}</p>
-                      </div>
-                    </label>
-                  ))}
-                </div>
+            {/* Other Section */}
+            <div>
+              <h4 className="text-sm font-medium text-muted-foreground mb-2">Other Step Types</h4>
+              <div className="space-y-2">
+                {otherTypes.map((type) => (
+                  <label
+                    key={type.id}
+                    className={`
+                      flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors
+                      ${selectedType === type.id 
+                        ? 'border-primary bg-primary/5' 
+                        : 'border-border hover:border-primary/50 hover:bg-accent/50'
+                      }
+                    `}
+                  >
+                    <RadioGroupItem value={type.id} className="sr-only" />
+                    <div className={`p-2 rounded-md ${selectedType === type.id ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
+                      {type.icon}
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium">{type.label}</p>
+                      <p className="text-sm text-muted-foreground">{type.description}</p>
+                    </div>
+                  </label>
+                ))}
               </div>
-
-              {/* Other Section */}
-              <div>
-                <h4 className="text-sm font-medium text-muted-foreground mb-2">Other Step Types</h4>
-                <div className="space-y-2">
-                  {otherTypes.map((type) => (
-                    <label
-                      key={type.id}
-                      className={`
-                        flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors
-                        ${selectedType === type.id 
-                          ? 'border-primary bg-primary/5' 
-                          : 'border-border hover:border-primary/50 hover:bg-accent/50'
-                        }
-                      `}
-                    >
-                      <RadioGroupItem value={type.id} className="sr-only" />
-                      <div className={`p-2 rounded-md ${selectedType === type.id ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
-                        {type.icon}
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-medium">{type.label}</p>
-                        <p className="text-sm text-muted-foreground">{type.description}</p>
-                      </div>
-                    </label>
-                  ))}
-                </div>
-              </div>
-            </RadioGroup>
-          </div>
-        </ScrollArea>
+            </div>
+          </RadioGroup>
+        </div>
 
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
