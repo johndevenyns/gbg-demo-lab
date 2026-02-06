@@ -16,7 +16,7 @@ import {
   DEFAULT_FORM_STYLE,
 } from '@/types/formStyle';
 import { DemoEnvironment } from '@/types/demo';
-import { ScrapedBranding, scrapingApi, FormElementStyles, formAnalysisApi } from '@/lib/api/scraping';
+import { ScrapedBranding, scrapingApi, FormElementStyles, formAnalysisApi, CapturedFormData } from '@/lib/api/scraping';
 import { useToast } from '@/hooks/use-toast';
  import { getBorderRadius, getPadding, getFontSize, getLabelWeight, getFormBorderRadius, getFormShadow, getTitleFontSize, getTitleFontWeight, getBodyFontSize } from '@/lib/formStyleUtils';
 
@@ -101,10 +101,19 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, onUpdateButtonCo
   const [extractedStyles, setExtractedStyles] = useState<FormElementStyles | null>(null);
   const [selectorStatus, setSelectorStatus] = useState<SelectorValidationStatus>('idle');
   const [selectorMessage, setSelectorMessage] = useState<string>('');
- const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [triggerSelector, setTriggerSelector] = useState<string>('');
   const [isAnalyzingScreenshot, setIsAnalyzingScreenshot] = useState(false);
   const [uploadedScreenshot, setUploadedScreenshot] = useState<string | null>(null);
+  
+  // Form capture state
+  const [isCapturing, setIsCapturing] = useState(false);
+  const [captureFormId, setCaptureFormId] = useState(formStyle.capturedFormId || '');
+  const [captureUrl, setCaptureUrl] = useState(formStyle.capturedSourceUrl || formStyle.formStyleUrl || '');
+  const [captureTrigger, setCaptureTrigger] = useState<string>('');
+  const [capturedData, setCapturedData] = useState<CapturedFormData | null>(null);
+  const [captureStatus, setCaptureStatus] = useState<'idle' | 'capturing' | 'success' | 'error'>('idle');
+  const [captureMessage, setCaptureMessage] = useState<string>('');
 
   const handleTabChange = (value: string) => {
     setActiveTab(value as FormStyleSource);
@@ -185,6 +194,85 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, onUpdateButtonCo
       });
     } finally {
       setIsScraping(false);
+    }
+  };
+
+  // NEW: Capture form by ID for exact reproduction
+  const handleCaptureFormById = async () => {
+    if (!captureUrl) {
+      toast({
+        title: 'URL required',
+        description: 'Please enter the URL of the page containing the form',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!captureFormId) {
+      toast({
+        title: 'Form ID required',
+        description: 'Please enter the form ID attribute (e.g., membershipForm)',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsCapturing(true);
+    setCaptureStatus('capturing');
+    setCaptureMessage('Fetching page and extracting form...');
+
+    try {
+      const response = await scrapingApi.captureFormById(
+        captureUrl,
+        captureFormId,
+        {
+          triggerSelector: captureTrigger || undefined,
+          waitTime: captureTrigger ? 6000 : 5000,
+        }
+      );
+
+      if (!response.success || !response.data) {
+        throw new Error(response.error || 'Failed to capture form');
+      }
+
+      setCapturedData(response.data);
+      setCaptureStatus('success');
+      setCaptureMessage(`Form captured! (${response.data.formHtml.length} chars HTML, ${response.data.formCss.length} chars CSS)`);
+
+      // Convert the captured styles to our config format
+      const capturedConfig: Partial<FormStyleConfig> = {
+        source: 'captured',
+        capturedFormHtml: response.data.formHtml,
+        capturedFormCss: response.data.formCss,
+        capturedFormId: captureFormId,
+        capturedSourceUrl: captureUrl,
+      };
+
+      // Also apply any extracted styles as fallbacks
+      if (response.data.styles) {
+        const styleConfig = formElementStylesToConfig(response.data.styles as FormElementStyles);
+        Object.assign(capturedConfig, styleConfig);
+      }
+
+      onUpdateStyle({
+        ...DEFAULT_FORM_STYLE,
+        ...capturedConfig,
+      });
+
+      toast({
+        title: 'Form Captured Successfully',
+        description: `Captured form "${captureFormId}" with exact HTML and CSS for faithful reproduction`,
+      });
+    } catch (error) {
+      setCaptureStatus('error');
+      setCaptureMessage(error instanceof Error ? error.message : 'Failed to capture form');
+      toast({
+        title: 'Capture failed',
+        description: error instanceof Error ? error.message : 'Could not capture form',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsCapturing(false);
     }
   };
 
@@ -673,36 +761,177 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, onUpdateButtonCo
 
           {/* Mirrored Tab */}
           <TabsContent value="mirrored" className="space-y-4">
-            {/* Form Style URL Input */}
-            <div className="space-y-2">
-              <Label htmlFor="form-style-url">Customer Form URL</Label>
-              <div className="flex items-center gap-2">
-                <Input
-                  id="form-style-url"
-                  placeholder="https://customer.com/apply or /signup"
-                  value={formStyle.formStyleUrl || ''}
-                  onChange={(e) => {
-                    onUpdateStyle({ ...formStyle, formStyleUrl: e.target.value });
-                    setSelectorStatus('idle');
-                    setSelectorMessage('');
-                  }}
-                />
-                {formStyle.formStyleUrl && (
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    asChild
+            {/* EXACT FORM CAPTURE - Primary option */}
+            <Card className="border-2 border-primary/30 bg-primary/5">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Globe className="w-5 h-5 text-primary" />
+                  Exact Form Capture
+                  <Badge variant="default" className="ml-2">Recommended</Badge>
+                </CardTitle>
+                <CardDescription>
+                  Capture the exact form HTML and CSS by form ID for pixel-perfect reproduction
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Capture URL */}
+                <div className="space-y-2">
+                  <Label htmlFor="capture-url">Page URL</Label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      id="capture-url"
+                      placeholder="https://www.costco.com/cart/membership?itemNumber=35671"
+                      value={captureUrl}
+                      onChange={(e) => {
+                        setCaptureUrl(e.target.value);
+                        setCaptureStatus('idle');
+                      }}
+                    />
+                    {captureUrl && (
+                      <Button variant="outline" size="icon" asChild>
+                        <a href={captureUrl} target="_blank" rel="noopener noreferrer">
+                          <Globe className="w-4 h-4" />
+                        </a>
+                      </Button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Form ID Input */}
+                <div className="space-y-2">
+                  <Label htmlFor="capture-form-id">
+                    Form ID <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id="capture-form-id"
+                    placeholder="membershipForm"
+                    value={captureFormId}
+                    onChange={(e) => {
+                      setCaptureFormId(e.target.value);
+                      setCaptureStatus('idle');
+                    }}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    The form's ID attribute (e.g., for <code className="text-primary">&lt;form id="membershipForm"&gt;</code> enter <code className="text-primary">membershipForm</code>)
+                  </p>
+                </div>
+
+                {/* Modal Trigger (if form is in a modal) */}
+                <div className="space-y-2">
+                  <Label htmlFor="capture-trigger">Modal Trigger (Optional)</Label>
+                  <Input
+                    id="capture-trigger"
+                    placeholder="e.g., #open-form-btn, .apply-button"
+                    value={captureTrigger}
+                    onChange={(e) => setCaptureTrigger(e.target.value)}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    If the form is hidden behind a button click, enter the button's CSS selector
+                  </p>
+                </div>
+
+                {/* Capture Button */}
+                <Button
+                  onClick={handleCaptureFormById}
+                  disabled={!captureUrl || !captureFormId || isCapturing}
+                  className="w-full"
+                  size="lg"
+                >
+                  {isCapturing ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Capturing Form...
+                    </>
+                  ) : (
+                    <>
+                      <Paintbrush className="w-4 h-4 mr-2" />
+                      Capture Form by ID
+                    </>
+                  )}
+                </Button>
+
+                {/* Capture Status Feedback */}
+                {captureStatus !== 'idle' && captureMessage && (
+                  <Alert 
+                    variant={captureStatus === 'success' ? 'default' : captureStatus === 'error' ? 'destructive' : 'default'}
+                    className={captureStatus === 'success' ? 'border-green-500/50 bg-green-500/10' : ''}
                   >
-                    <a href={formStyle.formStyleUrl} target="_blank" rel="noopener noreferrer">
-                      <Globe className="w-4 h-4" />
-                    </a>
-                  </Button>
+                    {captureStatus === 'success' && <CheckCircle className="w-4 h-4 text-green-500" />}
+                    {captureStatus === 'error' && <AlertCircle className="w-4 h-4" />}
+                    {captureStatus === 'capturing' && <Loader2 className="w-4 h-4 animate-spin" />}
+                    <AlertDescription className="ml-2">
+                      {captureMessage}
+                    </AlertDescription>
+                  </Alert>
                 )}
+
+                {/* Show captured form status */}
+                {formStyle.source === 'captured' && formStyle.capturedFormHtml && (
+                  <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/30">
+                    <div className="flex items-center gap-2 text-sm">
+                      <CheckCircle className="w-4 h-4 text-green-500" />
+                      <span className="font-medium text-green-700 dark:text-green-400">
+                        Form Captured: <code className="text-xs">{formStyle.capturedFormId}</code>
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      From: {formStyle.capturedSourceUrl}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {formStyle.capturedFormHtml.length.toLocaleString()} chars HTML, {(formStyle.capturedFormCss?.length || 0).toLocaleString()} chars CSS
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Divider */}
+            <div className="relative py-3">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
               </div>
-              <p className="text-xs text-muted-foreground">
-                Enter a URL to a form page on the customer's site
-              </p>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">Or extract styles only</span>
+              </div>
             </div>
+
+            {/* STYLE EXTRACTION - Secondary option */}
+            <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
+              <h4 className="text-sm font-medium flex items-center gap-2">
+                <Palette className="w-4 h-4" />
+                Style Extraction (Colors & Fonts Only)
+              </h4>
+              <p className="text-xs text-muted-foreground">
+                Extract just the colors, fonts, and styling from a form page without capturing the HTML structure
+              </p>
+
+              {/* Form Style URL Input */}
+              <div className="space-y-2">
+                <Label htmlFor="form-style-url">Customer Form URL</Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="form-style-url"
+                    placeholder="https://customer.com/apply or /signup"
+                    value={formStyle.formStyleUrl || ''}
+                    onChange={(e) => {
+                      onUpdateStyle({ ...formStyle, formStyleUrl: e.target.value });
+                      setSelectorStatus('idle');
+                      setSelectorMessage('');
+                    }}
+                  />
+                  {formStyle.formStyleUrl && (
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      asChild
+                    >
+                      <a href={formStyle.formStyleUrl} target="_blank" rel="noopener noreferrer">
+                        <Globe className="w-4 h-4" />
+                      </a>
+                    </Button>
+                  )}
+                </div>
+              </div>
 
             {/* Container Selector Input */}
             <div className="space-y-2">
@@ -1061,6 +1290,7 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, onUpdateButtonCo
                 </p>
               </div>
             )}
+            </div>
           </TabsContent>
 
           {/* Templates Tab */}

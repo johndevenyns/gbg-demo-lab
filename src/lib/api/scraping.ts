@@ -77,6 +77,17 @@ export interface ScrapedFormStyles {
   selectorUsed: string;
 }
 
+// New: Captured form data for faithful reproduction
+export interface CapturedFormData {
+  formHtml: string; // The actual form HTML
+  formCss: string; // All CSS that applies to the form
+  formId: string; // The form ID/selector used
+  sourceUrl: string; // Where it was captured from
+  // Also include extracted styles for fallback/editing
+  styles: FormElementStyles;
+  branding: ScrapedBranding['branding'];
+}
+
 export interface ScrapeResponse {
   success: boolean;
   error?: string;
@@ -87,6 +98,12 @@ export interface ScrapeFormStylesResponse {
   success: boolean;
   error?: string;
   data?: ScrapedFormStyles;
+}
+
+export interface CaptureFormResponse {
+  success: boolean;
+  error?: string;
+  data?: CapturedFormData;
 }
 
 export const scrapingApi = {
@@ -114,6 +131,31 @@ export const scrapingApi = {
       body: { 
         url, 
         selector,
+        triggerSelector: options?.triggerSelector,
+        waitTime: options?.waitTime,
+      },
+    });
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+    
+    return data;
+  },
+
+  // NEW: Capture exact form HTML and CSS by form ID for faithful reproduction
+  async captureFormById(
+    url: string,
+    formId: string,
+    options?: {
+      triggerSelector?: string;
+      waitTime?: number;
+    }
+  ): Promise<CaptureFormResponse> {
+    const { data, error } = await supabase.functions.invoke('capture-form-html', {
+      body: { 
+        url, 
+        formId,
         triggerSelector: options?.triggerSelector,
         waitTime: options?.waitTime,
       },

@@ -14,3 +14,15 @@ verify_jwt = false
 
 [functions.address-verification]
 verify_jwt = false
+
+[functions.scrape-form-styles]
+verify_jwt = false
+
+[functions.analyze-form-screenshot]
+verify_jwt = false
+
+[functions.manage-admin-users]
+verify_jwt = false
+
+[functions.capture-form-html]
+verify_jwt = false
