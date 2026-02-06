@@ -77,10 +77,11 @@ export interface ScrapedFormStyles {
   selectorUsed: string;
 }
 
-// New: Captured form data for faithful reproduction
+// Captured form data for faithful reproduction
 export interface CapturedFormData {
   formHtml: string; // The actual form HTML
   formCss: string; // All CSS that applies to the form
+  formJs: string; // JavaScript for form interactions (floating labels, validation)
   formId: string; // The form ID/selector used
   sourceUrl: string; // Where it was captured from
   // Also include extracted styles for fallback/editing
