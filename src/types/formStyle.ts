@@ -2,6 +2,61 @@
 
 export type FormStyleSource = 'default' | 'mirrored' | 'template' | 'custom' | 'captured';
 
+// Label display patterns detected from captured forms
+export type LabelStyle = 'floating' | 'above' | 'inline' | 'placeholder-only' | 'hidden';
+
+// Captured form display patterns - extracted from the original form
+export interface CapturedFormPatterns {
+  // Label behavior
+  labelStyle: LabelStyle;
+  labelPosition?: 'top' | 'left' | 'inside'; // Where label sits relative to input
+  labelsVisible: boolean; // Are labels shown at all?
+  
+  // Placeholder behavior
+  usesPlaceholders: boolean;
+  placeholderAsLabel: boolean; // Placeholder text acts as label
+  
+  // Field layout
+  fieldLayout: 'stacked' | 'inline' | 'grid';
+  fieldsPerRow?: number;
+  
+  // Text content patterns
+  hasHelperText: boolean;
+  hasRequiredIndicator: boolean;
+  requiredIndicatorStyle?: 'asterisk' | 'text' | 'color';
+  
+  // Visual patterns
+  inputStyle: 'bordered' | 'underlined' | 'filled' | 'outline';
+  focusStyle: 'border-color' | 'shadow' | 'underline' | 'label-shrink';
+  
+  // Typography extracted from form
+  detectedFontFamily?: string;
+  detectedFontSize?: string;
+  detectedLabelFontSize?: string;
+  detectedLabelFontWeight?: string;
+  detectedLabelColor?: string;
+  detectedInputFontSize?: string;
+  detectedInputPadding?: string;
+  detectedHelperTextSize?: string;
+  detectedHelperTextColor?: string;
+  
+  // Colors extracted
+  detectedInputBgColor?: string;
+  detectedInputBorderColor?: string;
+  detectedInputFocusBorderColor?: string;
+  detectedButtonBgColor?: string;
+  detectedButtonTextColor?: string;
+  detectedErrorColor?: string;
+  
+  // Spacing
+  detectedFieldSpacing?: string;
+  detectedLabelSpacing?: string; // Gap between label and input
+  
+  // Border styles
+  detectedBorderRadius?: string;
+  detectedBorderWidth?: string;
+}
+
 export interface FormStyleConfig {
   source: FormStyleSource;
   templateId?: string; // Used when source = 'template'
@@ -15,6 +70,10 @@ export interface FormStyleConfig {
   capturedFormJs?: string; // JavaScript for form interactions (floating labels, validation)
   capturedFormId?: string; // The form ID that was captured
   capturedSourceUrl?: string; // The URL where the form was captured from
+  
+  // Captured form display patterns - used when building custom forms
+  // These patterns tell the form builder HOW to display fields
+  capturedPatterns?: CapturedFormPatterns;
   
   // Typography
   fontFamily: string;

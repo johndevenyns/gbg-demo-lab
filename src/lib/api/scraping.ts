@@ -1,4 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
+import type { CapturedFormPatterns, LabelStyle } from '@/types/formStyle';
+
+export type { CapturedFormPatterns, LabelStyle };
 
 export interface FormElementStyles {
   // Input styles
@@ -65,7 +68,7 @@ export interface ScrapedBranding {
     components?: Record<string, unknown>;
     images?: Record<string, string>;
   } | null;
-  formStyles?: FormElementStyles; // NEW: Form styles extracted from initial scrape
+  formStyles?: FormElementStyles;
   sourceUrl: string;
 }
 
@@ -79,14 +82,14 @@ export interface ScrapedFormStyles {
 
 // Captured form data for faithful reproduction
 export interface CapturedFormData {
-  formHtml: string; // The actual form HTML
-  formCss: string; // All CSS that applies to the form
-  formJs: string; // JavaScript for form interactions (floating labels, validation)
-  formId: string; // The form ID/selector used
-  sourceUrl: string; // Where it was captured from
-  // Also include extracted styles for fallback/editing
+  formHtml: string;
+  formCss: string;
+  formJs: string;
+  formId: string;
+  sourceUrl: string;
   styles: FormElementStyles;
   branding: ScrapedBranding['branding'];
+  patterns: CapturedFormPatterns;
 }
 
 export interface ScrapeResponse {
