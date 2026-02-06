@@ -1,6 +1,14 @@
 import { CheckCircle2, XCircle, ExternalLink, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { FormStyleConfig, DEFAULT_FORM_STYLE } from '@/types/formStyle';
+import { 
+  getFormBorderRadius, 
+  getFormShadow, 
+  getTitleFontSize, 
+  getTitleFontWeight,
+  getBodyFontSize,
+  getBorderRadius
+} from '@/lib/formStyleUtils';
 
 export interface ResultPageConfig {
   type: 'success' | 'failure';
@@ -26,6 +34,18 @@ export function ResultPage({ config, formStyle, buttonColor, onButtonClick }: Re
   const style = formStyle || DEFAULT_FORM_STYLE;
   const isSuccess = config.type === 'success';
   
+  // Get the computed button color - prefer explicit buttonColor, then style's focus color as brand
+  const computedButtonColor = buttonColor || style.inputFocusBorderColor || '#3b82f6';
+  
+  // Derive icon color from button color for consistent branding
+  const iconColor = computedButtonColor;
+  
+  // Get computed values using shared utilities
+  const borderRadius = getFormBorderRadius(style.formBorderRadius);
+  const boxShadow = getFormShadow(style.formShadow);
+  const borderWidth = style.formBorderWidth ? `${style.formBorderWidth}px` : '1px';
+  const inputBorderRadius = getBorderRadius(style.borderRadius);
+  
   const handleButtonClick = () => {
     if (onButtonClick) {
       onButtonClick();
@@ -34,84 +54,163 @@ export function ResultPage({ config, formStyle, buttonColor, onButtonClick }: Re
     }
   };
 
+  // Container styles matching form styling
+  const containerStyle: React.CSSProperties = {
+    fontFamily: style.fontFamily || 'inherit',
+    backgroundColor: style.formBgColor || '#ffffff',
+    borderRadius: borderRadius,
+    border: style.formBorderWidth && style.formBorderWidth !== '0' 
+      ? `${borderWidth} solid ${style.formBorderColor || '#e5e7eb'}`
+      : 'none',
+    boxShadow: boxShadow,
+    padding: '2rem',
+    maxWidth: '500px',
+    margin: '0 auto',
+  };
+
+  // Text color based on form background for contrast
+  const textColor = style.titleColor || (style.formBgColor && isLightColor(style.formBgColor) ? '#1f2937' : '#f9fafb');
+  const mutedTextColor = style.bodyColor || (style.formBgColor && isLightColor(style.formBgColor) ? '#6b7280' : '#9ca3af');
+
   return (
-    <div className="text-center py-8 space-y-6">
-      {/* Icon */}
-      {config.showIcon !== false && (
-        <div className="flex justify-center">
-          {isSuccess ? (
-            <div className="w-20 h-20 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-              <CheckCircle2 className="w-12 h-12 text-green-600 dark:text-green-400" />
-            </div>
-          ) : (
-            <div className="w-20 h-20 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
-              <XCircle className="w-12 h-12 text-red-600 dark:text-red-400" />
-            </div>
+    <div 
+      className="min-h-full flex items-center justify-center p-4"
+      style={{ backgroundColor: style.contentAreaBgColor || 'transparent' }}
+    >
+      <div style={containerStyle} className="text-center space-y-6">
+        {/* Icon */}
+        {config.showIcon !== false && (
+          <div className="flex justify-center">
+            {isSuccess ? (
+              <div 
+                className="w-20 h-20 rounded-full flex items-center justify-center"
+                style={{ 
+                  backgroundColor: `${iconColor}15`,
+                }}
+              >
+                <CheckCircle2 
+                  className="w-12 h-12" 
+                  style={{ color: iconColor }}
+                />
+              </div>
+            ) : (
+              <div 
+                className="w-20 h-20 rounded-full flex items-center justify-center"
+                style={{ 
+                  backgroundColor: `${iconColor}15`,
+                }}
+              >
+                <XCircle 
+                  className="w-12 h-12" 
+                  style={{ color: iconColor }}
+                />
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Title */}
+        <div>
+          <h2 
+            className="mb-2"
+            style={{ 
+              fontFamily: style.fontFamily,
+              color: textColor,
+              fontSize: getTitleFontSize(style.titleFontSize),
+              fontWeight: getTitleFontWeight(style.titleFontWeight),
+              textAlign: style.titleAlignment || 'center',
+            }}
+          >
+            {config.title}
+          </h2>
+          {config.subtitle && (
+            <p 
+              className="text-lg"
+              style={{ 
+                fontFamily: style.fontFamily,
+                color: mutedTextColor,
+              }}
+            >
+              {config.subtitle}
+            </p>
           )}
         </div>
-      )}
 
-      {/* Title */}
-      <div>
-        <h2 
-          className="text-2xl font-bold mb-2"
-          style={{ fontFamily: style.fontFamily }}
-        >
-          {config.title}
-        </h2>
-        {config.subtitle && (
+        {/* Message */}
+        {config.message && (
           <p 
-            className="text-lg text-muted-foreground"
-            style={{ fontFamily: style.fontFamily }}
+            className="max-w-md mx-auto"
+            style={{ 
+              fontFamily: style.fontFamily,
+              color: mutedTextColor,
+              fontSize: getBodyFontSize(style.bodyFontSize),
+            }}
           >
-            {config.subtitle}
+            {config.message}
           </p>
         )}
+
+        {/* Reference ID */}
+        {config.showReferenceId && config.referenceId && (
+          <div 
+            className="rounded-lg px-4 py-3 inline-block"
+            style={{
+              backgroundColor: style.inputBgColor || '#f9fafb',
+              border: `1px solid ${style.inputBorderColor || '#e5e7eb'}`,
+            }}
+          >
+            <p className="text-xs mb-1" style={{ color: mutedTextColor }}>Reference ID</p>
+            <p className="font-mono font-medium" style={{ color: textColor }}>{config.referenceId}</p>
+          </div>
+        )}
+
+        {/* Custom content (HTML) */}
+        {config.customContent && (
+          <div 
+            className="prose prose-sm max-w-none"
+            style={{ color: textColor }}
+            dangerouslySetInnerHTML={{ __html: config.customContent }}
+          />
+        )}
+
+        {/* Button */}
+        {config.buttonText && (
+          <Button
+            onClick={handleButtonClick}
+            className="min-w-[200px]"
+            style={{ 
+              backgroundColor: computedButtonColor,
+              color: '#ffffff',
+              borderRadius: inputBorderRadius,
+              fontFamily: style.fontFamily,
+            }}
+          >
+            {config.buttonText}
+            {config.buttonUrl ? (
+              <ExternalLink className="w-4 h-4 ml-2" />
+            ) : (
+              <ArrowRight className="w-4 h-4 ml-2" />
+            )}
+          </Button>
+        )}
       </div>
-
-      {/* Message */}
-      {config.message && (
-        <p 
-          className="text-muted-foreground max-w-md mx-auto"
-          style={{ fontFamily: style.fontFamily }}
-        >
-          {config.message}
-        </p>
-      )}
-
-      {/* Reference ID */}
-      {config.showReferenceId && config.referenceId && (
-        <div className="bg-muted/50 rounded-lg px-4 py-3 inline-block">
-          <p className="text-xs text-muted-foreground mb-1">Reference ID</p>
-          <p className="font-mono font-medium">{config.referenceId}</p>
-        </div>
-      )}
-
-      {/* Custom content (HTML) */}
-      {config.customContent && (
-        <div 
-          className="prose prose-sm dark:prose-invert max-w-none"
-          dangerouslySetInnerHTML={{ __html: config.customContent }}
-        />
-      )}
-
-      {/* Button */}
-      {config.buttonText && (
-        <Button
-          onClick={handleButtonClick}
-          className="min-w-[200px]"
-          style={{ backgroundColor: buttonColor }}
-        >
-          {config.buttonText}
-          {config.buttonUrl ? (
-            <ExternalLink className="w-4 h-4 ml-2" />
-          ) : (
-            <ArrowRight className="w-4 h-4 ml-2" />
-          )}
-        </Button>
-      )}
     </div>
   );
+}
+
+// Helper to determine if a color is light (for text contrast)
+function isLightColor(color: string): boolean {
+  // Handle hex colors
+  if (color.startsWith('#')) {
+    const hex = color.replace('#', '');
+    const r = parseInt(hex.substr(0, 2), 16);
+    const g = parseInt(hex.substr(2, 2), 16);
+    const b = parseInt(hex.substr(4, 2), 16);
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    return luminance > 0.5;
+  }
+  // Default to light if we can't parse
+  return true;
 }
 
 // Default configurations
