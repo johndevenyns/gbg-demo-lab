@@ -471,6 +471,26 @@ export function FormBuilderCanvas({ steps, onUpdateSteps, demo }: FormBuilderCan
           backButtonLabel: 'Back',
         },
       };
+    } else if (type === 'unified_verification') {
+      // New unified verification step
+      newStep = {
+        id: stepId,
+        title,
+        order: steps.length + 1,
+        stepType: 'unified_verification',
+        fields: [],
+        unifiedVerificationConfig: {
+          methodSelection: 'admin_preselect',
+          enabledTypes: ['docbio'],
+          typeConfigs: {},
+          successDestination: 'default',
+          failureDestination: 'default',
+          showBackButton: true,
+          backButtonLabel: 'Back',
+          showNextButton: false,
+          nextButtonLabel: 'Continue',
+        },
+      };
     } else {
       // Fallback to form step
       newStep = {

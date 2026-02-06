@@ -2,6 +2,9 @@
 
 export type VerificationType = 'docBio' | 'dataBio' | 'dataOnly';
 
+// Import unified verification config from new types file
+import type { UnifiedVerificationConfig } from './verification';
+
 // Stored test data for Fill Pass/Fail buttons
 export interface StoredTestData {
   passData: Record<string, string>;
@@ -213,8 +216,8 @@ export interface VerificationStepConfig {
 }
 
 // Step type enumeration
-// Note: 'verification' step type is deprecated - use 'verification_flow' instead
-export type FormStepType = 'form' | 'verification' | 'api' | 'path' | 'verification_flow' | 'page' | 'method_selection' | 'decision';
+// Note: 'verification' step type is deprecated - use 'unified_verification' for new implementations
+export type FormStepType = 'form' | 'verification' | 'api' | 'path' | 'verification_flow' | 'page' | 'method_selection' | 'decision' | 'unified_verification';
 
 // Decision step choice destination types
 export type DecisionDestinationType = 'verification' | 'step' | 'next';
@@ -439,6 +442,8 @@ export interface FormStep {
   methodSelectionConfig?: MethodSelectionStepConfig;
   // Decision step configuration (only used when stepType = 'decision')
   decisionStepConfig?: DecisionStepConfig;
+  // Unified verification step configuration (only used when stepType = 'unified_verification')
+  unifiedVerificationConfig?: UnifiedVerificationConfig;
 }
 
 export interface FormField {

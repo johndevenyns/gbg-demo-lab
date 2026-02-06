@@ -140,16 +140,22 @@ export default function AdminDashboard() {
       {/* Main Content */}
       <main className="admin-container py-8">
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "demos" | "users")}>
-          <TabsList className="mb-6">
-            <TabsTrigger value="demos" className="flex items-center gap-2">
-              <Layers className="w-4 h-4" />
-              Demos
-            </TabsTrigger>
-            <TabsTrigger value="users" className="flex items-center gap-2">
-              <Users className="w-4 h-4" />
-              User Management
-            </TabsTrigger>
-          </TabsList>
+          <div className="flex items-center justify-between mb-6">
+            <TabsList>
+              <TabsTrigger value="demos" className="flex items-center gap-2">
+                <Layers className="w-4 h-4" />
+                Demos
+              </TabsTrigger>
+              <TabsTrigger value="users" className="flex items-center gap-2">
+                <Users className="w-4 h-4" />
+                User Management
+              </TabsTrigger>
+            </TabsList>
+            <Button variant="outline" onClick={() => navigate('/admin/verification-settings')}>
+              <Shield className="w-4 h-4 mr-2" />
+              Verification Settings
+            </Button>
+          </div>
 
           <TabsContent value="demos">
             {/* Stats Overview */}

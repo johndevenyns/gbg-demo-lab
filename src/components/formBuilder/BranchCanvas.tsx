@@ -145,8 +145,25 @@ export function BranchCanvas({
           ],
         },
       };
+    } else if (type === 'unified_verification') {
+      // New unified verification step
+      newStep = {
+        id: stepId,
+        title,
+        order: branchSteps.length + 1,
+        stepType: 'unified_verification',
+        fields: [],
+        unifiedVerificationConfig: {
+          methodSelection: 'admin_preselect',
+          enabledTypes: ['docbio'],
+          typeConfigs: {},
+          successDestination: 'default',
+          failureDestination: 'default',
+          showBackButton: true,
+          backButtonLabel: 'Back',
+        },
+      };
     } else {
-      // Default fallback
       newStep = {
         id: stepId,
         title,

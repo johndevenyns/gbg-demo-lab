@@ -170,6 +170,54 @@ export type Database = {
         }
         Relationships: []
       }
+      mdl_providers: {
+        Row: {
+          config_options: Json | null
+          country_code: string | null
+          created_at: string
+          description: string | null
+          display_name: string
+          display_order: number
+          domain: string | null
+          id: string
+          is_enabled: boolean
+          logo_url: string | null
+          provider_key: string
+          scope: string[] | null
+          updated_at: string
+        }
+        Insert: {
+          config_options?: Json | null
+          country_code?: string | null
+          created_at?: string
+          description?: string | null
+          display_name: string
+          display_order?: number
+          domain?: string | null
+          id?: string
+          is_enabled?: boolean
+          logo_url?: string | null
+          provider_key: string
+          scope?: string[] | null
+          updated_at?: string
+        }
+        Update: {
+          config_options?: Json | null
+          country_code?: string | null
+          created_at?: string
+          description?: string | null
+          display_name?: string
+          display_order?: number
+          domain?: string | null
+          id?: string
+          is_enabled?: boolean
+          logo_url?: string | null
+          provider_key?: string
+          scope?: string[] | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -188,6 +236,57 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      verification_type_configs: {
+        Row: {
+          config_schema: Json | null
+          created_at: string
+          default_resource_id: string | null
+          description: string | null
+          display_name: string
+          display_order: number
+          icon_name: string | null
+          id: string
+          is_enabled: boolean
+          requires_biometric: boolean
+          requires_document: boolean
+          supports_qr_code: boolean
+          type_key: string
+          updated_at: string
+        }
+        Insert: {
+          config_schema?: Json | null
+          created_at?: string
+          default_resource_id?: string | null
+          description?: string | null
+          display_name: string
+          display_order?: number
+          icon_name?: string | null
+          id?: string
+          is_enabled?: boolean
+          requires_biometric?: boolean
+          requires_document?: boolean
+          supports_qr_code?: boolean
+          type_key: string
+          updated_at?: string
+        }
+        Update: {
+          config_schema?: Json | null
+          created_at?: string
+          default_resource_id?: string | null
+          description?: string | null
+          display_name?: string
+          display_order?: number
+          icon_name?: string | null
+          id?: string
+          is_enabled?: boolean
+          requires_biometric?: boolean
+          requires_document?: boolean
+          supports_qr_code?: boolean
+          type_key?: string
+          updated_at?: string
         }
         Relationships: []
       }
