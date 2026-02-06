@@ -679,7 +679,14 @@ export function DemoFlowRenderer({
   };
 
   // Create verification session with the API
-  const createVerificationSession = useCallback(async (verificationType: VerificationType) => {
+  // skipAdvance: if true, don't call goToNextStep after creation (for unified_verification)
+  const createVerificationSession = useCallback(async (verificationType: VerificationType, skipAdvance = false) => {
+    // Guard against duplicate calls
+    if (verificationSessionId) {
+      console.log('Session already exists, skipping creation');
+      return;
+    }
+    
     setIsLoading(true);
     setError(null);
     const startTime = Date.now();
@@ -792,7 +799,11 @@ export function DemoFlowRenderer({
       setApiResponses(prev => [...prev, apiResponse]);
 
       toast.success('Verification session created');
-      goToNextStep();
+      
+      // Only advance to next step if not skipping (unified_verification skips to show QR)
+      if (!skipAdvance) {
+        goToNextStep();
+      }
       
     } catch (err) {
       console.error('Create verification session error:', err);
@@ -802,7 +813,7 @@ export function DemoFlowRenderer({
     } finally {
       setIsLoading(false);
     }
-  }, [formData, customerName, returnUrl, includeQr, referenceIdPrefix, resourceId, resourceIdDocBio, resourceIdDataBio, resourceIdDataOnly, logoUrl, buttonColor, headerTextColor, headerBgColor, currentStep?.id, goToNextStep, onSubmissionLog]);
+  }, [formData, customerName, returnUrl, includeQr, referenceIdPrefix, resourceId, resourceIdDocBio, resourceIdDataBio, resourceIdDataOnly, logoUrl, buttonColor, headerTextColor, headerBgColor, currentStep?.id, goToNextStep, onSubmissionLog, verificationSessionId]);
 
   // Poll for verification status
   const pollVerificationStatus = useCallback(async () => {
@@ -934,9 +945,8 @@ export function DemoFlowRenderer({
     // Get type-specific config if available
     const typeConfig = currentStep?.unifiedVerificationConfig?.typeConfigs?.[typeKey];
     
-    // Create verification session with appropriate resource ID
-    // The createVerificationSession function will use the demo's resource IDs
-    createVerificationSession(verificationType);
+    // Create verification session - skip advance so we stay on step to show QR/polling
+    createVerificationSession(verificationType, true);
   }, [createVerificationSession, currentStep?.unifiedVerificationConfig]);
 
   // Handle step-specific rendering and actions
@@ -1421,6 +1431,108 @@ export function DemoFlowRenderer({
           );
         }
         
+        // If session exists, show QR code and polling UI
+        if (verificationSessionId) {
+          const uvQrImageUrl = verificationSessionDataRef.current?.qrCodeUrl || (allApiData.qrCodeUrl as string);
+          const uvShortUrl = verificationSessionDataRef.current?.shortUrl || (allApiData.shortUrl as string) || '';
+          const uvVerifyUrl = verificationSessionDataRef.current?.verifyUrl || (allApiData.verifyUrl as string) || '';
+          const uvQrValue = uvShortUrl || uvVerifyUrl;
+          const uvStatus = pollingStatus || (allApiData.status as string) || 'pending';
+          
+          // Get type config for display settings
+          const enabledTypes = unifiedConfig.enabledTypes || [];
+          const activeTypeKey = enabledTypes[0] || 'docbio';
+          const typeConfig = unifiedConfig.typeConfigs?.[activeTypeKey];
+          const isDataOnly = activeTypeKey === 'dataonly';
+          
+          // For data-only, show processing status
+          if (isDataOnly) {
+            return (
+              <div className="text-center py-8 space-y-4">
+                <div className="w-16 h-16 mx-auto bg-primary/20 rounded-full flex items-center justify-center">
+                  {uvStatus === 'completed' ? (
+                    <CheckCircle2 className="w-8 h-8 text-green-600" />
+                  ) : uvStatus === 'failed' ? (
+                    <XCircle className="w-8 h-8 text-red-600" />
+                  ) : (
+                    <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                  )}
+                </div>
+                <p className="text-lg font-medium">{typeConfig?.customTitle || 'Data Verification'}</p>
+                <p className="text-muted-foreground">{typeConfig?.customDescription || 'Verifying your information...'}</p>
+                <Badge variant="outline">Status: {uvStatus}</Badge>
+              </div>
+            );
+          }
+          
+          // For doc/bio paths, show QR code and status
+          return (
+            <div className="text-center py-8 space-y-6">
+              <div>
+                <p className="text-lg font-medium">{typeConfig?.customTitle || 'Identity Verification'}</p>
+                <p className="text-muted-foreground text-sm">{typeConfig?.customDescription || 'Scan the QR code to continue on your mobile device'}</p>
+              </div>
+              
+              {/* QR Code section */}
+              {(typeConfig?.qrCodeEnabled !== false) && (
+                <div>
+                  <p className="font-medium mb-2">{typeConfig?.qrCodeTitle || 'Scan QR Code'}</p>
+                  <QRCodeDisplay imageUrl={uvQrImageUrl} value={uvQrValue} size={200} />
+                  {typeConfig?.qrCodeInstructions && (
+                    <p className="text-sm text-muted-foreground mt-2">{typeConfig.qrCodeInstructions}</p>
+                  )}
+                  {uvShortUrl && (
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Or visit: <a href={uvShortUrl} target="_blank" rel="noopener noreferrer" className="text-primary underline">{uvShortUrl}</a>
+                    </p>
+                  )}
+                </div>
+              )}
+              
+              {/* Direct redirect option */}
+              {uvVerifyUrl && typeConfig?.qrCodeEnabled === false && (
+                <div className="space-y-4">
+                  <Smartphone className="w-12 h-12 mx-auto text-primary" />
+                  <p className="font-medium">Continue on this device</p>
+                  <Button
+                    onClick={() => window.location.href = uvVerifyUrl}
+                    style={{ backgroundColor: buttonColor }}
+                  >
+                    Start Verification
+                    <ExternalLink className="w-4 h-4 ml-2" />
+                  </Button>
+                </div>
+              )}
+              
+              {/* Status display */}
+              <div className="space-y-2">
+                <Badge 
+                  variant="outline" 
+                  className={`
+                    ${uvStatus === 'completed' ? 'bg-green-500/20 text-green-600 border-green-500/30' : ''}
+                    ${uvStatus === 'failed' || uvStatus === 'expired' ? 'bg-red-500/20 text-red-600 border-red-500/30' : ''}
+                    ${uvStatus === 'pending' || uvStatus === 'in_progress' ? 'bg-yellow-500/20 text-yellow-600 border-yellow-500/30' : ''}
+                  `}
+                >
+                  Status: {uvStatus}
+                </Badge>
+                {verificationSessionId && (
+                  <p className="text-xs text-muted-foreground">
+                    Session: {verificationSessionId.substring(0, 8)}...
+                  </p>
+                )}
+                {(uvStatus === 'pending' || uvStatus === 'in_progress') && (
+                  <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Waiting for verification...
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        }
+        
+        // No session yet - show selection UI (or auto-trigger for admin_preselect)
         return (
           <UnifiedVerificationRenderer
             config={unifiedConfig}

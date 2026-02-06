@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { FormStyleConfig, DEFAULT_FORM_STYLE } from '@/types/formStyle';
 import { UnifiedVerificationConfig, UserSelectionChoice, SelectionIconType } from '@/types/verification';
 import { VerificationType } from '@/types/demo';
@@ -52,6 +52,9 @@ export function UnifiedVerificationRenderer({
 }: UnifiedVerificationRendererProps) {
   const style = formStyle || DEFAULT_FORM_STYLE;
   const [expandedChoices, setExpandedChoices] = useState<Set<string>>(new Set());
+  
+  // Track if we've already triggered auto-select to prevent multiple calls
+  const hasTriggeredRef = useRef(false);
 
   // Get contrast text color for button
   const getContrastTextColor = (hexColor: string): string => {
@@ -84,12 +87,25 @@ export function UnifiedVerificationRenderer({
     onSelectType(verificationType, choice.typeKey);
   }, [onSelectType]);
 
-  // For admin_preselect or auto_detect, immediately trigger with first enabled type
-  if (config.methodSelection === 'admin_preselect' || config.methodSelection === 'auto_detect') {
-    const firstEnabledType = config.enabledTypes[0] || 'docbio';
-    const verificationType = TYPE_KEY_MAP[firstEnabledType] || 'docBio';
-    
-    // Render a processing state and trigger the verification
+  // Auto-trigger for admin_preselect or auto_detect modes
+  const isAutoMode = config.methodSelection === 'admin_preselect' || config.methodSelection === 'auto_detect';
+  const firstEnabledType = config.enabledTypes[0] || 'docbio';
+  const verificationType = TYPE_KEY_MAP[firstEnabledType] || 'docBio';
+
+  useEffect(() => {
+    if (isAutoMode && !hasTriggeredRef.current && !isLoading) {
+      hasTriggeredRef.current = true;
+      // Small delay to ensure component is fully mounted
+      const timer = setTimeout(() => {
+        console.log('Auto-triggering verification:', verificationType, firstEnabledType);
+        onSelectType(verificationType, firstEnabledType);
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [isAutoMode, isLoading, verificationType, firstEnabledType, onSelectType]);
+
+  // For auto modes, show a loading state
+  if (isAutoMode) {
     return (
       <div className="text-center py-8 space-y-4">
         <Loader2 className="w-12 h-12 mx-auto text-primary animate-spin" />
@@ -99,8 +115,6 @@ export function UnifiedVerificationRenderer({
         <p className="text-sm text-muted-foreground" style={{ fontFamily: style.fontFamily }}>
           Please wait while we set up your verification session.
         </p>
-        {/* Auto-trigger on mount */}
-        <AutoTrigger onTrigger={() => onSelectType(verificationType, firstEnabledType)} />
       </div>
     );
   }
@@ -220,15 +234,4 @@ export function UnifiedVerificationRenderer({
       )}
     </div>
   );
-}
-
-// Helper component to auto-trigger on mount
-function AutoTrigger({ onTrigger }: { onTrigger: () => void }) {
-  useEffect(() => {
-    // Small delay to ensure state is ready
-    const timer = setTimeout(onTrigger, 100);
-    return () => clearTimeout(timer);
-  }, [onTrigger]);
-  
-  return null;
 }
