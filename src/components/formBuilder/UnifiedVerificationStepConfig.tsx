@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { FormStep, DemoEnvironment } from '@/types/demo';
@@ -37,7 +37,14 @@ const TYPE_COLORS: Record<string, string> = {
   mdl: 'data-[state=on]:bg-green-500/20 data-[state=on]:text-green-700 data-[state=on]:border-green-500',
 };
 
-const ACCORDION_COLORS: Record<string, string> = {
+const TAB_COLORS: Record<string, string> = {
+  docbio: 'data-[state=active]:border-purple-500 data-[state=active]:text-purple-700',
+  databio: 'data-[state=active]:border-blue-500 data-[state=active]:text-blue-700',
+  dataonly: 'data-[state=active]:border-cyan-500 data-[state=active]:text-cyan-700',
+  mdl: 'data-[state=active]:border-green-500 data-[state=active]:text-green-700',
+};
+
+const PANEL_COLORS: Record<string, string> = {
   docbio: 'border-purple-500/30 bg-purple-500/5',
   databio: 'border-blue-500/30 bg-blue-500/5',
   dataonly: 'border-cyan-500/30 bg-cyan-500/5',
@@ -69,9 +76,9 @@ export function UnifiedVerificationStepConfig({ step, onUpdateStep, demo }: Unif
   // Get config from step or use defaults
   const config: UnifiedVerificationConfig = step.unifiedVerificationConfig || DEFAULT_CONFIG;
   
-  // Track which accordion panel is open (single open at a time for accordion style)
-  const [openPanel, setOpenPanel] = useState<string | undefined>(
-    config.enabledTypes.length > 0 ? config.enabledTypes[0] : undefined
+  // Track which tab is active
+  const [activeTab, setActiveTab] = useState<string>(
+    config.enabledTypes.length > 0 ? config.enabledTypes[0] : 'docbio'
   );
 
   const handleConfigUpdate = (updates: Partial<UnifiedVerificationConfig>) => {
@@ -84,10 +91,13 @@ export function UnifiedVerificationStepConfig({ step, onUpdateStep, demo }: Unif
     // Ensure at least one type is always selected
     if (typeKeys.length === 0) return;
     
-    // Update enabled types and set the first newly added type as open
+    // Update enabled types and set the first newly added type as active tab
     const newTypes = typeKeys.filter(t => !config.enabledTypes.includes(t));
     if (newTypes.length > 0) {
-      setOpenPanel(newTypes[0]);
+      setActiveTab(newTypes[0]);
+    } else if (!typeKeys.includes(activeTab)) {
+      // If active tab was removed, switch to first available
+      setActiveTab(typeKeys[0]);
     }
     
     handleConfigUpdate({ enabledTypes: typeKeys });
@@ -253,13 +263,25 @@ export function UnifiedVerificationStepConfig({ step, onUpdateStep, demo }: Unif
             </Badge>
           </Label>
 
-          <Accordion
-            type="single"
-            collapsible
-            value={openPanel}
-            onValueChange={setOpenPanel}
-            className="space-y-2"
-          >
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="w-full h-auto flex-wrap gap-1 bg-muted/50 p-1">
+              {config.enabledTypes.map((typeKey) => {
+                const globalType = getGlobalTypeInfo(typeKey);
+                if (!globalType) return null;
+
+                return (
+                  <TabsTrigger
+                    key={typeKey}
+                    value={typeKey}
+                    className={`flex items-center gap-2 px-3 py-2 border-b-2 border-transparent ${TAB_COLORS[typeKey] || ''}`}
+                  >
+                    {TYPE_ICONS[typeKey]}
+                    <span className="font-medium">{globalType.displayName}</span>
+                  </TabsTrigger>
+                );
+              })}
+            </TabsList>
+
             {config.enabledTypes.map((typeKey) => {
               const globalType = getGlobalTypeInfo(typeKey);
               const typeConfig = getTypeConfig(typeKey);
@@ -267,37 +289,30 @@ export function UnifiedVerificationStepConfig({ step, onUpdateStep, demo }: Unif
               if (!globalType) return null;
 
               return (
-                <AccordionItem
+                <TabsContent
                   key={typeKey}
                   value={typeKey}
-                  className={`border rounded-lg overflow-hidden ${ACCORDION_COLORS[typeKey] || ''}`}
+                  className={`mt-3 p-4 rounded-lg border ${PANEL_COLORS[typeKey] || 'border-border'}`}
                 >
-                  <AccordionTrigger className="px-4 py-3 hover:no-underline">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full flex items-center justify-center bg-background">
-                        {TYPE_ICONS[typeKey]}
-                      </div>
-                      <div className="text-left">
-                        <p className="font-semibold">{globalType.displayName}</p>
-                        <p className="text-xs text-muted-foreground">{globalType.description}</p>
-                      </div>
-                    </div>
-                  </AccordionTrigger>
-                  
-                  <AccordionContent className="px-4 pb-4">
-                    <VerificationTypePanel
-                      typeKey={typeKey}
-                      globalType={globalType}
-                      typeConfig={typeConfig}
-                      mdlProviders={mdlProviders}
-                      demo={demo}
-                      onUpdate={(updates) => handleTypeConfigUpdate(typeKey, updates)}
-                    />
-                  </AccordionContent>
-                </AccordionItem>
+                  <div className="mb-3">
+                    <p className="font-semibold flex items-center gap-2">
+                      {TYPE_ICONS[typeKey]}
+                      {globalType.displayName}
+                    </p>
+                    <p className="text-sm text-muted-foreground">{globalType.description}</p>
+                  </div>
+                  <VerificationTypePanel
+                    typeKey={typeKey}
+                    globalType={globalType}
+                    typeConfig={typeConfig}
+                    mdlProviders={mdlProviders}
+                    demo={demo}
+                    onUpdate={(updates) => handleTypeConfigUpdate(typeKey, updates)}
+                  />
+                </TabsContent>
               );
             })}
-          </Accordion>
+          </Tabs>
         </div>
       )}
 
