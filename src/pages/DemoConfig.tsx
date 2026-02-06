@@ -24,7 +24,7 @@ type ConfigSection = 'settings' | 'mirror' | 'branding' | 'form-builder' | 'prev
 
 const sections: { id: ConfigSection; label: string; icon: React.ElementType; description: string }[] = [
   { id: 'settings', label: 'Site Settings', icon: Settings, description: 'Core configuration' },
-  { id: 'mirror', label: 'Site Mirror', icon: Globe, description: 'Branding & form styling' },
+  { id: 'mirror', label: 'Appearance', icon: Globe, description: 'Site & form styling' },
   { id: 'branding', label: 'Branding', icon: Palette, description: 'Colors & logo' },
   { id: 'form-builder', label: 'Form Builder', icon: Layout, description: 'Steps & fields' },
   { id: 'preview', label: 'Live Preview', icon: PlayCircle, description: 'Test the flow' },

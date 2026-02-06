@@ -62,13 +62,13 @@
        <CardHeader>
          <div className="flex items-center justify-between">
            <div>
-             <CardTitle className="flex items-center gap-2">
-               <Globe className="w-5 h-5" />
-               Site Mirror
-             </CardTitle>
-             <CardDescription>
-               Capture header, footer, and branding from a customer's website
-             </CardDescription>
+            <CardTitle className="flex items-center gap-2">
+                <Globe className="w-5 h-5" />
+                Appearance
+              </CardTitle>
+              <CardDescription>
+                Configure site branding and form styling
+              </CardDescription>
            </div>
            {(htmlConfigured || screenshotConfigured) && (
              <Button
