@@ -110,9 +110,15 @@ export interface VerificationTypeOverride {
   // Status polling
   statusPollingInterval?: number; // seconds
   
-  // Custom display settings
+  // Custom display settings (used in verification flow)
   customTitle?: string;
   customDescription?: string;
+  
+  // User selection screen display (when methodSelection = 'user_choice')
+  // These control how this type appears on the selection screen
+  selectionIcon?: string; // Lucide icon name
+  selectionLabel?: string; // Button/card label
+  selectionDescription?: string; // Description shown to user
   
   // Per-type result page overrides
   useCustomResultPages?: boolean;
