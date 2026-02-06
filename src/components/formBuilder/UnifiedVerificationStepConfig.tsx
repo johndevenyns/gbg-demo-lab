@@ -81,6 +81,13 @@ export function UnifiedVerificationStepConfig({ step, onUpdateStep, demo }: Unif
     config.enabledTypes.length > 0 ? config.enabledTypes[0] : 'docbio'
   );
 
+  // Sync activeTab when enabledTypes changes
+  useEffect(() => {
+    if (config.enabledTypes.length > 0 && !config.enabledTypes.includes(activeTab)) {
+      setActiveTab(config.enabledTypes[0]);
+    }
+  }, [config.enabledTypes, activeTab]);
+
   const handleConfigUpdate = (updates: Partial<UnifiedVerificationConfig>) => {
     onUpdateStep({
       unifiedVerificationConfig: { ...config, ...updates }
