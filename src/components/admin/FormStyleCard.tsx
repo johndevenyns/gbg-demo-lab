@@ -238,7 +238,11 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, onUpdateButtonCo
 
       setCapturedData(response.data);
       setCaptureStatus('success');
-      setCaptureMessage(`Form captured! (${response.data.formHtml.length} chars HTML, ${response.data.formCss.length} chars CSS)`);
+      
+      const patternInfo = response.data.patterns 
+        ? `Label: ${response.data.patterns.labelStyle}, Layout: ${response.data.patterns.fieldLayout}`
+        : '';
+      setCaptureMessage(`Form captured! (${response.data.formHtml.length} chars HTML, ${response.data.formCss.length} chars CSS) ${patternInfo}`);
 
       // Convert the captured styles to our config format
       const capturedConfig: Partial<FormStyleConfig> = {
@@ -248,12 +252,24 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, onUpdateButtonCo
         capturedFormJs: response.data.formJs,
         capturedFormId: captureFormId,
         capturedSourceUrl: captureUrl,
+        // Store the captured display patterns for form builder use
+        capturedPatterns: response.data.patterns,
       };
 
       // Also apply any extracted styles as fallbacks
       if (response.data.styles) {
         const styleConfig = formElementStylesToConfig(response.data.styles as FormElementStyles);
         Object.assign(capturedConfig, styleConfig);
+      }
+      
+      // Apply detected pattern colors if available
+      if (response.data.patterns) {
+        const p = response.data.patterns;
+        if (p.detectedInputBgColor) capturedConfig.inputBgColor = p.detectedInputBgColor;
+        if (p.detectedInputBorderColor) capturedConfig.inputBorderColor = p.detectedInputBorderColor;
+        if (p.detectedLabelColor) capturedConfig.labelColor = p.detectedLabelColor;
+        if (p.detectedErrorColor) capturedConfig.errorColor = p.detectedErrorColor;
+        if (p.detectedFontFamily) capturedConfig.fontFamily = p.detectedFontFamily;
       }
 
       onUpdateStyle({
@@ -263,7 +279,7 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, onUpdateButtonCo
 
       toast({
         title: 'Form Captured Successfully',
-        description: `Captured form "${captureFormId}" with exact HTML and CSS for faithful reproduction`,
+        description: `Captured form "${captureFormId}" - Label style: ${response.data.patterns?.labelStyle || 'detected'}, Layout: ${response.data.patterns?.fieldLayout || 'detected'}`,
       });
     } catch (error) {
       setCaptureStatus('error');
@@ -883,9 +899,9 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, onUpdateButtonCo
                   </Alert>
                 )}
 
-                {/* Show captured form status */}
+                {/* Show captured form status with detected patterns */}
                 {formStyle.source === 'captured' && formStyle.capturedFormHtml && (
-                  <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/30">
+                  <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/30 space-y-3">
                     <div className="flex items-center gap-2 text-sm">
                       <CheckCircle className="w-4 h-4 text-green-500" />
                       <span className="font-medium text-green-700 dark:text-green-400">
@@ -898,6 +914,93 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, onUpdateButtonCo
                     <p className="text-xs text-muted-foreground">
                       {formStyle.capturedFormHtml.length.toLocaleString()} chars HTML, {(formStyle.capturedFormCss?.length || 0).toLocaleString()} chars CSS
                     </p>
+                    
+                    {/* Display detected patterns */}
+                    {formStyle.capturedPatterns && (
+                      <div className="mt-3 pt-3 border-t border-green-500/20 space-y-2">
+                        <p className="text-xs font-medium text-green-700 dark:text-green-400">
+                          Detected Display Patterns:
+                        </p>
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="text-xs">
+                              Labels: {formStyle.capturedPatterns.labelStyle}
+                            </Badge>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="text-xs">
+                              Layout: {formStyle.capturedPatterns.fieldLayout}
+                            </Badge>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="text-xs">
+                              Input: {formStyle.capturedPatterns.inputStyle}
+                            </Badge>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="text-xs">
+                              Focus: {formStyle.capturedPatterns.focusStyle}
+                            </Badge>
+                          </div>
+                          {formStyle.capturedPatterns.usesPlaceholders && (
+                            <div className="flex items-center gap-2">
+                              <Badge variant="outline" className="text-xs bg-blue-500/10">
+                                Uses Placeholders
+                              </Badge>
+                            </div>
+                          )}
+                          {formStyle.capturedPatterns.hasRequiredIndicator && (
+                            <div className="flex items-center gap-2">
+                              <Badge variant="outline" className="text-xs bg-orange-500/10">
+                                Required: {formStyle.capturedPatterns.requiredIndicatorStyle || 'yes'}
+                              </Badge>
+                            </div>
+                          )}
+                        </div>
+                        {(formStyle.capturedPatterns.detectedFontFamily || formStyle.capturedPatterns.detectedLabelColor) && (
+                          <div className="mt-2 pt-2 border-t border-green-500/10">
+                            <p className="text-xs text-muted-foreground mb-1">Detected Styles:</p>
+                            <div className="flex flex-wrap gap-2">
+                              {formStyle.capturedPatterns.detectedFontFamily && (
+                                <span className="text-xs px-2 py-0.5 bg-muted rounded">
+                                  Font: {formStyle.capturedPatterns.detectedFontFamily.split(',')[0]}
+                                </span>
+                              )}
+                              {formStyle.capturedPatterns.detectedLabelColor && (
+                                <span className="text-xs px-2 py-0.5 bg-muted rounded flex items-center gap-1">
+                                  Label: 
+                                  <span 
+                                    className="w-3 h-3 rounded-sm border" 
+                                    style={{ backgroundColor: formStyle.capturedPatterns.detectedLabelColor }}
+                                  />
+                                </span>
+                              )}
+                              {formStyle.capturedPatterns.detectedInputBgColor && (
+                                <span className="text-xs px-2 py-0.5 bg-muted rounded flex items-center gap-1">
+                                  Input BG: 
+                                  <span 
+                                    className="w-3 h-3 rounded-sm border" 
+                                    style={{ backgroundColor: formStyle.capturedPatterns.detectedInputBgColor }}
+                                  />
+                                </span>
+                              )}
+                              {formStyle.capturedPatterns.detectedButtonBgColor && (
+                                <span className="text-xs px-2 py-0.5 bg-muted rounded flex items-center gap-1">
+                                  Button: 
+                                  <span 
+                                    className="w-3 h-3 rounded-sm border" 
+                                    style={{ backgroundColor: formStyle.capturedPatterns.detectedButtonBgColor }}
+                                  />
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                        <p className="text-xs text-muted-foreground italic mt-2">
+                          These patterns will be used when building custom forms to match the customer's form behavior
+                        </p>
+                      </div>
+                    )}
                   </div>
                 )}
               </CardContent>

@@ -10,14 +10,52 @@ interface CaptureOptions {
   waitTime?: number; // Custom wait time in ms
 }
 
+// Detected label display patterns
+type LabelStyle = 'floating' | 'above' | 'inline' | 'placeholder-only' | 'hidden';
+
+interface CapturedFormPatterns {
+  labelStyle: LabelStyle;
+  labelPosition?: 'top' | 'left' | 'inside';
+  labelsVisible: boolean;
+  usesPlaceholders: boolean;
+  placeholderAsLabel: boolean;
+  fieldLayout: 'stacked' | 'inline' | 'grid';
+  fieldsPerRow?: number;
+  hasHelperText: boolean;
+  hasRequiredIndicator: boolean;
+  requiredIndicatorStyle?: 'asterisk' | 'text' | 'color';
+  inputStyle: 'bordered' | 'underlined' | 'filled' | 'outline';
+  focusStyle: 'border-color' | 'shadow' | 'underline' | 'label-shrink';
+  detectedFontFamily?: string;
+  detectedFontSize?: string;
+  detectedLabelFontSize?: string;
+  detectedLabelFontWeight?: string;
+  detectedLabelColor?: string;
+  detectedInputFontSize?: string;
+  detectedInputPadding?: string;
+  detectedHelperTextSize?: string;
+  detectedHelperTextColor?: string;
+  detectedInputBgColor?: string;
+  detectedInputBorderColor?: string;
+  detectedInputFocusBorderColor?: string;
+  detectedButtonBgColor?: string;
+  detectedButtonTextColor?: string;
+  detectedErrorColor?: string;
+  detectedFieldSpacing?: string;
+  detectedLabelSpacing?: string;
+  detectedBorderRadius?: string;
+  detectedBorderWidth?: string;
+}
+
 interface CapturedFormData {
   formHtml: string;
   formCss: string;
-  formJs: string; // JavaScript for form interactions (floating labels, etc.)
+  formJs: string;
   formId: string;
   sourceUrl: string;
   styles: Record<string, string>;
   branding: Record<string, unknown> | null;
+  patterns: CapturedFormPatterns; // Extracted display patterns
 }
 
 Deno.serve(async (req) => {
@@ -170,6 +208,12 @@ Deno.serve(async (req) => {
       console.warn('Failed to fetch branding:', e);
     }
 
+    console.log('Analyzing form display patterns...');
+    const patterns = analyzeFormPatterns(formHtml, relevantCss);
+    console.log('Detected label style:', patterns.labelStyle);
+    console.log('Labels visible:', patterns.labelsVisible);
+    console.log('Uses placeholders:', patterns.usesPlaceholders);
+
     console.log('Form capture complete');
 
     const capturedData: CapturedFormData = {
@@ -180,6 +224,7 @@ Deno.serve(async (req) => {
       sourceUrl: formattedUrl,
       styles,
       branding,
+      patterns,
     };
 
     return new Response(
@@ -701,4 +746,181 @@ function generateFloatingLabelScript(formId: string): string {
   });
 })();
 `.trim();
+}
+
+// Analyze form HTML and CSS to detect display patterns
+function analyzeFormPatterns(formHtml: string, formCss: string): CapturedFormPatterns {
+  const htmlLower = formHtml.toLowerCase();
+  const cssLower = formCss.toLowerCase();
+  
+  // Detect label presence and style
+  const hasLabels = /<label[^>]*>/i.test(formHtml);
+  const labelCount = (formHtml.match(/<label/gi) || []).length;
+  const inputCount = (formHtml.match(/<input(?![^>]*type=["'](?:hidden|submit|button)["'])/gi) || []).length;
+  
+  // Check for floating label patterns in CSS
+  const hasFloatingLabelCss = 
+    /\.floating|label\.active|label\.shrink|\.has-value|\.focused\s+label|:focus\s*\+\s*label|:focus-within.*label/i.test(cssLower) ||
+    /transform:\s*translatey\s*\(|transform:\s*scale\s*\(/i.test(cssLower);
+  
+  // Check for floating label patterns in HTML classes
+  const hasFloatingLabelClasses = 
+    /class=["'][^"']*(?:floating|material|mdc-text-field|form-floating|float-label)[^"']*["']/i.test(formHtml);
+  
+  // Check if labels are inside input wrappers (floating pattern)
+  const labelsInsideWrapper = /<div[^>]*>[\s\S]*?<input[^>]*>[\s\S]*?<label[^>]*>/i.test(formHtml) ||
+    /<div[^>]*>[\s\S]*?<label[^>]*>[\s\S]*?<input[^>]*>/i.test(formHtml);
+  
+  // Check for placeholder-only pattern (no visible labels, just placeholders)
+  const hasPlaceholders = /placeholder=["'][^"']+["']/i.test(formHtml);
+  const placeholderCount = (formHtml.match(/placeholder=["'][^"']+["']/gi) || []).length;
+  
+  // Determine label style
+  let labelStyle: LabelStyle = 'above';
+  let labelPosition: 'top' | 'left' | 'inside' = 'top';
+  
+  if (!hasLabels || labelCount === 0) {
+    if (hasPlaceholders) {
+      labelStyle = 'placeholder-only';
+    } else {
+      labelStyle = 'hidden';
+    }
+  } else if (hasFloatingLabelCss || hasFloatingLabelClasses) {
+    labelStyle = 'floating';
+    labelPosition = 'inside';
+  } else if (labelsInsideWrapper && hasPlaceholders && placeholderCount >= inputCount * 0.8) {
+    // If most inputs have placeholders and labels are in wrappers, likely floating
+    labelStyle = 'floating';
+    labelPosition = 'inside';
+  }
+  
+  // Check for inline layout (labels beside inputs)
+  const hasInlineLabels = /display:\s*(?:inline-flex|inline-block|flex).*label|label.*display:\s*(?:inline|inline-block)/i.test(cssLower) ||
+    /class=["'][^"']*(?:inline|horizontal|row)[^"']*["']/i.test(formHtml);
+  
+  if (hasInlineLabels && labelStyle === 'above') {
+    labelStyle = 'inline';
+    labelPosition = 'left';
+  }
+  
+  // Detect field layout
+  let fieldLayout: 'stacked' | 'inline' | 'grid' = 'stacked';
+  let fieldsPerRow = 1;
+  
+  if (/display:\s*grid|grid-template-columns/i.test(cssLower)) {
+    fieldLayout = 'grid';
+    // Try to detect columns
+    const gridMatch = cssLower.match(/grid-template-columns:\s*repeat\s*\(\s*(\d+)/i);
+    if (gridMatch) {
+      fieldsPerRow = parseInt(gridMatch[1], 10);
+    }
+  } else if (/display:\s*flex.*flex-direction:\s*row|flex-wrap:\s*wrap/i.test(cssLower)) {
+    fieldLayout = 'inline';
+    fieldsPerRow = 2;
+  }
+  
+  // Detect input styling
+  let inputStyle: 'bordered' | 'underlined' | 'filled' | 'outline' = 'bordered';
+  
+  if (/border-bottom[^;]*:\s*[^n]|border-bottom-width/i.test(cssLower) && 
+      !/border(?:-top|-left|-right)?[^-]/i.test(cssLower)) {
+    inputStyle = 'underlined';
+  } else if (/background-color:\s*(?!transparent|rgba\([^)]*,\s*0\))/i.test(cssLower) &&
+             /border:\s*(?:none|0)/i.test(cssLower)) {
+    inputStyle = 'filled';
+  }
+  
+  // Detect focus style
+  let focusStyle: 'border-color' | 'shadow' | 'underline' | 'label-shrink' = 'border-color';
+  
+  if (labelStyle === 'floating') {
+    focusStyle = 'label-shrink';
+  } else if (/focus.*box-shadow|:focus-within.*box-shadow/i.test(cssLower)) {
+    focusStyle = 'shadow';
+  } else if (inputStyle === 'underlined') {
+    focusStyle = 'underline';
+  }
+  
+  // Extract colors from CSS
+  const extractColor = (pattern: RegExp): string | undefined => {
+    const match = cssLower.match(pattern);
+    if (match && match[1]) {
+      // Return original case from full CSS
+      const originalMatch = formCss.match(new RegExp(pattern.source, 'i'));
+      return originalMatch?.[1];
+    }
+    return undefined;
+  };
+  
+  // Try to extract specific colors
+  const detectedInputBgColor = extractColor(/input[^{]*\{[^}]*background(?:-color)?:\s*([^;}\s]+)/i);
+  const detectedInputBorderColor = extractColor(/input[^{]*\{[^}]*border(?:-color)?:\s*[^;]*?([#\w]+(?:\([^)]+\))?)/i);
+  const detectedLabelColor = extractColor(/label[^{]*\{[^}]*color:\s*([^;}\s]+)/i);
+  const detectedButtonBgColor = extractColor(/button[^{]*\{[^}]*background(?:-color)?:\s*([^;}\s]+)/i) ||
+    extractColor(/\[type=["']?submit["']?\][^{]*\{[^}]*background(?:-color)?:\s*([^;}\s]+)/i);
+  const detectedButtonTextColor = extractColor(/button[^{]*\{[^}]*(?<!background-)color:\s*([^;}\s]+)/i);
+  const detectedErrorColor = extractColor(/\.error[^{]*\{[^}]*color:\s*([^;}\s]+)/i) ||
+    extractColor(/\.invalid[^{]*\{[^}]*color:\s*([^;}\s]+)/i);
+  
+  // Extract typography
+  const detectedFontFamily = extractColor(/(?:body|form|input)[^{]*\{[^}]*font-family:\s*([^;]+)/i);
+  const detectedFontSize = extractColor(/input[^{]*\{[^}]*font-size:\s*([^;}\s]+)/i);
+  const detectedLabelFontSize = extractColor(/label[^{]*\{[^}]*font-size:\s*([^;}\s]+)/i);
+  const detectedLabelFontWeight = extractColor(/label[^{]*\{[^}]*font-weight:\s*([^;}\s]+)/i);
+  
+  // Extract spacing
+  const detectedInputPadding = extractColor(/input[^{]*\{[^}]*padding:\s*([^;]+)/i);
+  const detectedBorderRadius = extractColor(/input[^{]*\{[^}]*border-radius:\s*([^;}\s]+)/i);
+  const detectedBorderWidth = extractColor(/input[^{]*\{[^}]*border(?:-width)?:\s*(\d+(?:px)?)/i);
+  
+  // Detect helper text
+  const hasHelperText = /class=["'][^"']*(?:helper|hint|description|help-text|supporting)[^"']*["']/i.test(formHtml) ||
+    /<small[^>]*>|<span[^>]*class=["'][^"']*help/i.test(formHtml);
+  
+  // Detect required indicator
+  const hasRequiredIndicator = /required|aria-required/i.test(formHtml) ||
+    /\*|class=["'][^"']*required/i.test(formHtml);
+  let requiredIndicatorStyle: 'asterisk' | 'text' | 'color' | undefined;
+  if (hasRequiredIndicator) {
+    if (/>\s*\*/i.test(formHtml) || /::after[^{]*content:\s*["']\*/i.test(cssLower)) {
+      requiredIndicatorStyle = 'asterisk';
+    } else if (/required/i.test(formHtml) && !/aria-required/i.test(formHtml)) {
+      requiredIndicatorStyle = 'text';
+    }
+  }
+  
+  return {
+    labelStyle,
+    labelPosition,
+    labelsVisible: hasLabels && labelCount > 0,
+    usesPlaceholders: hasPlaceholders,
+    placeholderAsLabel: labelStyle === 'placeholder-only' || 
+      (labelStyle === 'floating' && hasPlaceholders && placeholderCount >= inputCount * 0.5),
+    fieldLayout,
+    fieldsPerRow,
+    hasHelperText,
+    hasRequiredIndicator,
+    requiredIndicatorStyle,
+    inputStyle,
+    focusStyle,
+    detectedFontFamily: detectedFontFamily?.trim(),
+    detectedFontSize,
+    detectedLabelFontSize,
+    detectedLabelFontWeight,
+    detectedLabelColor,
+    detectedInputFontSize: detectedFontSize, // Same as detectedFontSize for inputs
+    detectedInputPadding,
+    detectedHelperTextSize: undefined, // Could be extracted if needed
+    detectedHelperTextColor: undefined,
+    detectedInputBgColor,
+    detectedInputBorderColor,
+    detectedInputFocusBorderColor: undefined,
+    detectedButtonBgColor,
+    detectedButtonTextColor,
+    detectedErrorColor,
+    detectedFieldSpacing: undefined,
+    detectedLabelSpacing: undefined,
+    detectedBorderRadius,
+    detectedBorderWidth,
+  };
 }
