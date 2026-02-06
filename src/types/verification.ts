@@ -62,7 +62,9 @@ export interface MdlProviderFormData {
 }
 
 // Verification method selection mode for the unified verification step
-export type VerificationMethodSelection = 'admin_preselect' | 'user_choice' | 'auto_detect';
+// - 'user_choice': User sees a selection screen to pick from enabled methods
+// - 'auto_detect': System automatically chooses based on device type (web vs mobile)
+export type VerificationMethodSelection = 'user_choice' | 'auto_detect';
 
 // Unified Verification Step configuration (new design)
 export interface UnifiedVerificationConfig {

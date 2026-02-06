@@ -154,7 +154,7 @@ export function BranchCanvas({
         stepType: 'unified_verification',
         fields: [],
         unifiedVerificationConfig: {
-          methodSelection: 'admin_preselect',
+          methodSelection: 'user_choice',
           enabledTypes: ['docbio'],
           typeConfigs: {},
           successDestination: 'default',

@@ -52,7 +52,7 @@ const PANEL_COLORS: Record<string, string> = {
 };
 
 const DEFAULT_CONFIG: UnifiedVerificationConfig = {
-  methodSelection: 'admin_preselect',
+  methodSelection: 'user_choice',
   enabledTypes: ['docbio'],
   typeConfigs: {},
   successDestination: 'default',
@@ -137,7 +137,7 @@ export function UnifiedVerificationStepConfig({ step, onUpdateStep, demo }: Unif
         <CardContent className="pt-4 space-y-4">
           <Label className="text-sm font-semibold flex items-center gap-2">
             <Settings2 className="w-4 h-4" />
-            Verification Method Selection
+            How is the verification method determined?
           </Label>
           
           <RadioGroup
@@ -145,38 +145,34 @@ export function UnifiedVerificationStepConfig({ step, onUpdateStep, demo }: Unif
             onValueChange={(v) => handleConfigUpdate({ methodSelection: v as VerificationMethodSelection })}
             className="space-y-2"
           >
-            <div className="flex items-start gap-3 p-3 rounded-lg border border-border hover:border-primary/30 transition-colors">
-              <RadioGroupItem value="admin_preselect" id="admin_preselect" className="mt-1" />
-              <div className="flex-1">
-                <Label htmlFor="admin_preselect" className="font-medium cursor-pointer">
-                  Admin Pre-selects
-                </Label>
-                <p className="text-sm text-muted-foreground">
-                  System uses the first enabled verification type automatically
-                </p>
-              </div>
-            </div>
-            
-            <div className="flex items-start gap-3 p-3 rounded-lg border border-border hover:border-primary/30 transition-colors">
+            <div className={`flex items-start gap-3 p-3 rounded-lg border transition-colors cursor-pointer ${
+              config.methodSelection === 'user_choice'
+                ? 'border-primary bg-primary/5' 
+                : 'border-border hover:border-primary/30'
+            }`}>
               <RadioGroupItem value="user_choice" id="user_choice" className="mt-1" />
               <div className="flex-1">
                 <Label htmlFor="user_choice" className="font-medium cursor-pointer">
-                  User Chooses
+                  User Selects Method
                 </Label>
                 <p className="text-sm text-muted-foreground">
-                  User sees a selection screen to pick their verification method
+                  User sees a selection screen to choose from the enabled verification methods below
                 </p>
               </div>
             </div>
             
-            <div className="flex items-start gap-3 p-3 rounded-lg border border-border hover:border-primary/30 transition-colors">
+            <div className={`flex items-start gap-3 p-3 rounded-lg border transition-colors cursor-pointer ${
+              config.methodSelection === 'auto_detect'
+                ? 'border-primary bg-primary/5' 
+                : 'border-border hover:border-primary/30'
+            }`}>
               <RadioGroupItem value="auto_detect" id="auto_detect" className="mt-1" />
               <div className="flex-1">
                 <Label htmlFor="auto_detect" className="font-medium cursor-pointer">
                   Auto-detect (Web/Mobile)
                 </Label>
                 <p className="text-sm text-muted-foreground">
-                  System automatically chooses based on device type
+                  System automatically chooses the appropriate method based on device type
                 </p>
               </div>
             </div>
