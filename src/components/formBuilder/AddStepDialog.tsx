@@ -14,9 +14,11 @@ import {
   LayoutList, Workflow, Plug, FileText, SplitSquareVertical
 } from 'lucide-react';
 
+// 'verification' kept for backwards compatibility with existing steps
 export type StepTypeOption = 
   | 'form' 
   | 'verification'
+  | 'unified_verification'
   | 'decision'
   | 'api' 
   | 'page';
@@ -38,9 +40,9 @@ const STEP_TYPES: StepTypeInfo[] = [
     category: 'form',
   },
   {
-    id: 'verification',
+    id: 'unified_verification',
     label: 'Verification',
-    description: 'Identity verification step with configurable type (Doc+Bio, Data+Bio, Data Only, or mDL)',
+    description: 'Identity verification with configurable types (Doc+Bio, Data+Bio, Data Only, mDL)',
     icon: <Workflow className="w-5 h-5" />,
     category: 'verification',
   },
@@ -80,7 +82,8 @@ export function AddStepDialog({ open, onOpenChange, onAddStep }: AddStepDialogPr
   const handleSubmit = () => {
     const defaultTitles: Record<StepTypeOption, string> = {
       form: 'Form Step',
-      verification: 'Identity Verification',
+      verification: 'Identity Verification (Legacy)',
+      unified_verification: 'Identity Verification',
       decision: 'Choose Your Path',
       api: 'API Submission',
       page: 'Display Page',

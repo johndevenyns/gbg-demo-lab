@@ -18,11 +18,12 @@ import { VerificationFlowConfig } from './VerificationFlowConfig';
 import { PageStepConfig } from './PageStepConfig';
 import { MethodSelectionStepConfig } from './MethodSelectionStepConfig';
 import { DecisionStepConfig } from './DecisionStepConfig';
+import { UnifiedVerificationStepConfig } from './UnifiedVerificationStepConfig';
 import { 
   GripVertical, Trash2, ChevronDown, ChevronUp, Edit2, Check, X,
   User, Mail, Phone, Calendar, Hash, MapPin, Building, DollarSign, 
   FileText, Type, CheckSquare, MapPinCheck, Send, Smartphone, Database, FileCheck,
-  Plug, QrCode, Activity, Workflow, SplitSquareVertical
+  Plug, QrCode, Activity, Workflow, SplitSquareVertical, Shield
 } from 'lucide-react';
 
 const FIELD_ICONS: Record<string, React.ReactNode> = {
@@ -387,6 +388,12 @@ export function FormStepCard({
               Method Selection
             </Badge>
           )}
+          {step.stepType === 'unified_verification' && (
+            <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/30">
+              <Shield className="w-3 h-3 mr-1" />
+              Verification ({step.unifiedVerificationConfig?.enabledTypes?.length || 0} types)
+            </Badge>
+          )}
           {step.verificationPath && (
             <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/30">
               {PATH_ICONS[step.verificationPath]}
@@ -541,6 +548,9 @@ export function FormStepCard({
           ) : step.stepType === 'decision' ? (
             /* Decision Step Type */
             <DecisionStepConfig step={step} allSteps={allSteps} onUpdateStep={onUpdateStep} />
+          ) : step.stepType === 'unified_verification' ? (
+            /* Unified Verification Step Type */
+            <UnifiedVerificationStepConfig step={step} onUpdateStep={onUpdateStep} demo={demo} />
           ) : (
             <>
               {/* Regular Form Step */}

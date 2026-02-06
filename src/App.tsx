@@ -8,6 +8,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import DemoConfig from "./pages/DemoConfig";
 import DemoPreview from "./pages/DemoPreview";
 import DemoEmbed from "./pages/DemoEmbed";
+import VerificationSettings from "./pages/VerificationSettings";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -27,6 +28,14 @@ const App = () => (
             element={
               <ProtectedRoute>
                 <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/verification-settings"
+            element={
+              <ProtectedRoute>
+                <VerificationSettings />
               </ProtectedRoute>
             }
           />
