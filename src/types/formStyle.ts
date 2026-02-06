@@ -1,12 +1,19 @@
 // Form Style Configuration Types
 
-export type FormStyleSource = 'default' | 'mirrored' | 'template' | 'custom';
+export type FormStyleSource = 'default' | 'mirrored' | 'template' | 'custom' | 'captured';
 
 export interface FormStyleConfig {
   source: FormStyleSource;
   templateId?: string; // Used when source = 'template'
   formStyleUrl?: string; // URL to a specific form page on customer's site
   formContainerSelector?: string; // CSS selector to target specific form container on the page
+  
+  // Captured form HTML/CSS (source = 'captured')
+  // These store the raw extracted form for faithful reproduction
+  capturedFormHtml?: string; // The actual form HTML extracted from the customer site
+  capturedFormCss?: string; // All CSS that applies to the form
+  capturedFormId?: string; // The form ID that was captured
+  capturedSourceUrl?: string; // The URL where the form was captured from
   
   // Typography
   fontFamily: string;
