@@ -194,38 +194,130 @@ function StyledFormFields({ fields, formData, onInputChange, style, fieldErrors 
     marginTop: '4px',
   };
 
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: spacingMap[style.fieldSpacing || 'normal'] }}>
-      {fields.map((field) => (
+  // Content field types that don't need input handling
+  const contentFieldTypes = ['heading', 'paragraph', 'divider', 'consent_checkbox'];
+
+  const renderField = (field: FormField) => {
+    // Handle content elements (non-input fields)
+    if (field.type === 'heading') {
+      return (
         <div key={field.id}>
-          <label style={labelStyle}>
-            {field.label}
-            {field.required && <span style={{ color: style.errorColor, marginLeft: '4px' }}>*</span>}
+          <h3 style={{ 
+            fontFamily: style.fontFamily,
+            fontSize: '18px',
+            fontWeight: 600,
+            color: style.titleColor || style.labelColor,
+            marginBottom: '4px',
+          }}>
+            {field.content || field.label}
+          </h3>
+        </div>
+      );
+    }
+
+    if (field.type === 'paragraph') {
+      return (
+        <div key={field.id}>
+          <p style={{ 
+            fontFamily: style.fontFamily,
+            fontSize: fontSizeMap[style.fontSize],
+            color: style.bodyColor || style.labelColor,
+            lineHeight: 1.6,
+          }}>
+            {field.content || field.placeholder || 'Text content here...'}
+          </p>
+        </div>
+      );
+    }
+
+    if (field.type === 'divider') {
+      return (
+        <div key={field.id} style={{ padding: '8px 0' }}>
+          <hr style={{ 
+            border: 'none',
+            borderTop: `1px solid ${style.inputBorderColor}`,
+          }} />
+        </div>
+      );
+    }
+
+    if (field.type === 'consent_checkbox') {
+      const isChecked = formData[field.name] === 'true';
+      return (
+        <div key={field.id}>
+          <label 
+            style={{ 
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: '12px',
+              cursor: 'pointer',
+              fontFamily: style.fontFamily,
+              fontSize: fontSizeMap[style.fontSize],
+              color: style.labelColor,
+            }}
+          >
+            <input
+              type="checkbox"
+              checked={isChecked}
+              onChange={(e) => onInputChange(field.name, e.target.checked ? 'true' : 'false')}
+              style={{
+                width: '18px',
+                height: '18px',
+                marginTop: '2px',
+                accentColor: style.inputFocusBorderColor,
+                cursor: 'pointer',
+              }}
+            />
+            <span style={{ flex: 1, lineHeight: 1.5 }}>
+              {field.consentText || field.label}
+              {(field.consentRequired || field.required) && (
+                <span style={{ color: style.errorColor, marginLeft: '4px' }}>*</span>
+              )}
+            </span>
           </label>
-          <input
-            type={field.type === 'email' ? 'email' : field.type === 'phone' ? 'tel' : 'text'}
-            placeholder={field.placeholder}
-            value={formData[field.name] || ''}
-            onChange={(e) => onInputChange(field.name, e.target.value)}
-            style={getInputStyle(field.name)}
-            onFocus={(e) => {
-              if (!fieldErrors[field.name]) {
-                e.target.style.borderColor = style.inputFocusBorderColor;
-                e.target.style.boxShadow = `0 0 0 3px ${style.inputFocusBorderColor}20`;
-              }
-            }}
-            onBlur={(e) => {
-              if (!fieldErrors[field.name]) {
-                e.target.style.borderColor = style.inputBorderColor;
-                e.target.style.boxShadow = 'none';
-              }
-            }}
-          />
           {fieldErrors[field.name] && (
             <p style={errorStyle}>{fieldErrors[field.name]}</p>
           )}
         </div>
-      ))}
+      );
+    }
+
+    // Regular input fields
+    return (
+      <div key={field.id}>
+        <label style={labelStyle}>
+          {field.label}
+          {field.required && <span style={{ color: style.errorColor, marginLeft: '4px' }}>*</span>}
+        </label>
+        <input
+          type={field.type === 'email' ? 'email' : field.type === 'phone' ? 'tel' : 'text'}
+          placeholder={field.placeholder}
+          value={formData[field.name] || ''}
+          onChange={(e) => onInputChange(field.name, e.target.value)}
+          style={getInputStyle(field.name)}
+          onFocus={(e) => {
+            if (!fieldErrors[field.name]) {
+              e.target.style.borderColor = style.inputFocusBorderColor;
+              e.target.style.boxShadow = `0 0 0 3px ${style.inputFocusBorderColor}20`;
+            }
+          }}
+          onBlur={(e) => {
+            if (!fieldErrors[field.name]) {
+              e.target.style.borderColor = style.inputBorderColor;
+              e.target.style.boxShadow = 'none';
+            }
+          }}
+        />
+        {fieldErrors[field.name] && (
+          <p style={errorStyle}>{fieldErrors[field.name]}</p>
+        )}
+      </div>
+    );
+  };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: spacingMap[style.fieldSpacing || 'normal'] }}>
+      {fields.map(renderField)}
     </div>
   );
 }
