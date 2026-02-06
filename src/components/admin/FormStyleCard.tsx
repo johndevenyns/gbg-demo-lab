@@ -24,6 +24,7 @@ interface FormStyleCardProps {
   demo: DemoEnvironment;
   formStyle: FormStyleConfig;
   onUpdateStyle: (style: FormStyleConfig) => void;
+  onUpdateButtonColor?: (color: string) => void;
   scrapedBranding?: ScrapedBranding | null;
 }
 
@@ -93,7 +94,7 @@ function formElementStylesToConfig(styles: FormElementStyles): Partial<FormStyle
 
 type SelectorValidationStatus = 'idle' | 'validating' | 'valid' | 'invalid' | 'not-found';
 
-export function FormStyleCard({ demo, formStyle, onUpdateStyle, scrapedBranding }: FormStyleCardProps) {
+export function FormStyleCard({ demo, formStyle, onUpdateStyle, onUpdateButtonColor, scrapedBranding }: FormStyleCardProps) {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<FormStyleSource>(formStyle.source);
   const [isScraping, setIsScraping] = useState(false);
@@ -368,6 +369,11 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, scrapedBranding 
           ...newStyle,
         });
 
+        // Also update button color if extracted
+        if (styles.buttonBgColor && onUpdateButtonColor) {
+          onUpdateButtonColor(styles.buttonBgColor);
+        }
+
         toast({
           title: 'Screenshot Analyzed',
           description: `Extracted ${Object.keys(styles).length} style properties from your form screenshot`,
@@ -393,7 +399,7 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, scrapedBranding 
 
     // Reset file input
     event.target.value = '';
-  }, [onUpdateStyle, toast]);
+  }, [onUpdateStyle, onUpdateButtonColor, toast]);
 
   const hasMirroredData = !!demo.customerSiteUrl || !!scrapedBranding?.branding || !!demo.scrapedCss || !!demo.buttonColor || !!extractedStyles;
 
