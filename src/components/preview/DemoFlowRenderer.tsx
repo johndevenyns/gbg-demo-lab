@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { FormStep, PageElement, StepApiResponse, MdlProvider, VerificationType, StoredTestData, FormField, VerificationFlowConfig as VerificationFlowConfigType, DecisionChoice } from '@/types/demo';
 import { FormStyleConfig, DEFAULT_FORM_STYLE } from '@/types/formStyle';
+import { UnifiedVerificationConfig } from '@/types/verification';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, QrCode, ArrowLeft, ArrowRight, Check, Copy, ExternalLink, AlertCircle, Smartphone, CheckCircle2, XCircle } from 'lucide-react';
@@ -10,6 +11,7 @@ import { ResultPage, ResultPageConfig, DEFAULT_SUCCESS_CONFIG, DEFAULT_FAILURE_C
 import { VerificationMethodSelector } from './VerificationMethodSelector';
 import { AddressValidationDialog } from './AddressValidationDialog';
 import { DecisionStepRenderer } from './DecisionStepRenderer';
+import { UnifiedVerificationRenderer } from './UnifiedVerificationRenderer';
 
 // Helper to determine if a color is light or dark and return contrasting text color
 const getContrastTextColor = (hexColor: string): string => {
@@ -839,11 +841,24 @@ export function DemoFlowRenderer({
 
   // Start polling when verification session is created
   useEffect(() => {
-    const isVerificationStep = currentStep?.stepType === 'verification' || currentStep?.stepType === 'verification_flow';
+    const isVerificationStep = currentStep?.stepType === 'verification' || 
+      currentStep?.stepType === 'verification_flow' || 
+      currentStep?.stepType === 'unified_verification';
     if (verificationSessionId && isVerificationStep) {
-      const pollingInterval = currentStep?.stepType === 'verification_flow'
-        ? (currentStep.verificationFlowConfig?.statusPollingInterval || 5) * 1000
-        : (currentStep?.verificationConfig?.statusPollingInterval || 5) * 1000;
+      let pollingInterval = 5000; // default 5 seconds
+      
+      if (currentStep?.stepType === 'verification_flow') {
+        pollingInterval = (currentStep.verificationFlowConfig?.statusPollingInterval || 5) * 1000;
+      } else if (currentStep?.stepType === 'unified_verification') {
+        // Get polling interval from type config if available
+        const enabledTypes = currentStep.unifiedVerificationConfig?.enabledTypes || [];
+        const firstType = enabledTypes[0];
+        const typeConfig = firstType ? currentStep.unifiedVerificationConfig?.typeConfigs?.[firstType] : undefined;
+        pollingInterval = (typeConfig?.statusPollingInterval || 5) * 1000;
+      } else {
+        pollingInterval = (currentStep?.verificationConfig?.statusPollingInterval || 5) * 1000;
+      }
+      
       pollingRef.current = setInterval(pollVerificationStatus, pollingInterval);
       
       // Initial poll
@@ -856,7 +871,7 @@ export function DemoFlowRenderer({
         }
       };
     }
-  }, [verificationSessionId, currentStep?.stepType, currentStep?.verificationConfig?.statusPollingInterval, currentStep?.verificationFlowConfig?.statusPollingInterval, pollVerificationStatus]);
+  }, [verificationSessionId, currentStep?.stepType, currentStep?.verificationConfig?.statusPollingInterval, currentStep?.verificationFlowConfig?.statusPollingInterval, currentStep?.unifiedVerificationConfig, pollVerificationStatus]);
 
   // Handle method selection
   const handleDocumentScanSelected = useCallback(() => {
@@ -911,6 +926,19 @@ export function DemoFlowRenderer({
     }
   }, [createVerificationSession, steps, goToNextStep]);
 
+  // Handle unified verification type selection
+  const handleUnifiedVerificationSelect = useCallback((verificationType: VerificationType, typeKey: string) => {
+    console.log('Unified verification selected:', verificationType, typeKey);
+    setSelectedVerificationType(verificationType);
+    
+    // Get type-specific config if available
+    const typeConfig = currentStep?.unifiedVerificationConfig?.typeConfigs?.[typeKey];
+    
+    // Create verification session with appropriate resource ID
+    // The createVerificationSession function will use the demo's resource IDs
+    createVerificationSession(verificationType);
+  }, [createVerificationSession, currentStep?.unifiedVerificationConfig]);
+
   // Handle step-specific rendering and actions
   useEffect(() => {
     if (currentStep?.stepType === 'api' && !apiResponses.find(r => r.stepId === currentStep.id)) {
@@ -957,6 +985,17 @@ export function DemoFlowRenderer({
         enabled: (vc.showNextButton ?? false) && isLastStep, 
         label: vc.nextButtonLabel || 'Submit' 
       };
+    }
+    // Handle unified_verification step button config
+    else if (currentStep?.stepType === 'unified_verification' && currentStep.unifiedVerificationConfig) {
+      const vc = currentStep.unifiedVerificationConfig;
+      defaultButtons.back = { 
+        enabled: (vc.showBackButton ?? true) && !isFirstStep, 
+        label: vc.backButtonLabel || 'Back' 
+      };
+      // Unified verification handles its own navigation, so disable default buttons
+      defaultButtons.next = { enabled: false, label: 'Continue' };
+      defaultButtons.submit = { enabled: false, label: 'Submit' };
     }
     // Handle standard button config from step.buttons
     else if (currentStep?.buttons) {
@@ -1371,6 +1410,29 @@ export function DemoFlowRenderer({
           </div>
         );
 
+      case 'unified_verification':
+        // New unified verification step
+        const unifiedConfig = currentStep.unifiedVerificationConfig;
+        if (!unifiedConfig) {
+          return (
+            <div className="text-center py-8 text-muted-foreground">
+              <p>Verification step not configured</p>
+            </div>
+          );
+        }
+        
+        return (
+          <UnifiedVerificationRenderer
+            config={unifiedConfig}
+            formStyle={style}
+            buttonColor={buttonColor}
+            isFirstStep={isFirstStep}
+            isLoading={isLoading}
+            onSelectType={handleUnifiedVerificationSelect}
+            onBack={goToPrevStep}
+          />
+        );
+
       default:
         // Form step - apply custom styling
         return (
@@ -1386,7 +1448,7 @@ export function DemoFlowRenderer({
   };
 
   // Don't show nav buttons for certain step types
-  const showNavButtons = !['api', 'decision'].includes(currentStep?.stepType || '') || !isLoading;
+  const showNavButtons = !['api', 'decision', 'unified_verification'].includes(currentStep?.stepType || '') || !isLoading;
 
   // Handle result page button clicks
   const handleResultButtonClick = (isSuccess: boolean) => {
