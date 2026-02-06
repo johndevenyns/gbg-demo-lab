@@ -310,6 +310,7 @@ export function UnifiedVerificationStepConfig({ step, onUpdateStep, demo }: Unif
                     typeConfig={typeConfig}
                     mdlProviders={mdlProviders}
                     demo={demo}
+                    methodSelection={config.methodSelection}
                     onUpdate={(updates) => handleTypeConfigUpdate(typeKey, updates)}
                   />
                 </TabsContent>
@@ -454,6 +455,7 @@ interface VerificationTypePanelProps {
   typeConfig: VerificationTypeOverride;
   mdlProviders: MdlProvider[];
   demo?: DemoEnvironment;
+  methodSelection: VerificationMethodSelection;
   onUpdate: (updates: Partial<VerificationTypeOverride>) => void;
 }
 
@@ -463,6 +465,7 @@ function VerificationTypePanel({
   typeConfig, 
   mdlProviders,
   demo,
+  methodSelection,
   onUpdate 
 }: VerificationTypePanelProps) {
   const isMdlType = typeKey === 'mdl';
@@ -502,7 +505,49 @@ function VerificationTypePanel({
         </p>
       </div>
 
-      {/* Custom display settings */}
+      {/* Selection Screen Display (only when User Selects mode) */}
+      {methodSelection === 'user_choice' && (
+        <div className="space-y-3 p-4 rounded-lg border border-dashed border-primary/30 bg-primary/5">
+          <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+            Selection Screen Display
+          </Label>
+          <p className="text-xs text-muted-foreground">
+            How this verification type appears when the user selects their method
+          </p>
+          <div className="grid grid-cols-3 gap-3">
+            <div className="space-y-2">
+              <Label className="text-sm">Icon</Label>
+              <Input
+                value={typeConfig.selectionIcon || ''}
+                onChange={(e) => onUpdate({ selectionIcon: e.target.value })}
+                placeholder={globalType.iconName || 'FileText'}
+                className="h-8 text-sm"
+              />
+              <p className="text-xs text-muted-foreground">Lucide icon name</p>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-sm">Label</Label>
+              <Input
+                value={typeConfig.selectionLabel || ''}
+                onChange={(e) => onUpdate({ selectionLabel: e.target.value })}
+                placeholder={globalType.displayName}
+                className="h-8 text-sm"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-sm">Description</Label>
+              <Input
+                value={typeConfig.selectionDescription || ''}
+                onChange={(e) => onUpdate({ selectionDescription: e.target.value })}
+                placeholder={globalType.description || ''}
+                className="h-8 text-sm"
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Custom display settings (for verification flow) */}
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-2">
           <Label className="text-sm">Custom Title</Label>
