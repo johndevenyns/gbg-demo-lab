@@ -5,7 +5,8 @@ import { Badge } from '@/components/ui/badge';
 import { AVAILABLE_FORM_FIELDS, FormField } from '@/types/demo';
 import { 
   User, Mail, Phone, Calendar, Hash, MapPin, Building, DollarSign, 
-  FileText, Type, CheckSquare, GripVertical, Search
+  FileText, Type, CheckSquare, GripVertical, Search, Heading, AlignLeft, 
+  Minus, ShieldCheck
 } from 'lucide-react';
 import { useState, useMemo } from 'react';
 
@@ -33,9 +34,15 @@ const FIELD_ICONS: Record<string, React.ReactNode> = {
   select: <FileText className="w-4 h-4" />,
   gender: <User className="w-4 h-4" />,
   nationality: <MapPin className="w-4 h-4" />,
+  // Content elements
+  heading: <Heading className="w-4 h-4" />,
+  paragraph: <AlignLeft className="w-4 h-4" />,
+  divider: <Minus className="w-4 h-4" />,
+  consent_checkbox: <ShieldCheck className="w-4 h-4" />,
 };
 
 const FIELD_CATEGORIES = {
+  content: ['heading', 'paragraph', 'divider', 'consent_checkbox'],
   personal: ['first_name', 'last_name', 'middle_name', 'date_of_birth', 'gender', 'nationality'],
   contact: ['email', 'phone'],
   address: ['address_street', 'address_city', 'address_state', 'address_zip', 'address_country'],
@@ -97,7 +104,7 @@ function DraggableField({ field, index }: DraggableFieldProps) {
 
 export function FieldPalette() {
   const [search, setSearch] = useState('');
-  const [expandedCategory, setExpandedCategory] = useState<string | null>('personal');
+  const [expandedCategory, setExpandedCategory] = useState<string | null>('content');
 
   const filteredFields = useMemo(() => {
     if (!search) return AVAILABLE_FORM_FIELDS;
@@ -122,6 +129,7 @@ export function FieldPalette() {
   }, [filteredFields]);
 
   const categoryLabels: Record<string, string> = {
+    content: 'Content & Text',
     personal: 'Personal Info',
     contact: 'Contact',
     address: 'Address',

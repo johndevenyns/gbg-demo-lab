@@ -455,6 +455,10 @@ export interface FormField {
   required: boolean;
   validation?: FieldValidation;
   order: number;
+  // Content field properties
+  content?: string; // For heading, paragraph - the text to display
+  consentText?: string; // For consent_checkbox - the legal text
+  consentRequired?: boolean; // For consent_checkbox - whether it must be checked
 }
 
 export type FormFieldType = 
@@ -480,7 +484,12 @@ export type FormFieldType =
   | 'income'
   | 'select'
   | 'checkbox'
-  | 'textarea';
+  | 'textarea'
+  // Content elements (non-input)
+  | 'heading'
+  | 'paragraph'
+  | 'divider'
+  | 'consent_checkbox';
 
 export interface FieldValidation {
   minLength?: number;
@@ -512,6 +521,11 @@ export const AVAILABLE_FORM_FIELDS: Omit<FormField, 'id' | 'order'>[] = [
   { type: 'text', label: 'Custom Text Field', name: 'customText', placeholder: 'Enter text', required: false },
   { type: 'textarea', label: 'Custom Text Area', name: 'customTextarea', placeholder: 'Enter details', required: false },
   { type: 'checkbox', label: 'Custom Checkbox', name: 'customCheckbox', required: false },
+  // Content elements
+  { type: 'heading', label: 'Section Heading', name: 'sectionHeading', required: false, content: 'Section Title' },
+  { type: 'paragraph', label: 'Text Block', name: 'textBlock', required: false, content: 'Add your text here...' },
+  { type: 'divider', label: 'Divider Line', name: 'divider', required: false },
+  { type: 'consent_checkbox', label: 'Consent Checkbox', name: 'consent', required: true, consentText: 'I agree to the Terms of Service and Privacy Policy', consentRequired: true },
 ];
 
 // Industry template defaults
