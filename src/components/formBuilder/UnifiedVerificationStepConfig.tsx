@@ -5,21 +5,28 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { FormStep, DemoEnvironment } from '@/types/demo';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { FormStep, DemoEnvironment, DecisionChoiceIcon } from '@/types/demo';
 import { 
   UnifiedVerificationConfig, 
   VerificationTypeOverride, 
   VerificationMethodSelection,
   VerificationTypeConfig,
-  MdlProvider 
+  MdlProvider,
+  UserSelectionChoice,
+  SelectionIconType,
+  UserSelectionScreen,
 } from '@/types/verification';
 import { useVerificationTypes, useMdlProviders } from '@/hooks/useVerificationAdmin';
 import { 
   FileText, UserCheck, Database, Smartphone, QrCode, Activity, Clock, Settings2,
-  ChevronRight, Check, AlertCircle, Loader2
+  ChevronRight, Check, AlertCircle, Loader2, ChevronDown, ChevronUp, GripVertical,
+  Shield, User, Fingerprint, Camera, CreditCard
 } from 'lucide-react';
 
 // Icon mapping for verification types
@@ -44,6 +51,22 @@ const ACCORDION_COLORS: Record<string, string> = {
   mdl: 'border-green-500/30 bg-green-500/5',
 };
 
+const ICON_OPTIONS: { id: DecisionChoiceIcon; label: string; icon: React.ReactNode }[] = [
+  { id: 'document', label: 'Document', icon: <FileText className="w-4 h-4" /> },
+  { id: 'smartphone', label: 'Smartphone', icon: <Smartphone className="w-4 h-4" /> },
+  { id: 'database', label: 'Database', icon: <Database className="w-4 h-4" /> },
+  { id: 'shield', label: 'Shield', icon: <Shield className="w-4 h-4" /> },
+  { id: 'user', label: 'User', icon: <User className="w-4 h-4" /> },
+  { id: 'fingerprint', label: 'Fingerprint', icon: <Fingerprint className="w-4 h-4" /> },
+  { id: 'camera', label: 'Camera', icon: <Camera className="w-4 h-4" /> },
+  { id: 'id-card', label: 'ID Card', icon: <CreditCard className="w-4 h-4" /> },
+];
+
+const getIconComponent = (iconId?: DecisionChoiceIcon) => {
+  const iconOption = ICON_OPTIONS.find(i => i.id === iconId);
+  return iconOption?.icon || <FileText className="w-4 h-4" />;
+};
+
 const DEFAULT_CONFIG: UnifiedVerificationConfig = {
   methodSelection: 'admin_preselect',
   enabledTypes: ['docbio'],
@@ -54,6 +77,12 @@ const DEFAULT_CONFIG: UnifiedVerificationConfig = {
   backButtonLabel: 'Back',
   showNextButton: false,
   nextButtonLabel: 'Continue',
+  userSelectionScreen: {
+    title: 'Choose Verification Method',
+    subtitle: 'Select how you would like to verify your identity',
+    showDescriptions: true,
+    choices: [],
+  },
 };
 
 interface UnifiedVerificationStepConfigProps {
@@ -90,7 +119,47 @@ export function UnifiedVerificationStepConfig({ step, onUpdateStep, demo }: Unif
       setOpenPanel(newTypes[0]);
     }
     
-    handleConfigUpdate({ enabledTypes: typeKeys });
+    // Auto-generate user selection choices for new types
+    const existingChoiceKeys = config.userSelectionScreen?.choices.map(c => c.typeKey) || [];
+    const newChoices = newTypes
+      .filter(typeKey => !existingChoiceKeys.includes(typeKey))
+      .map(typeKey => {
+        const globalType = verificationTypes.find(t => t.typeKey === typeKey);
+        return {
+          typeKey,
+          label: globalType?.displayName || typeKey,
+          description: globalType?.description || '',
+          icon: getDefaultIcon(typeKey),
+          collapsedByDefault: false,
+        };
+      });
+    
+    // Remove choices for types that were deselected
+    const updatedChoices = [
+      ...(config.userSelectionScreen?.choices.filter(c => typeKeys.includes(c.typeKey)) || []),
+      ...newChoices,
+    ];
+    
+    handleConfigUpdate({ 
+      enabledTypes: typeKeys,
+      userSelectionScreen: {
+        ...config.userSelectionScreen,
+        title: config.userSelectionScreen?.title || 'Choose Verification Method',
+        subtitle: config.userSelectionScreen?.subtitle || 'Select how you would like to verify your identity',
+        showDescriptions: config.userSelectionScreen?.showDescriptions ?? true,
+        choices: updatedChoices,
+      }
+    });
+  };
+
+  const getDefaultIcon = (typeKey: string): SelectionIconType => {
+    switch (typeKey) {
+      case 'docbio': return 'document';
+      case 'databio': return 'fingerprint';
+      case 'dataonly': return 'database';
+      case 'mdl': return 'smartphone';
+      default: return 'document';
+    }
   };
 
   const handleTypeConfigUpdate = (typeKey: string, updates: Partial<VerificationTypeOverride>) => {
@@ -101,6 +170,27 @@ export function UnifiedVerificationStepConfig({ step, onUpdateStep, demo }: Unif
         [typeKey]: { ...currentTypeConfig, ...updates }
       }
     });
+  };
+
+  const handleUserSelectionUpdate = (updates: Partial<UserSelectionScreen>) => {
+    handleConfigUpdate({
+      userSelectionScreen: {
+        ...config.userSelectionScreen,
+        title: config.userSelectionScreen?.title || 'Choose Verification Method',
+        subtitle: config.userSelectionScreen?.subtitle || 'Select how you would like to verify your identity',
+        showDescriptions: config.userSelectionScreen?.showDescriptions ?? true,
+        choices: config.userSelectionScreen?.choices || [],
+        ...updates,
+      }
+    });
+  };
+
+  const handleChoiceUpdate = (typeKey: string, updates: Partial<UserSelectionChoice>) => {
+    const currentChoices = config.userSelectionScreen?.choices || [];
+    const updatedChoices = currentChoices.map(c => 
+      c.typeKey === typeKey ? { ...c, ...updates } : c
+    );
+    handleUserSelectionUpdate({ choices: updatedChoices });
   };
 
   const getTypeConfig = (typeKey: string): VerificationTypeOverride => {
@@ -174,7 +264,150 @@ export function UnifiedVerificationStepConfig({ step, onUpdateStep, demo }: Unif
         </CardContent>
       </Card>
 
-      {/* Verification Types Selection */}
+      {/* User Selection Screen Configuration - only when user_choice is selected */}
+      {config.methodSelection === 'user_choice' && config.enabledTypes.length > 0 && (
+        <Card className="border-primary/30 bg-primary/5">
+          <CardContent className="pt-4 space-y-4">
+            <Label className="text-sm font-semibold flex items-center gap-2">
+              <Settings2 className="w-4 h-4" />
+              Selection Screen Configuration
+            </Label>
+            
+            {/* Screen Title and Subtitle */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label className="text-sm">Title</Label>
+                <Input
+                  value={config.userSelectionScreen?.title || ''}
+                  onChange={(e) => handleUserSelectionUpdate({ title: e.target.value })}
+                  placeholder="Choose Verification Method"
+                  className="bg-background"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-sm">Subtitle</Label>
+                <Input
+                  value={config.userSelectionScreen?.subtitle || ''}
+                  onChange={(e) => handleUserSelectionUpdate({ subtitle: e.target.value })}
+                  placeholder="Select how you would like to verify..."
+                  className="bg-background"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 pt-2 border-t border-primary/20">
+              <Switch
+                checked={config.userSelectionScreen?.showDescriptions ?? true}
+                onCheckedChange={(v) => handleUserSelectionUpdate({ showDescriptions: v })}
+                className="scale-75"
+              />
+              <Label className="text-sm">Show expanded descriptions by default</Label>
+            </div>
+
+            {/* Choice Cards Configuration */}
+            <div className="space-y-3 pt-2">
+              <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                Choice Cards ({config.enabledTypes.length})
+              </Label>
+              
+              {config.userSelectionScreen?.choices.map((choice) => {
+                const globalType = getGlobalTypeInfo(choice.typeKey);
+                if (!globalType) return null;
+                
+                return (
+                  <Collapsible key={choice.typeKey}>
+                    <Card className="border-border overflow-hidden">
+                      <CollapsibleTrigger asChild>
+                        <div className="flex items-center gap-3 p-3 cursor-pointer hover:bg-accent/50 transition-colors">
+                          <GripVertical className="w-4 h-4 text-muted-foreground" />
+                          <div className="w-8 h-8 rounded-md bg-primary/20 flex items-center justify-center text-primary">
+                            {getIconComponent(choice.icon)}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium truncate">{choice.label || globalType.displayName}</p>
+                            <p className="text-xs text-muted-foreground truncate">
+                              {choice.description || globalType.description}
+                            </p>
+                          </div>
+                          <Badge variant="outline" className={`text-xs ${ACCORDION_COLORS[choice.typeKey] || ''}`}>
+                            {choice.typeKey}
+                          </Badge>
+                          <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                        </div>
+                      </CollapsibleTrigger>
+                      
+                      <CollapsibleContent>
+                        <CardContent className="pt-0 pb-4 space-y-3 border-t border-border">
+                          {/* Label and Icon */}
+                          <div className="grid grid-cols-2 gap-3 pt-3">
+                            <div className="space-y-2">
+                              <Label className="text-sm">Label</Label>
+                              <Input
+                                value={choice.label}
+                                onChange={(e) => handleChoiceUpdate(choice.typeKey, { label: e.target.value })}
+                                placeholder={globalType.displayName}
+                                className="h-8 text-sm bg-background"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label className="text-sm">Icon</Label>
+                              <Select
+                                value={choice.icon || 'document'}
+                                onValueChange={(v) => handleChoiceUpdate(choice.typeKey, { icon: v as SelectionIconType })}
+                              >
+                                <SelectTrigger className="h-8 text-sm bg-background">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent className="bg-background border z-50">
+                                  {ICON_OPTIONS.map(icon => (
+                                    <SelectItem key={icon.id} value={icon.id}>
+                                      <div className="flex items-center gap-2">
+                                        {icon.icon}
+                                        <span>{icon.label}</span>
+                                      </div>
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+
+                          {/* Description */}
+                          <div className="space-y-2">
+                            <Label className="text-sm">Description</Label>
+                            <Textarea
+                              value={choice.description || ''}
+                              onChange={(e) => handleChoiceUpdate(choice.typeKey, { description: e.target.value })}
+                              placeholder={globalType.description || 'Describe this option...'}
+                              className="text-sm min-h-[60px] bg-background"
+                            />
+                          </div>
+
+                          {/* Collapsed by default */}
+                          <div className="flex items-center gap-2">
+                            <Switch
+                              checked={choice.collapsedByDefault || false}
+                              onCheckedChange={(v) => handleChoiceUpdate(choice.typeKey, { collapsedByDefault: v })}
+                              className="scale-75"
+                            />
+                            <Label className="text-sm text-muted-foreground">Start collapsed (only show label)</Label>
+                          </div>
+                        </CardContent>
+                      </CollapsibleContent>
+                    </Card>
+                  </Collapsible>
+                );
+              })}
+              
+              {(!config.userSelectionScreen?.choices || config.userSelectionScreen.choices.length === 0) && (
+                <p className="text-sm text-muted-foreground italic text-center py-4">
+                  Enable verification types above to configure selection cards
+                </p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
       <div className="space-y-4">
         <Label className="text-sm font-semibold flex items-center gap-2">
           <Check className="w-4 h-4" />

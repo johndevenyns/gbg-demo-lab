@@ -64,6 +64,26 @@ export interface MdlProviderFormData {
 // Verification method selection mode for the unified verification step
 export type VerificationMethodSelection = 'admin_preselect' | 'user_choice' | 'auto_detect';
 
+// Icon options for user selection screen (reuses DecisionChoiceIcon from demo.ts)
+export type SelectionIconType = 'document' | 'smartphone' | 'database' | 'shield' | 'user' | 'fingerprint' | 'camera' | 'id-card';
+
+// Choice configuration for user selection screen
+export interface UserSelectionChoice {
+  typeKey: string; // Links to verification type (docbio, databio, etc.)
+  label: string;
+  description: string;
+  icon: SelectionIconType;
+  collapsedByDefault: boolean;
+}
+
+// User selection screen configuration
+export interface UserSelectionScreen {
+  title: string;
+  subtitle: string;
+  showDescriptions: boolean;
+  choices: UserSelectionChoice[];
+}
+
 // Unified Verification Step configuration (new design)
 export interface UnifiedVerificationConfig {
   // Method selection mode
@@ -76,8 +96,7 @@ export interface UnifiedVerificationConfig {
   typeConfigs: Record<string, VerificationTypeOverride>;
   
   // User selection screen settings (when methodSelection = 'user_choice')
-  userSelectionTitle?: string;
-  userSelectionSubtitle?: string;
+  userSelectionScreen?: UserSelectionScreen;
   
   // Post-verification handling
   successDestination: 'default' | 'custom' | 'per_type';
