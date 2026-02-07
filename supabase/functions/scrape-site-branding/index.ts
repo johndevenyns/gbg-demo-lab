@@ -248,10 +248,45 @@ Deno.serve(async (req) => {
     console.log('Form styles extracted:', Object.keys(formStyles).filter(k => formStyles[k as keyof FormElementStyles]).length, 'properties');
     
     // Extract logo from branding or metadata
-    const logoUrl = branding?.images?.logo || 
-                    branding?.logo || 
-                    metadata.ogImage || 
+    let logoUrl = branding?.images?.logo || 
+                  branding?.logo || 
+                  metadata.ogImage || 
+                  null;
+
+    // If no logo found and we're not already at root, try fetching from root domain
+    const isRootUrl = baseUrl.pathname === '/' || baseUrl.pathname === '';
+    if (!logoUrl && !isRootUrl) {
+      console.log('No logo found on page, attempting to fetch from root domain...');
+      const rootUrl = `${baseUrl.protocol}//${baseUrl.host}`;
+      
+      try {
+        const rootResponse = await firecrawlScrape({
+          url: rootUrl,
+          formats: ['branding'],
+          onlyMainContent: false,
+          waitFor: 2000,
+        });
+        
+        if (rootResponse.ok) {
+          const rootData = await rootResponse.json();
+          const rootBranding = rootData.data?.branding || rootData.branding || null;
+          const rootMetadata = rootData.data?.metadata || rootData.metadata || {};
+          
+          logoUrl = rootBranding?.images?.logo || 
+                    rootBranding?.logo || 
+                    rootMetadata.ogImage || 
                     null;
+          
+          if (logoUrl) {
+            console.log('Logo found on root domain:', logoUrl);
+          } else {
+            console.log('No logo found on root domain either');
+          }
+        }
+      } catch (rootError) {
+        console.warn('Failed to fetch logo from root domain:', rootError);
+      }
+    }
 
     // Extract colors from branding
     const colors = branding?.colors || {};
