@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Globe, Loader2, ExternalLink, RefreshCw, Check, ImageIcon, Palette } from "lucide-react";
+import { Globe, Loader2, ExternalLink, Check, ImageIcon, Palette } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,7 +15,7 @@ interface BrandingScrapeProps {
 
 export function BrandingScrapeSection({ demo, onUpdate }: BrandingScrapeProps) {
   const { toast } = useToast();
-  const [url, setUrl] = useState(demo.customerSiteUrl || "");
+  const [url, setUrl] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [scrapedData, setScrapedData] = useState<ScrapedBranding | null>(null);
   
@@ -49,9 +49,7 @@ export function BrandingScrapeSection({ demo, onUpdate }: BrandingScrapeProps) {
   const handleApply = () => {
     if (!scrapedData) return;
 
-    const updates: Partial<DemoEnvironment> = {
-      customerSiteUrl: url,
-    };
+    const updates: Partial<DemoEnvironment> = {};
 
     if (applyLogo && scrapedData.logoUrl) {
       updates.logoUrl = scrapedData.logoUrl;
@@ -71,8 +69,6 @@ export function BrandingScrapeSection({ demo, onUpdate }: BrandingScrapeProps) {
     });
     setScrapedData(null); // Clear preview after applying
   };
-
-  const hasExistingBranding = demo.customerSiteUrl && (demo.logoUrl || demo.headerBgColor);
 
   return (
     <Card className="glass-card">
@@ -103,8 +99,6 @@ export function BrandingScrapeSection({ demo, onUpdate }: BrandingScrapeProps) {
           <Button onClick={handleFetch} disabled={isLoading || !url.trim()}>
             {isLoading ? (
               <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Fetching...</>
-            ) : hasExistingBranding && url === demo.customerSiteUrl ? (
-              <><RefreshCw className="w-4 h-4 mr-2" />Refetch</>
             ) : (
               <><Globe className="w-4 h-4 mr-2" />Fetch Branding</>
             )}
@@ -243,14 +237,6 @@ export function BrandingScrapeSection({ demo, onUpdate }: BrandingScrapeProps) {
           </div>
         )}
 
-        {/* Existing Source Info */}
-        {!scrapedData && hasExistingBranding && (
-          <div className="pt-2 border-t border-border">
-            <p className="text-xs text-muted-foreground">
-              Last fetched from: <span className="font-mono">{demo.customerSiteUrl}</span>
-            </p>
-          </div>
-        )}
       </CardContent>
     </Card>
   );
