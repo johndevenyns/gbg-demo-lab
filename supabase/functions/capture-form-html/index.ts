@@ -56,6 +56,8 @@ interface CapturedFormData {
   styles: Record<string, string>;
   branding: Record<string, unknown> | null;
   patterns: CapturedFormPatterns; // Extracted display patterns
+  formScreenshot?: string; // Base64 screenshot of the form area
+  availableFormIds?: string[]; // List of form IDs found on the page
 }
 
 Deno.serve(async (req) => {
@@ -112,7 +114,7 @@ Deno.serve(async (req) => {
     // Wait for dynamic content to load
     actions.push({ type: 'wait', milliseconds: waitTime || 5000 });
 
-    // Fetch the page with rawHtml to get complete DOM
+    // Fetch the page with rawHtml AND screenshot to get complete DOM and visual
     const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
       method: 'POST',
       headers: {
@@ -121,7 +123,7 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         url: formattedUrl,
-        formats: ['rawHtml', 'html'],
+        formats: ['rawHtml', 'html', 'screenshot'],
         onlyMainContent: false,
         waitFor: waitTime || 5000,
         actions: actions.length > 0 ? actions : undefined,
@@ -139,6 +141,7 @@ Deno.serve(async (req) => {
     }
 
     const rawHtml = data.data?.rawHtml || data.rawHtml || '';
+    const pageScreenshot = data.data?.screenshot || data.screenshot || '';
     
     if (!rawHtml) {
       return new Response(
@@ -147,15 +150,24 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Extract all form IDs found on the page to help the user
+    const availableFormIds = extractAllFormIds(rawHtml);
+    console.log(`Found ${availableFormIds.length} form/container IDs on page:`, availableFormIds.slice(0, 10));
+
     // Extract the form by ID
     console.log(`Extracting form with id="${formId}"...`);
     const formHtml = extractFormById(rawHtml, formId, baseUrl);
     
     if (!formHtml) {
+      // Provide helpful error with available IDs
+      const idSuggestions = availableFormIds.length > 0 
+        ? ` Available IDs found: ${availableFormIds.slice(0, 8).join(', ')}${availableFormIds.length > 8 ? '...' : ''}`
+        : ' No form or container IDs found on the page.';
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: `Form with id="${formId}" not found on the page. Make sure the form ID is correct and the form is visible (not behind a modal that needs to be triggered).` 
+          error: `Form with id="${formId}" not found on the page.${idSuggestions}`,
+          availableFormIds: availableFormIds.slice(0, 20),
         }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
@@ -225,6 +237,8 @@ Deno.serve(async (req) => {
       styles,
       branding,
       patterns,
+      formScreenshot: pageScreenshot || undefined,
+      availableFormIds,
     };
 
     return new Response(
@@ -382,6 +396,41 @@ function extractIdsFromHtml(html: string): Set<string> {
   }
   
   return ids;
+}
+
+// Extract all form and container IDs from the page to help users find the right ID
+function extractAllFormIds(html: string): string[] {
+  const ids: string[] = [];
+  
+  // Look for form elements with IDs
+  const formIdPattern = /<form[^>]*id=["']([^"']+)["']/gi;
+  let match;
+  while ((match = formIdPattern.exec(html)) !== null) {
+    if (!ids.includes(match[1])) ids.push(match[1]);
+  }
+  
+  // Look for section/div elements that might contain forms (common patterns)
+  const containerPatterns = [
+    /<section[^>]*id=["']([^"']+)["'][^>]*>/gi,
+    /<div[^>]*id=["']([^"']*(?:form|signup|signin|register|login|apply|checkout|contact|subscribe|membership)[^"']*)["']/gi,
+    /<div[^>]*id=["']([^"']+)["'][^>]*class=["'][^"']*(?:form|card|panel|container|section|wrapper)[^"']*["']/gi,
+  ];
+  
+  for (const pattern of containerPatterns) {
+    while ((match = pattern.exec(html)) !== null) {
+      if (match[1] && !ids.includes(match[1])) ids.push(match[1]);
+    }
+  }
+  
+  // Look for any element with common form-related IDs
+  const formRelatedIdPattern = /id=["']([^"']*(?:form|card|application|step|input|field|modal|dialog|panel)[^"']*)["']/gi;
+  while ((match = formRelatedIdPattern.exec(html)) !== null) {
+    if (match[1] && !ids.includes(match[1]) && match[1].length < 50) {
+      ids.push(match[1]);
+    }
+  }
+  
+  return ids.slice(0, 30); // Limit to avoid overwhelming the response
 }
 
 // Extract all element types from HTML
