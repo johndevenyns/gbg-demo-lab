@@ -5,13 +5,13 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
-// Get the verification API base URL from environment or use placeholder
-const getBaseUrl = () => Deno.env.get('VERIFICATION_API_URL') || 'https://api.verification-service.example';
+const BASE_URL = 'https://app.art-of-sales-engineering.com';
+const LEGACY_BASE_URL = 'https://paulandcarolynn.com';
 
-// Normalize URLs to use the configured base URL
+// Normalize URLs to use the public base URL
 const normalizeUrl = (url?: string) =>
   typeof url === 'string' && url.length > 0
-    ? url
+    ? url.replace(LEGACY_BASE_URL, BASE_URL)
     : url;
 
 // Field mappings from form field types to API customerData field names
@@ -188,7 +188,7 @@ serve(async (req) => {
     console.log('=== END PAYLOAD ===');
 
     // Call the verification session API
-    const response = await fetch(`${getBaseUrl()}/api/verification/sessions`, {
+    const response = await fetch(`${BASE_URL}/api/verification/sessions`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
