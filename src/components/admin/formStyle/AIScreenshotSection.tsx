@@ -7,24 +7,38 @@ import { useToast } from '@/hooks/use-toast';
 import { FormStyleConfig, DEFAULT_FORM_STYLE, CapturedFormPatterns } from '@/types/formStyle';
 import { formAnalysisApi } from '@/lib/api/scraping';
 
-// Helper function to adjust color brightness
-function adjustColorBrightness(hex: string, percent: number): string {
-  // Remove # if present
+// Helper to calculate luminance and determine if color is light or dark
+function getLuminance(hex: string): number {
   hex = hex.replace('#', '');
-  
-  // Parse the hex color
+  const r = parseInt(hex.substring(0, 2), 16) / 255;
+  const g = parseInt(hex.substring(2, 4), 16) / 255;
+  const b = parseInt(hex.substring(4, 6), 16) / 255;
+  const toLinear = (c: number) => c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+  return 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
+}
+
+function isLightColor(hex: string): boolean {
+  return getLuminance(hex) > 0.5;
+}
+
+// Adjust color brightness - positive = lighter, negative = darker
+function adjustColorBrightness(hex: string, percent: number): string {
+  hex = hex.replace('#', '');
   let r = parseInt(hex.substring(0, 2), 16);
   let g = parseInt(hex.substring(2, 4), 16);
   let b = parseInt(hex.substring(4, 6), 16);
-  
-  // Adjust brightness
   r = Math.min(255, Math.max(0, r + (r * percent / 100)));
   g = Math.min(255, Math.max(0, g + (g * percent / 100)));
   b = Math.min(255, Math.max(0, b + (b * percent / 100)));
-  
-  // Convert back to hex
   const toHex = (n: number) => Math.round(n).toString(16).padStart(2, '0');
   return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+}
+
+// Smart hover color: lighter for dark buttons, darker for light buttons
+function getSmartHoverColor(bgColor: string): string {
+  return isLightColor(bgColor) 
+    ? adjustColorBrightness(bgColor, -15) // Darken light buttons
+    : adjustColorBrightness(bgColor, 25);  // Lighten dark buttons
 }
 
 interface AIScreenshotSectionProps {
@@ -210,9 +224,9 @@ export function AIScreenshotSection({
         if (styles.buttonBgColor) newStyle.buttonBgColor = styles.buttonBgColor;
         if (styles.buttonTextColor) newStyle.buttonTextColor = styles.buttonTextColor;
         
-        // Smart default: hover is slightly darker version
+        // Smart hover: lighter for dark buttons, darker for light buttons
         if (styles.buttonBgColor) {
-          newStyle.buttonHoverBgColor = adjustColorBrightness(styles.buttonBgColor, -15);
+          newStyle.buttonHoverBgColor = getSmartHoverColor(styles.buttonBgColor);
         }
         newStyle.buttonHoverTextColor = styles.buttonTextColor || '#ffffff';
 
@@ -294,7 +308,7 @@ export function AIScreenshotSection({
           detectedInputFocusBorderColor: styles.inputFocusBorderColor,
           detectedButtonBgColor: styles.buttonBgColor,
           detectedButtonTextColor: styles.buttonTextColor,
-          detectedButtonHoverBgColor: styles.buttonBgColor ? adjustColorBrightness(styles.buttonBgColor, -15) : undefined,
+          detectedButtonHoverBgColor: styles.buttonBgColor ? getSmartHoverColor(styles.buttonBgColor) : undefined,
           detectedButtonBorderRadius: styles.buttonBorderRadius,
           detectedButtonPadding: styles.buttonPadding,
           detectedButtonFontWeight: styles.buttonFontWeight,
