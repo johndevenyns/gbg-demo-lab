@@ -302,12 +302,41 @@ export function FormStepCard({
               </Button>
             </div>
           ) : (
-            <button
-              className="flex-1 text-left font-semibold hover:text-primary transition-colors"
-              onClick={() => setIsEditingTitle(true)}
-            >
-              {step.title}
-            </button>
+            <div className="flex items-center gap-2 flex-1">
+              <button
+                className="flex-1 text-left font-semibold hover:text-primary transition-colors"
+                onClick={() => setIsEditingTitle(true)}
+              >
+                {step.title}
+              </button>
+              {/* Title Alignment Selector */}
+              <div className="flex items-center border rounded-md overflow-hidden">
+                <button
+                  type="button"
+                  className={`px-2 py-1 text-xs transition-colors ${step.titleAlignment === 'left' || !step.titleAlignment ? 'bg-primary/20 text-primary' : 'hover:bg-muted'}`}
+                  onClick={() => onUpdateStep({ titleAlignment: 'left' })}
+                  title="Align left"
+                >
+                  ◀
+                </button>
+                <button
+                  type="button"
+                  className={`px-2 py-1 text-xs border-x transition-colors ${step.titleAlignment === 'center' ? 'bg-primary/20 text-primary' : 'hover:bg-muted'}`}
+                  onClick={() => onUpdateStep({ titleAlignment: 'center' })}
+                  title="Align center"
+                >
+                  ◆
+                </button>
+                <button
+                  type="button"
+                  className={`px-2 py-1 text-xs transition-colors ${step.titleAlignment === 'right' ? 'bg-primary/20 text-primary' : 'hover:bg-muted'}`}
+                  onClick={() => onUpdateStep({ titleAlignment: 'right' })}
+                  title="Align right"
+                >
+                  ▶
+                </button>
+              </div>
+            </div>
           )}
           
           {/* Address Validation Toggle - Only show if step has address fields */}

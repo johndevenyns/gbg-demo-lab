@@ -415,6 +415,7 @@ export interface MethodSelectionStepConfig {
 export interface FormStep {
   id: string;
   title: string;
+  titleAlignment?: 'left' | 'center' | 'right'; // Horizontal alignment of step title
   description?: string;
   order: number;
   // Step type - determines rendering behavior
