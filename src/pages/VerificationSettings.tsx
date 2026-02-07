@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Shield, Smartphone, Plus, Pencil, Trash2, GripVertical, Check, X, LogOut, Settings } from "lucide-react";
+import { ArrowLeft, Shield, Smartphone, Plus, Pencil, Trash2, GripVertical, Check, X, LogOut, Settings, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -37,6 +37,7 @@ import {
   useDeleteMdlProvider,
 } from "@/hooks/useVerificationAdmin";
 import { VerificationTypeConfig, MdlProvider, MdlProviderFormData } from "@/types/verification";
+import { UserManagement } from "@/components/admin/UserManagement";
 
 // Icon mapping for verification types
 const iconMap: Record<string, React.ReactNode> = {
@@ -406,11 +407,11 @@ export default function VerificationSettings() {
                 <ArrowLeft className="w-5 h-5" />
               </Button>
               <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center">
-                <Shield className="w-5 h-5 text-primary-foreground" />
+                <Settings className="w-5 h-5 text-primary-foreground" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-foreground">Verification Settings</h1>
-                <p className="text-sm text-muted-foreground">Manage verification types and mDL providers</p>
+                <h1 className="text-xl font-bold text-foreground">Global Settings</h1>
+                <p className="text-sm text-muted-foreground">Manage verification types, providers, and users</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -433,6 +434,10 @@ export default function VerificationSettings() {
             <TabsTrigger value="providers" className="flex items-center gap-2">
               <Smartphone className="w-4 h-4" />
               mDL Providers
+            </TabsTrigger>
+            <TabsTrigger value="users" className="flex items-center gap-2">
+              <Users className="w-4 h-4" />
+              User Management
             </TabsTrigger>
           </TabsList>
 
@@ -515,6 +520,10 @@ export default function VerificationSettings() {
                 ))}
               </div>
             )}
+          </TabsContent>
+
+          <TabsContent value="users" className="space-y-6">
+            <UserManagement />
           </TabsContent>
         </Tabs>
       </main>

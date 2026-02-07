@@ -32,7 +32,7 @@ const App = () => (
             }
           />
           <Route
-            path="/admin/verification-settings"
+            path="/admin/global-settings"
             element={
               <ProtectedRoute>
                 <VerificationSettings />

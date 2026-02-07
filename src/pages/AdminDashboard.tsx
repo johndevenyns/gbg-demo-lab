@@ -1,16 +1,14 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Search, Settings, ExternalLink, Trash2, Copy, Building2, Car, Gamepad2, Shield, Landmark, Layers, Heart, ShoppingBag, ImageOff, LogOut, Users } from "lucide-react";
+import { Plus, Search, Settings, ExternalLink, Trash2, Copy, Building2, Car, Gamepad2, Shield, Landmark, Layers, Heart, ShoppingBag, ImageOff, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useDemos, useDeleteDemo } from "@/hooks/useDemos";
 import { useAuth } from "@/hooks/useAuth";
 import { IndustryTemplate } from "@/types/demo";
 import { CreateDemoDialog } from "@/components/admin/CreateDemoDialog";
-import { UserManagement } from "@/components/admin/UserManagement";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -80,7 +78,6 @@ export default function AdminDashboard() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [demoToDelete, setDemoToDelete] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"demos" | "users">("demos");
 
   const handleSignOut = async () => {
     await signOut();
@@ -139,25 +136,15 @@ export default function AdminDashboard() {
 
       {/* Main Content */}
       <main className="admin-container py-8">
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "demos" | "users")}>
-          <div className="flex items-center justify-between mb-6">
-            <TabsList>
-              <TabsTrigger value="demos" className="flex items-center gap-2">
-                <Layers className="w-4 h-4" />
-                Demos
-              </TabsTrigger>
-              <TabsTrigger value="users" className="flex items-center gap-2">
-                <Users className="w-4 h-4" />
-                User Management
-              </TabsTrigger>
-            </TabsList>
-            <Button variant="outline" onClick={() => navigate('/admin/verification-settings')}>
-              <Shield className="w-4 h-4 mr-2" />
-              Verification Settings
-            </Button>
-          </div>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-lg font-semibold">Demo Environments</h2>
+          <Button variant="outline" onClick={() => navigate('/admin/global-settings')}>
+            <Settings className="w-4 h-4 mr-2" />
+            Global Settings
+          </Button>
+        </div>
 
-          <TabsContent value="demos">
+        <div>
             {/* Stats Overview */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
               <Card className="glass-card">
@@ -321,12 +308,7 @@ export default function AdminDashboard() {
                 ))}
               </div>
             )}
-          </TabsContent>
-
-          <TabsContent value="users">
-            <UserManagement />
-          </TabsContent>
-        </Tabs>
+        </div>
       </main>
 
       {/* Create Dialog */}
