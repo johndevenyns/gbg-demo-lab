@@ -46,6 +46,10 @@ export interface CapturedFormPatterns {
   detectedInputFocusBorderColor?: string;
   detectedButtonBgColor?: string;
   detectedButtonTextColor?: string;
+  detectedButtonHoverBgColor?: string;
+  detectedButtonBorderRadius?: string;
+  detectedButtonPadding?: string;
+  detectedButtonFontWeight?: string;
   detectedErrorColor?: string;
   
   // Spacing
@@ -122,6 +126,16 @@ export interface FormStyleConfig {
   // Body text styling (descriptions, helper text)
   bodyFontSize?: 'xs' | 'sm' | 'base';
   bodyColor?: string;
+  
+  // Button styling
+  buttonBgColor?: string;          // Button background color (overrides demo.buttonColor if set)
+  buttonTextColor?: string;        // Button text color
+  buttonHoverBgColor?: string;     // Button hover background color
+  buttonHoverTextColor?: string;   // Button hover text color
+  buttonPadding?: 'sm' | 'md' | 'lg';  // Button padding size
+  buttonBorderRadius?: 'none' | 'sm' | 'md' | 'lg' | 'full';  // Button corner radius
+  buttonFontWeight?: 'normal' | 'medium' | 'semibold' | 'bold';
+  buttonShadow?: 'none' | 'sm' | 'md' | 'lg';  // Button shadow
 }
 
 // Default form style
@@ -155,6 +169,11 @@ export const DEFAULT_FORM_STYLE: FormStyleConfig = {
   titleAlignment: 'center',
   bodyFontSize: 'sm',
   bodyColor: '#6b7280',
+  // Button defaults
+  buttonPadding: 'md',
+  buttonBorderRadius: 'md',
+  buttonFontWeight: 'semibold',
+  buttonShadow: 'none',
 };
 
 // Predefined form style templates

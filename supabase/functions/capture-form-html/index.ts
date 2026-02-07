@@ -40,6 +40,10 @@ interface CapturedFormPatterns {
   detectedInputFocusBorderColor?: string;
   detectedButtonBgColor?: string;
   detectedButtonTextColor?: string;
+  detectedButtonHoverBgColor?: string;
+  detectedButtonBorderRadius?: string;
+  detectedButtonPadding?: string;
+  detectedButtonFontWeight?: string;
   detectedErrorColor?: string;
   detectedFieldSpacing?: string;
   detectedLabelSpacing?: string;
@@ -908,6 +912,11 @@ function analyzeFormPatterns(formHtml: string, formCss: string): CapturedFormPat
   const detectedButtonBgColor = extractColor(/button[^{]*\{[^}]*background(?:-color)?:\s*([^;}\s]+)/i) ||
     extractColor(/\[type=["']?submit["']?\][^{]*\{[^}]*background(?:-color)?:\s*([^;}\s]+)/i);
   const detectedButtonTextColor = extractColor(/button[^{]*\{[^}]*(?<!background-)color:\s*([^;}\s]+)/i);
+  const detectedButtonHoverBgColor = extractColor(/button:hover[^{]*\{[^}]*background(?:-color)?:\s*([^;}\s]+)/i);
+  const detectedButtonBorderRadius = extractColor(/button[^{]*\{[^}]*border-radius:\s*([^;}\s]+)/i) ||
+    extractColor(/\[type=["']?submit["']?\][^{]*\{[^}]*border-radius:\s*([^;}\s]+)/i);
+  const detectedButtonPadding = extractColor(/button[^{]*\{[^}]*padding:\s*([^;]+)/i);
+  const detectedButtonFontWeight = extractColor(/button[^{]*\{[^}]*font-weight:\s*([^;}\s]+)/i);
   const detectedErrorColor = extractColor(/\.error[^{]*\{[^}]*color:\s*([^;}\s]+)/i) ||
     extractColor(/\.invalid[^{]*\{[^}]*color:\s*([^;}\s]+)/i);
   
@@ -966,6 +975,10 @@ function analyzeFormPatterns(formHtml: string, formCss: string): CapturedFormPat
     detectedInputFocusBorderColor: undefined,
     detectedButtonBgColor,
     detectedButtonTextColor,
+    detectedButtonHoverBgColor,
+    detectedButtonBorderRadius,
+    detectedButtonPadding,
+    detectedButtonFontWeight,
     detectedErrorColor,
     detectedFieldSpacing: undefined,
     detectedLabelSpacing: undefined,

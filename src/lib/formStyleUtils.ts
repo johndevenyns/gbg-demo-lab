@@ -107,6 +107,46 @@ export function getBodyFontSize(size: string = 'sm'): string {
   }
 }
 
+// ============ Button Style Mappers ============
+
+export function getButtonPadding(padding: string = 'md'): string {
+  switch (padding) {
+    case 'sm': return '10px 16px';
+    case 'lg': return '16px 28px';
+    default: return '12px 24px';
+  }
+}
+
+export function getButtonBorderRadius(radius: string = 'md'): string {
+  switch (radius) {
+    case 'none': return '0px';
+    case 'sm': return '4px';
+    case 'md': return '6px';
+    case 'lg': return '10px';
+    case 'full': return '9999px';
+    default: return '6px';
+  }
+}
+
+export function getButtonFontWeight(weight: string = 'semibold'): number {
+  switch (weight) {
+    case 'normal': return 400;
+    case 'medium': return 500;
+    case 'semibold': return 600;
+    case 'bold': return 700;
+    default: return 600;
+  }
+}
+
+export function getButtonShadow(shadow: string = 'none'): string {
+  switch (shadow) {
+    case 'sm': return '0 1px 2px rgba(0,0,0,0.1)';
+    case 'md': return '0 4px 6px -1px rgba(0,0,0,0.1)';
+    case 'lg': return '0 10px 15px -3px rgba(0,0,0,0.15)';
+    default: return 'none';
+  }
+}
+
  // ============ Style Object Generators ============
  
  export interface FormInputStyles {
