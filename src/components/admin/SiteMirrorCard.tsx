@@ -202,14 +202,12 @@ interface SiteMirrorCardProps {
                   isConfigured={screenshotConfigured}
                 />
               }
-              formStylingContent={formStyleContent}
-              formStylingConfigured={formStylingConfigured}
-            />
-          </CardContent>
-        </Card>
-
-        {/* Embed Form Section */}
-        <EmbedFormSection slug={demo.slug} />
-      </div>
-    );
-  }
+               formStylingContent={formStyleContent}
+               formStylingConfigured={formStylingConfigured}
+               embedFormContent={<EmbedFormSection slug={demo.slug} />}
+             />
+           </CardContent>
+         </Card>
+       </div>
+     );
+   }
