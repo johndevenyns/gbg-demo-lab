@@ -23,6 +23,7 @@ interface SiteMirrorTabsProps {
   screenshotConfigured: boolean;
   formStylingConfigured: boolean;
   sitePreviewContent?: React.ReactNode;
+  embedFormContent?: React.ReactNode;
 }
 
 export function SiteMirrorTabs({
@@ -37,6 +38,7 @@ export function SiteMirrorTabs({
   screenshotConfigured,
   formStylingConfigured,
   sitePreviewContent,
+  embedFormContent,
 }: SiteMirrorTabsProps) {
   const [appearanceTab, setAppearanceTab] = useState<AppearanceTab>('site');
   const [siteSubTab, setSiteSubTab] = useState<'html' | 'screenshot'>('html');
@@ -156,8 +158,9 @@ export function SiteMirrorTabs({
         </TabsContent>
         
         {/* Form Tab Content */}
-        <TabsContent value="form" className="mt-6">
+        <TabsContent value="form" className="mt-6 space-y-6">
           {formStylingContent}
+          {embedFormContent}
         </TabsContent>
       </Tabs>
     </div>
