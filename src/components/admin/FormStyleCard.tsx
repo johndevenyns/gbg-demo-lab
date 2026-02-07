@@ -279,6 +279,8 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, onUpdateButtonCo
         if (p.detectedLabelColor) capturedConfig.labelColor = p.detectedLabelColor;
         if (p.detectedErrorColor) capturedConfig.errorColor = p.detectedErrorColor;
         if (p.detectedFontFamily) capturedConfig.fontFamily = p.detectedFontFamily;
+        // Apply detected label style to make it configurable
+        if (p.labelStyle) capturedConfig.labelStyle = p.labelStyle;
       }
 
       onUpdateStyle({
@@ -764,13 +766,16 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, onUpdateButtonCo
                <div className="flex items-center gap-2">
                  <span className="font-medium" style={{ fontFamily: formStyle.fontFamily }}>Aa</span>
                  <span className="text-muted-foreground truncate max-w-20">{formStyle.fontFamily.split(',')[0]}</span>
-               </div>
-             )}
-             <Badge variant="outline" className="text-xs">
-               {formStyle.source === 'captured' ? 'Captured' : formStyle.source === 'mirrored' ? 'Mirrored' : formStyle.source === 'template' ? 'Template' : 'Custom'}
-             </Badge>
-           </div>
-         </div>
+                </div>
+              )}
+              <Badge variant="outline" className="text-xs">
+                Labels: {formStyle.labelStyle || 'above'}
+              </Badge>
+              <Badge variant="outline" className="text-xs">
+                {formStyle.source === 'captured' ? 'Captured' : formStyle.source === 'mirrored' ? 'Mirrored' : formStyle.source === 'template' ? 'Template' : 'Custom'}
+              </Badge>
+            </div>
+          </div>
        </CardContent>
      </Card>
  
@@ -1704,6 +1709,24 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, onUpdateButtonCo
                       className="font-mono text-xs"
                     />
                   </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Label Style</Label>
+                  <p className="text-xs text-muted-foreground">How labels appear relative to inputs</p>
+                  <Select
+                    value={formStyle.labelStyle || 'above'}
+                    onValueChange={(value) => updateCustomStyle({ labelStyle: value as FormStyleConfig['labelStyle'] })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="above">Above Input (Standard)</SelectItem>
+                      <SelectItem value="floating">Floating Label</SelectItem>
+                      <SelectItem value="inline">Inline (Side-by-side)</SelectItem>
+                      <SelectItem value="placeholder-only">Placeholder Only (Hidden Labels)</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-2">
                   <Label>Error Color</Label>

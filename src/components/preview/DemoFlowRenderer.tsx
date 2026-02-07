@@ -178,14 +178,58 @@ function StyledFormFields({ fields, formData, onInputChange, style, fieldErrors 
     transition: 'border-color 0.2s, box-shadow 0.2s',
   });
 
-  const labelStyle: React.CSSProperties = {
-    fontFamily: style.fontFamily,
-    fontSize: fontSizeMap[style.fontSize],
-    color: style.labelColor,
-    fontWeight: labelWeightMap[style.labelWeight || 'medium'],
-    marginBottom: '6px',
-    display: 'block',
+  // Get the effective label style (from explicit setting or captured patterns)
+  const effectiveLabelStyle = style.labelStyle || style.capturedPatterns?.labelStyle || 'above';
+
+  // Label style varies based on labelStyle setting
+  const getLabelStyles = (isFloating: boolean = false): React.CSSProperties => {
+    const baseStyle: React.CSSProperties = {
+      fontFamily: style.fontFamily,
+      fontSize: fontSizeMap[style.fontSize],
+      color: style.labelColor,
+      fontWeight: labelWeightMap[style.labelWeight || 'medium'],
+    };
+
+    switch (effectiveLabelStyle) {
+      case 'floating':
+        return {
+          ...baseStyle,
+          position: 'absolute',
+          left: '12px',
+          top: isFloating ? '4px' : '50%',
+          transform: isFloating ? 'translateY(0) scale(0.75)' : 'translateY(-50%)',
+          transformOrigin: 'left top',
+          transition: 'all 0.2s ease',
+          pointerEvents: 'none',
+          backgroundColor: style.inputBgColor,
+          padding: '0 4px',
+          fontSize: isFloating ? '12px' : fontSizeMap[style.fontSize],
+        };
+      case 'inline':
+        return {
+          ...baseStyle,
+          display: 'inline-block',
+          marginRight: '12px',
+          minWidth: '100px',
+          flexShrink: 0,
+        };
+      case 'placeholder-only':
+      case 'hidden':
+        return {
+          ...baseStyle,
+          display: 'none',
+        };
+      case 'above':
+      default:
+        return {
+          ...baseStyle,
+          marginBottom: '6px',
+          display: 'block',
+        };
+    }
   };
+
+  const labelStyleAbove = getLabelStyles(false);
 
   const errorStyle: React.CSSProperties = {
     fontFamily: style.fontFamily,
@@ -282,16 +326,110 @@ function StyledFormFields({ fields, formData, onInputChange, style, fieldErrors 
       );
     }
 
-    // Regular input fields
+    // Regular input fields - render based on labelStyle
+    const hasValue = Boolean(formData[field.name]);
+    const fieldPlaceholder = effectiveLabelStyle === 'placeholder-only' 
+      ? `${field.label}${field.required ? ' *' : ''}`
+      : field.placeholder;
+
+    // Floating label needs special wrapper
+    if (effectiveLabelStyle === 'floating') {
+      return (
+        <div key={field.id} style={{ position: 'relative' }}>
+          <input
+            type={field.type === 'email' ? 'email' : field.type === 'phone' ? 'tel' : 'text'}
+            placeholder=""
+            value={formData[field.name] || ''}
+            onChange={(e) => onInputChange(field.name, e.target.value)}
+            style={{
+              ...getInputStyle(field.name),
+              paddingTop: '20px',
+              paddingBottom: '8px',
+            }}
+            onFocus={(e) => {
+              const label = e.target.previousElementSibling as HTMLElement;
+              if (label) {
+                label.style.top = '4px';
+                label.style.transform = 'translateY(0) scale(0.75)';
+                label.style.fontSize = '12px';
+              }
+              if (!fieldErrors[field.name]) {
+                e.target.style.borderColor = style.inputFocusBorderColor;
+                e.target.style.boxShadow = `0 0 0 3px ${style.inputFocusBorderColor}20`;
+              }
+            }}
+            onBlur={(e) => {
+              const label = e.target.previousElementSibling as HTMLElement;
+              if (label && !formData[field.name]) {
+                label.style.top = '50%';
+                label.style.transform = 'translateY(-50%)';
+                label.style.fontSize = fontSizeMap[style.fontSize];
+              }
+              if (!fieldErrors[field.name]) {
+                e.target.style.borderColor = style.inputBorderColor;
+                e.target.style.boxShadow = 'none';
+              }
+            }}
+          />
+          <label style={getLabelStyles(hasValue)}>
+            {field.label}
+            {field.required && <span style={{ color: style.errorColor, marginLeft: '4px' }}>*</span>}
+          </label>
+          {fieldErrors[field.name] && (
+            <p style={errorStyle}>{fieldErrors[field.name]}</p>
+          )}
+        </div>
+      );
+    }
+
+    // Inline label layout
+    if (effectiveLabelStyle === 'inline') {
+      return (
+        <div key={field.id} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <label style={getLabelStyles()}>
+            {field.label}
+            {field.required && <span style={{ color: style.errorColor, marginLeft: '4px' }}>*</span>}
+          </label>
+          <div style={{ flex: 1 }}>
+            <input
+              type={field.type === 'email' ? 'email' : field.type === 'phone' ? 'tel' : 'text'}
+              placeholder={field.placeholder}
+              value={formData[field.name] || ''}
+              onChange={(e) => onInputChange(field.name, e.target.value)}
+              style={getInputStyle(field.name)}
+              onFocus={(e) => {
+                if (!fieldErrors[field.name]) {
+                  e.target.style.borderColor = style.inputFocusBorderColor;
+                  e.target.style.boxShadow = `0 0 0 3px ${style.inputFocusBorderColor}20`;
+                }
+              }}
+              onBlur={(e) => {
+                if (!fieldErrors[field.name]) {
+                  e.target.style.borderColor = style.inputBorderColor;
+                  e.target.style.boxShadow = 'none';
+                }
+              }}
+            />
+            {fieldErrors[field.name] && (
+              <p style={errorStyle}>{fieldErrors[field.name]}</p>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    // Standard above label or placeholder-only
     return (
       <div key={field.id}>
-        <label style={labelStyle}>
-          {field.label}
-          {field.required && <span style={{ color: style.errorColor, marginLeft: '4px' }}>*</span>}
-        </label>
+        {effectiveLabelStyle !== 'placeholder-only' && effectiveLabelStyle !== 'hidden' && (
+          <label style={labelStyleAbove}>
+            {field.label}
+            {field.required && <span style={{ color: style.errorColor, marginLeft: '4px' }}>*</span>}
+          </label>
+        )}
         <input
           type={field.type === 'email' ? 'email' : field.type === 'phone' ? 'tel' : 'text'}
-          placeholder={field.placeholder}
+          placeholder={fieldPlaceholder}
           value={formData[field.name] || ''}
           onChange={(e) => onInputChange(field.name, e.target.value)}
           style={getInputStyle(field.name)}
