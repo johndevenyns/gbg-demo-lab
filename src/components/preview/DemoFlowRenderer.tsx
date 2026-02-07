@@ -2036,45 +2036,49 @@ export function DemoFlowRenderer({
           {currentStep?.title}
         </h2>
         
-        {/* Fill Pass / Fill Fail buttons - pill style aligned right */}
+        {/* Fill Pass / Fill Fail buttons - subtle gray style */}
         {showAnyFillButton && (
-          <div className="flex gap-2 justify-end">
+          <div className={`flex gap-1.5 ${
+            storedTestData?.buttonPosition === 'left' ? 'justify-start' :
+            storedTestData?.buttonPosition === 'center' ? 'justify-center' :
+            'justify-end'
+          }`}>
             {showPassButton && (
               <button 
                 onClick={() => fillTestData('pass')}
-                className="px-4 py-1.5 text-sm font-medium rounded-full border-2 transition-colors"
+                className="px-2.5 py-0.5 text-xs font-normal rounded-full border transition-colors"
                 style={{
-                  color: '#0d9488',
-                  borderColor: '#0d9488',
+                  color: '#6b7280',
+                  borderColor: '#d1d5db',
                   backgroundColor: 'transparent',
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = 'rgba(13, 148, 136, 0.1)';
+                  e.currentTarget.style.backgroundColor = '#f3f4f6';
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.backgroundColor = 'transparent';
                 }}
               >
-                Fill Pass
+                ✓ Pass
               </button>
             )}
             {showFailButton && (
               <button 
                 onClick={() => fillTestData('fail')}
-                className="px-4 py-1.5 text-sm font-medium rounded-full border-2 transition-colors"
+                className="px-2.5 py-0.5 text-xs font-normal rounded-full border transition-colors"
                 style={{
-                  color: '#f87171',
-                  borderColor: '#f87171',
+                  color: '#6b7280',
+                  borderColor: '#d1d5db',
                   backgroundColor: 'transparent',
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = 'rgba(248, 113, 113, 0.1)';
+                  e.currentTarget.style.backgroundColor = '#f3f4f6';
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.backgroundColor = 'transparent';
                 }}
               >
-                Fill Fail
+                ✗ Fail
               </button>
             )}
           </div>
