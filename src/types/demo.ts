@@ -11,6 +11,7 @@ export interface StoredTestData {
   failData: Record<string, string>;
   showFillPassButton?: boolean;
   showFillFailButton?: boolean;
+  buttonPosition?: 'left' | 'center' | 'right';
 }
 
 export type IndustryTemplate = 'bank' | 'rental_car' | 'online_gambling' | 'healthcare' | 'insurance' | 'retail' | 'custom';

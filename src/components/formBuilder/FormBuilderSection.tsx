@@ -15,7 +15,8 @@ import { SaveTemplateDialog } from './SaveTemplateDialog';
 import { StoredUserDataConfig } from './StoredUserDataConfig';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
-  LayoutGrid, Settings2, Workflow, ExternalLink, RotateCcw, Bookmark, Users, CheckCircle2, XCircle
+  LayoutGrid, Settings2, Workflow, ExternalLink, RotateCcw, Bookmark, Users, CheckCircle2, XCircle,
+  AlignLeft, AlignCenter, AlignRight
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -190,11 +191,10 @@ export function FormBuilderSection({ demo, onUpdate }: FormBuilderSectionProps) 
                   id="fill-pass"
                   checked={showFillPass}
                   onCheckedChange={(v) => handleToggleFillButton('pass', v)}
-                  className="data-[state=checked]:bg-green-500"
+                  className="scale-90"
                 />
-                <label htmlFor="fill-pass" className="text-sm font-medium flex items-center gap-1 cursor-pointer">
-                  <CheckCircle2 className="w-4 h-4 text-green-500" />
-                  Fill Pass
+                <label htmlFor="fill-pass" className="text-xs font-medium text-muted-foreground cursor-pointer">
+                  Pass
                 </label>
               </div>
               <div className="flex items-center gap-2">
@@ -202,13 +202,74 @@ export function FormBuilderSection({ demo, onUpdate }: FormBuilderSectionProps) 
                   id="fill-fail"
                   checked={showFillFail}
                   onCheckedChange={(v) => handleToggleFillButton('fail', v)}
-                  className="data-[state=checked]:bg-red-500"
+                  className="scale-90"
                 />
-                <label htmlFor="fill-fail" className="text-sm font-medium flex items-center gap-1 cursor-pointer">
-                  <XCircle className="w-4 h-4 text-red-500" />
-                  Fill Fail
+                <label htmlFor="fill-fail" className="text-xs font-medium text-muted-foreground cursor-pointer">
+                  Fail
                 </label>
               </div>
+              {/* Position selector - only show if at least one button is enabled */}
+              {(showFillPass || showFillFail) && (
+                <div className="flex items-center border rounded-md overflow-hidden ml-2">
+                  <button
+                    type="button"
+                    className={`p-1.5 transition-colors ${
+                      (demo.storedTestData?.buttonPosition || 'right') === 'left' 
+                        ? 'bg-primary/20 text-primary' 
+                        : 'hover:bg-muted text-muted-foreground'
+                    }`}
+                    onClick={() => onUpdate({ 
+                      storedTestData: { 
+                        ...demo.storedTestData, 
+                        passData: demo.storedTestData?.passData || {}, 
+                        failData: demo.storedTestData?.failData || {},
+                        buttonPosition: 'left' 
+                      } 
+                    })}
+                    title="Align left"
+                  >
+                    <AlignLeft className="w-3 h-3" />
+                  </button>
+                  <button
+                    type="button"
+                    className={`p-1.5 border-x transition-colors ${
+                      demo.storedTestData?.buttonPosition === 'center' 
+                        ? 'bg-primary/20 text-primary' 
+                        : 'hover:bg-muted text-muted-foreground'
+                    }`}
+                    onClick={() => onUpdate({ 
+                      storedTestData: { 
+                        ...demo.storedTestData, 
+                        passData: demo.storedTestData?.passData || {}, 
+                        failData: demo.storedTestData?.failData || {},
+                        buttonPosition: 'center' 
+                      } 
+                    })}
+                    title="Align center"
+                  >
+                    <AlignCenter className="w-3 h-3" />
+                  </button>
+                  <button
+                    type="button"
+                    className={`p-1.5 transition-colors ${
+                      (demo.storedTestData?.buttonPosition || 'right') === 'right' 
+                        ? 'bg-primary/20 text-primary' 
+                        : 'hover:bg-muted text-muted-foreground'
+                    }`}
+                    onClick={() => onUpdate({ 
+                      storedTestData: { 
+                        ...demo.storedTestData, 
+                        passData: demo.storedTestData?.passData || {}, 
+                        failData: demo.storedTestData?.failData || {},
+                        buttonPosition: 'right' 
+                      } 
+                    })}
+                    title="Align right"
+                  >
+                    <AlignRight className="w-3 h-3" />
+                  </button>
+                </div>
+              )}
             </div>
             <Button variant="outline" size="sm" onClick={() => setSaveTemplateOpen(true)}>
               <Bookmark className="w-4 h-4 mr-2" />
