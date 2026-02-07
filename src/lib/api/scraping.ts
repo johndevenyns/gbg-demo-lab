@@ -47,6 +47,8 @@ export interface ScrapedBranding {
   footerHtml: string;
   cssContent: string;
   logoUrl: string | null;
+  logoFoundAt?: string | null;
+  fetchedUrls?: string[];
   screenshot: string | null;
   screenshots?: {
     desktop: string | null;

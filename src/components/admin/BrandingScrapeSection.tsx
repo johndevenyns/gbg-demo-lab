@@ -121,6 +121,18 @@ export function BrandingScrapeSection({ demo, onUpdate }: BrandingScrapeProps) {
           <div className="space-y-4 pt-4 border-t border-border">
             <Label className="text-base font-semibold">Extracted Branding</Label>
 
+            {/* URLs Fetched Info */}
+            {scrapedData.fetchedUrls && scrapedData.fetchedUrls.length > 0 && (
+              <div className="p-3 rounded-lg bg-muted/30 border text-xs space-y-1">
+                <p className="font-medium text-muted-foreground">URLs fetched:</p>
+                {scrapedData.fetchedUrls.map((fetchedUrl, idx) => (
+                  <p key={idx} className="font-mono text-muted-foreground truncate">
+                    {idx + 1}. {fetchedUrl}
+                  </p>
+                ))}
+              </div>
+            )}
+
             {/* Logo Preview */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
@@ -155,11 +167,14 @@ export function BrandingScrapeSection({ demo, onUpdate }: BrandingScrapeProps) {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium">Logo Found</p>
                     <p className="text-xs text-muted-foreground truncate font-mono">{scrapedData.logoUrl}</p>
+                    {scrapedData.logoFoundAt && scrapedData.logoFoundAt !== scrapedData.sourceUrl && (
+                      <p className="text-xs text-warning mt-1">Found via fallback: {scrapedData.logoFoundAt}</p>
+                    )}
                   </div>
                 </div>
               ) : (
                 <div className="p-3 rounded-lg bg-muted/30 border border-dashed text-center text-sm text-muted-foreground">
-                  No logo detected on this page
+                  No logo detected on this page or root domain
                 </div>
               )}
             </div>

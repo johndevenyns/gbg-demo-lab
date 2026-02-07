@@ -247,17 +247,29 @@ Deno.serve(async (req) => {
     const formStyles = extractFormElementStyles(rawHtml, cssContent, branding);
     console.log('Form styles extracted:', Object.keys(formStyles).filter(k => formStyles[k as keyof FormElementStyles]).length, 'properties');
     
+    // Track which URLs were fetched
+    const fetchedUrls: string[] = [formattedUrl];
+    let logoFoundAt: string | null = null;
+
     // Extract logo from branding or metadata
     let logoUrl = branding?.images?.logo || 
                   branding?.logo || 
                   metadata.ogImage || 
                   null;
 
+    if (logoUrl) {
+      logoFoundAt = formattedUrl;
+      console.log('Logo found on original URL:', logoUrl);
+    }
+
     // If no logo found and we're not already at root, try fetching from root domain
-    const isRootUrl = baseUrl.pathname === '/' || baseUrl.pathname === '';
+    // Strip everything after the TLD (e.g., .com, .net, .org, etc.)
+    const rootUrl = `${baseUrl.protocol}//${baseUrl.host}`;
+    const isRootUrl = formattedUrl.replace(/\/$/, '') === rootUrl.replace(/\/$/, '');
+    
     if (!logoUrl && !isRootUrl) {
-      console.log('No logo found on page, attempting to fetch from root domain...');
-      const rootUrl = `${baseUrl.protocol}//${baseUrl.host}`;
+      console.log('No logo found on page, attempting to fetch from root domain:', rootUrl);
+      fetchedUrls.push(rootUrl);
       
       try {
         const rootResponse = await firecrawlScrape({
@@ -278,6 +290,7 @@ Deno.serve(async (req) => {
                     null;
           
           if (logoUrl) {
+            logoFoundAt = rootUrl;
             console.log('Logo found on root domain:', logoUrl);
           } else {
             console.log('No logo found on root domain either');
@@ -295,6 +308,8 @@ Deno.serve(async (req) => {
     const buttonColor = colors.primary || colors.accent || '#6366f1';
 
     console.log('Scrape successful, extracted branding, CSS, and form styles');
+    console.log('URLs fetched:', fetchedUrls);
+    console.log('Logo found at:', logoFoundAt || 'Not found');
 
     return new Response(
       JSON.stringify({
@@ -304,6 +319,8 @@ Deno.serve(async (req) => {
           footerHtml,
           cssContent,
           logoUrl,
+          logoFoundAt,
+          fetchedUrls,
           screenshot: desktopScreenshot,
           screenshots: {
             desktop: desktopScreenshot,
@@ -316,7 +333,7 @@ Deno.serve(async (req) => {
             buttonColor,
           },
           branding,
-          formStyles, // NEW: Include extracted form styles
+          formStyles,
           sourceUrl: formattedUrl,
         },
       }),
