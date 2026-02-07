@@ -79,7 +79,7 @@ export function BrandingScrapeSection({ demo, onUpdate }: BrandingScrapeProps) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Globe className="w-5 h-5" />
-          Capture from Website
+          Fetch from Website
         </CardTitle>
         <CardDescription>
           Extract logo and colors automatically from any website
@@ -104,7 +104,7 @@ export function BrandingScrapeSection({ demo, onUpdate }: BrandingScrapeProps) {
             {isLoading ? (
               <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Fetching...</>
             ) : hasExistingBranding && url === demo.customerSiteUrl ? (
-              <><RefreshCw className="w-4 h-4 mr-2" />Recapture</>
+              <><RefreshCw className="w-4 h-4 mr-2" />Refetch</>
             ) : (
               <><Globe className="w-4 h-4 mr-2" />Fetch Branding</>
             )}
@@ -232,7 +232,7 @@ export function BrandingScrapeSection({ demo, onUpdate }: BrandingScrapeProps) {
         {!scrapedData && hasExistingBranding && (
           <div className="pt-2 border-t border-border">
             <p className="text-xs text-muted-foreground">
-              Last captured from: <span className="font-mono">{demo.customerSiteUrl}</span>
+              Last fetched from: <span className="font-mono">{demo.customerSiteUrl}</span>
             </p>
           </div>
         )}
