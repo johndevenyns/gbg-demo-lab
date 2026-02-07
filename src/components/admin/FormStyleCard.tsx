@@ -135,71 +135,255 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, onUpdateButtonCo
                   Application Form
                 </h3>
 
-                {/* First Name */}
-                <div className="space-y-2">
-                  <label
-                    style={{
-                      display: 'block',
-                      color: formStyle.labelColor,
-                      fontWeight: getLabelWeight(formStyle.labelWeight),
-                      fontFamily: formStyle.fontFamily,
-                      fontSize: getFontSize(formStyle.fontSize),
-                      marginBottom: '6px',
-                    }}
-                  >
-                    First Name <span style={{ color: formStyle.errorColor }}>*</span>
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="John"
-                    style={{
-                      width: '100%',
-                      padding: getPadding(formStyle.inputPadding),
-                      backgroundColor: formStyle.inputBgColor,
-                      color: formStyle.inputTextColor,
-                      border: `${formStyle.borderWidth}px solid ${formStyle.inputBorderColor}`,
-                      borderRadius: getBorderRadius(formStyle.borderRadius),
-                      fontFamily: formStyle.fontFamily,
-                      fontSize: getFontSize(formStyle.fontSize),
-                      outline: 'none',
-                    }}
-                  />
-                </div>
+                {/* First Name - demonstrates label style */}
+                {formStyle.labelStyle === 'inline' ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <label
+                      style={{
+                        minWidth: '100px',
+                        color: formStyle.labelColor,
+                        fontWeight: getLabelWeight(formStyle.labelWeight),
+                        fontFamily: formStyle.fontFamily,
+                        fontSize: getFontSize(formStyle.fontSize),
+                        flexShrink: 0,
+                      }}
+                    >
+                      First Name <span style={{ color: formStyle.errorColor }}>*</span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="John"
+                      style={{
+                        flex: 1,
+                        padding: getPadding(formStyle.inputPadding),
+                        backgroundColor: formStyle.inputBgColor,
+                        color: formStyle.inputTextColor,
+                        border: `${formStyle.borderWidth}px solid ${formStyle.inputBorderColor}`,
+                        borderRadius: getBorderRadius(formStyle.borderRadius),
+                        fontFamily: formStyle.fontFamily,
+                        fontSize: getFontSize(formStyle.fontSize),
+                        outline: 'none',
+                      }}
+                    />
+                  </div>
+                ) : formStyle.labelStyle === 'floating' ? (
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type="text"
+                      placeholder=" "
+                      style={{
+                        width: '100%',
+                        padding: getPadding(formStyle.inputPadding),
+                        paddingTop: '20px',
+                        backgroundColor: formStyle.inputBgColor,
+                        color: formStyle.inputTextColor,
+                        border: `${formStyle.borderWidth}px solid ${formStyle.inputBorderColor}`,
+                        borderRadius: getBorderRadius(formStyle.borderRadius),
+                        fontFamily: formStyle.fontFamily,
+                        fontSize: getFontSize(formStyle.fontSize),
+                        outline: 'none',
+                      }}
+                    />
+                    <label
+                      style={{
+                        position: 'absolute',
+                        top: '6px',
+                        left: '12px',
+                        color: formStyle.labelColor,
+                        fontWeight: getLabelWeight(formStyle.labelWeight),
+                        fontFamily: formStyle.fontFamily,
+                        fontSize: '11px',
+                        pointerEvents: 'none',
+                      }}
+                    >
+                      First Name <span style={{ color: formStyle.errorColor }}>*</span>
+                    </label>
+                  </div>
+                ) : formStyle.labelStyle === 'hidden' || formStyle.labelStyle === 'placeholder-only' ? (
+                  <div>
+                    <input
+                      type="text"
+                      placeholder={formStyle.labelStyle === 'placeholder-only' ? 'First Name *' : 'John'}
+                      style={{
+                        width: '100%',
+                        padding: getPadding(formStyle.inputPadding),
+                        backgroundColor: formStyle.inputBgColor,
+                        color: formStyle.inputTextColor,
+                        border: `${formStyle.borderWidth}px solid ${formStyle.inputBorderColor}`,
+                        borderRadius: getBorderRadius(formStyle.borderRadius),
+                        fontFamily: formStyle.fontFamily,
+                        fontSize: getFontSize(formStyle.fontSize),
+                        outline: 'none',
+                      }}
+                    />
+                  </div>
+                ) : (
+                  /* Default: above */
+                  <div className="space-y-2">
+                    <label
+                      style={{
+                        display: 'block',
+                        color: formStyle.labelColor,
+                        fontWeight: getLabelWeight(formStyle.labelWeight),
+                        fontFamily: formStyle.fontFamily,
+                        fontSize: getFontSize(formStyle.fontSize),
+                        marginBottom: '6px',
+                      }}
+                    >
+                      First Name <span style={{ color: formStyle.errorColor }}>*</span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="John"
+                      style={{
+                        width: '100%',
+                        padding: getPadding(formStyle.inputPadding),
+                        backgroundColor: formStyle.inputBgColor,
+                        color: formStyle.inputTextColor,
+                        border: `${formStyle.borderWidth}px solid ${formStyle.inputBorderColor}`,
+                        borderRadius: getBorderRadius(formStyle.borderRadius),
+                        fontFamily: formStyle.fontFamily,
+                        fontSize: getFontSize(formStyle.fontSize),
+                        outline: 'none',
+                      }}
+                    />
+                  </div>
+                )}
 
-                {/* Email - show focus state */}
-                <div className="space-y-2">
-                  <label
-                    style={{
-                      display: 'block',
-                      color: formStyle.labelColor,
-                      fontWeight: getLabelWeight(formStyle.labelWeight),
-                      fontFamily: formStyle.fontFamily,
-                      fontSize: getFontSize(formStyle.fontSize),
-                      marginBottom: '6px',
-                    }}
-                  >
-                    Email Address <span style={{ color: formStyle.errorColor }}>*</span>
-                  </label>
-                  <input
-                    type="email"
-                    placeholder="john.doe@example.com"
-                    style={{
-                      width: '100%',
-                      padding: getPadding(formStyle.inputPadding),
-                      backgroundColor: formStyle.inputBgColor,
-                      color: formStyle.inputTextColor,
-                      border: `2px solid ${formStyle.inputFocusBorderColor}`,
-                      borderRadius: getBorderRadius(formStyle.borderRadius),
-                      fontFamily: formStyle.fontFamily,
-                      fontSize: getFontSize(formStyle.fontSize),
-                      outline: 'none',
-                      boxShadow: `0 0 0 3px ${formStyle.inputFocusBorderColor}20`,
-                    }}
-                  />
-                  <span style={{ fontSize: '12px', color: formStyle.inputFocusBorderColor }}>
-                    ↑ This field shows the focus state styling
-                  </span>
-                </div>
+                {/* Email - show focus state with same label style */}
+                {formStyle.labelStyle === 'inline' ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <label
+                      style={{
+                        minWidth: '100px',
+                        color: formStyle.labelColor,
+                        fontWeight: getLabelWeight(formStyle.labelWeight),
+                        fontFamily: formStyle.fontFamily,
+                        fontSize: getFontSize(formStyle.fontSize),
+                        flexShrink: 0,
+                      }}
+                    >
+                      Email <span style={{ color: formStyle.errorColor }}>*</span>
+                    </label>
+                    <div style={{ flex: 1 }}>
+                      <input
+                        type="email"
+                        placeholder="john.doe@example.com"
+                        style={{
+                          width: '100%',
+                          padding: getPadding(formStyle.inputPadding),
+                          backgroundColor: formStyle.inputBgColor,
+                          color: formStyle.inputTextColor,
+                          border: `2px solid ${formStyle.inputFocusBorderColor}`,
+                          borderRadius: getBorderRadius(formStyle.borderRadius),
+                          fontFamily: formStyle.fontFamily,
+                          fontSize: getFontSize(formStyle.fontSize),
+                          outline: 'none',
+                          boxShadow: `0 0 0 3px ${formStyle.inputFocusBorderColor}20`,
+                        }}
+                      />
+                      <span style={{ fontSize: '12px', color: formStyle.inputFocusBorderColor }}>
+                        ↑ Focus state
+                      </span>
+                    </div>
+                  </div>
+                ) : formStyle.labelStyle === 'floating' ? (
+                  <div>
+                    <div style={{ position: 'relative' }}>
+                      <input
+                        type="email"
+                        placeholder=" "
+                        style={{
+                          width: '100%',
+                          padding: getPadding(formStyle.inputPadding),
+                          paddingTop: '20px',
+                          backgroundColor: formStyle.inputBgColor,
+                          color: formStyle.inputTextColor,
+                          border: `2px solid ${formStyle.inputFocusBorderColor}`,
+                          borderRadius: getBorderRadius(formStyle.borderRadius),
+                          fontFamily: formStyle.fontFamily,
+                          fontSize: getFontSize(formStyle.fontSize),
+                          outline: 'none',
+                          boxShadow: `0 0 0 3px ${formStyle.inputFocusBorderColor}20`,
+                        }}
+                      />
+                      <label
+                        style={{
+                          position: 'absolute',
+                          top: '6px',
+                          left: '12px',
+                          color: formStyle.inputFocusBorderColor,
+                          fontWeight: getLabelWeight(formStyle.labelWeight),
+                          fontFamily: formStyle.fontFamily,
+                          fontSize: '11px',
+                          pointerEvents: 'none',
+                        }}
+                      >
+                        Email <span style={{ color: formStyle.errorColor }}>*</span>
+                      </label>
+                    </div>
+                    <span style={{ fontSize: '12px', color: formStyle.inputFocusBorderColor }}>
+                      ↑ Focus state (label floated up)
+                    </span>
+                  </div>
+                ) : formStyle.labelStyle === 'hidden' || formStyle.labelStyle === 'placeholder-only' ? (
+                  <div>
+                    <input
+                      type="email"
+                      placeholder={formStyle.labelStyle === 'placeholder-only' ? 'Email Address *' : 'john.doe@example.com'}
+                      style={{
+                        width: '100%',
+                        padding: getPadding(formStyle.inputPadding),
+                        backgroundColor: formStyle.inputBgColor,
+                        color: formStyle.inputTextColor,
+                        border: `2px solid ${formStyle.inputFocusBorderColor}`,
+                        borderRadius: getBorderRadius(formStyle.borderRadius),
+                        fontFamily: formStyle.fontFamily,
+                        fontSize: getFontSize(formStyle.fontSize),
+                        outline: 'none',
+                        boxShadow: `0 0 0 3px ${formStyle.inputFocusBorderColor}20`,
+                      }}
+                    />
+                    <span style={{ fontSize: '12px', color: formStyle.inputFocusBorderColor }}>
+                      ↑ Focus state
+                    </span>
+                  </div>
+                ) : (
+                  /* Default: above */
+                  <div className="space-y-2">
+                    <label
+                      style={{
+                        display: 'block',
+                        color: formStyle.labelColor,
+                        fontWeight: getLabelWeight(formStyle.labelWeight),
+                        fontFamily: formStyle.fontFamily,
+                        fontSize: getFontSize(formStyle.fontSize),
+                        marginBottom: '6px',
+                      }}
+                    >
+                      Email Address <span style={{ color: formStyle.errorColor }}>*</span>
+                    </label>
+                    <input
+                      type="email"
+                      placeholder="john.doe@example.com"
+                      style={{
+                        width: '100%',
+                        padding: getPadding(formStyle.inputPadding),
+                        backgroundColor: formStyle.inputBgColor,
+                        color: formStyle.inputTextColor,
+                        border: `2px solid ${formStyle.inputFocusBorderColor}`,
+                        borderRadius: getBorderRadius(formStyle.borderRadius),
+                        fontFamily: formStyle.fontFamily,
+                        fontSize: getFontSize(formStyle.fontSize),
+                        outline: 'none',
+                        boxShadow: `0 0 0 3px ${formStyle.inputFocusBorderColor}20`,
+                      }}
+                    />
+                    <span style={{ fontSize: '12px', color: formStyle.inputFocusBorderColor }}>
+                      ↑ This field shows the focus state styling
+                    </span>
+                  </div>
+                )}
 
                 {/* Navigation Buttons Preview */}
                 <div className="flex gap-3 mt-2">
