@@ -1,21 +1,22 @@
- import { useState } from "react";
- import { Globe, X } from "lucide-react";
- import { Button } from "@/components/ui/button";
- import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
- import { SiteMirrorTabs, CaptureTab, CaptureMode } from "./SiteMirrorTabs";
- import { HtmlCaptureTab } from "./HtmlCaptureTab";
- import { ScreenshotCaptureTab } from "./ScreenshotCaptureTab";
- import { useToast } from "@/hooks/use-toast";
- import { DemoEnvironment } from "@/types/demo";
- import { DEFAULT_FORM_STYLE } from "@/types/formStyle";
+import { useState } from "react";
+import { Globe, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { SiteMirrorTabs, CaptureTab, CaptureMode } from "./SiteMirrorTabs";
+import { HtmlCaptureTab } from "./HtmlCaptureTab";
+import { ScreenshotCaptureTab } from "./ScreenshotCaptureTab";
+import { EmbedFormSection } from "./EmbedFormSection";
+import { useToast } from "@/hooks/use-toast";
+import { DemoEnvironment } from "@/types/demo";
+import { DEFAULT_FORM_STYLE } from "@/types/formStyle";
 
- export type { CaptureMode } from "./SiteMirrorTabs";
+export type { CaptureMode } from "./SiteMirrorTabs";
  
- interface SiteMirrorCardProps {
-   demo: DemoEnvironment;
-   onApplyBranding: (updates: Partial<DemoEnvironment>, autoSave?: boolean) => void;
-   formStyleContent?: React.ReactNode;
- }
+interface SiteMirrorCardProps {
+  demo: DemoEnvironment;
+  onApplyBranding: (updates: Partial<DemoEnvironment>, autoSave?: boolean) => void;
+  formStyleContent?: React.ReactNode;
+}
  
  export function SiteMirrorCard({ demo, onApplyBranding, formStyleContent }: SiteMirrorCardProps) {
    const { toast } = useToast();
@@ -57,62 +58,67 @@
      onApplyBranding(updates, true);
    };
  
-   return (
-     <Card className="glass-card">
-       <CardHeader>
-         <div className="flex items-center justify-between">
-           <div>
-            <CardTitle className="flex items-center gap-2">
-                <Globe className="w-5 h-5" />
-                Appearance
-              </CardTitle>
-              <CardDescription>
-                Configure site branding and form styling
-              </CardDescription>
-           </div>
-           {(htmlConfigured || screenshotConfigured) && (
-             <Button
-               variant="outline"
-               size="sm"
-               onClick={handleClearMirror}
-               className="text-destructive hover:text-destructive"
-             >
-               <X className="w-4 h-4 mr-2" />
-               Clear All
-             </Button>
-           )}
-         </div>
-       </CardHeader>
-       <CardContent>
-         <SiteMirrorTabs
-           activeMethod={activeMethod}
-          onActiveMethodChange={handleActiveMethodChange}
-           currentTab={currentTab}
-           onTabChange={setCurrentTab}
-           htmlConfigured={htmlConfigured}
-           screenshotConfigured={screenshotConfigured}
-           htmlContent={
-             <HtmlCaptureTab
-               demo={demo}
-               url={url}
-               onUrlChange={setUrl}
-               onApply={handleApplyBranding}
-               isConfigured={htmlConfigured}
-             />
-           }
-           screenshotContent={
-             <ScreenshotCaptureTab
-               demo={demo}
-               url={url}
-               onUrlChange={setUrl}
-               onApply={handleApplyBranding}
-               isConfigured={screenshotConfigured}
-             />
-           }
-           formStylingContent={formStyleContent}
-           formStylingConfigured={formStylingConfigured}
-         />
-       </CardContent>
-     </Card>
-   );
- }
+    return (
+      <div className="space-y-6">
+        <Card className="glass-card">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+               <CardTitle className="flex items-center gap-2">
+                   <Globe className="w-5 h-5" />
+                   Appearance
+                 </CardTitle>
+                 <CardDescription>
+                   Configure site branding and form styling
+                 </CardDescription>
+              </div>
+              {(htmlConfigured || screenshotConfigured) && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleClearMirror}
+                  className="text-destructive hover:text-destructive"
+                >
+                  <X className="w-4 h-4 mr-2" />
+                  Clear All
+                </Button>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent>
+            <SiteMirrorTabs
+              activeMethod={activeMethod}
+             onActiveMethodChange={handleActiveMethodChange}
+              currentTab={currentTab}
+              onTabChange={setCurrentTab}
+              htmlConfigured={htmlConfigured}
+              screenshotConfigured={screenshotConfigured}
+              htmlContent={
+                <HtmlCaptureTab
+                  demo={demo}
+                  url={url}
+                  onUrlChange={setUrl}
+                  onApply={handleApplyBranding}
+                  isConfigured={htmlConfigured}
+                />
+              }
+              screenshotContent={
+                <ScreenshotCaptureTab
+                  demo={demo}
+                  url={url}
+                  onUrlChange={setUrl}
+                  onApply={handleApplyBranding}
+                  isConfigured={screenshotConfigured}
+                />
+              }
+              formStylingContent={formStyleContent}
+              formStylingConfigured={formStylingConfigured}
+            />
+          </CardContent>
+        </Card>
+
+        {/* Embed Form Section */}
+        <EmbedFormSection slug={demo.slug} />
+      </div>
+    );
+  }
