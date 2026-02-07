@@ -93,6 +93,7 @@ export interface FormStyleConfig {
   // Label styling
   labelColor: string;
   labelWeight?: 'normal' | 'medium' | 'semibold';
+  labelStyle?: LabelStyle; // How labels are displayed (floating, above, inline, etc.)
   
   // Status colors
   errorColor: string;
@@ -137,6 +138,7 @@ export const DEFAULT_FORM_STYLE: FormStyleConfig = {
   inputPlaceholderColor: '#9ca3af',
   labelColor: '#374151',
   labelWeight: 'medium',
+  labelStyle: 'above', // Default: labels appear above inputs
   errorColor: '#ef4444',
   successColor: '#22c55e',
   inputPadding: 'md',
