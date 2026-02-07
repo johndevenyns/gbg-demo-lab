@@ -460,6 +460,7 @@ export interface FormField {
   content?: string; // For heading, paragraph - the text to display
   consentText?: string; // For consent_checkbox - the legal text
   consentRequired?: boolean; // For consent_checkbox - whether it must be checked
+  questionText?: string; // For yes_no - the question text shown to the user (label is for admin display)
 }
 
 export type FormFieldType = 

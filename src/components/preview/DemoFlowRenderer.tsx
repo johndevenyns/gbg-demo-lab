@@ -330,11 +330,13 @@ function StyledFormFields({ fields, formData, onInputChange, style, fieldErrors 
 
     if (field.type === 'yes_no') {
       const value = formData[field.name];
+      // Use questionText if set, otherwise fall back to label
+      const displayText = field.questionText || field.label;
       return (
         <div key={field.id}>
           {effectiveLabelStyle !== 'placeholder-only' && effectiveLabelStyle !== 'hidden' && (
             <label style={labelStyleAbove}>
-              {field.label}
+              {displayText}
               {field.required && <span style={{ color: style.errorColor, marginLeft: '4px' }}>*</span>}
             </label>
           )}

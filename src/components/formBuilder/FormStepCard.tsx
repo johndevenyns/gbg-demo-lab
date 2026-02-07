@@ -80,12 +80,14 @@ function SortableField({ field, stepId, isAddressValidated, onRemove, onToggleRe
   const [isEditing, setIsEditing] = useState(false);
   const [editLabel, setEditLabel] = useState(field.label);
   const [isEditingContent, setIsEditingContent] = useState(false);
-  const [editContent, setEditContent] = useState(field.content || field.consentText || '');
+  const [editContent, setEditContent] = useState(field.content || field.consentText || field.questionText || '');
   const isAddressField = ADDRESS_VALIDATION_FIELDS.includes(field.type);
   
   // Check if this is a content-editable field type
-  const isContentField = ['paragraph', 'heading', 'consent_checkbox'].includes(field.type);
-  const contentLabel = field.type === 'consent_checkbox' ? 'Consent Text' : 'Text Content';
+  const isContentField = ['paragraph', 'heading', 'consent_checkbox', 'yes_no'].includes(field.type);
+  const contentLabel = field.type === 'consent_checkbox' ? 'Consent Text' 
+    : field.type === 'yes_no' ? 'Question Text'
+    : 'Text Content';
   
   const {
     attributes,
@@ -121,6 +123,8 @@ function SortableField({ field, stepId, isAddressValidated, onRemove, onToggleRe
   // Get the display content for content fields
   const displayContent = field.type === 'consent_checkbox' 
     ? field.consentText 
+    : field.type === 'yes_no'
+    ? field.questionText
     : field.content;
 
   return (
