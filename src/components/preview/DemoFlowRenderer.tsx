@@ -1884,8 +1884,9 @@ export function DemoFlowRenderer({
     }
   };
 
-  // Don't show nav buttons for certain step types
-  const showNavButtons = !['api', 'decision', 'unified_verification'].includes(currentStep?.stepType || '') || !isLoading;
+  // Don't show nav buttons for certain step types that handle their own navigation
+  const stepTypesWithOwnNav = ['api', 'decision', 'unified_verification'];
+  const showNavButtons = !stepTypesWithOwnNav.includes(currentStep?.stepType || '') && !isLoading;
 
   // Handle result page button clicks
   const handleResultButtonClick = (isSuccess: boolean) => {
