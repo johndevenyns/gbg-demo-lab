@@ -5,7 +5,7 @@ const corsHeaders = {
 
 interface CaptureOptions {
   url: string;
-  formId: string; // Form ID attribute (e.g., "membershipForm")
+  formId?: string; // Form ID attribute (e.g., "membershipForm") - optional, will find first form if not specified
   triggerSelector?: string; // CSS selector for button/link to click to open modal
   waitTime?: number; // Custom wait time in ms
 }
@@ -79,12 +79,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    if (!formId) {
-      return new Response(
-        JSON.stringify({ success: false, error: 'Form ID is required' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+    // formId is now optional - we'll find the first form if not specified
 
     const apiKey = Deno.env.get('FIRECRAWL_API_KEY');
     if (!apiKey) {
@@ -158,19 +153,34 @@ Deno.serve(async (req) => {
     const availableFormIds = extractAllFormIds(rawHtml);
     console.log(`Found ${availableFormIds.length} form/container IDs on page:`, availableFormIds.slice(0, 10));
 
-    // Extract the form by ID
-    console.log(`Extracting form with id="${formId}"...`);
-    const formHtml = extractFormById(rawHtml, formId, baseUrl);
+    // Extract the form - either by ID or find the first form
+    let actualFormId = formId || '';
+    let formHtml: string | null = null;
+    
+    if (formId) {
+      console.log(`Extracting form with id="${formId}"...`);
+      formHtml = extractFormById(rawHtml, formId, baseUrl);
+    } else {
+      // Find the first form on the page
+      console.log('No form ID specified, finding first form on page...');
+      const result = extractFirstForm(rawHtml, baseUrl);
+      if (result) {
+        formHtml = result.html;
+        actualFormId = result.formId || 'form-1';
+        console.log(`Found first form${result.formId ? ` with id="${result.formId}"` : ''}`);
+      }
+    }
     
     if (!formHtml) {
       // Provide helpful error with available IDs
+      const searchedFor = formId ? `Form with id="${formId}"` : 'No forms';
       const idSuggestions = availableFormIds.length > 0 
         ? ` Available IDs found: ${availableFormIds.slice(0, 8).join(', ')}${availableFormIds.length > 8 ? '...' : ''}`
         : ' No form or container IDs found on the page.';
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: `Form with id="${formId}" not found on the page.${idSuggestions}`,
+          error: `${searchedFor} not found on the page.${idSuggestions}`,
           availableFormIds: availableFormIds.slice(0, 20),
         }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -192,16 +202,16 @@ Deno.serve(async (req) => {
     console.log(`Found ${formClasses.size} classes, ${formIds.size} IDs, ${formElements.size} element types in form`);
 
     // Filter CSS to only include rules that might apply to the form
-    const relevantCss = filterRelevantCss(allCss, formClasses, formIds, formElements, formId);
+    const relevantCss = filterRelevantCss(allCss, formClasses, formIds, formElements, actualFormId);
     console.log(`Filtered to ${relevantCss.length} chars of relevant CSS`);
 
     // Extract JavaScript for form interactions (floating labels, validation, etc.)
     console.log('Extracting JavaScript for form interactions...');
-    const formJs = extractFormJavaScript(rawHtml, formId, formClasses, formIds);
+    const formJs = extractFormJavaScript(rawHtml, actualFormId, formClasses, formIds);
     console.log(`Extracted ${formJs.length} chars of JavaScript`);
 
     // Also extract computed styles for fallback
-    const styles = extractFormStyles(rawHtml, formId);
+    const styles = extractFormStyles(rawHtml, actualFormId);
 
     // Get branding for additional context
     let branding = null;
@@ -236,7 +246,7 @@ Deno.serve(async (req) => {
       formHtml,
       formCss: relevantCss,
       formJs,
-      formId,
+      formId: actualFormId,
       sourceUrl: formattedUrl,
       styles,
       branding,
@@ -342,6 +352,62 @@ function extractFormById(html: string, formId: string, baseUrl: URL): string | n
   formHtml = convertRelativeUrls(formHtml, baseUrl);
   
   return formHtml;
+}
+
+// Extract the first form element found on the page
+function extractFirstForm(html: string, baseUrl: URL): { html: string; formId: string | null } | null {
+  // Find the first <form> tag
+  const formStartPattern = /<form[^>]*>/i;
+  const match = html.match(formStartPattern);
+  
+  if (!match) {
+    return null;
+  }
+  
+  const startIndex = html.indexOf(match[0]);
+  
+  // Try to extract the form's ID if it has one
+  const idMatch = match[0].match(/id=["']([^"']+)["']/i);
+  const formId = idMatch ? idMatch[1] : null;
+  
+  // Find the matching </form> tag
+  let depth = 1;
+  let currentPos = startIndex + match[0].length;
+  const openTagPattern = /<form[\s>]/gi;
+  const closeTagPattern = /<\/form>/gi;
+  
+  while (depth > 0 && currentPos < html.length) {
+    openTagPattern.lastIndex = currentPos;
+    closeTagPattern.lastIndex = currentPos;
+    
+    const nextOpen = openTagPattern.exec(html);
+    const nextClose = closeTagPattern.exec(html);
+    
+    if (!nextClose) break;
+    
+    if (!nextOpen || nextClose.index < nextOpen.index) {
+      depth--;
+      currentPos = nextClose.index + nextClose[0].length;
+    } else {
+      depth++;
+      currentPos = nextOpen.index + nextOpen[0].length;
+    }
+  }
+  
+  if (depth !== 0) {
+    // Fallback: find the first </form>
+    const fallbackEnd = html.indexOf('</form>', startIndex);
+    if (fallbackEnd !== -1) {
+      currentPos = fallbackEnd + '</form>'.length;
+    } else {
+      return null;
+    }
+  }
+  
+  let formHtml = html.substring(startIndex, currentPos);
+  formHtml = convertRelativeUrls(formHtml, baseUrl);
+  
+  return { html: formHtml, formId };
 }
 
 // Escape special regex characters
