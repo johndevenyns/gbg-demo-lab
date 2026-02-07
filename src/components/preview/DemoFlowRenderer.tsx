@@ -240,7 +240,7 @@ function StyledFormFields({ fields, formData, onInputChange, style, fieldErrors 
   };
 
   // Content field types that don't need input handling
-  const contentFieldTypes = ['heading', 'paragraph', 'divider', 'consent_checkbox'];
+  const contentFieldTypes = ['heading', 'paragraph', 'divider', 'consent_checkbox', 'yes_no'];
 
   const renderField = (field: FormField) => {
     // Handle content elements (non-input fields)
@@ -327,7 +327,81 @@ function StyledFormFields({ fields, formData, onInputChange, style, fieldErrors 
       );
     }
 
-    // Regular input fields - render based on labelStyle
+    if (field.type === 'yes_no') {
+      const value = formData[field.name];
+      return (
+        <div key={field.id}>
+          {effectiveLabelStyle !== 'placeholder-only' && effectiveLabelStyle !== 'hidden' && (
+            <label style={labelStyleAbove}>
+              {field.label}
+              {field.required && <span style={{ color: style.errorColor, marginLeft: '4px' }}>*</span>}
+            </label>
+          )}
+          <div style={{ 
+            display: 'flex', 
+            gap: '12px',
+            marginTop: '4px',
+          }}>
+            <label 
+              style={{ 
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                cursor: 'pointer',
+                fontFamily: style.fontFamily,
+                fontSize: fontSizeMap[style.fontSize],
+                color: style.labelColor,
+              }}
+            >
+              <input
+                type="radio"
+                name={field.name}
+                value="yes"
+                checked={value === 'yes'}
+                onChange={() => onInputChange(field.name, 'yes')}
+                style={{
+                  width: '18px',
+                  height: '18px',
+                  accentColor: style.inputFocusBorderColor,
+                  cursor: 'pointer',
+                }}
+              />
+              Yes
+            </label>
+            <label 
+              style={{ 
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                cursor: 'pointer',
+                fontFamily: style.fontFamily,
+                fontSize: fontSizeMap[style.fontSize],
+                color: style.labelColor,
+              }}
+            >
+              <input
+                type="radio"
+                name={field.name}
+                value="no"
+                checked={value === 'no'}
+                onChange={() => onInputChange(field.name, 'no')}
+                style={{
+                  width: '18px',
+                  height: '18px',
+                  accentColor: style.inputFocusBorderColor,
+                  cursor: 'pointer',
+                }}
+              />
+              No
+            </label>
+          </div>
+          {fieldErrors[field.name] && (
+            <p style={errorStyle}>{fieldErrors[field.name]}</p>
+          )}
+        </div>
+      );
+    }
+
     const hasValue = Boolean(formData[field.name]);
     const fieldPlaceholder = effectiveLabelStyle === 'placeholder-only' 
       ? `${field.label}${field.required ? ' *' : ''}`

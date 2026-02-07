@@ -486,6 +486,7 @@ export type FormFieldType =
   | 'select'
   | 'checkbox'
   | 'textarea'
+  | 'yes_no'
   // Content elements (non-input)
   | 'heading'
   | 'paragraph'
@@ -522,6 +523,7 @@ export const AVAILABLE_FORM_FIELDS: Omit<FormField, 'id' | 'order'>[] = [
   { type: 'text', label: 'Custom Text Field', name: 'customText', placeholder: 'Enter text', required: false },
   { type: 'textarea', label: 'Custom Text Area', name: 'customTextarea', placeholder: 'Enter details', required: false },
   { type: 'checkbox', label: 'Custom Checkbox', name: 'customCheckbox', required: false },
+  { type: 'yes_no', label: 'Yes/No Question', name: 'yesNoQuestion', required: false },
   // Content elements
   { type: 'heading', label: 'Section Heading', name: 'sectionHeading', required: false, content: 'Section Title' },
   { type: 'paragraph', label: 'Text Block', name: 'textBlock', required: false, content: 'Add your text here...' },
