@@ -17,6 +17,7 @@ import { FormBuilderSection } from "@/components/formBuilder";
  import { FormStyleCard } from "@/components/admin/FormStyleCard";
 import { FormPreviewPanel } from "@/components/formBuilder/FormPreviewPanel";
 import { LogoUploadSection } from "@/components/admin/LogoUploadSection";
+import { BrandingScrapeSection } from "@/components/admin/BrandingScrapeSection";
 import { cn } from "@/lib/utils";
 
 // Navigation sections
@@ -63,6 +64,9 @@ function SiteSettingsSection({ demo, onUpdate }: { demo: DemoEnvironment; onUpda
 function BrandingSection({ demo, onUpdate }: { demo: DemoEnvironment; onUpdate: (updates: Partial<DemoEnvironment>) => void }) {
   return (
     <div className="space-y-6">
+      {/* Capture from Website */}
+      <BrandingScrapeSection demo={demo} onUpdate={onUpdate} />
+      
       {/* Logo Section */}
       <Card className="glass-card">
         <CardHeader>
