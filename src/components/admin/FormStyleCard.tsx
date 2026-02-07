@@ -323,21 +323,38 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, onUpdateButtonCo
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                   <CardContent className="space-y-6 pt-0">
+                    {/* Detected Values Summary (if from extraction) */}
+                    {formStyle.capturedPatterns && (
+                      <div className="p-3 rounded-lg bg-primary/10 border border-primary/20">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Eye className="w-4 h-4 text-primary" />
+                          <span className="text-sm font-medium text-primary">Values Detected from Extraction</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          The fields below show values captured from the source. Edit any field to customize.
+                        </p>
+                      </div>
+                    )}
+
                     {/* Typography */}
                     <div className="space-y-4">
-                      <h4 className="font-semibold text-sm">Typography</h4>
-                      <div className="grid grid-cols-2 gap-4">
+                      <h4 className="font-semibold text-sm border-b pb-2">Typography</h4>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                         <div className="space-y-2">
-                          <Label htmlFor="font-family">Font Family</Label>
+                          <Label htmlFor="font-family" className="text-xs">Font Family</Label>
                           <Input
                             id="font-family"
                             value={formStyle.fontFamily}
                             onChange={(e) => updateCustomStyle({ fontFamily: e.target.value })}
                             placeholder="Inter, system-ui, sans-serif"
+                            className="text-sm"
                           />
+                          {formStyle.capturedPatterns?.detectedFontFamily && (
+                            <span className="text-xs text-muted-foreground">Detected: {formStyle.capturedPatterns.detectedFontFamily}</span>
+                          )}
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="font-size">Font Size</Label>
+                          <Label htmlFor="font-size" className="text-xs">Base Font Size</Label>
                           <Select
                             value={formStyle.fontSize}
                             onValueChange={(value) => updateCustomStyle({ fontSize: value as 'sm' | 'base' | 'lg' })}
@@ -351,21 +368,128 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, onUpdateButtonCo
                               <SelectItem value="lg">Large (18px)</SelectItem>
                             </SelectContent>
                           </Select>
+                          {formStyle.capturedPatterns?.detectedFontSize && (
+                            <span className="text-xs text-muted-foreground">Detected: {formStyle.capturedPatterns.detectedFontSize}</span>
+                          )}
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-xs">Input Padding</Label>
+                          <Select
+                            value={formStyle.inputPadding || 'md'}
+                            onValueChange={(value) => updateCustomStyle({ inputPadding: value as 'sm' | 'md' | 'lg' })}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="sm">Compact (8px 12px)</SelectItem>
+                              <SelectItem value="md">Medium (12px 16px)</SelectItem>
+                              <SelectItem value="lg">Spacious (16px 20px)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          {formStyle.capturedPatterns?.detectedInputPadding && (
+                            <span className="text-xs text-muted-foreground">Detected: {formStyle.capturedPatterns.detectedInputPadding}</span>
+                          )}
                         </div>
                       </div>
                     </div>
 
-                    {/* Borders */}
+                    {/* Label Styling */}
                     <div className="space-y-4">
-                      <h4 className="font-semibold text-sm">Borders</h4>
-                      <div className="grid grid-cols-2 gap-4">
+                      <h4 className="font-semibold text-sm border-b pb-2">Label Styling</h4>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <div className="space-y-2">
-                          <Label htmlFor="border-radius">Border Radius</Label>
+                          <Label className="text-xs">Label Style</Label>
+                          <Select
+                            value={formStyle.labelStyle || 'above'}
+                            onValueChange={(value) => updateCustomStyle({ labelStyle: value as any })}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="above">Above Input</SelectItem>
+                              <SelectItem value="floating">Floating</SelectItem>
+                              <SelectItem value="inline">Inline/Left</SelectItem>
+                              <SelectItem value="placeholder-only">Placeholder Only</SelectItem>
+                              <SelectItem value="hidden">Hidden</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          {formStyle.capturedPatterns?.labelStyle && (
+                            <span className="text-xs text-muted-foreground">Detected: {formStyle.capturedPatterns.labelStyle}</span>
+                          )}
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-xs">Label Weight</Label>
+                          <Select
+                            value={formStyle.labelWeight || 'medium'}
+                            onValueChange={(value) => updateCustomStyle({ labelWeight: value as 'normal' | 'medium' | 'semibold' })}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="normal">Normal (400)</SelectItem>
+                              <SelectItem value="medium">Medium (500)</SelectItem>
+                              <SelectItem value="semibold">Semibold (600)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          {formStyle.capturedPatterns?.detectedLabelFontWeight && (
+                            <span className="text-xs text-muted-foreground">Detected: {formStyle.capturedPatterns.detectedLabelFontWeight}</span>
+                          )}
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-xs">Label Color</Label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="color"
+                              value={formStyle.labelColor}
+                              onChange={(e) => updateCustomStyle({ labelColor: e.target.value })}
+                              className="color-picker-swatch"
+                            />
+                            <Input
+                              value={formStyle.labelColor}
+                              onChange={(e) => updateCustomStyle({ labelColor: e.target.value })}
+                              className="font-mono text-xs flex-1"
+                            />
+                          </div>
+                          {formStyle.capturedPatterns?.detectedLabelColor && (
+                            <span className="text-xs text-muted-foreground">Detected: {formStyle.capturedPatterns.detectedLabelColor}</span>
+                          )}
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-xs">Field Spacing</Label>
+                          <Select
+                            value={formStyle.fieldSpacing || 'normal'}
+                            onValueChange={(value) => updateCustomStyle({ fieldSpacing: value as 'compact' | 'normal' | 'relaxed' })}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="compact">Compact (12px)</SelectItem>
+                              <SelectItem value="normal">Normal (20px)</SelectItem>
+                              <SelectItem value="relaxed">Relaxed (28px)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          {formStyle.capturedPatterns?.detectedFieldSpacing && (
+                            <span className="text-xs text-muted-foreground">Detected: {formStyle.capturedPatterns.detectedFieldSpacing}</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Input Borders */}
+                    <div className="space-y-4">
+                      <h4 className="font-semibold text-sm border-b pb-2">Input Borders</h4>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="space-y-2">
+                          <Label className="text-xs">Border Radius</Label>
                           <Select
                             value={formStyle.borderRadius}
                             onValueChange={(value) => updateCustomStyle({ borderRadius: value as 'none' | 'sm' | 'md' | 'lg' | 'full' })}
                           >
-                            <SelectTrigger id="border-radius">
+                            <SelectTrigger>
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -376,14 +500,17 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, onUpdateButtonCo
                               <SelectItem value="full">Full (rounded)</SelectItem>
                             </SelectContent>
                           </Select>
+                          {formStyle.capturedPatterns?.detectedBorderRadius && (
+                            <span className="text-xs text-muted-foreground">Detected: {formStyle.capturedPatterns.detectedBorderRadius}</span>
+                          )}
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="border-width">Border Width</Label>
+                          <Label className="text-xs">Border Width</Label>
                           <Select
                             value={formStyle.borderWidth}
                             onValueChange={(value) => updateCustomStyle({ borderWidth: value as '0' | '1' | '2' })}
                           >
-                            <SelectTrigger id="border-width">
+                            <SelectTrigger>
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -392,21 +519,58 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, onUpdateButtonCo
                               <SelectItem value="2">2px</SelectItem>
                             </SelectContent>
                           </Select>
+                          {formStyle.capturedPatterns?.detectedBorderWidth && (
+                            <span className="text-xs text-muted-foreground">Detected: {formStyle.capturedPatterns.detectedBorderWidth}</span>
+                          )}
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-xs">Border Color</Label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="color"
+                              value={formStyle.inputBorderColor}
+                              onChange={(e) => updateCustomStyle({ inputBorderColor: e.target.value })}
+                              className="color-picker-swatch"
+                            />
+                            <Input
+                              value={formStyle.inputBorderColor}
+                              onChange={(e) => updateCustomStyle({ inputBorderColor: e.target.value })}
+                              className="font-mono text-xs flex-1"
+                            />
+                          </div>
+                          {formStyle.capturedPatterns?.detectedInputBorderColor && (
+                            <span className="text-xs text-muted-foreground">Detected: {formStyle.capturedPatterns.detectedInputBorderColor}</span>
+                          )}
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-xs">Focus Border Color</Label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="color"
+                              value={formStyle.inputFocusBorderColor}
+                              onChange={(e) => updateCustomStyle({ inputFocusBorderColor: e.target.value })}
+                              className="color-picker-swatch"
+                            />
+                            <Input
+                              value={formStyle.inputFocusBorderColor}
+                              onChange={(e) => updateCustomStyle({ inputFocusBorderColor: e.target.value })}
+                              className="font-mono text-xs flex-1"
+                            />
+                          </div>
+                          {formStyle.capturedPatterns?.detectedInputFocusBorderColor && (
+                            <span className="text-xs text-muted-foreground">Detected: {formStyle.capturedPatterns.detectedInputFocusBorderColor}</span>
+                          )}
                         </div>
                       </div>
                     </div>
 
-                    {/* Colors */}
+                    {/* Input Colors */}
                     <div className="space-y-4">
-                      <h4 className="font-semibold text-sm">Colors</h4>
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                      <h4 className="font-semibold text-sm border-b pb-2">Input Colors</h4>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <div className="space-y-2">
-                          <Label>Input Background</Label>
+                          <Label className="text-xs">Background</Label>
                           <div className="flex items-center gap-2">
-                            <div
-                              className="w-6 h-6 rounded border-2 border-border shrink-0"
-                              style={{ backgroundColor: formStyle.inputBgColor }}
-                            />
                             <input
                               type="color"
                               value={formStyle.inputBgColor}
@@ -416,17 +580,16 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, onUpdateButtonCo
                             <Input
                               value={formStyle.inputBgColor}
                               onChange={(e) => updateCustomStyle({ inputBgColor: e.target.value })}
-                              className="font-mono text-xs"
+                              className="font-mono text-xs flex-1"
                             />
                           </div>
+                          {formStyle.capturedPatterns?.detectedInputBgColor && (
+                            <span className="text-xs text-muted-foreground">Detected: {formStyle.capturedPatterns.detectedInputBgColor}</span>
+                          )}
                         </div>
                         <div className="space-y-2">
-                          <Label>Input Text</Label>
+                          <Label className="text-xs">Text Color</Label>
                           <div className="flex items-center gap-2">
-                            <div
-                              className="w-6 h-6 rounded border-2 border-border shrink-0"
-                              style={{ backgroundColor: formStyle.inputTextColor }}
-                            />
                             <input
                               type="color"
                               value={formStyle.inputTextColor}
@@ -436,77 +599,29 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, onUpdateButtonCo
                             <Input
                               value={formStyle.inputTextColor}
                               onChange={(e) => updateCustomStyle({ inputTextColor: e.target.value })}
-                              className="font-mono text-xs"
+                              className="font-mono text-xs flex-1"
                             />
                           </div>
                         </div>
                         <div className="space-y-2">
-                          <Label>Input Border</Label>
+                          <Label className="text-xs">Placeholder Color</Label>
                           <div className="flex items-center gap-2">
-                            <div
-                              className="w-6 h-6 rounded border-2 border-border shrink-0"
-                              style={{ backgroundColor: formStyle.inputBorderColor }}
-                            />
                             <input
                               type="color"
-                              value={formStyle.inputBorderColor}
-                              onChange={(e) => updateCustomStyle({ inputBorderColor: e.target.value })}
+                              value={formStyle.inputPlaceholderColor || '#9ca3af'}
+                              onChange={(e) => updateCustomStyle({ inputPlaceholderColor: e.target.value })}
                               className="color-picker-swatch"
                             />
                             <Input
-                              value={formStyle.inputBorderColor}
-                              onChange={(e) => updateCustomStyle({ inputBorderColor: e.target.value })}
-                              className="font-mono text-xs"
+                              value={formStyle.inputPlaceholderColor || '#9ca3af'}
+                              onChange={(e) => updateCustomStyle({ inputPlaceholderColor: e.target.value })}
+                              className="font-mono text-xs flex-1"
                             />
                           </div>
                         </div>
                         <div className="space-y-2">
-                          <Label>Focus Border</Label>
+                          <Label className="text-xs">Error Color</Label>
                           <div className="flex items-center gap-2">
-                            <div
-                              className="w-6 h-6 rounded border-2 border-border shrink-0"
-                              style={{ backgroundColor: formStyle.inputFocusBorderColor }}
-                            />
-                            <input
-                              type="color"
-                              value={formStyle.inputFocusBorderColor}
-                              onChange={(e) => updateCustomStyle({ inputFocusBorderColor: e.target.value })}
-                              className="color-picker-swatch"
-                            />
-                            <Input
-                              value={formStyle.inputFocusBorderColor}
-                              onChange={(e) => updateCustomStyle({ inputFocusBorderColor: e.target.value })}
-                              className="font-mono text-xs"
-                            />
-                          </div>
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Label Color</Label>
-                          <div className="flex items-center gap-2">
-                            <div
-                              className="w-6 h-6 rounded border-2 border-border shrink-0"
-                              style={{ backgroundColor: formStyle.labelColor }}
-                            />
-                            <input
-                              type="color"
-                              value={formStyle.labelColor}
-                              onChange={(e) => updateCustomStyle({ labelColor: e.target.value })}
-                              className="color-picker-swatch"
-                            />
-                            <Input
-                              value={formStyle.labelColor}
-                              onChange={(e) => updateCustomStyle({ labelColor: e.target.value })}
-                              className="font-mono text-xs"
-                            />
-                          </div>
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Error Color</Label>
-                          <div className="flex items-center gap-2">
-                            <div
-                              className="w-6 h-6 rounded border-2 border-border shrink-0"
-                              style={{ backgroundColor: formStyle.errorColor }}
-                            />
                             <input
                               type="color"
                               value={formStyle.errorColor}
@@ -516,7 +631,225 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, onUpdateButtonCo
                             <Input
                               value={formStyle.errorColor}
                               onChange={(e) => updateCustomStyle({ errorColor: e.target.value })}
-                              className="font-mono text-xs"
+                              className="font-mono text-xs flex-1"
+                            />
+                          </div>
+                          {formStyle.capturedPatterns?.detectedErrorColor && (
+                            <span className="text-xs text-muted-foreground">Detected: {formStyle.capturedPatterns.detectedErrorColor}</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Form Container */}
+                    <div className="space-y-4">
+                      <h4 className="font-semibold text-sm border-b pb-2">Form Container</h4>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="space-y-2">
+                          <Label className="text-xs">Form Background</Label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="color"
+                              value={formStyle.formBgColor || '#ffffff'}
+                              onChange={(e) => updateCustomStyle({ formBgColor: e.target.value })}
+                              className="color-picker-swatch"
+                            />
+                            <Input
+                              value={formStyle.formBgColor || '#ffffff'}
+                              onChange={(e) => updateCustomStyle({ formBgColor: e.target.value })}
+                              className="font-mono text-xs flex-1"
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-xs">Content Area BG</Label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="color"
+                              value={formStyle.contentAreaBgColor || '#f5f5f5'}
+                              onChange={(e) => updateCustomStyle({ contentAreaBgColor: e.target.value })}
+                              className="color-picker-swatch"
+                            />
+                            <Input
+                              value={formStyle.contentAreaBgColor || '#f5f5f5'}
+                              onChange={(e) => updateCustomStyle({ contentAreaBgColor: e.target.value })}
+                              className="font-mono text-xs flex-1"
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-xs">Form Border Radius</Label>
+                          <Select
+                            value={formStyle.formBorderRadius || 'lg'}
+                            onValueChange={(value) => updateCustomStyle({ formBorderRadius: value as any })}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">None</SelectItem>
+                              <SelectItem value="sm">Small</SelectItem>
+                              <SelectItem value="md">Medium</SelectItem>
+                              <SelectItem value="lg">Large</SelectItem>
+                              <SelectItem value="xl">Extra Large</SelectItem>
+                              <SelectItem value="2xl">2X Large</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-xs">Form Shadow</Label>
+                          <Select
+                            value={formStyle.formShadow || 'lg'}
+                            onValueChange={(value) => updateCustomStyle({ formShadow: value as any })}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">None</SelectItem>
+                              <SelectItem value="sm">Small</SelectItem>
+                              <SelectItem value="md">Medium</SelectItem>
+                              <SelectItem value="lg">Large</SelectItem>
+                              <SelectItem value="xl">Extra Large</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-xs">Form Border Width</Label>
+                          <Select
+                            value={formStyle.formBorderWidth || '1'}
+                            onValueChange={(value) => updateCustomStyle({ formBorderWidth: value as any })}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="0">None</SelectItem>
+                              <SelectItem value="1">1px</SelectItem>
+                              <SelectItem value="2">2px</SelectItem>
+                              <SelectItem value="3">3px</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-xs">Form Border Color</Label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="color"
+                              value={formStyle.formBorderColor || '#e5e7eb'}
+                              onChange={(e) => updateCustomStyle({ formBorderColor: e.target.value })}
+                              className="color-picker-swatch"
+                            />
+                            <Input
+                              value={formStyle.formBorderColor || '#e5e7eb'}
+                              onChange={(e) => updateCustomStyle({ formBorderColor: e.target.value })}
+                              className="font-mono text-xs flex-1"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Title & Body Text */}
+                    <div className="space-y-4">
+                      <h4 className="font-semibold text-sm border-b pb-2">Title & Body Text</h4>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="space-y-2">
+                          <Label className="text-xs">Title Size</Label>
+                          <Select
+                            value={formStyle.titleFontSize || 'xl'}
+                            onValueChange={(value) => updateCustomStyle({ titleFontSize: value as any })}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="sm">Small</SelectItem>
+                              <SelectItem value="base">Base</SelectItem>
+                              <SelectItem value="lg">Large</SelectItem>
+                              <SelectItem value="xl">XL</SelectItem>
+                              <SelectItem value="2xl">2XL</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-xs">Title Weight</Label>
+                          <Select
+                            value={formStyle.titleFontWeight || 'semibold'}
+                            onValueChange={(value) => updateCustomStyle({ titleFontWeight: value as any })}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="normal">Normal</SelectItem>
+                              <SelectItem value="medium">Medium</SelectItem>
+                              <SelectItem value="semibold">Semibold</SelectItem>
+                              <SelectItem value="bold">Bold</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-xs">Title Color</Label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="color"
+                              value={formStyle.titleColor || formStyle.labelColor}
+                              onChange={(e) => updateCustomStyle({ titleColor: e.target.value })}
+                              className="color-picker-swatch"
+                            />
+                            <Input
+                              value={formStyle.titleColor || formStyle.labelColor}
+                              onChange={(e) => updateCustomStyle({ titleColor: e.target.value })}
+                              className="font-mono text-xs flex-1"
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-xs">Title Alignment</Label>
+                          <Select
+                            value={formStyle.titleAlignment || 'center'}
+                            onValueChange={(value) => updateCustomStyle({ titleAlignment: value as any })}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="left">Left</SelectItem>
+                              <SelectItem value="center">Center</SelectItem>
+                              <SelectItem value="right">Right</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-xs">Body Text Size</Label>
+                          <Select
+                            value={formStyle.bodyFontSize || 'sm'}
+                            onValueChange={(value) => updateCustomStyle({ bodyFontSize: value as any })}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="xs">Extra Small</SelectItem>
+                              <SelectItem value="sm">Small</SelectItem>
+                              <SelectItem value="base">Base</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-xs">Body Text Color</Label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="color"
+                              value={formStyle.bodyColor || '#6b7280'}
+                              onChange={(e) => updateCustomStyle({ bodyColor: e.target.value })}
+                              className="color-picker-swatch"
+                            />
+                            <Input
+                              value={formStyle.bodyColor || '#6b7280'}
+                              onChange={(e) => updateCustomStyle({ bodyColor: e.target.value })}
+                              className="font-mono text-xs flex-1"
                             />
                           </div>
                         </div>
@@ -525,15 +858,11 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, onUpdateButtonCo
 
                     {/* Button Styling */}
                     <div className="space-y-4">
-                      <h4 className="font-semibold text-sm">Button Styling</h4>
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                      <h4 className="font-semibold text-sm border-b pb-2">Button Styling</h4>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <div className="space-y-2">
-                          <Label>Button Background</Label>
+                          <Label className="text-xs">Background</Label>
                           <div className="flex items-center gap-2">
-                            <div
-                              className="w-6 h-6 rounded border-2 border-border shrink-0"
-                              style={{ backgroundColor: formStyle.buttonBgColor || demo.buttonColor || '#6366f1' }}
-                            />
                             <input
                               type="color"
                               value={formStyle.buttonBgColor || demo.buttonColor || '#6366f1'}
@@ -543,17 +872,16 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, onUpdateButtonCo
                             <Input
                               value={formStyle.buttonBgColor || demo.buttonColor || '#6366f1'}
                               onChange={(e) => updateCustomStyle({ buttonBgColor: e.target.value })}
-                              className="font-mono text-xs"
+                              className="font-mono text-xs flex-1"
                             />
                           </div>
+                          {formStyle.capturedPatterns?.detectedButtonBgColor && (
+                            <span className="text-xs text-muted-foreground">Detected: {formStyle.capturedPatterns.detectedButtonBgColor}</span>
+                          )}
                         </div>
                         <div className="space-y-2">
-                          <Label>Button Text</Label>
+                          <Label className="text-xs">Text Color</Label>
                           <div className="flex items-center gap-2">
-                            <div
-                              className="w-6 h-6 rounded border-2 border-border shrink-0"
-                              style={{ backgroundColor: formStyle.buttonTextColor || '#ffffff' }}
-                            />
                             <input
                               type="color"
                               value={formStyle.buttonTextColor || '#ffffff'}
@@ -563,15 +891,55 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, onUpdateButtonCo
                             <Input
                               value={formStyle.buttonTextColor || '#ffffff'}
                               onChange={(e) => updateCustomStyle({ buttonTextColor: e.target.value })}
-                              className="font-mono text-xs"
+                              className="font-mono text-xs flex-1"
+                            />
+                          </div>
+                          {formStyle.capturedPatterns?.detectedButtonTextColor && (
+                            <span className="text-xs text-muted-foreground">Detected: {formStyle.capturedPatterns.detectedButtonTextColor}</span>
+                          )}
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-xs">Hover Background</Label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="color"
+                              value={formStyle.buttonHoverBgColor || formStyle.buttonBgColor || demo.buttonColor || '#4f46e5'}
+                              onChange={(e) => updateCustomStyle({ buttonHoverBgColor: e.target.value })}
+                              className="color-picker-swatch"
+                            />
+                            <Input
+                              value={formStyle.buttonHoverBgColor || ''}
+                              onChange={(e) => updateCustomStyle({ buttonHoverBgColor: e.target.value })}
+                              placeholder="Auto"
+                              className="font-mono text-xs flex-1"
+                            />
+                          </div>
+                          {formStyle.capturedPatterns?.detectedButtonHoverBgColor && (
+                            <span className="text-xs text-muted-foreground">Detected: {formStyle.capturedPatterns.detectedButtonHoverBgColor}</span>
+                          )}
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-xs">Hover Text Color</Label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="color"
+                              value={formStyle.buttonHoverTextColor || formStyle.buttonTextColor || '#ffffff'}
+                              onChange={(e) => updateCustomStyle({ buttonHoverTextColor: e.target.value })}
+                              className="color-picker-swatch"
+                            />
+                            <Input
+                              value={formStyle.buttonHoverTextColor || ''}
+                              onChange={(e) => updateCustomStyle({ buttonHoverTextColor: e.target.value })}
+                              placeholder="Auto"
+                              className="font-mono text-xs flex-1"
                             />
                           </div>
                         </div>
                         <div className="space-y-2">
-                          <Label>Button Radius</Label>
+                          <Label className="text-xs">Border Radius</Label>
                           <Select
                             value={formStyle.buttonBorderRadius || 'md'}
-                            onValueChange={(value) => updateCustomStyle({ buttonBorderRadius: value as 'none' | 'sm' | 'md' | 'lg' | 'full' })}
+                            onValueChange={(value) => updateCustomStyle({ buttonBorderRadius: value as any })}
                           >
                             <SelectTrigger>
                               <SelectValue />
@@ -584,6 +952,88 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, onUpdateButtonCo
                               <SelectItem value="full">Full</SelectItem>
                             </SelectContent>
                           </Select>
+                          {formStyle.capturedPatterns?.detectedButtonBorderRadius && (
+                            <span className="text-xs text-muted-foreground">Detected: {formStyle.capturedPatterns.detectedButtonBorderRadius}</span>
+                          )}
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-xs">Padding</Label>
+                          <Select
+                            value={formStyle.buttonPadding || 'md'}
+                            onValueChange={(value) => updateCustomStyle({ buttonPadding: value as any })}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="sm">Compact</SelectItem>
+                              <SelectItem value="md">Medium</SelectItem>
+                              <SelectItem value="lg">Large</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          {formStyle.capturedPatterns?.detectedButtonPadding && (
+                            <span className="text-xs text-muted-foreground">Detected: {formStyle.capturedPatterns.detectedButtonPadding}</span>
+                          )}
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-xs">Font Weight</Label>
+                          <Select
+                            value={formStyle.buttonFontWeight || 'semibold'}
+                            onValueChange={(value) => updateCustomStyle({ buttonFontWeight: value as any })}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="normal">Normal</SelectItem>
+                              <SelectItem value="medium">Medium</SelectItem>
+                              <SelectItem value="semibold">Semibold</SelectItem>
+                              <SelectItem value="bold">Bold</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          {formStyle.capturedPatterns?.detectedButtonFontWeight && (
+                            <span className="text-xs text-muted-foreground">Detected: {formStyle.capturedPatterns.detectedButtonFontWeight}</span>
+                          )}
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-xs">Shadow</Label>
+                          <Select
+                            value={formStyle.buttonShadow || 'none'}
+                            onValueChange={(value) => updateCustomStyle({ buttonShadow: value as any })}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">None</SelectItem>
+                              <SelectItem value="sm">Small</SelectItem>
+                              <SelectItem value="md">Medium</SelectItem>
+                              <SelectItem value="lg">Large</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Status Colors */}
+                    <div className="space-y-4">
+                      <h4 className="font-semibold text-sm border-b pb-2">Status Colors</h4>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label className="text-xs">Success Color</Label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="color"
+                              value={formStyle.successColor}
+                              onChange={(e) => updateCustomStyle({ successColor: e.target.value })}
+                              className="color-picker-swatch"
+                            />
+                            <Input
+                              value={formStyle.successColor}
+                              onChange={(e) => updateCustomStyle({ successColor: e.target.value })}
+                              className="font-mono text-xs flex-1"
+                            />
+                          </div>
                         </div>
                       </div>
                     </div>
