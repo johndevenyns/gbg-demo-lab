@@ -223,28 +223,28 @@ function formElementStylesToConfig(styles: FormElementStyles): FormStyleConfig {
      return scrapedData.screenshot;
    };
  
-   const handleCapture = async () => {
-     if (!url.trim()) {
-       toast({ title: "URL Required", description: "Please enter a website URL", variant: "destructive" });
-       return;
-     }
+    const handleFetch = async () => {
+      if (!url.trim()) {
+        toast({ title: "URL Required", description: "Please enter a website URL", variant: "destructive" });
+        return;
+      }
  
-     setIsLoading(true);
-     try {
-       const response = await scrapingApi.scrapeSiteBranding(url);
-       if (response.success && response.data) {
-         setScrapedData(response.data);
-         toast({ title: "Screenshots Captured", description: "Site screenshots are ready for cropping" });
-       } else {
-         toast({ title: "Capture Failed", description: response.error || "Could not capture screenshots", variant: "destructive" });
-       }
-     } catch (error) {
-       console.error("Error capturing:", error);
-       toast({ title: "Error", description: "Failed to capture screenshots. Check Firecrawl connector.", variant: "destructive" });
-     } finally {
-       setIsLoading(false);
-     }
-   };
+      setIsLoading(true);
+      try {
+        const response = await scrapingApi.scrapeSiteBranding(url);
+        if (response.success && response.data) {
+          setScrapedData(response.data);
+          toast({ title: "Screenshots Fetched", description: "Site screenshots are ready for cropping" });
+        } else {
+          toast({ title: "Fetch Failed", description: response.error || "Could not fetch screenshots", variant: "destructive" });
+        }
+      } catch (error) {
+        console.error("Error fetching:", error);
+        toast({ title: "Error", description: "Failed to fetch screenshots. Check Firecrawl connector.", variant: "destructive" });
+      } finally {
+        setIsLoading(false);
+      }
+    };
  
    const handleApply = () => {
      if (!scrapedData) return;
@@ -300,20 +300,20 @@ function formElementStylesToConfig(styles: FormElementStyles): FormStyleConfig {
        ...(formStyleConfig && { formStyle: formStyleConfig }),
      };
  
-     onApply(updates);
-     toast({ title: "Screenshot Capture Applied", description: "All viewport screenshots have been saved" });
-   };
+      onApply(updates);
+      toast({ title: "Screenshot Fetch Applied", description: "All viewport screenshots have been saved" });
+    };
  
    const selectedScreenshot = getSelectedScreenshot();
  
    return (
      <div className="space-y-4">
        <Card>
-         <CardContent className="pt-4 space-y-4">
-           <p className="text-sm text-muted-foreground">
-             Captures full-page screenshots and lets you crop specific regions for the header and footer.
-             Purely visual—no interactive elements.
-           </p>
+          <CardContent className="pt-4 space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Fetches full-page screenshots and lets you crop specific regions for the header and footer.
+              Purely visual—no interactive elements.
+            </p>
            
            <div className="flex gap-2">
              <div className="flex-1">
@@ -327,14 +327,14 @@ function formElementStylesToConfig(styles: FormElementStyles): FormStyleConfig {
              </div>
            </div>
            
-           <div className="flex items-center gap-2">
-             <Button onClick={handleCapture} disabled={isLoading || !url.trim()}>
-               {isLoading ? (
-                 <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Capturing...</>
-               ) : (
-                 <><Camera className="w-4 h-4 mr-2" />Capture Screenshots</>
-               )}
-             </Button>
+            <div className="flex items-center gap-2">
+              <Button onClick={handleFetch} disabled={isLoading || !url.trim()}>
+                {isLoading ? (
+                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Fetching...</>
+                ) : (
+                  <><Camera className="w-4 h-4 mr-2" />Fetch Screenshots</>
+                )}
+              </Button>
              {url && (
                <Button variant="outline" size="icon" onClick={() => window.open(url, '_blank')} title="Open site">
                  <ExternalLink className="w-4 h-4" />
@@ -353,11 +353,11 @@ function formElementStylesToConfig(styles: FormElementStyles): FormStyleConfig {
                  <Eye className="w-4 h-4" />
                  Crop Header & Footer
                </Label>
-               <Button onClick={handleApply} size="sm" className="gradient-primary">
-                 <Check className="w-4 h-4 mr-2" />
-                 Apply Screenshot Capture
-               </Button>
-             </div>
+                <Button onClick={handleApply} size="sm" className="gradient-primary">
+                  <Check className="w-4 h-4 mr-2" />
+                  Apply Screenshot Fetch
+                </Button>
+              </div>
  
              {/* Viewport Selector */}
              <div className="flex items-center justify-between flex-wrap gap-2">
@@ -377,12 +377,12 @@ function formElementStylesToConfig(styles: FormElementStyles): FormStyleConfig {
                      className="gap-1"
                    >
                      <Icon className="w-4 h-4" />
-                     {label}
-                   {scrapedData.screenshots?.[key] && (
-                     <span className="ml-1 w-2 h-2 rounded-full bg-green-500" title="Screenshot captured" />
-                   )}
-                   </Button>
-                 ))}
+                      {label}
+                    {scrapedData.screenshots?.[key] && (
+                      <span className="ml-1 w-2 h-2 rounded-full bg-green-500" title="Screenshot fetched" />
+                    )}
+                    </Button>
+                  ))}
                </div>
              </div>
  
@@ -540,11 +540,11 @@ function formElementStylesToConfig(styles: FormElementStyles): FormStyleConfig {
        {isConfigured && !scrapedData && (
          <Card className="border-primary/30">
            <CardContent className="pt-4 space-y-4">
-             <div className="flex items-center justify-between">
-               <div className="flex items-center gap-2 text-primary">
-                 <Check className="w-4 h-4" />
-                 <span className="font-medium">Currently Applied Screenshot Capture</span>
-               </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-primary">
+                  <Check className="w-4 h-4" />
+                  <span className="font-medium">Currently Applied Screenshot Fetch</span>
+                </div>
                <div className="flex items-center gap-2">
                  <span className="text-xs text-muted-foreground">
                    From: {demo.customerSiteUrl}
@@ -602,30 +602,30 @@ function formElementStylesToConfig(styles: FormElementStyles): FormStyleConfig {
                    key={savedPreviewKey}
                    srcDoc={(() => {
                      const formStyle = demo.formStyle || DEFAULT_FORM_STYLE;
-                   return generatePreviewDocument({
-                     formStyle,
-                     buttonColor: demo.buttonColor || '#3b82f6',
-                     headerHtml: demo.mirrorScreenshotHeaderHtml || '<div style="padding: 20px; background: #f0f0f0; text-align: center; color: #666;">No header screenshot captured</div>',
-                     footerHtml: demo.mirrorScreenshotFooterHtml || '<div style="padding: 20px; background: #f0f0f0; text-align: center; color: #666;">No footer screenshot captured</div>',
-                   });
-                   })()}
-                   className="w-full h-[350px] border-0"
-                   title="Saved screenshot capture preview"
+                    return generatePreviewDocument({
+                      formStyle,
+                      buttonColor: demo.buttonColor || '#3b82f6',
+                      headerHtml: demo.mirrorScreenshotHeaderHtml || '<div style="padding: 20px; background: #f0f0f0; text-align: center; color: #666;">No header screenshot fetched</div>',
+                      footerHtml: demo.mirrorScreenshotFooterHtml || '<div style="padding: 20px; background: #f0f0f0; text-align: center; color: #666;">No footer screenshot fetched</div>',
+                    });
+                    })()}
+                    className="w-full h-[350px] border-0"
+                    title="Saved screenshot fetch preview"
                    sandbox="allow-same-origin"
                  />
                </div>
              </div>
  
              {/* Content Stats */}
-             <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
-               <div className="flex items-center gap-1">
-                 <span className="font-medium">Header:</span>
-                 <span>{demo.mirrorScreenshotHeaderHtml ? 'Captured' : 'None'}</span>
-               </div>
-               <div className="flex items-center gap-1">
-                 <span className="font-medium">Footer:</span>
-                 <span>{demo.mirrorScreenshotFooterHtml ? 'Captured' : 'None'}</span>
-               </div>
+              <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
+                <div className="flex items-center gap-1">
+                  <span className="font-medium">Header:</span>
+                  <span>{demo.mirrorScreenshotHeaderHtml ? 'Fetched' : 'None'}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="font-medium">Footer:</span>
+                  <span>{demo.mirrorScreenshotFooterHtml ? 'Fetched' : 'None'}</span>
+                </div>
              </div>
            </CardContent>
          </Card>

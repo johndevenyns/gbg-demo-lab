@@ -140,22 +140,22 @@
        formStyleConfig = formElementStylesToConfig(scrapedData.formStyles);
      }
  
-     const updates: Partial<DemoEnvironment> = {
-       customerSiteUrl: url,
-       logoUrl: scrapedData.logoUrl || demo.logoUrl,
-       headerBgColor: scrapedData.colors.headerBgColor,
-       headerTextColor: scrapedData.colors.headerTextColor,
-       buttonColor: scrapedData.colors.buttonColor,
-      // Store in dedicated HTML capture fields (won't overwrite screenshot capture)
-      mirrorHtmlHeaderHtml: scrapedData.headerHtml,
-      mirrorHtmlFooterHtml: scrapedData.footerHtml,
-      mirrorHtmlCss: scrapedData.cssContent,
-       ...(formStyleConfig && { formStyle: formStyleConfig }),
-     };
- 
-     onApply(updates);
-     toast({ title: "HTML Capture Applied", description: "Header, footer, and CSS have been saved" });
-   };
+      const updates: Partial<DemoEnvironment> = {
+        customerSiteUrl: url,
+        logoUrl: scrapedData.logoUrl || demo.logoUrl,
+        headerBgColor: scrapedData.colors.headerBgColor,
+        headerTextColor: scrapedData.colors.headerTextColor,
+        buttonColor: scrapedData.colors.buttonColor,
+       // Store in dedicated HTML fetch fields (won't overwrite screenshot fetch)
+       mirrorHtmlHeaderHtml: scrapedData.headerHtml,
+       mirrorHtmlFooterHtml: scrapedData.footerHtml,
+       mirrorHtmlCss: scrapedData.cssContent,
+        ...(formStyleConfig && { formStyle: formStyleConfig }),
+      };
+
+      onApply(updates);
+      toast({ title: "HTML Fetch Applied", description: "Header, footer, and CSS have been saved" });
+    };
  
    return (
      <div className="space-y-4">
@@ -204,18 +204,18 @@
                  <Eye className="w-4 h-4" />
                  Preview Extracted Content
                </Label>
-               <Button onClick={handleApply} size="sm" className="gradient-primary">
-                 <Check className="w-4 h-4 mr-2" />
-                 Apply HTML Capture
-               </Button>
-             </div>
+                <Button onClick={handleApply} size="sm" className="gradient-primary">
+                  <Check className="w-4 h-4 mr-2" />
+                  Apply HTML Fetch
+                </Button>
+              </div>
              
              <div className="border rounded-lg overflow-hidden bg-background">
                <iframe
-                 srcDoc={generateHtmlPreviewHtml(scrapedData, demo.formStyle || DEFAULT_FORM_STYLE, scrapedData.colors.buttonColor)}
-                 className="w-full h-[400px] border-0"
-                 title="HTML capture preview"
-                 sandbox="allow-same-origin"
+                  srcDoc={generateHtmlPreviewHtml(scrapedData, demo.formStyle || DEFAULT_FORM_STYLE, scrapedData.colors.buttonColor)}
+                  className="w-full h-[400px] border-0"
+                  title="HTML fetch preview"
+                  sandbox="allow-same-origin"
                />
              </div>
  
@@ -307,38 +307,37 @@
        {/* Current Applied State */}
        {isConfigured && !scrapedData && (
          <Card className="border-primary/30">
-           <CardContent className="pt-4 space-y-4">
-             <div className="flex items-center justify-between">
-               <div className="flex items-center gap-2 text-primary">
-                 <Check className="w-4 h-4" />
-                 <span className="font-medium">Currently Applied HTML Capture</span>
-               </div>
-               <span className="text-xs text-muted-foreground">
-                 From: {demo.customerSiteUrl}
-               </span>
-             </div>
+          <CardContent className="pt-4 space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-primary">
+                  <Check className="w-4 h-4" />
+                  <span className="font-medium">Currently Applied HTML Fetch</span>
+                </div>
+                <span className="text-xs text-muted-foreground">
+                  From: {demo.customerSiteUrl}
+                </span>
+              </div>
  
-             {/* Live Preview of Saved Content */}
-             <div className="space-y-2">
-               <Label className="flex items-center gap-2">
-                 <Eye className="w-4 h-4" />
-                 Saved HTML Preview
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <Eye className="w-4 h-4" />
+                  Saved HTML Preview
                </Label>
                <div className="border rounded-lg overflow-hidden bg-background">
                  <iframe
                    srcDoc={(() => {
                      const formStyle = demo.formStyle || DEFAULT_FORM_STYLE;
-                   return generatePreviewDocument({
-                     formStyle,
-                     buttonColor: demo.buttonColor || '#3b82f6',
-                     headerHtml: demo.mirrorHtmlHeaderHtml || '<div style="padding: 20px; background: #f0f0f0; text-align: center; color: #666;">No header captured</div>',
-                     footerHtml: demo.mirrorHtmlFooterHtml || '<div style="padding: 20px; background: #f0f0f0; text-align: center; color: #666;">No footer captured</div>',
-                     cssContent: demo.mirrorHtmlCss || undefined,
-                   });
-                   })()}
-                   className="w-full h-[350px] border-0"
-                   title="Saved HTML capture preview"
-                   sandbox="allow-same-origin"
+                    return generatePreviewDocument({
+                      formStyle,
+                      buttonColor: demo.buttonColor || '#3b82f6',
+                      headerHtml: demo.mirrorHtmlHeaderHtml || '<div style="padding: 20px; background: #f0f0f0; text-align: center; color: #666;">No header fetched</div>',
+                      footerHtml: demo.mirrorHtmlFooterHtml || '<div style="padding: 20px; background: #f0f0f0; text-align: center; color: #666;">No footer fetched</div>',
+                      cssContent: demo.mirrorHtmlCss || undefined,
+                    });
+                    })()}
+                    className="w-full h-[350px] border-0"
+                    title="Saved HTML fetch preview"
+                    sandbox="allow-same-origin"
                  />
                </div>
              </div>
