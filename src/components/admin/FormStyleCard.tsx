@@ -201,26 +201,48 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, onUpdateButtonCo
                   </span>
                 </div>
 
-                {/* Submit Button */}
-                <button
-                  style={{
-                    width: '100%',
-                    padding: getButtonPadding(formStyle.buttonPadding),
-                    backgroundColor: formStyle.buttonBgColor || demo.buttonColor || formStyle.inputFocusBorderColor,
-                    color: formStyle.buttonTextColor || '#ffffff',
-                    border: 'none',
-                    borderRadius: getButtonBorderRadius(formStyle.buttonBorderRadius),
-                    fontFamily: formStyle.fontFamily,
-                    fontWeight: getButtonFontWeight(formStyle.buttonFontWeight),
-                    fontSize: getFontSize(formStyle.fontSize),
-                    cursor: 'pointer',
-                    marginTop: '8px',
-                    boxShadow: getButtonShadow(formStyle.buttonShadow),
-                    transition: 'all 0.2s ease',
-                  }}
-                >
-                  Continue
-                </button>
+                {/* Navigation Buttons Preview */}
+                <div className="flex gap-3 mt-2">
+                  {/* Back Button */}
+                  <button
+                    style={{
+                      flex: 1,
+                      padding: getButtonPadding(formStyle.reverseButtonPadding),
+                      backgroundColor: formStyle.reverseButtonBgColor || 'transparent',
+                      color: formStyle.reverseButtonTextColor || '#6b7280',
+                      border: `${formStyle.reverseButtonBorderWidth || '1'}px solid ${formStyle.reverseButtonBorderColor || '#e5e7eb'}`,
+                      borderRadius: getButtonBorderRadius(formStyle.reverseButtonBorderRadius),
+                      fontFamily: formStyle.fontFamily,
+                      fontWeight: getButtonFontWeight(formStyle.reverseButtonFontWeight || 'medium'),
+                      fontSize: getFontSize(formStyle.fontSize),
+                      cursor: 'pointer',
+                      boxShadow: getButtonShadow(formStyle.reverseButtonShadow),
+                      transition: 'all 0.2s ease',
+                    }}
+                  >
+                    Back
+                  </button>
+                  
+                  {/* Continue/Submit Button */}
+                  <button
+                    style={{
+                      flex: 2,
+                      padding: getButtonPadding(formStyle.buttonPadding),
+                      backgroundColor: formStyle.buttonBgColor || demo.buttonColor || formStyle.inputFocusBorderColor,
+                      color: formStyle.buttonTextColor || '#ffffff',
+                      border: 'none',
+                      borderRadius: getButtonBorderRadius(formStyle.buttonBorderRadius),
+                      fontFamily: formStyle.fontFamily,
+                      fontWeight: getButtonFontWeight(formStyle.buttonFontWeight),
+                      fontSize: getFontSize(formStyle.fontSize),
+                      cursor: 'pointer',
+                      boxShadow: getButtonShadow(formStyle.buttonShadow),
+                      transition: 'all 0.2s ease',
+                    }}
+                  >
+                    Continue
+                  </button>
+                </div>
               </div>
             </div>
           )}
@@ -856,9 +878,9 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, onUpdateButtonCo
                       </div>
                     </div>
 
-                    {/* Button Styling */}
+                    {/* Forward Button Styling */}
                     <div className="space-y-4">
-                      <h4 className="font-semibold text-sm border-b pb-2">Button Styling</h4>
+                      <h4 className="font-semibold text-sm border-b pb-2">Forward Button (Next, Submit)</h4>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <div className="space-y-2">
                           <Label className="text-xs">Background</Label>
@@ -914,9 +936,6 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, onUpdateButtonCo
                               className="font-mono text-xs flex-1"
                             />
                           </div>
-                          {formStyle.capturedPatterns?.detectedButtonHoverBgColor && (
-                            <span className="text-xs text-muted-foreground">Detected: {formStyle.capturedPatterns.detectedButtonHoverBgColor}</span>
-                          )}
                         </div>
                         <div className="space-y-2">
                           <Label className="text-xs">Hover Text Color</Label>
@@ -952,9 +971,6 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, onUpdateButtonCo
                               <SelectItem value="full">Full</SelectItem>
                             </SelectContent>
                           </Select>
-                          {formStyle.capturedPatterns?.detectedButtonBorderRadius && (
-                            <span className="text-xs text-muted-foreground">Detected: {formStyle.capturedPatterns.detectedButtonBorderRadius}</span>
-                          )}
                         </div>
                         <div className="space-y-2">
                           <Label className="text-xs">Padding</Label>
@@ -971,9 +987,6 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, onUpdateButtonCo
                               <SelectItem value="lg">Large</SelectItem>
                             </SelectContent>
                           </Select>
-                          {formStyle.capturedPatterns?.detectedButtonPadding && (
-                            <span className="text-xs text-muted-foreground">Detected: {formStyle.capturedPatterns.detectedButtonPadding}</span>
-                          )}
                         </div>
                         <div className="space-y-2">
                           <Label className="text-xs">Font Weight</Label>
@@ -991,15 +1004,186 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, onUpdateButtonCo
                               <SelectItem value="bold">Bold</SelectItem>
                             </SelectContent>
                           </Select>
-                          {formStyle.capturedPatterns?.detectedButtonFontWeight && (
-                            <span className="text-xs text-muted-foreground">Detected: {formStyle.capturedPatterns.detectedButtonFontWeight}</span>
-                          )}
                         </div>
                         <div className="space-y-2">
                           <Label className="text-xs">Shadow</Label>
                           <Select
                             value={formStyle.buttonShadow || 'none'}
                             onValueChange={(value) => updateCustomStyle({ buttonShadow: value as any })}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">None</SelectItem>
+                              <SelectItem value="sm">Small</SelectItem>
+                              <SelectItem value="md">Medium</SelectItem>
+                              <SelectItem value="lg">Large</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Reverse Button Styling */}
+                    <div className="space-y-4">
+                      <h4 className="font-semibold text-sm border-b pb-2">Reverse Button (Back, Previous)</h4>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="space-y-2">
+                          <Label className="text-xs">Background</Label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="color"
+                              value={formStyle.reverseButtonBgColor === 'transparent' ? '#ffffff' : (formStyle.reverseButtonBgColor || '#ffffff')}
+                              onChange={(e) => updateCustomStyle({ reverseButtonBgColor: e.target.value })}
+                              className="color-picker-swatch"
+                            />
+                            <Input
+                              value={formStyle.reverseButtonBgColor || 'transparent'}
+                              onChange={(e) => updateCustomStyle({ reverseButtonBgColor: e.target.value })}
+                              placeholder="transparent"
+                              className="font-mono text-xs flex-1"
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-xs">Text Color</Label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="color"
+                              value={formStyle.reverseButtonTextColor || '#6b7280'}
+                              onChange={(e) => updateCustomStyle({ reverseButtonTextColor: e.target.value })}
+                              className="color-picker-swatch"
+                            />
+                            <Input
+                              value={formStyle.reverseButtonTextColor || '#6b7280'}
+                              onChange={(e) => updateCustomStyle({ reverseButtonTextColor: e.target.value })}
+                              className="font-mono text-xs flex-1"
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-xs">Hover Background</Label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="color"
+                              value={formStyle.reverseButtonHoverBgColor || '#f3f4f6'}
+                              onChange={(e) => updateCustomStyle({ reverseButtonHoverBgColor: e.target.value })}
+                              className="color-picker-swatch"
+                            />
+                            <Input
+                              value={formStyle.reverseButtonHoverBgColor || ''}
+                              onChange={(e) => updateCustomStyle({ reverseButtonHoverBgColor: e.target.value })}
+                              placeholder="Auto"
+                              className="font-mono text-xs flex-1"
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-xs">Hover Text Color</Label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="color"
+                              value={formStyle.reverseButtonHoverTextColor || '#374151'}
+                              onChange={(e) => updateCustomStyle({ reverseButtonHoverTextColor: e.target.value })}
+                              className="color-picker-swatch"
+                            />
+                            <Input
+                              value={formStyle.reverseButtonHoverTextColor || ''}
+                              onChange={(e) => updateCustomStyle({ reverseButtonHoverTextColor: e.target.value })}
+                              placeholder="Auto"
+                              className="font-mono text-xs flex-1"
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-xs">Border Color</Label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="color"
+                              value={formStyle.reverseButtonBorderColor || '#e5e7eb'}
+                              onChange={(e) => updateCustomStyle({ reverseButtonBorderColor: e.target.value })}
+                              className="color-picker-swatch"
+                            />
+                            <Input
+                              value={formStyle.reverseButtonBorderColor || '#e5e7eb'}
+                              onChange={(e) => updateCustomStyle({ reverseButtonBorderColor: e.target.value })}
+                              className="font-mono text-xs flex-1"
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-xs">Border Width</Label>
+                          <Select
+                            value={formStyle.reverseButtonBorderWidth || '1'}
+                            onValueChange={(value) => updateCustomStyle({ reverseButtonBorderWidth: value as any })}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="0">None</SelectItem>
+                              <SelectItem value="1">1px</SelectItem>
+                              <SelectItem value="2">2px</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-xs">Border Radius</Label>
+                          <Select
+                            value={formStyle.reverseButtonBorderRadius || 'md'}
+                            onValueChange={(value) => updateCustomStyle({ reverseButtonBorderRadius: value as any })}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">None</SelectItem>
+                              <SelectItem value="sm">Small</SelectItem>
+                              <SelectItem value="md">Medium</SelectItem>
+                              <SelectItem value="lg">Large</SelectItem>
+                              <SelectItem value="full">Full</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-xs">Padding</Label>
+                          <Select
+                            value={formStyle.reverseButtonPadding || 'md'}
+                            onValueChange={(value) => updateCustomStyle({ reverseButtonPadding: value as any })}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="sm">Compact</SelectItem>
+                              <SelectItem value="md">Medium</SelectItem>
+                              <SelectItem value="lg">Large</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-xs">Font Weight</Label>
+                          <Select
+                            value={formStyle.reverseButtonFontWeight || 'medium'}
+                            onValueChange={(value) => updateCustomStyle({ reverseButtonFontWeight: value as any })}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="normal">Normal</SelectItem>
+                              <SelectItem value="medium">Medium</SelectItem>
+                              <SelectItem value="semibold">Semibold</SelectItem>
+                              <SelectItem value="bold">Bold</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-xs">Shadow</Label>
+                          <Select
+                            value={formStyle.reverseButtonShadow || 'none'}
+                            onValueChange={(value) => updateCustomStyle({ reverseButtonShadow: value as any })}
                           >
                             <SelectTrigger>
                               <SelectValue />

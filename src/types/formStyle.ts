@@ -127,7 +127,7 @@ export interface FormStyleConfig {
   bodyFontSize?: 'xs' | 'sm' | 'base';
   bodyColor?: string;
   
-  // Button styling
+  // Forward Button styling (Next, Submit, Continue)
   buttonBgColor?: string;          // Button background color (overrides demo.buttonColor if set)
   buttonTextColor?: string;        // Button text color
   buttonHoverBgColor?: string;     // Button hover background color
@@ -136,6 +136,18 @@ export interface FormStyleConfig {
   buttonBorderRadius?: 'none' | 'sm' | 'md' | 'lg' | 'full';  // Button corner radius
   buttonFontWeight?: 'normal' | 'medium' | 'semibold' | 'bold';
   buttonShadow?: 'none' | 'sm' | 'md' | 'lg';  // Button shadow
+  
+  // Reverse Button styling (Back, Previous, Cancel)
+  reverseButtonBgColor?: string;
+  reverseButtonTextColor?: string;
+  reverseButtonHoverBgColor?: string;
+  reverseButtonHoverTextColor?: string;
+  reverseButtonBorderColor?: string;
+  reverseButtonBorderWidth?: '0' | '1' | '2';
+  reverseButtonPadding?: 'sm' | 'md' | 'lg';
+  reverseButtonBorderRadius?: 'none' | 'sm' | 'md' | 'lg' | 'full';
+  reverseButtonFontWeight?: 'normal' | 'medium' | 'semibold' | 'bold';
+  reverseButtonShadow?: 'none' | 'sm' | 'md' | 'lg';
 }
 
 // Default form style
@@ -169,11 +181,20 @@ export const DEFAULT_FORM_STYLE: FormStyleConfig = {
   titleAlignment: 'center',
   bodyFontSize: 'sm',
   bodyColor: '#6b7280',
-  // Button defaults
+  // Forward button defaults
   buttonPadding: 'md',
   buttonBorderRadius: 'md',
   buttonFontWeight: 'semibold',
   buttonShadow: 'none',
+  // Reverse button defaults (outline style)
+  reverseButtonBgColor: 'transparent',
+  reverseButtonTextColor: '#6b7280',
+  reverseButtonBorderColor: '#e5e7eb',
+  reverseButtonBorderWidth: '1',
+  reverseButtonPadding: 'md',
+  reverseButtonBorderRadius: 'md',
+  reverseButtonFontWeight: 'medium',
+  reverseButtonShadow: 'none',
 };
 
 // Predefined form style templates
