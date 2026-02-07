@@ -18,7 +18,7 @@ import {
 import { DemoEnvironment } from '@/types/demo';
 import { ScrapedBranding, scrapingApi, FormElementStyles, formAnalysisApi, CapturedFormData } from '@/lib/api/scraping';
 import { useToast } from '@/hooks/use-toast';
-import { getBorderRadius, getPadding, getFontSize, getLabelWeight, getFormBorderRadius, getFormShadow, getTitleFontSize, getTitleFontWeight, getBodyFontSize } from '@/lib/formStyleUtils';
+import { getBorderRadius, getPadding, getFontSize, getLabelWeight, getFormBorderRadius, getFormShadow, getTitleFontSize, getTitleFontWeight, getBodyFontSize, getButtonPadding, getButtonBorderRadius, getButtonFontWeight, getButtonShadow } from '@/lib/formStyleUtils';
 import CapturedFormRenderer from '@/components/preview/CapturedFormRenderer';
 
 interface FormStyleCardProps {
@@ -281,6 +281,27 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, onUpdateButtonCo
         if (p.detectedFontFamily) capturedConfig.fontFamily = p.detectedFontFamily;
         // Apply detected label style to make it configurable
         if (p.labelStyle) capturedConfig.labelStyle = p.labelStyle;
+        // Apply detected button styles
+        if (p.detectedButtonBgColor) capturedConfig.buttonBgColor = p.detectedButtonBgColor;
+        if (p.detectedButtonTextColor) capturedConfig.buttonTextColor = p.detectedButtonTextColor;
+        if (p.detectedButtonHoverBgColor) capturedConfig.buttonHoverBgColor = p.detectedButtonHoverBgColor;
+        // Map detected button border radius to our enum
+        if (p.detectedButtonBorderRadius) {
+          const radiusNum = parseInt(p.detectedButtonBorderRadius);
+          if (radiusNum === 0) capturedConfig.buttonBorderRadius = 'none';
+          else if (radiusNum <= 4) capturedConfig.buttonBorderRadius = 'sm';
+          else if (radiusNum <= 8) capturedConfig.buttonBorderRadius = 'md';
+          else if (radiusNum <= 16) capturedConfig.buttonBorderRadius = 'lg';
+          else capturedConfig.buttonBorderRadius = 'full';
+        }
+        // Map detected button font weight
+        if (p.detectedButtonFontWeight) {
+          const weight = parseInt(p.detectedButtonFontWeight) || 0;
+          if (weight >= 700) capturedConfig.buttonFontWeight = 'bold';
+          else if (weight >= 600) capturedConfig.buttonFontWeight = 'semibold';
+          else if (weight >= 500) capturedConfig.buttonFontWeight = 'medium';
+          else capturedConfig.buttonFontWeight = 'normal';
+        }
       }
 
       onUpdateStyle({
@@ -721,16 +742,18 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, onUpdateButtonCo
              <button
                style={{
                  width: '100%',
-                 padding: '14px 24px',
-                 backgroundColor: demo.buttonColor || formStyle.inputFocusBorderColor,
-                 color: '#ffffff',
+                 padding: getButtonPadding(formStyle.buttonPadding),
+                 backgroundColor: formStyle.buttonBgColor || demo.buttonColor || formStyle.inputFocusBorderColor,
+                 color: formStyle.buttonTextColor || '#ffffff',
                  border: 'none',
-                 borderRadius: getBorderRadius(formStyle.borderRadius),
+                 borderRadius: getButtonBorderRadius(formStyle.buttonBorderRadius),
                  fontFamily: formStyle.fontFamily,
-                 fontWeight: 600,
+                 fontWeight: getButtonFontWeight(formStyle.buttonFontWeight),
                  fontSize: getFontSize(formStyle.fontSize),
                  cursor: 'pointer',
                  marginTop: '8px',
+                 boxShadow: getButtonShadow(formStyle.buttonShadow),
+                 transition: 'all 0.2s ease',
                }}
              >
                Continue
@@ -758,10 +781,10 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, onUpdateButtonCo
                <div className="w-4 h-4 rounded border" style={{ backgroundColor: formStyle.labelColor }} />
                <span className="text-muted-foreground">Label</span>
              </div>
-             <div className="flex items-center gap-2">
-               <div className="w-4 h-4 rounded border" style={{ backgroundColor: demo.buttonColor || formStyle.inputFocusBorderColor }} />
-               <span className="text-muted-foreground">Button</span>
-             </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 rounded border" style={{ backgroundColor: formStyle.buttonBgColor || demo.buttonColor || formStyle.inputFocusBorderColor }} />
+                <span className="text-muted-foreground">Button</span>
+              </div>
              {formStyle.fontFamily && (
                <div className="flex items-center gap-2">
                  <span className="font-medium" style={{ fontFamily: formStyle.fontFamily }}>Aa</span>
@@ -2004,7 +2027,126 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, onUpdateButtonCo
               </div>
             </div>
 
-           {/* Save Button */}
+            {/* Button Styling */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h4 className="font-semibold text-sm">Button Styling</h4>
+                <p className="text-xs text-muted-foreground">Customize submit button appearance</p>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label>Background Color</Label>
+                  <div className="flex items-center gap-2">
+                    <div 
+                      className="w-6 h-6 rounded border-2 border-border shrink-0"
+                      style={{ backgroundColor: formStyle.buttonBgColor || demo.buttonColor || '#6366f1' }}
+                    />
+                    <input
+                      type="color"
+                      value={formStyle.buttonBgColor || demo.buttonColor || '#6366f1'}
+                      onChange={(e) => updateCustomStyle({ buttonBgColor: e.target.value })}
+                      className="color-picker-swatch"
+                    />
+                    <Input
+                      value={formStyle.buttonBgColor || demo.buttonColor || '#6366f1'}
+                      onChange={(e) => updateCustomStyle({ buttonBgColor: e.target.value })}
+                      className="font-mono text-xs"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Text Color</Label>
+                  <div className="flex items-center gap-2">
+                    <div 
+                      className="w-6 h-6 rounded border-2 border-border shrink-0"
+                      style={{ backgroundColor: formStyle.buttonTextColor || '#ffffff' }}
+                    />
+                    <input
+                      type="color"
+                      value={formStyle.buttonTextColor || '#ffffff'}
+                      onChange={(e) => updateCustomStyle({ buttonTextColor: e.target.value })}
+                      className="color-picker-swatch"
+                    />
+                    <Input
+                      value={formStyle.buttonTextColor || '#ffffff'}
+                      onChange={(e) => updateCustomStyle({ buttonTextColor: e.target.value })}
+                      className="font-mono text-xs"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Hover Background</Label>
+                  <div className="flex items-center gap-2">
+                    <div 
+                      className="w-6 h-6 rounded border-2 border-border shrink-0"
+                      style={{ backgroundColor: formStyle.buttonHoverBgColor || formStyle.buttonBgColor || demo.buttonColor || '#4f46e5' }}
+                    />
+                    <input
+                      type="color"
+                      value={formStyle.buttonHoverBgColor || formStyle.buttonBgColor || demo.buttonColor || '#4f46e5'}
+                      onChange={(e) => updateCustomStyle({ buttonHoverBgColor: e.target.value })}
+                      className="color-picker-swatch"
+                    />
+                    <Input
+                      value={formStyle.buttonHoverBgColor || formStyle.buttonBgColor || demo.buttonColor || '#4f46e5'}
+                      onChange={(e) => updateCustomStyle({ buttonHoverBgColor: e.target.value })}
+                      className="font-mono text-xs"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Border Radius</Label>
+                  <Select
+                    value={formStyle.buttonBorderRadius || 'md'}
+                    onValueChange={(value) => updateCustomStyle({ buttonBorderRadius: value as 'none' | 'sm' | 'md' | 'lg' | 'full' })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">None (0px)</SelectItem>
+                      <SelectItem value="sm">Small (4px)</SelectItem>
+                      <SelectItem value="md">Medium (6px)</SelectItem>
+                      <SelectItem value="lg">Large (10px)</SelectItem>
+                      <SelectItem value="full">Pill (rounded)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Padding</Label>
+                  <Select
+                    value={formStyle.buttonPadding || 'md'}
+                    onValueChange={(value) => updateCustomStyle({ buttonPadding: value as 'sm' | 'md' | 'lg' })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="sm">Small</SelectItem>
+                      <SelectItem value="md">Medium</SelectItem>
+                      <SelectItem value="lg">Large</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Font Weight</Label>
+                  <Select
+                    value={formStyle.buttonFontWeight || 'semibold'}
+                    onValueChange={(value) => updateCustomStyle({ buttonFontWeight: value as 'normal' | 'medium' | 'semibold' | 'bold' })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="normal">Normal</SelectItem>
+                      <SelectItem value="medium">Medium</SelectItem>
+                      <SelectItem value="semibold">Semibold</SelectItem>
+                      <SelectItem value="bold">Bold</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
            <div className="pt-4 border-t border-border">
              <Button 
                onClick={handleSaveCustomStyles} 

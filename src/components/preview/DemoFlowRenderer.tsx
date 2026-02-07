@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { FormStep, PageElement, StepApiResponse, MdlProvider, VerificationType, StoredTestData, FormField, VerificationFlowConfig as VerificationFlowConfigType, DecisionChoice } from '@/types/demo';
 import { FormStyleConfig, DEFAULT_FORM_STYLE } from '@/types/formStyle';
+import { getButtonPadding, getButtonBorderRadius, getButtonFontWeight, getButtonShadow } from '@/lib/formStyleUtils';
 import { UnifiedVerificationConfig } from '@/types/verification';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -521,6 +522,26 @@ export function DemoFlowRenderer({
 
   // Use provided form style or default
   const style = formStyle || DEFAULT_FORM_STYLE;
+
+  // Get effective button color (from style config or demo buttonColor prop)
+  const effectiveButtonBgColor = style.buttonBgColor || buttonColor || '#6366f1';
+  const effectiveButtonTextColor = style.buttonTextColor || getContrastTextColor(effectiveButtonBgColor);
+  const effectiveButtonHoverBgColor = style.buttonHoverBgColor || effectiveButtonBgColor;
+  
+  // Helper to get button styles
+  const getButtonStyles = (): React.CSSProperties => ({
+    backgroundColor: effectiveButtonBgColor,
+    color: effectiveButtonTextColor,
+    padding: getButtonPadding(style.buttonPadding),
+    borderRadius: getButtonBorderRadius(style.buttonBorderRadius),
+    fontWeight: getButtonFontWeight(style.buttonFontWeight),
+    boxShadow: getButtonShadow(style.buttonShadow),
+    fontFamily: style.fontFamily,
+    fontSize: '14px',
+    border: 'none',
+    cursor: 'pointer',
+    transition: 'all 0.2s ease',
+  });
 
   const currentStep = steps[currentStepIndex];
   const isFirstStep = currentStepIndex === 0;
@@ -1941,10 +1962,13 @@ export function DemoFlowRenderer({
           {buttonConfig.next.enabled && currentStep?.stepType !== 'page' && (
             <button 
               onClick={goToNextStep} 
-              className="flex-1 h-10 px-4 py-2 rounded-md text-sm font-medium inline-flex items-center justify-center gap-2 transition-colors hover:opacity-90"
-              style={{ 
-                backgroundColor: buttonColor || '#6366f1',
-                color: getContrastTextColor(buttonColor || '#6366f1')
+              className="flex-1 inline-flex items-center justify-center gap-2 transition-all"
+              style={getButtonStyles()}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = effectiveButtonHoverBgColor;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = effectiveButtonBgColor;
               }}
             >
               {buttonConfig.next.label}
@@ -1955,10 +1979,13 @@ export function DemoFlowRenderer({
           {buttonConfig.submit.enabled && currentStep?.stepType !== 'page' && (
             <button 
               onClick={goToNextStep}
-              className="flex-1 h-10 px-4 py-2 rounded-md text-sm font-medium inline-flex items-center justify-center gap-2 transition-colors hover:opacity-90"
-              style={{ 
-                backgroundColor: buttonColor || '#6366f1',
-                color: getContrastTextColor(buttonColor || '#6366f1')
+              className="flex-1 inline-flex items-center justify-center gap-2 transition-all"
+              style={getButtonStyles()}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = effectiveButtonHoverBgColor;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = effectiveButtonBgColor;
               }}
             >
               {buttonConfig.submit.label}
