@@ -152,7 +152,7 @@ export default function DemoPreview() {
       <main
         className="flex-1 py-12"
         style={{
-          backgroundColor: (previewDocument?.formStyle?.contentAreaBgColor || '#f5f5f5'),
+          backgroundColor: previewDocument?.formStyle?.contentAreaBgColor || 'transparent',
         }}
       >
         <div className="max-w-xl mx-auto px-4">
