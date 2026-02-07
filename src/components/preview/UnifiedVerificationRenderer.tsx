@@ -1,14 +1,13 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { FormStyleConfig, DEFAULT_FORM_STYLE } from '@/types/formStyle';
-import { UnifiedVerificationConfig, UserSelectionChoice, SelectionIconType } from '@/types/verification';
+import { UnifiedVerificationConfig, UserSelectionChoice, SelectionIconType, MdlProvider } from '@/types/verification';
 import { VerificationType } from '@/types/demo';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
   FileText, Smartphone, Database, Shield, User, Fingerprint, Camera, CreditCard, 
-  ChevronDown, ChevronUp, ArrowLeft, Loader2
+  ArrowLeft, Loader2, ChevronRight
 } from 'lucide-react';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 // Map icon types to Lucide icons
 const ICON_MAP: Record<SelectionIconType, React.ElementType> = {
@@ -37,7 +36,8 @@ interface UnifiedVerificationRendererProps {
   buttonColor: string;
   isFirstStep: boolean;
   isLoading?: boolean;
-  onSelectType: (verificationType: VerificationType, typeKey: string) => void;
+  mdlProviders?: MdlProvider[];
+  onSelectType: (verificationType: VerificationType, typeKey: string, providerId?: string) => void;
   onBack: () => void;
 }
 
@@ -47,14 +47,16 @@ export function UnifiedVerificationRenderer({
   buttonColor,
   isFirstStep,
   isLoading = false,
+  mdlProviders = [],
   onSelectType,
   onBack,
 }: UnifiedVerificationRendererProps) {
   const style = formStyle || DEFAULT_FORM_STYLE;
-  const [expandedChoices, setExpandedChoices] = useState<Set<string>>(new Set());
+  const [selectedChoice, setSelectedChoice] = useState<string | null>(null);
   
-  // Track if we've already triggered auto-select to prevent multiple calls
+  // Track if we've already triggered to prevent multiple calls
   const hasTriggeredRef = useRef(false);
+  const isSelectingRef = useRef(false);
 
   // Get contrast text color for button
   const getContrastTextColor = (hexColor: string): string => {
@@ -70,22 +72,39 @@ export function UnifiedVerificationRenderer({
 
   const buttonTextColor = getContrastTextColor(buttonColor);
 
-  const toggleChoice = useCallback((choiceId: string) => {
-    setExpandedChoices(prev => {
-      const next = new Set(prev);
-      if (next.has(choiceId)) {
-        next.delete(choiceId);
-      } else {
-        next.add(choiceId);
-      }
-      return next;
-    });
-  }, []);
+  // Get enabled mDL providers for a specific choice
+  const getEnabledMdlProviders = useCallback((typeKey: string): MdlProvider[] => {
+    if (typeKey !== 'mdl') return [];
+    
+    const typeConfig = config.typeConfigs?.[typeKey];
+    const enabledKeys = typeConfig?.enabledProviderKeys;
+    
+    if (!enabledKeys || enabledKeys.length === 0) {
+      // All providers enabled by default
+      return mdlProviders.filter(p => p.isEnabled);
+    }
+    
+    return mdlProviders.filter(p => p.isEnabled && enabledKeys.includes(p.providerKey));
+  }, [config.typeConfigs, mdlProviders]);
 
-  const handleChoiceSelect = useCallback((choice: UserSelectionChoice) => {
+  const handleChoiceSelect = useCallback((choice: UserSelectionChoice, providerId?: string) => {
+    // Prevent double-triggering
+    if (isSelectingRef.current || isLoading) return;
+    isSelectingRef.current = true;
+    
+    setSelectedChoice(choice.typeKey);
     const verificationType = TYPE_KEY_MAP[choice.typeKey] || 'docBio';
-    onSelectType(verificationType, choice.typeKey);
-  }, [onSelectType]);
+    onSelectType(verificationType, choice.typeKey, providerId);
+    
+    // Reset after a delay
+    setTimeout(() => {
+      isSelectingRef.current = false;
+    }, 1000);
+  }, [onSelectType, isLoading]);
+
+  const handleMdlProviderSelect = useCallback((choice: UserSelectionChoice, provider: MdlProvider) => {
+    handleChoiceSelect(choice, provider.providerKey);
+  }, [handleChoiceSelect]);
 
   // Auto-trigger for admin_preselect or auto_detect modes
   const isAutoMode = config.methodSelection === 'admin_preselect' || config.methodSelection === 'auto_detect';
@@ -141,79 +160,126 @@ export function UnifiedVerificationRenderer({
       <div className="space-y-3">
         {choices.map((choice) => {
           const IconComponent = ICON_MAP[choice.icon] || Shield;
-          const isExpanded = !choice.collapsedByDefault || expandedChoices.has(choice.typeKey);
+          const isSelected = selectedChoice === choice.typeKey;
+          const isMdl = choice.typeKey === 'mdl';
+          const enabledProviders = getEnabledMdlProviders(choice.typeKey);
+          const showProviderList = isMdl && enabledProviders.length > 0;
 
           return (
             <Card 
               key={choice.typeKey}
-              className="cursor-pointer transition-all hover:shadow-md"
-              onClick={() => !choice.collapsedByDefault ? handleChoiceSelect(choice) : toggleChoice(choice.typeKey)}
+              className={`
+                transition-all duration-200
+                ${!showProviderList ? 'cursor-pointer hover:shadow-lg hover:scale-[1.01] active:scale-[0.99]' : ''}
+                ${isSelected ? 'ring-2 ring-offset-2' : ''}
+              `}
+              style={{
+                borderColor: isSelected ? buttonColor : undefined,
+                ...(isSelected ? { '--tw-ring-color': buttonColor } as React.CSSProperties : {}),
+              }}
+              onClick={() => {
+                // Only trigger directly if not an mDL choice with providers
+                if (!showProviderList) {
+                  handleChoiceSelect(choice);
+                }
+              }}
             >
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div 
-                      className="p-2 rounded-lg" 
-                      style={{ backgroundColor: `${buttonColor}20` }}
+                      className="p-2.5 rounded-lg" 
+                      style={{ backgroundColor: `${buttonColor}15` }}
                     >
                       <IconComponent 
                         className="w-5 h-5" 
                         style={{ color: buttonColor }}
                       />
                     </div>
-                    <CardTitle className="text-base">{choice.label}</CardTitle>
+                    <div>
+                      <CardTitle className="text-base">{choice.label}</CardTitle>
+                      {selectionScreen?.showDescriptions && choice.description && (
+                        <CardDescription className="mt-0.5">{choice.description}</CardDescription>
+                      )}
+                    </div>
                   </div>
-                  {choice.collapsedByDefault && (
-                    <CollapsibleTrigger asChild>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleChoice(choice.typeKey);
-                        }}
-                      >
-                        {isExpanded ? (
-                          <ChevronUp className="w-4 h-4" />
-                        ) : (
-                          <ChevronDown className="w-4 h-4" />
-                        )}
-                      </Button>
-                    </CollapsibleTrigger>
+                  
+                  {/* Arrow indicator for non-mDL choices */}
+                  {!showProviderList && (
+                    <div 
+                      className="p-1.5 rounded-full transition-colors"
+                      style={{ backgroundColor: `${buttonColor}10` }}
+                    >
+                      {isSelected && isLoading ? (
+                        <Loader2 className="w-5 h-5 animate-spin" style={{ color: buttonColor }} />
+                      ) : (
+                        <ChevronRight className="w-5 h-5" style={{ color: buttonColor }} />
+                      )}
+                    </div>
                   )}
                 </div>
               </CardHeader>
 
-              <Collapsible open={isExpanded}>
-                <CollapsibleContent>
-                  <CardContent className="pt-0 space-y-3">
-                    {selectionScreen?.showDescriptions && choice.description && (
-                      <CardDescription>{choice.description}</CardDescription>
-                    )}
-                    <Button
-                      className="w-full"
-                      style={{ 
-                        backgroundColor: buttonColor,
-                        color: buttonTextColor,
-                      }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleChoiceSelect(choice);
-                      }}
-                      disabled={isLoading}
-                    >
-                      {isLoading ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Starting...
-                        </>
-                      ) : (
-                        'Select'
-                      )}
-                    </Button>
-                  </CardContent>
-                </CollapsibleContent>
-              </Collapsible>
+              {/* mDL Provider List */}
+              {showProviderList && (
+                <CardContent className="pt-0 pb-3">
+                  <div className="space-y-2 mt-2">
+                    {enabledProviders.map((provider) => (
+                      <button
+                        key={provider.providerKey}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleMdlProviderSelect(choice, provider);
+                        }}
+                        disabled={isLoading}
+                        className={`
+                          w-full flex items-center gap-3 p-3 rounded-xl transition-all
+                          hover:scale-[1.01] active:scale-[0.99]
+                          ${isLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+                        `}
+                        style={{
+                          backgroundColor: '#E8E8EC',
+                        }}
+                      >
+                        {/* Provider logo */}
+                        <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center p-1.5 shrink-0 shadow-sm">
+                          {provider.logoUrl ? (
+                            <img
+                              src={provider.logoUrl}
+                              alt={provider.displayName}
+                              className="max-w-full max-h-full object-contain"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                              }}
+                            />
+                          ) : (
+                            <Smartphone className="w-5 h-5 text-muted-foreground" />
+                          )}
+                        </div>
+
+                        {/* Provider info */}
+                        <div className="flex-1 text-left">
+                          <div className="font-semibold text-sm" style={{ color: '#333' }}>
+                            {provider.displayName}
+                          </div>
+                          {provider.domain && (
+                            <div className="text-xs" style={{ color: '#666' }}>
+                              {provider.domain}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Arrow or loading */}
+                        {isSelected && isLoading ? (
+                          <Loader2 className="w-5 h-5 text-muted-foreground animate-spin shrink-0" />
+                        ) : (
+                          <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </CardContent>
+              )}
             </Card>
           );
         })}
@@ -226,6 +292,7 @@ export function UnifiedVerificationRenderer({
             variant="outline"
             onClick={onBack}
             className="w-full"
+            disabled={isLoading}
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             {config.backButtonLabel || 'Back'}

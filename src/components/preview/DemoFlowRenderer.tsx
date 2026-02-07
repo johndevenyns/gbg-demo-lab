@@ -2,7 +2,8 @@ import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { FormStep, PageElement, StepApiResponse, MdlProvider, VerificationType, StoredTestData, FormField, VerificationFlowConfig as VerificationFlowConfigType, DecisionChoice } from '@/types/demo';
 import { FormStyleConfig, DEFAULT_FORM_STYLE } from '@/types/formStyle';
 import { getButtonPadding, getButtonBorderRadius, getButtonFontWeight, getButtonShadow } from '@/lib/formStyleUtils';
-import { UnifiedVerificationConfig } from '@/types/verification';
+import { UnifiedVerificationConfig, MdlProvider as MdlProviderVerification, transformMdlProviderRow } from '@/types/verification';
+import { useMdlProviders } from '@/hooks/useVerificationAdmin';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, QrCode, ArrowLeft, ArrowRight, Check, Copy, ExternalLink, AlertCircle, Smartphone, CheckCircle2, XCircle } from 'lucide-react';
@@ -579,6 +580,12 @@ export function DemoFlowRenderer({
   // State to trigger re-render when session data is set
   const [, forceUpdate] = useState({});
   const pollingRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Fetch mDL providers for unified verification step
+  const { data: mdlProvidersData } = useMdlProviders(true);
+  const mdlProviders: MdlProviderVerification[] = useMemo(() => {
+    return mdlProvidersData || [];
+  }, [mdlProvidersData]);
 
   // Address validation state
   const [showAddressDialog, setShowAddressDialog] = useState(false);
@@ -1263,12 +1270,17 @@ export function DemoFlowRenderer({
   }, [createVerificationSession, steps, goToNextStep]);
 
   // Handle unified verification type selection
-  const handleUnifiedVerificationSelect = useCallback((verificationType: VerificationType, typeKey: string) => {
-    console.log('Unified verification selected:', verificationType, typeKey);
+  const handleUnifiedVerificationSelect = useCallback((verificationType: VerificationType, typeKey: string, providerId?: string) => {
+    console.log('Unified verification selected:', verificationType, typeKey, 'provider:', providerId);
     setSelectedVerificationType(verificationType);
     
     // Get type-specific config if available
     const typeConfig = currentStep?.unifiedVerificationConfig?.typeConfigs?.[typeKey];
+    
+    // TODO: If mDL with providerId, use the provider-specific flow
+    if (typeKey === 'mdl' && providerId) {
+      console.log('Starting mDL verification with provider:', providerId);
+    }
     
     // Create verification session - skip advance so we stay on step to show QR/polling
     createVerificationSession(verificationType, true);
@@ -1865,6 +1877,7 @@ export function DemoFlowRenderer({
             buttonColor={buttonColor}
             isFirstStep={isFirstStep}
             isLoading={isLoading}
+            mdlProviders={mdlProviders}
             onSelectType={handleUnifiedVerificationSelect}
             onBack={goToPrevStep}
           />
