@@ -566,6 +566,25 @@ export function FormBuilderCanvas({ steps, onUpdateSteps, demo }: FormBuilderCan
     );
   }, [steps, onUpdateSteps]);
 
+  const updateFieldContent = useCallback((stepId: string, fieldId: string, content: string) => {
+    onUpdateSteps(
+      steps.map(s => {
+        if (s.id !== stepId) return s;
+        return {
+          ...s,
+          fields: s.fields.map(f => {
+            if (f.id !== fieldId) return f;
+            // For consent_checkbox, update consentText; for others, update content
+            if (f.type === 'consent_checkbox') {
+              return { ...f, consentText: content };
+            }
+            return { ...f, content };
+          }),
+        };
+      })
+    );
+  }, [steps, onUpdateSteps]);
+
   const toggleExpand = useCallback((stepId: string) => {
     setExpandedSteps(prev => {
       const next = new Set(prev);
@@ -640,6 +659,7 @@ export function FormBuilderCanvas({ steps, onUpdateSteps, demo }: FormBuilderCan
                   onRemoveField={(fieldId) => removeField(step.id, fieldId)}
                   onToggleFieldRequired={(fieldId) => toggleFieldRequired(step.id, fieldId)}
                   onUpdateFieldLabel={(fieldId, label) => updateFieldLabel(step.id, fieldId, label)}
+                  onUpdateFieldContent={(fieldId, content) => updateFieldContent(step.id, fieldId, content)}
                   canDelete={steps.length > 1}
                 />
               )

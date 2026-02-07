@@ -73,12 +73,19 @@ interface SortableFieldProps {
   onRemove: () => void;
   onToggleRequired: () => void;
   onUpdateLabel: (label: string) => void;
+  onUpdateContent?: (content: string) => void;
 }
 
-function SortableField({ field, stepId, isAddressValidated, onRemove, onToggleRequired, onUpdateLabel }: SortableFieldProps) {
+function SortableField({ field, stepId, isAddressValidated, onRemove, onToggleRequired, onUpdateLabel, onUpdateContent }: SortableFieldProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editLabel, setEditLabel] = useState(field.label);
+  const [isEditingContent, setIsEditingContent] = useState(false);
+  const [editContent, setEditContent] = useState(field.content || field.consentText || '');
   const isAddressField = ADDRESS_VALIDATION_FIELDS.includes(field.type);
+  
+  // Check if this is a content-editable field type
+  const isContentField = ['paragraph', 'heading', 'consent_checkbox'].includes(field.type);
+  const contentLabel = field.type === 'consent_checkbox' ? 'Consent Text' : 'Text Content';
   
   const {
     attributes,
@@ -106,12 +113,22 @@ function SortableField({ field, stepId, isAddressValidated, onRemove, onToggleRe
     setIsEditing(false);
   };
 
+  const handleSaveContent = () => {
+    onUpdateContent?.(editContent);
+    setIsEditingContent(false);
+  };
+
+  // Get the display content for content fields
+  const displayContent = field.type === 'consent_checkbox' 
+    ? field.consentText 
+    : field.content;
+
   return (
     <div
       ref={setNodeRef}
       style={style}
       className={`
-        flex items-center gap-2 p-3 rounded-md border bg-card
+        rounded-md border bg-card
         hover:border-primary/30 group transition-all
         ${isDragging ? 'opacity-50 ring-2 ring-primary shadow-lg' : ''}
         ${isAddressValidated && isAddressField 
@@ -120,76 +137,122 @@ function SortableField({ field, stepId, isAddressValidated, onRemove, onToggleRe
         }
       `}
     >
-      <div
-        {...attributes}
-        {...listeners}
-        className="cursor-grab active:cursor-grabbing p-1 -ml-1 hover:bg-accent rounded"
-      >
-        <GripVertical className="w-4 h-4 text-muted-foreground" />
-      </div>
-      
-      <span className={`${isAddressValidated && isAddressField ? 'text-green-600' : 'text-muted-foreground'}`}>
-        {FIELD_ICONS[field.type] || <Type className="w-4 h-4" />}
-      </span>
-      
-      {isAddressValidated && isAddressField && (
-        <Badge variant="outline" className="text-xs bg-green-500/10 text-green-600 border-green-500/30">
-          Validated
-        </Badge>
-      )}
-      
-      {isEditing ? (
-        <div className="flex-1 flex items-center gap-2">
-          <Input
-            value={editLabel}
-            onChange={(e) => setEditLabel(e.target.value)}
-            className="h-7 text-sm"
-            autoFocus
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') handleSaveLabel();
-              if (e.key === 'Escape') setIsEditing(false);
-            }}
-          />
-          <Button size="icon" variant="ghost" className="h-7 w-7" onClick={handleSaveLabel}>
-            <Check className="w-3 h-3" />
-          </Button>
-          <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setIsEditing(false)}>
-            <X className="w-3 h-3" />
-          </Button>
+      {/* Main field row */}
+      <div className="flex items-center gap-2 p-3">
+        <div
+          {...attributes}
+          {...listeners}
+          className="cursor-grab active:cursor-grabbing p-1 -ml-1 hover:bg-accent rounded"
+        >
+          <GripVertical className="w-4 h-4 text-muted-foreground" />
         </div>
-      ) : (
-        <>
-          <span className="text-sm font-medium flex-1">{field.label}</span>
+        
+        <span className={`${isAddressValidated && isAddressField ? 'text-green-600' : 'text-muted-foreground'}`}>
+          {FIELD_ICONS[field.type] || <Type className="w-4 h-4" />}
+        </span>
+        
+        {isAddressValidated && isAddressField && (
+          <Badge variant="outline" className="text-xs bg-green-500/10 text-green-600 border-green-500/30">
+            Validated
+          </Badge>
+        )}
+        
+        {isEditing ? (
+          <div className="flex-1 flex items-center gap-2">
+            <Input
+              value={editLabel}
+              onChange={(e) => setEditLabel(e.target.value)}
+              className="h-7 text-sm"
+              autoFocus
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleSaveLabel();
+                if (e.key === 'Escape') setIsEditing(false);
+              }}
+            />
+            <Button size="icon" variant="ghost" className="h-7 w-7" onClick={handleSaveLabel}>
+              <Check className="w-3 h-3" />
+            </Button>
+            <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setIsEditing(false)}>
+              <X className="w-3 h-3" />
+            </Button>
+          </div>
+        ) : (
+          <>
+            <span className="text-sm font-medium flex-1">{field.label}</span>
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+              onClick={() => setIsEditing(true)}
+            >
+              <Edit2 className="w-3 h-3" />
+            </Button>
+          </>
+        )}
+        
+        <div className="flex items-center gap-2">
+          {/* Only show required toggle for non-content fields (except consent checkbox) */}
+          {(field.type !== 'paragraph' && field.type !== 'heading' && field.type !== 'divider') && (
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs text-muted-foreground">Req</span>
+              <Switch
+                checked={field.required}
+                onCheckedChange={onToggleRequired}
+                className="scale-75"
+              />
+            </div>
+          )}
+          
           <Button
             size="icon"
             variant="ghost"
-            className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-            onClick={() => setIsEditing(true)}
+            className="h-6 w-6 text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+            onClick={onRemove}
           >
-            <Edit2 className="w-3 h-3" />
+            <Trash2 className="w-3 h-3" />
           </Button>
-        </>
-      )}
-      
-      <div className="flex items-center gap-2">
-        <div className="flex items-center gap-1.5">
-          <span className="text-xs text-muted-foreground">Req</span>
-          <Switch
-            checked={field.required}
-            onCheckedChange={onToggleRequired}
-            className="scale-75"
-          />
         </div>
-        
-        <Button
-          size="icon"
-          variant="ghost"
-          className="h-6 w-6 text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-          onClick={onRemove}
-        >
-          <Trash2 className="w-3 h-3" />
-        </Button>
       </div>
+      
+      {/* Content editing row for content fields */}
+      {isContentField && (
+        <div className="px-3 pb-3 pt-0">
+          <div className="flex items-start gap-2 bg-muted/50 rounded-md p-2">
+            <span className="text-xs text-muted-foreground shrink-0 pt-1">{contentLabel}:</span>
+            {isEditingContent ? (
+              <div className="flex-1 flex flex-col gap-2">
+                <textarea
+                  value={editContent}
+                  onChange={(e) => setEditContent(e.target.value)}
+                  className="w-full text-sm p-2 border rounded-md bg-background resize-none min-h-[60px]"
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === 'Escape') setIsEditingContent(false);
+                  }}
+                />
+                <div className="flex gap-1 justify-end">
+                  <Button size="sm" variant="ghost" className="h-7" onClick={() => setIsEditingContent(false)}>
+                    Cancel
+                  </Button>
+                  <Button size="sm" className="h-7" onClick={handleSaveContent}>
+                    Save
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <button
+                className="flex-1 text-left text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                onClick={() => {
+                  setEditContent(displayContent || '');
+                  setIsEditingContent(true);
+                }}
+              >
+                {displayContent || <span className="italic opacity-60">Click to add text...</span>}
+              </button>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -207,6 +270,7 @@ interface FormStepCardProps {
   onRemoveField: (fieldId: string) => void;
   onToggleFieldRequired: (fieldId: string) => void;
   onUpdateFieldLabel: (fieldId: string, label: string) => void;
+  onUpdateFieldContent: (fieldId: string, content: string) => void;
   canDelete: boolean;
 }
 
@@ -223,6 +287,7 @@ export function FormStepCard({
   onRemoveField,
   onToggleFieldRequired,
   onUpdateFieldLabel,
+  onUpdateFieldContent,
   canDelete,
 }: FormStepCardProps) {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
@@ -602,6 +667,7 @@ export function FormStepCard({
                       onRemove={() => onRemoveField(field.id)}
                       onToggleRequired={() => onToggleFieldRequired(field.id)}
                       onUpdateLabel={(label) => onUpdateFieldLabel(field.id, label)}
+                      onUpdateContent={(content) => onUpdateFieldContent(field.id, content)}
                     />
                   ))}
                 </SortableContext>
