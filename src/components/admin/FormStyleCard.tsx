@@ -51,13 +51,19 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, onUpdateButtonCo
 
   const handleMethodChange = (method: FormStyleMethod) => {
     setActiveMethod(method);
-    // When changing method, update the source to match (if not custom which needs manual editing)
-    if (method === 'template' && !configuredMethods.template) {
-      // Don't auto-apply, let user pick a template
+    
+    // When switching to a configured method, apply its source so the preview updates
+    if (method === 'ai-screenshot' && configuredMethods['ai-screenshot']) {
+      // AI screenshot stores style with source = 'mirrored'
+      onUpdateStyle({ ...formStyle, source: 'mirrored' });
+    } else if (method === 'captured' && configuredMethods.captured) {
+      onUpdateStyle({ ...formStyle, source: 'captured' });
+    } else if (method === 'template' && configuredMethods.template) {
+      onUpdateStyle({ ...formStyle, source: 'template' });
     } else if (method === 'custom') {
       onUpdateStyle({ ...formStyle, source: 'custom' });
     }
-    // For ai-screenshot and captured, the source is set when the action is taken
+    // If the method isn't configured yet, just show the tab without changing source
   };
 
   const updateCustomStyle = (updates: Partial<FormStyleConfig>) => {
