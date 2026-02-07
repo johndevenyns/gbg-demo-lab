@@ -14,6 +14,7 @@ import {
   FormStyleTemplate,
   FORM_STYLE_TEMPLATES,
   DEFAULT_FORM_STYLE,
+  CapturedFormPatterns,
 } from '@/types/formStyle';
 import { DemoEnvironment } from '@/types/demo';
 import { ScrapedBranding, scrapingApi, FormElementStyles, formAnalysisApi, CapturedFormData } from '@/lib/api/scraping';
@@ -455,26 +456,49 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, onUpdateButtonCo
           throw new Error(response.error || 'Failed to analyze screenshot');
         }
 
-        const { styles } = response.data;
+        const { styles, content } = response.data;
 
-        // Map AI-extracted styles to FormStyleConfig
+        // Map AI-extracted styles to FormStyleConfig with enhanced detail
         const newStyle: Partial<FormStyleConfig> = {
           source: 'custom',
         };
 
+        // Font family - now captured with high precision
+        if (styles.fontFamily) newStyle.fontFamily = styles.fontFamily;
+        
+        // Input colors
         if (styles.inputBgColor) newStyle.inputBgColor = styles.inputBgColor;
         if (styles.inputTextColor) newStyle.inputTextColor = styles.inputTextColor;
         if (styles.inputBorderColor) newStyle.inputBorderColor = styles.inputBorderColor;
         if (styles.inputFocusBorderColor) newStyle.inputFocusBorderColor = styles.inputFocusBorderColor;
+        if (styles.inputPlaceholderColor) newStyle.inputPlaceholderColor = styles.inputPlaceholderColor;
+        
+        // Label styling
         if (styles.labelColor) newStyle.labelColor = styles.labelColor;
+        if (styles.labelPosition) {
+          newStyle.labelStyle = styles.labelPosition;
+        }
+        
+        // Error color
         if (styles.errorColor) newStyle.errorColor = styles.errorColor;
-        if (styles.fontFamily) newStyle.fontFamily = styles.fontFamily;
+        
+        // Container styling
+        if (styles.containerBgColor) newStyle.formBgColor = styles.containerBgColor;
 
-        // Map border radius
+        // Map border radius from pixel values
         if (styles.inputBorderRadius) {
-          const radius = styles.inputBorderRadius.toLowerCase();
-          if (['none', 'sm', 'md', 'lg', 'full'].includes(radius)) {
-            newStyle.borderRadius = radius as 'none' | 'sm' | 'md' | 'lg' | 'full';
+          const radiusStr = styles.inputBorderRadius.toLowerCase();
+          const radiusPx = parseInt(radiusStr);
+          if (radiusStr.includes('full') || radiusPx >= 20) {
+            newStyle.borderRadius = 'full';
+          } else if (radiusPx >= 10 || radiusStr.includes('lg')) {
+            newStyle.borderRadius = 'lg';
+          } else if (radiusPx >= 6 || radiusStr.includes('md')) {
+            newStyle.borderRadius = 'md';
+          } else if (radiusPx >= 2 || radiusStr.includes('sm')) {
+            newStyle.borderRadius = 'sm';
+          } else {
+            newStyle.borderRadius = 'none';
           }
         }
 
@@ -486,21 +510,135 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, onUpdateButtonCo
           else newStyle.borderWidth = '1';
         }
 
-        // Map font size
+        // Map font size from pixel values
         if (styles.fontSize) {
-          const size = styles.fontSize.toLowerCase();
-          if (['sm', 'base', 'lg'].includes(size)) {
-            newStyle.fontSize = size as 'sm' | 'base' | 'lg';
-          }
+          const sizePx = parseInt(styles.fontSize);
+          if (sizePx <= 14) newStyle.fontSize = 'sm';
+          else if (sizePx >= 18) newStyle.fontSize = 'lg';
+          else newStyle.fontSize = 'base';
         }
 
         // Map label weight
         if (styles.labelFontWeight) {
           const weight = styles.labelFontWeight.toLowerCase();
-          if (['normal', 'medium', 'semibold'].includes(weight)) {
-            newStyle.labelWeight = weight as 'normal' | 'medium' | 'semibold';
+          const weightNum = parseInt(weight);
+          if (weight.includes('semibold') || weight.includes('bold') || weightNum >= 600) {
+            newStyle.labelWeight = 'semibold';
+          } else if (weight.includes('medium') || weightNum >= 500) {
+            newStyle.labelWeight = 'medium';
+          } else {
+            newStyle.labelWeight = 'normal';
           }
         }
+
+        // Button styling - enhanced capture
+        if (styles.buttonBgColor) newStyle.buttonBgColor = styles.buttonBgColor;
+        if (styles.buttonTextColor) newStyle.buttonTextColor = styles.buttonTextColor;
+        
+        // Map button border radius
+        if (styles.buttonBorderRadius) {
+          const btnRadiusStr = styles.buttonBorderRadius.toLowerCase();
+          const btnRadiusPx = parseInt(btnRadiusStr);
+          if (btnRadiusStr.includes('full') || btnRadiusPx >= 20) {
+            newStyle.buttonBorderRadius = 'full';
+          } else if (btnRadiusPx >= 10 || btnRadiusStr.includes('lg')) {
+            newStyle.buttonBorderRadius = 'lg';
+          } else if (btnRadiusPx >= 6 || btnRadiusStr.includes('md')) {
+            newStyle.buttonBorderRadius = 'md';
+          } else if (btnRadiusPx >= 2 || btnRadiusStr.includes('sm')) {
+            newStyle.buttonBorderRadius = 'sm';
+          } else {
+            newStyle.buttonBorderRadius = 'none';
+          }
+        }
+        
+        // Map button padding
+        if (styles.buttonPadding) {
+          const paddingParts = styles.buttonPadding.split(' ');
+          const vertPadding = parseInt(paddingParts[0]);
+          if (vertPadding <= 8) newStyle.buttonPadding = 'sm';
+          else if (vertPadding >= 16) newStyle.buttonPadding = 'lg';
+          else newStyle.buttonPadding = 'md';
+        }
+        
+        // Map button font weight
+        if (styles.buttonFontWeight) {
+          const btnWeight = styles.buttonFontWeight.toLowerCase();
+          const btnWeightNum = parseInt(btnWeight);
+          if (btnWeight.includes('bold') || btnWeightNum >= 700) {
+            newStyle.buttonFontWeight = 'bold';
+          } else if (btnWeight.includes('semibold') || btnWeightNum >= 600) {
+            newStyle.buttonFontWeight = 'semibold';
+          } else if (btnWeight.includes('medium') || btnWeightNum >= 500) {
+            newStyle.buttonFontWeight = 'medium';
+          } else {
+            newStyle.buttonFontWeight = 'normal';
+          }
+        }
+        
+        // Map button shadow
+        if (styles.buttonShadow && styles.buttonShadow !== 'none') {
+          if (styles.buttonShadow.includes('0 4px') || styles.buttonShadow.includes('lg')) {
+            newStyle.buttonShadow = 'lg';
+          } else if (styles.buttonShadow.includes('0 2px') || styles.buttonShadow.includes('md')) {
+            newStyle.buttonShadow = 'md';
+          } else {
+            newStyle.buttonShadow = 'sm';
+          }
+        }
+        
+        // Map field spacing
+        if (styles.fieldSpacing) {
+          const spacingPx = parseInt(styles.fieldSpacing);
+          if (spacingPx <= 12) newStyle.fieldSpacing = 'compact';
+          else if (spacingPx >= 24) newStyle.fieldSpacing = 'relaxed';
+          else newStyle.fieldSpacing = 'normal';
+        }
+        
+        // Map input padding
+        if (styles.inputPadding) {
+          const inputPadPx = parseInt(styles.inputPadding);
+          if (inputPadPx <= 8) newStyle.inputPadding = 'sm';
+          else if (inputPadPx >= 16) newStyle.inputPadding = 'lg';
+          else newStyle.inputPadding = 'md';
+        }
+
+        // Store captured patterns for reference
+        const capturedPatterns: CapturedFormPatterns = {
+          labelStyle: styles.labelPosition || 'above',
+          labelsVisible: styles.labelPosition !== 'hidden' && styles.labelPosition !== 'placeholder-only',
+          usesPlaceholders: content?.placeholders && content.placeholders.length > 0,
+          placeholderAsLabel: styles.labelPosition === 'placeholder-only',
+          fieldLayout: content?.layoutPattern === 'single-column' ? 'stacked' : 
+                       content?.layoutPattern === 'inline' ? 'inline' : 'grid',
+          fieldsPerRow: content?.fieldsPerRow || 1,
+          hasHelperText: content?.helperTextExamples && content.helperTextExamples.length > 0,
+          hasRequiredIndicator: content?.labels?.some(l => l.labelText.includes('*')) || false,
+          inputStyle: 'bordered',
+          focusStyle: styles.inputFocusBoxShadow && styles.inputFocusBoxShadow !== 'none' ? 'shadow' : 'border-color',
+          detectedFontFamily: styles.fontFamily,
+          detectedFontSize: styles.fontSize,
+          detectedLabelFontSize: styles.labelFontSize,
+          detectedLabelFontWeight: styles.labelFontWeight,
+          detectedLabelColor: styles.labelColor,
+          detectedInputFontSize: styles.fontSize,
+          detectedInputPadding: styles.inputPadding,
+          detectedInputBgColor: styles.inputBgColor,
+          detectedInputBorderColor: styles.inputBorderColor,
+          detectedInputFocusBorderColor: styles.inputFocusBorderColor,
+          detectedButtonBgColor: styles.buttonBgColor,
+          detectedButtonTextColor: styles.buttonTextColor,
+          detectedButtonBorderRadius: styles.buttonBorderRadius,
+          detectedButtonPadding: styles.buttonPadding,
+          detectedButtonFontWeight: styles.buttonFontWeight,
+          detectedErrorColor: styles.errorColor,
+          detectedFieldSpacing: styles.fieldSpacing,
+          detectedLabelSpacing: styles.labelMarginBottom,
+          detectedBorderRadius: styles.inputBorderRadius,
+          detectedBorderWidth: styles.inputBorderWidth,
+        };
+        
+        newStyle.capturedPatterns = capturedPatterns;
 
         onUpdateStyle({
           ...DEFAULT_FORM_STYLE,
@@ -512,9 +650,20 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, onUpdateButtonCo
           onUpdateButtonColor(styles.buttonBgColor);
         }
 
+        // Build summary of what was extracted
+        const extractedItems: string[] = [];
+        if (styles.fontFamily) extractedItems.push(`Font: ${styles.fontFamily.split(',')[0]}`);
+        if (styles.labelPosition) extractedItems.push(`Labels: ${styles.labelPosition}`);
+        if (content?.placeholders?.length) extractedItems.push(`${content.placeholders.length} placeholders`);
+        if (content?.labels?.length) extractedItems.push(`${content.labels.length} labels`);
+        if (content?.buttonTexts?.length) extractedItems.push(`Buttons: ${content.buttonTexts.join(', ')}`);
+        if (content?.layoutPattern) extractedItems.push(`Layout: ${content.layoutPattern}`);
+
         toast({
           title: 'Screenshot Analyzed',
-          description: `Extracted ${Object.keys(styles).length} style properties from your form screenshot`,
+          description: extractedItems.length > 0 
+            ? extractedItems.slice(0, 4).join(' • ') 
+            : `Extracted ${Object.keys(styles).length} style properties`,
         });
 
         setIsAnalyzingScreenshot(false);
