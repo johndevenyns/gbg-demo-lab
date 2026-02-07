@@ -5,7 +5,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
-const BASE_URL = 'https://app.art-of-sales-engineering.com';
+// Get the verification API base URL from environment or use placeholder
+const getBaseUrl = () => Deno.env.get('VERIFICATION_API_URL') || 'https://api.verification-service.example';
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -49,7 +50,7 @@ serve(async (req) => {
     console.log('Getting verification status for session:', sessionId);
 
     // Get session status from API
-    const response = await fetch(`${BASE_URL}/api/verification/sessions/${sessionId}`, {
+    const response = await fetch(`${getBaseUrl()}/api/verification/sessions/${sessionId}`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${API_KEY}`,
