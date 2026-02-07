@@ -16,7 +16,21 @@ interface ExactCaptureSectionProps {
   isActive: boolean;
 }
 
-// Helper function to adjust color brightness
+// Helper to calculate luminance and determine if color is light or dark
+function getLuminance(hex: string): number {
+  hex = hex.replace('#', '');
+  const r = parseInt(hex.substring(0, 2), 16) / 255;
+  const g = parseInt(hex.substring(2, 4), 16) / 255;
+  const b = parseInt(hex.substring(4, 6), 16) / 255;
+  const toLinear = (c: number) => c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+  return 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
+}
+
+function isLightColor(hex: string): boolean {
+  return getLuminance(hex) > 0.5;
+}
+
+// Adjust color brightness - positive = lighter, negative = darker
 function adjustColorBrightness(hex: string, percent: number): string {
   hex = hex.replace('#', '');
   let r = parseInt(hex.substring(0, 2), 16);
@@ -27,6 +41,13 @@ function adjustColorBrightness(hex: string, percent: number): string {
   b = Math.min(255, Math.max(0, b + (b * percent / 100)));
   const toHex = (n: number) => Math.round(n).toString(16).padStart(2, '0');
   return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+}
+
+// Smart hover color: lighter for dark buttons, darker for light buttons
+function getSmartHoverColor(bgColor: string): string {
+  return isLightColor(bgColor) 
+    ? adjustColorBrightness(bgColor, -15) // Darken light buttons
+    : adjustColorBrightness(bgColor, 25);  // Lighten dark buttons
 }
 
 // Comprehensive helper to convert extracted form styles to full FormStyleConfig
@@ -122,10 +143,10 @@ function formElementStylesToFullConfig(styles: FormElementStyles, branding?: { c
   // ========== FORWARD BUTTON STYLING ==========
   if (styles.buttonBgColor) {
     config.buttonBgColor = styles.buttonBgColor;
-    config.buttonHoverBgColor = adjustColorBrightness(styles.buttonBgColor, -15);
+    config.buttonHoverBgColor = getSmartHoverColor(styles.buttonBgColor);
   } else if (branding?.colors?.primary) {
     config.buttonBgColor = branding.colors.primary;
-    config.buttonHoverBgColor = adjustColorBrightness(branding.colors.primary, -15);
+    config.buttonHoverBgColor = getSmartHoverColor(branding.colors.primary);
   }
   if (styles.buttonTextColor) config.buttonTextColor = styles.buttonTextColor;
   config.buttonHoverTextColor = styles.buttonTextColor || '#ffffff';
@@ -250,7 +271,7 @@ export function ExactCaptureSection({
         if (p.labelStyle) capturedConfig.labelStyle = p.labelStyle;
         if (p.detectedButtonBgColor) {
           capturedConfig.buttonBgColor = p.detectedButtonBgColor;
-          capturedConfig.buttonHoverBgColor = adjustColorBrightness(p.detectedButtonBgColor, -15);
+          capturedConfig.buttonHoverBgColor = getSmartHoverColor(p.detectedButtonBgColor);
           // Smart default: reverse button text color matches button bg
           capturedConfig.reverseButtonTextColor = p.detectedButtonBgColor;
           capturedConfig.reverseButtonHoverTextColor = p.detectedButtonBgColor;
