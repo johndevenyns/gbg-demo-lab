@@ -96,23 +96,16 @@ export function ExactCaptureSection({
       return;
     }
 
-    if (!captureFormId) {
-      toast({
-        title: 'Form ID required',
-        description: 'Please enter the form ID attribute (e.g., membershipForm)',
-        variant: 'destructive',
-      });
-      return;
-    }
-
     setIsCapturing(true);
     setCaptureStatus('capturing');
-    setCaptureMessage('Fetching page and extracting form...');
+    setCaptureMessage(captureFormId 
+      ? `Fetching page and extracting form "${captureFormId}"...`
+      : 'Fetching page and extracting first form...');
 
     try {
       const response = await scrapingApi.captureFormById(
         captureUrl,
-        captureFormId,
+        captureFormId || '', // Pass empty string if not specified - backend will find first form
         {
           triggerSelector: captureTrigger || undefined,
           waitTime: captureTrigger ? 6000 : 5000,
@@ -250,7 +243,7 @@ export function ExactCaptureSection({
         {/* Form ID Input */}
         <div className="space-y-2">
           <Label htmlFor="capture-form-id">
-            Form ID <span className="text-destructive">*</span>
+            Form ID <span className="text-muted-foreground text-xs">(recommended)</span>
           </Label>
           <Input
             id="capture-form-id"
@@ -262,7 +255,7 @@ export function ExactCaptureSection({
             }}
           />
           <p className="text-xs text-muted-foreground">
-            The form's ID attribute (e.g., for <code className="text-primary">&lt;form id="membershipForm"&gt;</code> enter <code className="text-primary">membershipForm</code>)
+            The form's ID attribute helps target a specific form. If left empty, the first form on the page will be captured.
           </p>
         </div>
 
@@ -283,7 +276,7 @@ export function ExactCaptureSection({
         {/* Capture Button */}
         <Button
           onClick={handleCaptureFormById}
-          disabled={!captureUrl || !captureFormId || isCapturing}
+          disabled={!captureUrl || isCapturing}
           className="w-full"
           variant={isActive ? 'default' : 'outline'}
           size="lg"
@@ -296,7 +289,7 @@ export function ExactCaptureSection({
           ) : (
             <>
               <Paintbrush className="w-4 h-4 mr-2" />
-              Capture Form by ID
+              {captureFormId ? `Capture Form "${captureFormId}"` : 'Capture First Form'}
             </>
           )}
         </Button>
