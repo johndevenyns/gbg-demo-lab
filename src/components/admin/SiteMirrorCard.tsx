@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Globe, X } from "lucide-react";
+import { Globe, X, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { SiteMirrorTabs, CaptureTab, CaptureMode } from "./SiteMirrorTabs";
 import { HtmlCaptureTab } from "./HtmlCaptureTab";
 import { ScreenshotCaptureTab } from "./ScreenshotCaptureTab";
@@ -9,6 +10,7 @@ import { EmbedFormSection } from "./EmbedFormSection";
 import { useToast } from "@/hooks/use-toast";
 import { DemoEnvironment } from "@/types/demo";
 import { DEFAULT_FORM_STYLE } from "@/types/formStyle";
+import { generatePreviewDocument } from "@/lib/formStyleUtils";
 
 export type { CaptureMode } from "./SiteMirrorTabs";
  
@@ -57,6 +59,94 @@ interface SiteMirrorCardProps {
    const handleApplyBranding = (updates: Partial<DemoEnvironment>) => {
      onApplyBranding(updates, true);
    };
+
+   // Generate live site preview content
+   const getSitePreviewContent = () => {
+     const hasHtmlContent = htmlConfigured;
+     const hasScreenshotContent = screenshotConfigured;
+     const hasAnyContent = hasHtmlContent || hasScreenshotContent;
+
+     // Determine which content to show based on active method
+     const showingMethod = activeMethod;
+     const headerHtml = showingMethod === 'html' ? demo.mirrorHtmlHeaderHtml : demo.mirrorScreenshotHeaderHtml;
+     const footerHtml = showingMethod === 'html' ? demo.mirrorHtmlFooterHtml : demo.mirrorScreenshotFooterHtml;
+     const cssContent = showingMethod === 'html' ? demo.mirrorHtmlCss : demo.mirrorScreenshotCss;
+     const hasContentForMethod = showingMethod === 'html' ? hasHtmlContent : hasScreenshotContent;
+
+     return (
+       <Card className="glass-card border-2 border-primary/20">
+         <CardHeader className="pb-3">
+           <CardTitle className="flex items-center gap-2 text-base">
+             <Eye className="w-5 h-5" />
+             Live Site Preview
+             {hasAnyContent && (
+               <Badge variant="default" className="ml-2">
+                 {showingMethod === 'html' ? 'HTML/CSS' : 'Screenshot'}
+               </Badge>
+             )}
+           </CardTitle>
+           <p className="text-sm text-muted-foreground">
+             {hasContentForMethod
+               ? `Showing the ${showingMethod === 'html' ? 'HTML/CSS fetched' : 'screenshot-based'} header and footer surrounding a sample form`
+               : 'Configure a fetch method below to see a preview of your site branding'
+             }
+           </p>
+         </CardHeader>
+         <CardContent>
+           {hasContentForMethod ? (
+             <div className="border rounded-lg overflow-hidden bg-background">
+               <iframe
+                 srcDoc={generatePreviewDocument({
+                   formStyle: demo.formStyle || DEFAULT_FORM_STYLE,
+                   buttonColor: demo.buttonColor || '#3b82f6',
+                   headerHtml: headerHtml || '',
+                   footerHtml: footerHtml || '',
+                   cssContent: cssContent || undefined,
+                 })}
+                 className="w-full h-[400px] border-0"
+                 title="Live site preview"
+                 sandbox="allow-same-origin"
+               />
+             </div>
+           ) : (
+             <div className="flex items-center justify-center h-64 bg-muted rounded-lg border border-dashed">
+               <div className="text-center text-muted-foreground">
+                 <Globe className="w-10 h-10 mx-auto mb-3 opacity-50" />
+                 <p className="text-sm font-medium">No site branding configured</p>
+                 <p className="text-xs mt-1">Use the HTML/CSS or Screenshot fetch below to capture your site's header and footer</p>
+               </div>
+             </div>
+           )}
+
+           {/* Method & Content Stats */}
+           {hasAnyContent && (
+             <div className="mt-4 p-3 rounded-lg bg-muted/50 border">
+               <div className="flex flex-wrap gap-4 text-xs">
+                 <div className="flex items-center gap-2">
+                   <span className="font-medium">Active Method:</span>
+                   <Badge variant="outline">{showingMethod === 'html' ? 'HTML/CSS' : 'Screenshot'}</Badge>
+                 </div>
+                 <div className="flex items-center gap-2">
+                   <span className="text-muted-foreground">Header:</span>
+                   <span>{headerHtml ? `${headerHtml.length} chars` : 'None'}</span>
+                 </div>
+                 <div className="flex items-center gap-2">
+                   <span className="text-muted-foreground">Footer:</span>
+                   <span>{footerHtml ? `${footerHtml.length} chars` : 'None'}</span>
+                 </div>
+                 {cssContent && (
+                   <div className="flex items-center gap-2">
+                     <span className="text-muted-foreground">CSS:</span>
+                     <span>{cssContent.length} chars</span>
+                   </div>
+                 )}
+               </div>
+             </div>
+           )}
+         </CardContent>
+       </Card>
+     );
+   };
  
     return (
       <div className="space-y-6">
@@ -93,6 +183,7 @@ interface SiteMirrorCardProps {
               onTabChange={setCurrentTab}
               htmlConfigured={htmlConfigured}
               screenshotConfigured={screenshotConfigured}
+              sitePreviewContent={getSitePreviewContent()}
               htmlContent={
                 <HtmlCaptureTab
                   demo={demo}

@@ -1,8 +1,10 @@
 import { useState } from "react";
-import { Code, Camera, Paintbrush, Check, Globe } from "lucide-react";
+import { Code, Camera, Paintbrush, Check, Globe, Eye } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 export type CaptureTab = 'html' | 'screenshot' | 'form-styling';
@@ -20,6 +22,7 @@ interface SiteMirrorTabsProps {
   htmlConfigured: boolean;
   screenshotConfigured: boolean;
   formStylingConfigured: boolean;
+  sitePreviewContent?: React.ReactNode;
 }
 
 export function SiteMirrorTabs({
@@ -33,6 +36,7 @@ export function SiteMirrorTabs({
   htmlConfigured,
   screenshotConfigured,
   formStylingConfigured,
+  sitePreviewContent,
 }: SiteMirrorTabsProps) {
   const [appearanceTab, setAppearanceTab] = useState<AppearanceTab>('site');
   const [siteSubTab, setSiteSubTab] = useState<'html' | 'screenshot'>('html');
@@ -58,6 +62,9 @@ export function SiteMirrorTabs({
         
         {/* Site Tab Content */}
         <TabsContent value="site" className="mt-6 space-y-6">
+          {/* Live Site Preview - Always visible at top */}
+          {sitePreviewContent}
+
           {/* Active Method Selector */}
           <div className="p-4 rounded-lg bg-muted/50 border border-border">
             <Label className="text-base font-semibold mb-3 block">Active Fetch Method</Label>
