@@ -115,7 +115,7 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, onUpdateButtonCo
   const [capturedData, setCapturedData] = useState<CapturedFormData | null>(null);
   const [captureStatus, setCaptureStatus] = useState<'idle' | 'capturing' | 'success' | 'error'>('idle');
   const [captureMessage, setCaptureMessage] = useState<string>('');
-
+  const [availableFormIds, setAvailableFormIds] = useState<string[]>([]);
   const handleTabChange = (value: string) => {
     setActiveTab(value as FormStyleSource);
   };
@@ -233,7 +233,16 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, onUpdateButtonCo
       );
 
       if (!response.success || !response.data) {
+        // Save available form IDs even on error to help user
+        if (response.availableFormIds) {
+          setAvailableFormIds(response.availableFormIds);
+        }
         throw new Error(response.error || 'Failed to capture form');
+      }
+
+      // Save available IDs for reference
+      if (response.data.availableFormIds) {
+        setAvailableFormIds(response.data.availableFormIds);
       }
 
       setCapturedData(response.data);
@@ -899,6 +908,29 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, onUpdateButtonCo
                   </Alert>
                 )}
 
+                {/* Show available form IDs when capture fails or for reference */}
+                {captureStatus === 'error' && availableFormIds.length > 0 && (
+                  <div className="p-3 rounded-lg bg-muted/50 border space-y-2">
+                    <p className="text-xs font-medium">Available Form/Container IDs found on page:</p>
+                    <div className="flex flex-wrap gap-1">
+                      {availableFormIds.slice(0, 12).map((id) => (
+                        <button
+                          key={id}
+                          type="button"
+                          onClick={() => {
+                            setCaptureFormId(id);
+                            setCaptureStatus('idle');
+                          }}
+                          className="text-xs px-2 py-1 rounded bg-primary/10 hover:bg-primary/20 text-primary font-mono transition-colors"
+                        >
+                          {id}
+                        </button>
+                      ))}
+                    </div>
+                    <p className="text-xs text-muted-foreground">Click an ID to use it</p>
+                  </div>
+                )}
+
                 {/* Show captured form status with detected patterns */}
                 {formStyle.source === 'captured' && formStyle.capturedFormHtml && (
                   <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/30 space-y-3">
@@ -998,6 +1030,25 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, onUpdateButtonCo
                         )}
                         <p className="text-xs text-muted-foreground italic mt-2">
                           These patterns will be used when building custom forms to match the customer's form behavior
+                        </p>
+                      </div>
+                    )}
+                    
+                    {/* Page screenshot for visual reference */}
+                    {capturedData?.formScreenshot && (
+                      <div className="mt-3 pt-3 border-t border-green-500/20">
+                        <p className="text-xs font-medium text-green-700 dark:text-green-400 mb-2">
+                          Page Screenshot (Visual Reference)
+                        </p>
+                        <div className="border rounded-lg overflow-hidden max-h-64 overflow-y-auto">
+                          <img 
+                            src={capturedData.formScreenshot.startsWith('data:') ? capturedData.formScreenshot : `data:image/png;base64,${capturedData.formScreenshot}`}
+                            alt="Page screenshot"
+                            className="w-full"
+                          />
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Use this as a visual reference for styling your form
                         </p>
                       </div>
                     )}

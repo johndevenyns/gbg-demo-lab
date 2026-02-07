@@ -92,6 +92,8 @@ export interface CapturedFormData {
   styles: FormElementStyles;
   branding: ScrapedBranding['branding'];
   patterns: CapturedFormPatterns;
+  formScreenshot?: string; // Base64 screenshot of the page
+  availableFormIds?: string[]; // Available form IDs found on the page
 }
 
 export interface ScrapeResponse {
@@ -110,6 +112,7 @@ export interface CaptureFormResponse {
   success: boolean;
   error?: string;
   data?: CapturedFormData;
+  availableFormIds?: string[]; // Returned even on error to help users
 }
 
 export const scrapingApi = {
