@@ -6,7 +6,7 @@ import { AVAILABLE_FORM_FIELDS, FormField } from '@/types/demo';
 import { 
   User, Mail, Phone, Calendar, Hash, MapPin, Building, DollarSign, 
   FileText, Type, CheckSquare, GripVertical, Search, Heading, AlignLeft, 
-  Minus, ShieldCheck
+  Minus, ShieldCheck, CircleDot
 } from 'lucide-react';
 import { useState, useMemo } from 'react';
 
@@ -34,6 +34,7 @@ const FIELD_ICONS: Record<string, React.ReactNode> = {
   select: <FileText className="w-4 h-4" />,
   gender: <User className="w-4 h-4" />,
   nationality: <MapPin className="w-4 h-4" />,
+  yes_no: <CircleDot className="w-4 h-4" />,
   // Content elements
   heading: <Heading className="w-4 h-4" />,
   paragraph: <AlignLeft className="w-4 h-4" />,
@@ -48,7 +49,7 @@ const FIELD_CATEGORIES = {
   address: ['address_street', 'address_city', 'address_state', 'address_zip', 'address_country'],
   identity: ['ssn', 'document_type', 'document_number'],
   financial: ['employer', 'income'],
-  custom: ['text', 'textarea', 'checkbox', 'select'],
+  custom: ['text', 'textarea', 'checkbox', 'select', 'yes_no'],
 };
 
 // Address fields that can be validated by Loqate API
