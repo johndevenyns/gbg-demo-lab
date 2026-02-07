@@ -247,12 +247,15 @@ export function BranchCanvas({
           ...s,
           fields: s.fields.map(f => {
             if (f.id !== fieldId) return f;
-            // For consent_checkbox, update consentText; for yes_no, update questionText; for others, update content
+            // For consent_checkbox, update consentText; for yes_no, update questionText; for checkbox, update checkboxText; for others, update content
             if (f.type === 'consent_checkbox') {
               return { ...f, consentText: content };
             }
             if (f.type === 'yes_no') {
               return { ...f, questionText: content };
+            }
+            if (f.type === 'checkbox') {
+              return { ...f, checkboxText: content };
             }
             return { ...f, content };
           }),

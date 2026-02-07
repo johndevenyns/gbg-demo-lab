@@ -241,7 +241,7 @@ function StyledFormFields({ fields, formData, onInputChange, style, fieldErrors 
   };
 
   // Content field types that don't need input handling
-  const contentFieldTypes = ['heading', 'paragraph', 'divider', 'consent_checkbox', 'yes_no'];
+  const contentFieldTypes = ['heading', 'paragraph', 'divider', 'consent_checkbox', 'yes_no', 'checkbox'];
 
   const renderField = (field: FormField) => {
     // Handle content elements (non-input fields)
@@ -398,6 +398,49 @@ function StyledFormFields({ fields, formData, onInputChange, style, fieldErrors 
               No
             </label>
           </div>
+          {fieldErrors[field.name] && (
+            <p style={errorStyle}>{fieldErrors[field.name]}</p>
+          )}
+        </div>
+      );
+    }
+
+    if (field.type === 'checkbox') {
+      const isChecked = formData[field.name] === 'true';
+      // Use checkboxText if set, otherwise fall back to label
+      const displayText = field.checkboxText || field.label;
+      return (
+        <div key={field.id}>
+          <label 
+            style={{ 
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: '12px',
+              cursor: 'pointer',
+              fontFamily: style.fontFamily,
+              fontSize: fontSizeMap[style.fontSize],
+              color: style.labelColor,
+            }}
+          >
+            <input
+              type="checkbox"
+              checked={isChecked}
+              onChange={(e) => onInputChange(field.name, e.target.checked ? 'true' : 'false')}
+              style={{
+                width: '18px',
+                height: '18px',
+                marginTop: '2px',
+                accentColor: style.inputFocusBorderColor,
+                cursor: 'pointer',
+              }}
+            />
+            <span style={{ flex: 1, lineHeight: 1.5 }}>
+              {displayText}
+              {field.required && (
+                <span style={{ color: style.errorColor, marginLeft: '4px' }}>*</span>
+              )}
+            </span>
+          </label>
           {fieldErrors[field.name] && (
             <p style={errorStyle}>{fieldErrors[field.name]}</p>
           )}
