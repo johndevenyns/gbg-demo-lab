@@ -1,13 +1,11 @@
 import { useState, useCallback } from 'react';
-import { Paintbrush, Eye, Save, Palette, Check } from 'lucide-react';
+import { Paintbrush, Eye, Save, Palette } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ChevronDown } from 'lucide-react';
 import {
   FormStyleConfig,
   DEFAULT_FORM_STYLE,
@@ -41,7 +39,6 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, onUpdateButtonCo
   
   // Determine active method from current formStyle source
   const [activeMethod, setActiveMethod] = useState<FormStyleMethod>(sourceToMethod(formStyle.source));
-  const [customizeExpanded, setCustomizeExpanded] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   // Determine which methods are configured
@@ -476,59 +473,52 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, onUpdateButtonCo
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Active Method Selector */}
+          {/* Active Method Selector - Tab Bar */}
           <FormStyleMethodSelector
             activeMethod={activeMethod}
             onMethodChange={handleMethodChange}
             configuredMethods={configuredMethods}
           />
 
-          <div className="border-t pt-6 space-y-4">
-            {/* AI Screenshot Section */}
-            <AIScreenshotSection
-              formStyle={formStyle}
-              onUpdateStyle={onUpdateStyle}
-              onUpdateButtonColor={onUpdateButtonColor}
-              isActive={activeMethod === 'ai-screenshot'}
-            />
+          {/* Tab Content - Only show active method */}
+          <div className="pt-2">
+            {activeMethod === 'ai-screenshot' && (
+              <AIScreenshotSection
+                formStyle={formStyle}
+                onUpdateStyle={onUpdateStyle}
+                onUpdateButtonColor={onUpdateButtonColor}
+                isActive={true}
+              />
+            )}
 
-            {/* Exact Capture Section */}
-            <ExactCaptureSection
-              formStyle={formStyle}
-              onUpdateStyle={onUpdateStyle}
-              isActive={activeMethod === 'captured'}
-            />
+            {activeMethod === 'captured' && (
+              <ExactCaptureSection
+                formStyle={formStyle}
+                onUpdateStyle={onUpdateStyle}
+                isActive={true}
+              />
+            )}
 
-            {/* Templates Section */}
-            <TemplatesSection
-              formStyle={formStyle}
-              onUpdateStyle={onUpdateStyle}
-              isActive={activeMethod === 'template'}
-            />
+            {activeMethod === 'template' && (
+              <TemplatesSection
+                formStyle={formStyle}
+                onUpdateStyle={onUpdateStyle}
+                isActive={true}
+              />
+            )}
 
-            {/* Customize Section - Collapsible */}
-            <Collapsible open={customizeExpanded || activeMethod === 'custom'} onOpenChange={setCustomizeExpanded}>
-              <Card className={activeMethod === 'custom' ? 'border-2 border-primary/30 bg-primary/5' : 'border-border'}>
-                <CollapsibleTrigger asChild>
-                  <CardHeader className="pb-3 cursor-pointer hover:bg-muted/50 transition-colors">
-                    <CardTitle className="text-base flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Palette className={activeMethod === 'custom' ? 'w-5 h-5 text-primary' : 'w-5 h-5 text-muted-foreground'} />
-                        Manual Customization
-                        {activeMethod === 'custom' && <Badge variant="default" className="ml-2">Active</Badge>}
-                        {configuredMethods.custom && activeMethod !== 'custom' && (
-                          <Badge variant="secondary" className="ml-2">Configured</Badge>
-                        )}
-                      </div>
-                      <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${customizeExpanded || activeMethod === 'custom' ? 'rotate-180' : ''}`} />
-                    </CardTitle>
-                    <CardDescription>
-                      Fine-tune colors, typography, borders, and spacing manually
-                    </CardDescription>
-                  </CardHeader>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <CardContent className="space-y-6 pt-0">
+            {activeMethod === 'custom' && (
+              <Card className="border-2 border-primary/30 bg-primary/5">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Palette className="w-5 h-5 text-primary" />
+                    Manual Customization
+                  </CardTitle>
+                  <CardDescription>
+                    Fine-tune colors, typography, borders, and spacing manually
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6 pt-0">
                     {/* Detected Values Summary (if from extraction) */}
                     {formStyle.capturedPatterns && (
                       <div className="p-3 rounded-lg bg-primary/10 border border-primary/20">
@@ -1416,9 +1406,8 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, onUpdateButtonCo
                       {hasUnsavedChanges ? 'Save Custom Styles' : 'Styles Saved'}
                     </Button>
                   </CardContent>
-                </CollapsibleContent>
-              </Card>
-            </Collapsible>
+                </Card>
+            )}
           </div>
         </CardContent>
       </Card>
