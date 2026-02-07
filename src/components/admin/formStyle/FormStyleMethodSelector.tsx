@@ -1,7 +1,8 @@
-import { Check, Camera, Globe, LayoutTemplate, Palette, Sparkles } from 'lucide-react';
+import { Check, Globe, LayoutTemplate, Palette, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { FormStyleSource } from '@/types/formStyle';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export type FormStyleMethod = 'ai-screenshot' | 'captured' | 'template' | 'custom';
 
@@ -24,7 +25,6 @@ export function sourceToMethod(source: FormStyleSource): FormStyleMethod {
 interface MethodOption {
   id: FormStyleMethod;
   label: string;
-  description: string;
   icon: React.ElementType;
   badge?: string;
 }
@@ -33,26 +33,22 @@ const methods: MethodOption[] = [
   {
     id: 'ai-screenshot',
     label: 'AI Screenshot',
-    description: 'Upload a form image for AI analysis',
     icon: Sparkles,
     badge: 'AI',
   },
   {
     id: 'captured',
     label: 'Exact Capture',
-    description: 'Fetch form HTML by ID',
     icon: Globe,
   },
   {
     id: 'template',
     label: 'Templates',
-    description: 'Choose a preset style',
     icon: LayoutTemplate,
   },
   {
     id: 'custom',
     label: 'Customize',
-    description: 'Manual color & font settings',
     icon: Palette,
   },
 ];
@@ -74,67 +70,46 @@ export function FormStyleMethodSelector({
   configuredMethods,
 }: FormStyleMethodSelectorProps) {
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <div>
-          <h4 className="text-sm font-medium">Active Styling Method</h4>
-          <p className="text-xs text-muted-foreground">
-            Choose which styling method to use for your form
-          </p>
-        </div>
-      </div>
-      
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+    <Tabs value={activeMethod} onValueChange={(value) => onMethodChange(value as FormStyleMethod)} className="w-full">
+      <TabsList className="w-full grid grid-cols-4 h-auto p-1">
         {methods.map((method) => {
           const Icon = method.icon;
-          const isActive = activeMethod === method.id;
           const isConfigured = configuredMethods[method.id];
+          const isActive = activeMethod === method.id;
           
           return (
-            <button
+            <TabsTrigger
               key={method.id}
-              onClick={() => onMethodChange(method.id)}
+              value={method.id}
               className={cn(
-                'relative flex flex-col items-center gap-1.5 p-3 rounded-lg border-2 transition-all text-center',
-                isActive
-                  ? 'border-primary bg-primary/5 text-primary'
-                  : 'border-border hover:border-primary/50 hover:bg-muted/50'
+                'relative flex items-center gap-1.5 py-2.5 px-3 text-xs font-medium',
+                'data-[state=active]:bg-primary data-[state=active]:text-primary-foreground'
               )}
             >
               {/* Configured indicator */}
               {isConfigured && !isActive && (
-                <div className="absolute top-1.5 right-1.5">
-                  <div className="w-2 h-2 rounded-full bg-green-500" title="Configured" />
+                <div className="absolute top-1 right-1">
+                  <div className="w-1.5 h-1.5 rounded-full bg-green-500" title="Configured" />
                 </div>
               )}
               
-              {/* Active check */}
-              {isActive && (
-                <div className="absolute top-1.5 right-1.5">
-                  <Check className="w-4 h-4 text-primary" />
-                </div>
+              <Icon className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">{method.label}</span>
+              {method.badge && (
+                <Badge 
+                  variant={isActive ? "outline" : "secondary"} 
+                  className={cn(
+                    "text-[9px] px-1 py-0 hidden md:inline-flex",
+                    isActive && "border-primary-foreground/30 text-primary-foreground"
+                  )}
+                >
+                  {method.badge}
+                </Badge>
               )}
-              
-              <div className="flex items-center gap-1.5">
-                <Icon className={cn('w-4 h-4', isActive ? 'text-primary' : 'text-muted-foreground')} />
-                {method.badge && (
-                  <Badge variant="secondary" className="text-[10px] px-1 py-0">
-                    {method.badge}
-                  </Badge>
-                )}
-              </div>
-              
-              <span className={cn('text-xs font-medium', isActive ? 'text-primary' : 'text-foreground')}>
-                {method.label}
-              </span>
-              
-              <span className="text-[10px] text-muted-foreground leading-tight">
-                {method.description}
-              </span>
-            </button>
+            </TabsTrigger>
           );
         })}
-      </div>
-    </div>
+      </TabsList>
+    </Tabs>
   );
 }
