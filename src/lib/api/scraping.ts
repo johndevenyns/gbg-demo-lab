@@ -178,25 +178,85 @@ export const scrapingApi = {
   },
 };
 
+// Detailed form styles extracted by AI vision
+export interface ExtractedDetailedFormStyles {
+  // Typography
+  fontFamily: string;
+  fontSize: string;
+  fontWeight: string;
+  lineHeight: string;
+  letterSpacing: string;
+  
+  // Input styling
+  inputBgColor: string;
+  inputTextColor: string;
+  inputBorderColor: string;
+  inputBorderWidth: string;
+  inputBorderRadius: string;
+  inputPadding: string;
+  inputHeight: string;
+  inputFocusBorderColor: string;
+  inputFocusBoxShadow: string;
+  inputPlaceholderColor: string;
+  
+  // Label styling
+  labelColor: string;
+  labelFontSize: string;
+  labelFontWeight: string;
+  labelFontFamily: string;
+  labelPosition: 'above' | 'floating' | 'inline' | 'placeholder-only' | 'hidden';
+  labelMarginBottom: string;
+  labelTextTransform: string;
+  
+  // Error styling
+  errorColor: string;
+  
+  // Button styling
+  buttonBgColor: string;
+  buttonTextColor: string;
+  buttonBorderRadius: string;
+  buttonPadding: string;
+  buttonFontWeight: string;
+  buttonFontSize: string;
+  buttonTextTransform: string;
+  buttonBorderWidth: string;
+  buttonBorderColor: string;
+  buttonShadow: string;
+  
+  // Spacing
+  fieldSpacing: string;
+  formPadding: string;
+  
+  // Container
+  containerBgColor: string;
+  containerBorderRadius: string;
+  containerShadow: string;
+}
+
+// Extracted form content (placeholders, labels, etc.)
+export interface ExtractedFormContent {
+  placeholders: Array<{
+    fieldType: string;
+    placeholderText: string;
+  }>;
+  labels: Array<{
+    fieldType: string;
+    labelText: string;
+  }>;
+  buttonTexts: string[];
+  helperTextExamples: string[];
+  formTitle: string | null;
+  detectedFieldTypes: string[];
+  layoutPattern: 'single-column' | 'two-column' | 'multi-column' | 'inline';
+  fieldsPerRow: number;
+}
+
 export interface AnalyzeScreenshotResponse {
   success: boolean;
   error?: string;
   data?: {
-    styles: {
-      inputBgColor?: string;
-      inputTextColor?: string;
-      inputBorderColor?: string;
-      inputBorderWidth?: string;
-      inputBorderRadius?: string;
-      inputFocusBorderColor?: string;
-      labelColor?: string;
-      labelFontWeight?: string;
-      fontFamily?: string;
-      fontSize?: string;
-      errorColor?: string;
-      buttonBgColor?: string;
-      buttonTextColor?: string;
-    };
+    styles: ExtractedDetailedFormStyles;
+    content: ExtractedFormContent;
   };
 }
 
