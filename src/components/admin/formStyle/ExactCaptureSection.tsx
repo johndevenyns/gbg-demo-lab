@@ -16,28 +16,31 @@ interface ExactCaptureSectionProps {
   isActive: boolean;
 }
 
-// Helper to convert extracted form styles to FormStyleConfig
-function formElementStylesToConfig(styles: FormElementStyles): Partial<FormStyleConfig> {
-  const config: Partial<FormStyleConfig> = {
+// Helper function to adjust color brightness
+function adjustColorBrightness(hex: string, percent: number): string {
+  hex = hex.replace('#', '');
+  let r = parseInt(hex.substring(0, 2), 16);
+  let g = parseInt(hex.substring(2, 4), 16);
+  let b = parseInt(hex.substring(4, 6), 16);
+  r = Math.min(255, Math.max(0, r + (r * percent / 100)));
+  g = Math.min(255, Math.max(0, g + (g * percent / 100)));
+  b = Math.min(255, Math.max(0, b + (b * percent / 100)));
+  const toHex = (n: number) => Math.round(n).toString(16).padStart(2, '0');
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+}
+
+// Comprehensive helper to convert extracted form styles to full FormStyleConfig
+function formElementStylesToFullConfig(styles: FormElementStyles, branding?: { colors?: Record<string, string>; fonts?: Array<{ family: string }> } | null): FormStyleConfig {
+  const config: FormStyleConfig = {
+    ...DEFAULT_FORM_STYLE,
     source: 'captured',
   };
 
-  if (styles.inputBgColor) config.inputBgColor = styles.inputBgColor;
-  if (styles.inputTextColor) config.inputTextColor = styles.inputTextColor;
-  if (styles.inputBorderColor) config.inputBorderColor = styles.inputBorderColor;
-  if (styles.inputFocusBorderColor) config.inputFocusBorderColor = styles.inputFocusBorderColor;
-  if (styles.inputPlaceholderColor) config.inputPlaceholderColor = styles.inputPlaceholderColor;
-
-  if (styles.labelColor) config.labelColor = styles.labelColor;
-  if (styles.labelFontWeight) {
-    const weight = parseInt(styles.labelFontWeight);
-    if (weight >= 600) config.labelWeight = 'semibold';
-    else if (weight >= 500) config.labelWeight = 'medium';
-    else config.labelWeight = 'normal';
-  }
-
+  // ========== TYPOGRAPHY ==========
   if (styles.inputFontFamily || styles.labelFontFamily) {
     config.fontFamily = styles.inputFontFamily || styles.labelFontFamily || DEFAULT_FORM_STYLE.fontFamily;
+  } else if (branding?.fonts && branding.fonts.length > 0) {
+    config.fontFamily = branding.fonts.map(f => f.family).join(', ') + ', sans-serif';
   }
 
   if (styles.inputFontSize) {
@@ -46,6 +49,19 @@ function formElementStylesToConfig(styles: FormElementStyles): Partial<FormStyle
     else if (size >= 18) config.fontSize = 'lg';
     else config.fontSize = 'base';
   }
+
+  // ========== INPUT STYLING ==========
+  if (styles.inputBgColor) config.inputBgColor = styles.inputBgColor;
+  if (styles.inputTextColor) config.inputTextColor = styles.inputTextColor;
+  if (styles.inputBorderColor) config.inputBorderColor = styles.inputBorderColor;
+  if (styles.inputFocusBorderColor) {
+    config.inputFocusBorderColor = styles.inputFocusBorderColor;
+  } else if (styles.buttonBgColor) {
+    config.inputFocusBorderColor = styles.buttonBgColor;
+  } else if (branding?.colors?.primary) {
+    config.inputFocusBorderColor = branding.colors.primary;
+  }
+  if (styles.inputPlaceholderColor) config.inputPlaceholderColor = styles.inputPlaceholderColor;
 
   if (styles.inputBorderRadius) {
     const radius = styles.inputBorderRadius.toLowerCase();
@@ -66,7 +82,82 @@ function formElementStylesToConfig(styles: FormElementStyles): Partial<FormStyle
     else config.borderWidth = '1';
   }
 
+  if (styles.inputPadding) {
+    const paddingPx = parseInt(styles.inputPadding);
+    if (paddingPx <= 8) config.inputPadding = 'sm';
+    else if (paddingPx >= 14) config.inputPadding = 'lg';
+    else config.inputPadding = 'md';
+  }
+
+  // ========== LABEL STYLING ==========
+  if (styles.labelColor) config.labelColor = styles.labelColor;
+  if (styles.labelFontWeight) {
+    const weight = parseInt(styles.labelFontWeight);
+    if (weight >= 600) config.labelWeight = 'semibold';
+    else if (weight >= 500) config.labelWeight = 'medium';
+    else config.labelWeight = 'normal';
+  }
+
+  // ========== ERROR COLOR ==========
   if (styles.errorColor) config.errorColor = styles.errorColor;
+  config.successColor = '#22c55e';
+
+  // ========== FORM CONTAINER STYLING ==========
+  if (styles.containerBgColor) {
+    config.formBgColor = styles.containerBgColor;
+  }
+  if (styles.containerPadding) {
+    // Just use default form container settings
+  }
+  config.contentAreaBgColor = '#f5f5f5';
+
+  // ========== TITLE STYLING ==========
+  config.titleFontSize = 'xl';
+  config.titleFontWeight = 'semibold';
+  config.titleColor = styles.labelColor || config.labelColor;
+  config.titleAlignment = 'center';
+  config.bodyFontSize = 'sm';
+  config.bodyColor = styles.inputPlaceholderColor || '#6b7280';
+
+  // ========== FORWARD BUTTON STYLING ==========
+  if (styles.buttonBgColor) {
+    config.buttonBgColor = styles.buttonBgColor;
+    config.buttonHoverBgColor = adjustColorBrightness(styles.buttonBgColor, -15);
+  } else if (branding?.colors?.primary) {
+    config.buttonBgColor = branding.colors.primary;
+    config.buttonHoverBgColor = adjustColorBrightness(branding.colors.primary, -15);
+  }
+  if (styles.buttonTextColor) config.buttonTextColor = styles.buttonTextColor;
+  config.buttonHoverTextColor = styles.buttonTextColor || '#ffffff';
+
+  if (styles.buttonBorderRadius) {
+    const radiusNum = parseInt(styles.buttonBorderRadius);
+    if (radiusNum === 0) config.buttonBorderRadius = 'none';
+    else if (radiusNum <= 4) config.buttonBorderRadius = 'sm';
+    else if (radiusNum <= 8) config.buttonBorderRadius = 'md';
+    else if (radiusNum <= 16) config.buttonBorderRadius = 'lg';
+    else config.buttonBorderRadius = 'full';
+  }
+
+  if (styles.buttonFontWeight) {
+    const weight = parseInt(styles.buttonFontWeight) || 0;
+    if (weight >= 700) config.buttonFontWeight = 'bold';
+    else if (weight >= 600) config.buttonFontWeight = 'semibold';
+    else if (weight >= 500) config.buttonFontWeight = 'medium';
+    else config.buttonFontWeight = 'normal';
+  }
+
+  // ========== REVERSE BUTTON STYLING ==========
+  config.reverseButtonBgColor = 'transparent';
+  config.reverseButtonTextColor = styles.labelColor || styles.buttonBgColor || '#6b7280';
+  config.reverseButtonHoverBgColor = '#f3f4f6';
+  config.reverseButtonHoverTextColor = styles.buttonBgColor || '#374151';
+  config.reverseButtonBorderColor = styles.inputBorderColor || '#e5e7eb';
+  config.reverseButtonBorderWidth = '1';
+  config.reverseButtonBorderRadius = config.buttonBorderRadius;
+  config.reverseButtonPadding = config.buttonPadding;
+  config.reverseButtonFontWeight = 'medium';
+  config.reverseButtonShadow = 'none';
 
   return config;
 }
@@ -131,21 +222,24 @@ export function ExactCaptureSection({
         : '';
       setCaptureMessage(`Form captured! (${response.data.formHtml.length} chars HTML, ${response.data.formCss.length} chars CSS) ${patternInfo}`);
 
-      const capturedConfig: Partial<FormStyleConfig> = {
-        source: 'captured',
-        capturedFormHtml: response.data.formHtml,
-        capturedFormCss: response.data.formCss,
-        capturedFormJs: response.data.formJs,
-        capturedFormId: captureFormId,
-        capturedSourceUrl: captureUrl,
-        capturedPatterns: response.data.patterns,
-      };
-
+      // Use comprehensive style mapping
+      let capturedConfig: FormStyleConfig;
+      
       if (response.data.styles) {
-        const styleConfig = formElementStylesToConfig(response.data.styles as FormElementStyles);
-        Object.assign(capturedConfig, styleConfig);
+        capturedConfig = formElementStylesToFullConfig(response.data.styles as FormElementStyles);
+      } else {
+        capturedConfig = { ...DEFAULT_FORM_STYLE, source: 'captured' };
       }
+      
+      // Add captured form HTML/CSS/JS
+      capturedConfig.capturedFormHtml = response.data.formHtml;
+      capturedConfig.capturedFormCss = response.data.formCss;
+      capturedConfig.capturedFormJs = response.data.formJs;
+      capturedConfig.capturedFormId = captureFormId;
+      capturedConfig.capturedSourceUrl = captureUrl;
+      capturedConfig.capturedPatterns = response.data.patterns;
 
+      // Override with pattern-detected values if available
       if (response.data.patterns) {
         const p = response.data.patterns;
         if (p.detectedInputBgColor) capturedConfig.inputBgColor = p.detectedInputBgColor;
@@ -154,7 +248,13 @@ export function ExactCaptureSection({
         if (p.detectedErrorColor) capturedConfig.errorColor = p.detectedErrorColor;
         if (p.detectedFontFamily) capturedConfig.fontFamily = p.detectedFontFamily;
         if (p.labelStyle) capturedConfig.labelStyle = p.labelStyle;
-        if (p.detectedButtonBgColor) capturedConfig.buttonBgColor = p.detectedButtonBgColor;
+        if (p.detectedButtonBgColor) {
+          capturedConfig.buttonBgColor = p.detectedButtonBgColor;
+          capturedConfig.buttonHoverBgColor = adjustColorBrightness(p.detectedButtonBgColor, -15);
+          // Smart default: reverse button text color matches button bg
+          capturedConfig.reverseButtonTextColor = p.detectedButtonBgColor;
+          capturedConfig.reverseButtonHoverTextColor = p.detectedButtonBgColor;
+        }
         if (p.detectedButtonTextColor) capturedConfig.buttonTextColor = p.detectedButtonTextColor;
         if (p.detectedButtonHoverBgColor) capturedConfig.buttonHoverBgColor = p.detectedButtonHoverBgColor;
         if (p.detectedButtonBorderRadius) {
@@ -164,6 +264,8 @@ export function ExactCaptureSection({
           else if (radiusNum <= 8) capturedConfig.buttonBorderRadius = 'md';
           else if (radiusNum <= 16) capturedConfig.buttonBorderRadius = 'lg';
           else capturedConfig.buttonBorderRadius = 'full';
+          // Match reverse button
+          capturedConfig.reverseButtonBorderRadius = capturedConfig.buttonBorderRadius;
         }
         if (p.detectedButtonFontWeight) {
           const weight = parseInt(p.detectedButtonFontWeight) || 0;
@@ -174,10 +276,7 @@ export function ExactCaptureSection({
         }
       }
 
-      onUpdateStyle({
-        ...DEFAULT_FORM_STYLE,
-        ...capturedConfig,
-      });
+      onUpdateStyle(capturedConfig);
 
       toast({
         title: 'Form Captured Successfully',

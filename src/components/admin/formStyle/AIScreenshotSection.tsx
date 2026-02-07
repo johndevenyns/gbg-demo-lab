@@ -7,6 +7,26 @@ import { useToast } from '@/hooks/use-toast';
 import { FormStyleConfig, DEFAULT_FORM_STYLE, CapturedFormPatterns } from '@/types/formStyle';
 import { formAnalysisApi } from '@/lib/api/scraping';
 
+// Helper function to adjust color brightness
+function adjustColorBrightness(hex: string, percent: number): string {
+  // Remove # if present
+  hex = hex.replace('#', '');
+  
+  // Parse the hex color
+  let r = parseInt(hex.substring(0, 2), 16);
+  let g = parseInt(hex.substring(2, 4), 16);
+  let b = parseInt(hex.substring(4, 6), 16);
+  
+  // Adjust brightness
+  r = Math.min(255, Math.max(0, r + (r * percent / 100)));
+  g = Math.min(255, Math.max(0, g + (g * percent / 100)));
+  b = Math.min(255, Math.max(0, b + (b * percent / 100)));
+  
+  // Convert back to hex
+  const toHex = (n: number) => Math.round(n).toString(16).padStart(2, '0');
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+}
+
 interface AIScreenshotSectionProps {
   formStyle: FormStyleConfig;
   onUpdateStyle: (style: FormStyleConfig) => void;
@@ -67,12 +87,13 @@ export function AIScreenshotSection({
 
         const { styles, content } = response.data;
 
-        // Build the new style config
-        const newStyle: Partial<FormStyleConfig> = {
+        // Build the new style config with ALL settings, using smart defaults for missing values
+        const newStyle: FormStyleConfig = {
+          ...DEFAULT_FORM_STYLE,
           source: 'mirrored', // AI screenshot analysis creates a 'mirrored' source
         };
 
-        // Map font family
+        // ========== TYPOGRAPHY ==========
         if (styles.fontFamily) {
           newStyle.fontFamily = styles.fontFamily;
         }
@@ -85,24 +106,17 @@ export function AIScreenshotSection({
           else newStyle.fontSize = 'base';
         }
 
-        // Map input colors
+        // ========== INPUT STYLING ==========
         if (styles.inputBgColor) newStyle.inputBgColor = styles.inputBgColor;
         if (styles.inputTextColor) newStyle.inputTextColor = styles.inputTextColor;
         if (styles.inputBorderColor) newStyle.inputBorderColor = styles.inputBorderColor;
-        if (styles.inputFocusBorderColor) newStyle.inputFocusBorderColor = styles.inputFocusBorderColor;
+        if (styles.inputFocusBorderColor) {
+          newStyle.inputFocusBorderColor = styles.inputFocusBorderColor;
+        } else if (styles.buttonBgColor) {
+          // Smart default: use button color as focus color
+          newStyle.inputFocusBorderColor = styles.buttonBgColor;
+        }
         if (styles.inputPlaceholderColor) newStyle.inputPlaceholderColor = styles.inputPlaceholderColor;
-
-        // Map label styles
-        if (styles.labelColor) newStyle.labelColor = styles.labelColor;
-        if (styles.labelFontWeight) {
-          const weight = parseInt(styles.labelFontWeight) || 400;
-          if (weight >= 600) newStyle.labelWeight = 'semibold';
-          else if (weight >= 500) newStyle.labelWeight = 'medium';
-          else newStyle.labelWeight = 'normal';
-        }
-        if (styles.labelPosition) {
-          newStyle.labelStyle = styles.labelPosition;
-        }
 
         // Map border radius
         if (styles.inputBorderRadius) {
@@ -122,10 +136,86 @@ export function AIScreenshotSection({
           else newStyle.borderWidth = '0';
         }
 
-        // Map button styles
+        // Map input padding
+        if (styles.inputPadding) {
+          const paddingPx = parseInt(styles.inputPadding);
+          if (paddingPx <= 8) newStyle.inputPadding = 'sm';
+          else if (paddingPx >= 14) newStyle.inputPadding = 'lg';
+          else newStyle.inputPadding = 'md';
+        }
+
+        // ========== LABEL STYLING ==========
+        if (styles.labelColor) newStyle.labelColor = styles.labelColor;
+        if (styles.labelFontWeight) {
+          const weight = parseInt(styles.labelFontWeight) || 400;
+          if (weight >= 600) newStyle.labelWeight = 'semibold';
+          else if (weight >= 500) newStyle.labelWeight = 'medium';
+          else newStyle.labelWeight = 'normal';
+        }
+        if (styles.labelPosition) {
+          newStyle.labelStyle = styles.labelPosition;
+        }
+
+        // ========== ERROR/STATUS COLORS ==========
+        if (styles.errorColor) newStyle.errorColor = styles.errorColor;
+        // Smart default for success color based on detected colors
+        if (!styles.errorColor) {
+          newStyle.errorColor = '#ef4444'; // Default red
+        }
+        newStyle.successColor = '#22c55e'; // Default green
+
+        // ========== FORM CONTAINER STYLING ==========
+        if (styles.containerBgColor) {
+          newStyle.formBgColor = styles.containerBgColor;
+        }
+        if (styles.containerBorderRadius) {
+          const radiusPx = parseInt(styles.containerBorderRadius);
+          if (radiusPx >= 24) newStyle.formBorderRadius = '2xl';
+          else if (radiusPx >= 16) newStyle.formBorderRadius = 'xl';
+          else if (radiusPx >= 12) newStyle.formBorderRadius = 'lg';
+          else if (radiusPx >= 8) newStyle.formBorderRadius = 'md';
+          else if (radiusPx >= 4) newStyle.formBorderRadius = 'sm';
+          else newStyle.formBorderRadius = 'none';
+        }
+        if (styles.containerShadow) {
+          const shadow = styles.containerShadow.toLowerCase();
+          if (shadow === 'none' || shadow === '0') newStyle.formShadow = 'none';
+          else if (shadow.includes('20px') || shadow.includes('25px')) newStyle.formShadow = 'xl';
+          else if (shadow.includes('10px') || shadow.includes('15px')) newStyle.formShadow = 'lg';
+          else if (shadow.includes('4px') || shadow.includes('6px')) newStyle.formShadow = 'md';
+          else newStyle.formShadow = 'sm';
+        }
+
+        // Smart default: slightly lighter/neutral background for content area
+        if (styles.containerBgColor) {
+          newStyle.contentAreaBgColor = '#f5f5f5';
+        }
+
+        // ========== TITLE STYLING (from detected font properties) ==========
+        // Use same font family for title
+        if (styles.fontFamily) {
+          // Title typically uses the same font
+        }
+        // Smart defaults for title based on form style
+        newStyle.titleFontSize = 'xl';
+        newStyle.titleFontWeight = 'semibold';
+        newStyle.titleColor = styles.labelColor || newStyle.labelColor;
+        newStyle.titleAlignment = 'center';
+
+        // Body text defaults
+        newStyle.bodyFontSize = 'sm';
+        newStyle.bodyColor = styles.inputPlaceholderColor || '#6b7280';
+
+        // ========== FORWARD BUTTON STYLING (Next, Submit, Continue) ==========
         if (styles.buttonBgColor) newStyle.buttonBgColor = styles.buttonBgColor;
         if (styles.buttonTextColor) newStyle.buttonTextColor = styles.buttonTextColor;
-        // Note: buttonHoverBgColor is not in ExtractedDetailedFormStyles, skip it
+        
+        // Smart default: hover is slightly darker version
+        if (styles.buttonBgColor) {
+          newStyle.buttonHoverBgColor = adjustColorBrightness(styles.buttonBgColor, -15);
+        }
+        newStyle.buttonHoverTextColor = styles.buttonTextColor || '#ffffff';
+
         if (styles.buttonBorderRadius) {
           const radiusNum = parseInt(styles.buttonBorderRadius);
           if (radiusNum >= 20) newStyle.buttonBorderRadius = 'full';
@@ -134,6 +224,15 @@ export function AIScreenshotSection({
           else if (radiusNum >= 2) newStyle.buttonBorderRadius = 'sm';
           else newStyle.buttonBorderRadius = 'none';
         }
+
+        if (styles.buttonPadding) {
+          const paddingParts = styles.buttonPadding.split(/\s+/);
+          const vertPadding = parseInt(paddingParts[0]);
+          if (vertPadding <= 10) newStyle.buttonPadding = 'sm';
+          else if (vertPadding >= 16) newStyle.buttonPadding = 'lg';
+          else newStyle.buttonPadding = 'md';
+        }
+
         if (styles.buttonFontWeight) {
           const btnWeight = parseInt(styles.buttonFontWeight) || 400;
           if (btnWeight >= 700) newStyle.buttonFontWeight = 'bold';
@@ -142,10 +241,37 @@ export function AIScreenshotSection({
           else newStyle.buttonFontWeight = 'normal';
         }
 
-        // Map error color
-        if (styles.errorColor) newStyle.errorColor = styles.errorColor;
+        if (styles.buttonShadow) {
+          const shadow = styles.buttonShadow.toLowerCase();
+          if (shadow === 'none' || shadow === '0') newStyle.buttonShadow = 'none';
+          else if (shadow.includes('10px') || shadow.includes('15px')) newStyle.buttonShadow = 'lg';
+          else if (shadow.includes('4px') || shadow.includes('6px')) newStyle.buttonShadow = 'md';
+          else newStyle.buttonShadow = 'sm';
+        }
 
-        // Store captured patterns for reference
+        // ========== REVERSE BUTTON STYLING (Back, Previous) ==========
+        // Smart defaults: outline style that complements the forward button
+        newStyle.reverseButtonBgColor = 'transparent';
+        newStyle.reverseButtonTextColor = styles.labelColor || styles.buttonBgColor || '#6b7280';
+        newStyle.reverseButtonHoverBgColor = '#f3f4f6';
+        newStyle.reverseButtonHoverTextColor = styles.buttonBgColor || '#374151';
+        newStyle.reverseButtonBorderColor = styles.inputBorderColor || '#e5e7eb';
+        newStyle.reverseButtonBorderWidth = '1';
+        // Match the forward button's border radius
+        newStyle.reverseButtonBorderRadius = newStyle.buttonBorderRadius;
+        newStyle.reverseButtonPadding = newStyle.buttonPadding;
+        newStyle.reverseButtonFontWeight = 'medium';
+        newStyle.reverseButtonShadow = 'none';
+
+        // ========== FIELD SPACING ==========
+        if (styles.fieldSpacing) {
+          const spacingPx = parseInt(styles.fieldSpacing);
+          if (spacingPx <= 12) newStyle.fieldSpacing = 'compact';
+          else if (spacingPx >= 24) newStyle.fieldSpacing = 'relaxed';
+          else newStyle.fieldSpacing = 'normal';
+        }
+
+        // ========== STORE CAPTURED PATTERNS FOR REFERENCE ==========
         const capturedPatterns: CapturedFormPatterns = {
           labelStyle: styles.labelPosition || 'above',
           labelsVisible: styles.labelPosition !== 'hidden' && styles.labelPosition !== 'placeholder-only',
@@ -165,19 +291,20 @@ export function AIScreenshotSection({
           detectedLabelColor: styles.labelColor,
           detectedInputBgColor: styles.inputBgColor,
           detectedInputBorderColor: styles.inputBorderColor,
+          detectedInputFocusBorderColor: styles.inputFocusBorderColor,
           detectedButtonBgColor: styles.buttonBgColor,
           detectedButtonTextColor: styles.buttonTextColor,
+          detectedButtonHoverBgColor: styles.buttonBgColor ? adjustColorBrightness(styles.buttonBgColor, -15) : undefined,
           detectedButtonBorderRadius: styles.buttonBorderRadius,
+          detectedButtonPadding: styles.buttonPadding,
           detectedButtonFontWeight: styles.buttonFontWeight,
           detectedErrorColor: styles.errorColor,
+          detectedFieldSpacing: styles.fieldSpacing,
         };
 
         newStyle.capturedPatterns = capturedPatterns;
 
-        onUpdateStyle({
-          ...DEFAULT_FORM_STYLE,
-          ...newStyle,
-        });
+        onUpdateStyle(newStyle);
 
         // Update button color if extracted
         if (styles.buttonBgColor && onUpdateButtonColor) {
