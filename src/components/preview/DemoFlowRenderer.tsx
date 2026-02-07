@@ -1893,7 +1893,13 @@ export function DemoFlowRenderer({
 
       {/* Step title with Fill buttons aligned right */}
       <div className="space-y-2">
-        <h2 className="text-2xl font-semibold text-foreground" style={{ fontFamily: style.fontFamily }}>
+        <h2 
+          className="text-2xl font-semibold text-foreground" 
+          style={{ 
+            fontFamily: style.fontFamily,
+            textAlign: currentStep?.titleAlignment || 'left',
+          }}
+        >
           {currentStep?.title}
         </h2>
         
