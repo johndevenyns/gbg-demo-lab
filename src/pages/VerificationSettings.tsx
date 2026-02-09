@@ -425,8 +425,12 @@ export default function VerificationSettings() {
 
       {/* Main Content */}
       <main className="admin-container py-8">
-        <Tabs defaultValue="types" className="space-y-6">
+        <Tabs defaultValue="users" className="space-y-6">
           <TabsList>
+            <TabsTrigger value="users" className="flex items-center gap-2">
+              <Users className="w-4 h-4" />
+              User Management
+            </TabsTrigger>
             <TabsTrigger value="types" className="flex items-center gap-2">
               <Shield className="w-4 h-4" />
               Verification Types
@@ -434,10 +438,6 @@ export default function VerificationSettings() {
             <TabsTrigger value="providers" className="flex items-center gap-2">
               <Smartphone className="w-4 h-4" />
               mDL Providers
-            </TabsTrigger>
-            <TabsTrigger value="users" className="flex items-center gap-2">
-              <Users className="w-4 h-4" />
-              User Management
             </TabsTrigger>
           </TabsList>
 
