@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Shield, Smartphone, Plus, Pencil, Trash2, GripVertical, Check, X, LogOut, Settings, Users } from "lucide-react";
+import { ArrowLeft, Shield, Smartphone, Plus, Pencil, Trash2, GripVertical, Check, X, LogOut, Settings, Users, UserCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -38,6 +38,7 @@ import {
 } from "@/hooks/useVerificationAdmin";
 import { VerificationTypeConfig, MdlProvider, MdlProviderFormData } from "@/types/verification";
 import { UserManagement } from "@/components/admin/UserManagement";
+import { TestProfileManagement } from "@/components/admin/TestProfileManagement";
 
 // Icon mapping for verification types
 const iconMap: Record<string, React.ReactNode> = {
@@ -439,6 +440,10 @@ export default function VerificationSettings() {
               <Smartphone className="w-4 h-4" />
               mDL Providers
             </TabsTrigger>
+            <TabsTrigger value="profiles" className="flex items-center gap-2">
+              <UserCheck className="w-4 h-4" />
+              Test Profiles
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="types" className="space-y-6">
@@ -524,6 +529,10 @@ export default function VerificationSettings() {
 
           <TabsContent value="users" className="space-y-6">
             <UserManagement />
+          </TabsContent>
+
+          <TabsContent value="profiles" className="space-y-6">
+            <TestProfileManagement />
           </TabsContent>
         </Tabs>
       </main>
