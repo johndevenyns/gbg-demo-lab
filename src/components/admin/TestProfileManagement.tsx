@@ -30,7 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Upload, Trash2, Pencil, CheckCircle2, XCircle, User } from 'lucide-react';
+import { Plus, Upload, Download, Trash2, Pencil, CheckCircle2, XCircle, User } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {
   useTestProfiles,
@@ -41,27 +41,57 @@ import {
   TestUserProfile,
 } from '@/hooks/useTestProfiles';
 
-// All data fields from AVAILABLE_FORM_FIELDS (excluding content elements)
+// Profile fields matching expected CSV headers
 const PROFILE_FIELDS = [
+  { name: 'idNote', label: 'ID Note' },
+  { name: 'apiResultCode', label: 'API Result Code' },
   { name: 'firstName', label: 'First Name' },
   { name: 'lastName', label: 'Last Name' },
-  { name: 'middleName', label: 'Middle Name' },
-  { name: 'email', label: 'Email Address' },
-  { name: 'phone', label: 'Phone Number' },
-  { name: 'dateOfBirth', label: 'Date of Birth' },
-  { name: 'ssn', label: 'SSN (Last 4)' },
-  { name: 'addressStreet', label: 'Street Address' },
+  { name: 'addressStreet', label: 'Address' },
   { name: 'addressCity', label: 'City' },
   { name: 'addressState', label: 'State' },
-  { name: 'addressZip', label: 'ZIP Code' },
-  { name: 'addressCountry', label: 'Country' },
-  { name: 'gender', label: 'Gender' },
-  { name: 'nationality', label: 'Nationality' },
-  { name: 'documentType', label: 'Document Type' },
-  { name: 'documentNumber', label: 'Document Number' },
-  { name: 'employer', label: 'Employer' },
-  { name: 'income', label: 'Annual Income' },
+  { name: 'addressZip', label: 'ZIP' },
+  { name: 'dateOfBirth', label: 'DOB' },
+  { name: 'ssn', label: 'SSN4' },
 ];
+
+// CSV header to field_data key mapping
+const CSV_HEADER_MAP: Record<string, string> = {
+  'id note': 'idNote',
+  'api result code': 'apiResultCode',
+  'first name': 'firstName',
+  'last name': 'lastName',
+  'address': 'addressStreet',
+  'city': 'addressCity',
+  'state': 'addressState',
+  'zip': 'addressZip',
+  'dob': 'dateOfBirth',
+  'ssn4': 'ssn',
+  // Also accept the field_data keys directly
+  'idnote': 'idNote',
+  'apiresultcode': 'apiResultCode',
+  'firstname': 'firstName',
+  'lastname': 'lastName',
+  'addressstreet': 'addressStreet',
+  'addresscity': 'addressCity',
+  'addressstate': 'addressState',
+  'addresszip': 'addressZip',
+  'dateofbirth': 'dateOfBirth',
+};
+
+const SAMPLE_CSV = `ID Note,API Result Code,First Name,Last Name,Address,City,State,ZIP,DOB,SSN4
+"Valid DL - Pass",pass,John,Smith,123 Main Street,Austin,TX,78701,1985-06-15,1234
+"Expired DL - Fail",fail,Jane,Doe,456 Fake Street,Nowhere,XX,00000,1990-01-01,0000`;
+
+function downloadSampleCsv() {
+  const blob = new Blob([SAMPLE_CSV], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'sample_test_profiles.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
 
 function ProfileFormDialog({
   open,
@@ -239,36 +269,52 @@ export function TestProfileManagement() {
         }
 
         const headers = lines[0].split(',').map((h) => h.trim().replace(/^"|"$/g, ''));
-        const nameIdx = headers.findIndex((h) => h.toLowerCase() === 'profile_name');
-        const typeIdx = headers.findIndex((h) => h.toLowerCase() === 'profile_type');
+        
+        // Map CSV headers to field_data keys
+        const mappedHeaders = headers.map((h) => {
+          const normalized = h.toLowerCase().trim();
+          return CSV_HEADER_MAP[normalized] || h;
+        });
 
-        if (nameIdx === -1 || typeIdx === -1) {
+        // Determine profile_name and profile_type columns
+        // profile_name maps from "ID Note", profile_type maps from "API Result Code"
+        const nameIdx = mappedHeaders.findIndex((h) => h === 'idNote');
+        const typeIdx = mappedHeaders.findIndex((h) => h === 'apiResultCode');
+
+        // Also check for legacy column names
+        const legacyNameIdx = nameIdx === -1 ? mappedHeaders.findIndex((h) => h.toLowerCase() === 'profile_name') : nameIdx;
+        const legacyTypeIdx = typeIdx === -1 ? mappedHeaders.findIndex((h) => h.toLowerCase() === 'profile_type') : typeIdx;
+
+        const finalNameIdx = nameIdx !== -1 ? nameIdx : legacyNameIdx;
+        const finalTypeIdx = typeIdx !== -1 ? typeIdx : legacyTypeIdx;
+
+        if (finalNameIdx === -1) {
           toast({
-            title: 'Missing Required Columns',
-            description: 'CSV must include "profile_name" and "profile_type" columns.',
+            title: 'Missing Required Column',
+            description: 'CSV must include an "ID Note" (or "profile_name") column.',
             variant: 'destructive',
           });
           return;
         }
-
-        const fieldHeaders = headers.filter((_, i) => i !== nameIdx && i !== typeIdx);
 
         const newProfiles = lines.slice(1).map((line) => {
           // Simple CSV parse (handles basic quoting)
           const values = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g)?.map((v) => v.trim().replace(/^"|"$/g, '')) || line.split(',').map((v) => v.trim());
           
           const fieldData: Record<string, string> = {};
-          fieldHeaders.forEach((header) => {
-            const idx = headers.indexOf(header);
+          mappedHeaders.forEach((key, idx) => {
+            if (idx === finalNameIdx || idx === finalTypeIdx) return;
             const val = values[idx]?.trim();
-            if (val) fieldData[header] = val;
+            if (val) fieldData[key] = val;
           });
 
-          const profileType = (values[typeIdx] || 'pass').toLowerCase();
+          // Determine profile type from API Result Code or profile_type column
+          const rawType = finalTypeIdx !== -1 ? (values[finalTypeIdx] || 'pass').toLowerCase().trim() : 'pass';
+          const profileType = rawType === 'fail' ? 'fail' : 'pass';
 
           return {
-            profile_name: values[nameIdx] || 'Unnamed',
-            profile_type: (profileType === 'fail' ? 'fail' : 'pass') as 'pass' | 'fail',
+            profile_name: values[finalNameIdx] || 'Unnamed',
+            profile_type: profileType as 'pass' | 'fail',
             field_data: fieldData,
           };
         });
@@ -355,6 +401,10 @@ export function TestProfileManagement() {
           </p>
         </div>
         <div className="flex gap-2">
+          <Button variant="ghost" size="sm" onClick={downloadSampleCsv}>
+            <Download className="w-4 h-4 mr-2" />
+            Sample CSV
+          </Button>
           <input
             ref={fileInputRef}
             type="file"
