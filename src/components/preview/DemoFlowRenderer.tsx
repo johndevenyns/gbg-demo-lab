@@ -769,23 +769,45 @@ export function DemoFlowRenderer({
       return { isValid: true, confidence: 100, aqi: 'A', suggestedAddress: '', isApiError: false };
     }
     
+    const requestBody = {
+      action: 'verify',
+      text: combinedAddress,
+      address1: street,
+      locality: city,
+      administrativeArea: state,
+      postalCode: zip,
+      country: country,
+    };
+
+    // Log request
+    onSubmissionLog?.({
+      type: 'request',
+      endpoint: 'address-verification',
+      method: 'POST',
+      data: requestBody as Record<string, unknown>,
+    });
+
+    const requestStart = Date.now();
+
     try {
       const { data, error } = await supabase.functions.invoke('address-verification', {
-        body: {
-          action: 'verify',
-          text: combinedAddress,
-          address1: street,
-          locality: city,
-          administrativeArea: state,
-          postalCode: zip,
-          country: country,
-        }
+        body: requestBody,
       });
 
+      const duration = Date.now() - requestStart;
       console.log('Address validation response:', data, error);
 
       if (error || !data?.success) {
-        // API error - allow proceed with warning
+        // Log error response
+        onSubmissionLog?.({
+          type: 'response',
+          endpoint: 'address-verification',
+          method: 'POST',
+          status: error ? 500 : 200,
+          data: (data || { error: error?.message || 'Unknown error' }) as Record<string, unknown>,
+          duration,
+        });
+
         return {
           isValid: true,
           confidence: 0,
@@ -795,6 +817,16 @@ export function DemoFlowRenderer({
         };
       }
 
+      // Log success response
+      onSubmissionLog?.({
+        type: 'response',
+        endpoint: 'address-verification',
+        method: 'POST',
+        status: 200,
+        data: data as Record<string, unknown>,
+        duration,
+      });
+
       return {
         isValid: !data.isLowConfidence,
         confidence: data.confidence || 0,
@@ -803,7 +835,19 @@ export function DemoFlowRenderer({
         isApiError: false,
       };
     } catch (err) {
+      const duration = Date.now() - requestStart;
       console.error('Address validation error:', err);
+
+      // Log error
+      onSubmissionLog?.({
+        type: 'response',
+        endpoint: 'address-verification',
+        method: 'POST',
+        status: 500,
+        data: { error: err instanceof Error ? err.message : 'Network error' },
+        duration,
+      });
+
       return {
         isValid: true,
         confidence: 0,
@@ -812,7 +856,7 @@ export function DemoFlowRenderer({
         isApiError: true,
       };
     }
-  }, [formData]);
+  }, [formData, onSubmissionLog]);
 
   // Complete the flow (success or failure)
   const completeFlow = useCallback((success: boolean, refId?: string) => {
