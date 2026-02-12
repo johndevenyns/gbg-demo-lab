@@ -1,5 +1,5 @@
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Save, Eye, Loader2, Settings, Globe, Palette, Layout, PlayCircle } from "lucide-react";
+import { ArrowLeft, Save, Eye, Loader2, Settings, Globe, Palette, Layout, PlayCircle, Calendar, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -33,30 +33,60 @@ const sections: { id: ConfigSection; label: string; icon: React.ElementType; des
 
 // Site Settings Section
 function SiteSettingsSection({ demo, onUpdate }: { demo: DemoEnvironment; onUpdate: (updates: Partial<DemoEnvironment>) => void }) {
+  const formatDate = (dateStr?: string) => {
+    if (!dateStr) return 'Unknown';
+    return new Date(dateStr).toLocaleDateString('en-US', {
+      year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
+    });
+  };
+
   return (
-    <Card className="glass-card">
-      <CardHeader>
-        <CardTitle>Site Settings</CardTitle>
-        <CardDescription>Core configuration for this demo environment</CardDescription>
-      </CardHeader>
-      <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="space-y-2">
-          <Label>Customer Name</Label>
-          <Input value={demo.customerName} onChange={(e) => onUpdate({ customerName: e.target.value })} />
-        </div>
-        <div className="space-y-2">
-          <Label>Reference ID Prefix</Label>
-          <Input value={demo.referenceIdPrefix || ""} onChange={(e) => onUpdate({ referenceIdPrefix: e.target.value })} />
-        </div>
-        <div className="md:col-span-2 flex items-center justify-between p-4 rounded-lg bg-muted/50">
-          <div>
-            <Label>Active</Label>
-            <p className="text-sm text-muted-foreground">Demo is accessible to users</p>
+    <div className="space-y-6">
+      <Card className="glass-card">
+        <CardHeader>
+          <CardTitle>Site Settings</CardTitle>
+          <CardDescription>Core configuration for this demo environment</CardDescription>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <Label>Customer Name</Label>
+            <Input value={demo.customerName} onChange={(e) => onUpdate({ customerName: e.target.value })} />
           </div>
-          <Switch checked={demo.isActive} onCheckedChange={(v) => onUpdate({ isActive: v })} />
-        </div>
-      </CardContent>
-    </Card>
+          <div className="space-y-2">
+            <Label>Reference ID Prefix</Label>
+            <Input value={demo.referenceIdPrefix || ""} onChange={(e) => onUpdate({ referenceIdPrefix: e.target.value })} />
+          </div>
+          <div className="md:col-span-2 flex items-center justify-between p-4 rounded-lg bg-muted/50">
+            <div>
+              <Label>Active</Label>
+              <p className="text-sm text-muted-foreground">Demo is accessible to users</p>
+            </div>
+            <Switch checked={demo.isActive} onCheckedChange={(v) => onUpdate({ isActive: v })} />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Metadata card */}
+      <Card className="glass-card">
+        <CardHeader>
+          <CardTitle className="text-base">Details</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <User className="w-4 h-4 shrink-0" />
+              <span>Created by:</span>
+              <span className="text-foreground font-medium truncate">{demo.createdByEmail || 'Unknown'}</span>
+            </div>
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Calendar className="w-4 h-4 shrink-0" />
+              <span>Created:</span>
+              <span className="text-foreground font-medium">{formatDate(demo.createdAt)}</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
 

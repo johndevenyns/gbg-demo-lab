@@ -86,6 +86,8 @@ export interface DemoEnvironment {
   createdAt: string;
   updatedAt: string;
   isActive: boolean;
+  createdBy?: string;
+  createdByEmail?: string;
 }
 
 // Step button configuration
