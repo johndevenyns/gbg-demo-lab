@@ -4,6 +4,7 @@ import { FormStyleConfig, DEFAULT_FORM_STYLE } from '@/types/formStyle';
 import { getButtonPadding, getButtonBorderRadius, getButtonFontWeight, getButtonShadow } from '@/lib/formStyleUtils';
 import { UnifiedVerificationConfig, MdlProvider as MdlProviderVerification, transformMdlProviderRow } from '@/types/verification';
 import { useMdlProviders } from '@/hooks/useVerificationAdmin';
+import { useResolvedResourceIds } from '@/hooks/useAdminResourceIds';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, QrCode, ArrowLeft, ArrowRight, Check, Copy, ExternalLink, AlertCircle, Smartphone, CheckCircle2, XCircle } from 'lucide-react';
@@ -634,6 +635,13 @@ export function DemoFlowRenderer({
     return mdlProvidersData || [];
   }, [mdlProvidersData]);
 
+  // Resolve resource IDs using 3-tier hierarchy: Customer → Admin → Global
+  const resolvedIds = useResolvedResourceIds(
+    { resourceId, resourceIdDocBio, resourceIdDataBio, resourceIdDataOnly },
+    // TODO: pass adminUserId when demo tracks which admin created it
+    undefined,
+  );
+
   // Address validation state
   const [showAddressDialog, setShowAddressDialog] = useState(false);
   const [addressValidation, setAddressValidation] = useState<{
@@ -1114,17 +1122,17 @@ export function DemoFlowRenderer({
     setError(null);
     const startTime = Date.now();
     
-    // Determine the correct resource ID based on verification type
+    // Determine the correct resource ID using 3-tier hierarchy
     const getResourceIdForType = (type: VerificationType): string | undefined => {
       switch (type) {
         case 'docBio':
-          return resourceIdDocBio || resourceId;
+          return resolvedIds.resourceIdDocBio;
         case 'dataBio':
-          return resourceIdDataBio || resourceId;
+          return resolvedIds.resourceIdDataBio;
         case 'dataOnly':
-          return resourceIdDataOnly || resourceId;
+          return resolvedIds.resourceIdDataOnly;
         default:
-          return resourceId;
+          return resolvedIds.resourceId;
       }
     };
     
@@ -1236,7 +1244,7 @@ export function DemoFlowRenderer({
     } finally {
       setIsLoading(false);
     }
-  }, [formData, customerName, returnUrl, includeQr, referenceIdPrefix, resourceId, resourceIdDocBio, resourceIdDataBio, resourceIdDataOnly, logoUrl, buttonColor, headerTextColor, headerBgColor, currentStep?.id, goToNextStep, onSubmissionLog, verificationSessionId]);
+  }, [formData, customerName, returnUrl, includeQr, referenceIdPrefix, resolvedIds, logoUrl, buttonColor, headerTextColor, headerBgColor, currentStep?.id, goToNextStep, onSubmissionLog, verificationSessionId]);
 
   // Poll for verification status
   const pollVerificationStatus = useCallback(async () => {
