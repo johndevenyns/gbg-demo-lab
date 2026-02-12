@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Shield, Smartphone, Plus, Pencil, Trash2, GripVertical, Check, X, LogOut, Settings, Users, UserCheck } from "lucide-react";
+import { ArrowLeft, Shield, Smartphone, Plus, Pencil, Trash2, GripVertical, Check, X, LogOut, Settings, Users, UserCheck, LayoutTemplate } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -40,6 +40,7 @@ import { VerificationTypeConfig, MdlProvider, MdlProviderFormData } from "@/type
 import { UserManagement } from "@/components/admin/UserManagement";
 import { TestProfileManagement } from "@/components/admin/TestProfileManagement";
 import { AdminResourceIdSettings } from "@/components/admin/AdminResourceIdSettings";
+import { FormTemplateManagement } from "@/components/admin/FormTemplateManagement";
 import { Key } from "lucide-react";
 
 // Icon mapping for verification types
@@ -450,6 +451,10 @@ export default function VerificationSettings() {
               <Key className="w-4 h-4" />
               My Resource IDs
             </TabsTrigger>
+            <TabsTrigger value="templates" className="flex items-center gap-2">
+              <LayoutTemplate className="w-4 h-4" />
+              Form Templates
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="types" className="space-y-6">
@@ -543,6 +548,10 @@ export default function VerificationSettings() {
 
           <TabsContent value="my-resource-ids" className="space-y-6">
             <AdminResourceIdSettings />
+          </TabsContent>
+
+          <TabsContent value="templates" className="space-y-6">
+            <FormTemplateManagement />
           </TabsContent>
         </Tabs>
       </main>
