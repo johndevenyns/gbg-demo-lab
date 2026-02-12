@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_resource_ids: {
+        Row: {
+          admin_user_id: string
+          created_at: string
+          id: string
+          resource_id: string
+          type_key: string
+          updated_at: string
+        }
+        Insert: {
+          admin_user_id: string
+          created_at?: string
+          id?: string
+          resource_id: string
+          type_key: string
+          updated_at?: string
+        }
+        Update: {
+          admin_user_id?: string
+          created_at?: string
+          id?: string
+          resource_id?: string
+          type_key?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       demo_environments: {
         Row: {
           approved_url: string | null

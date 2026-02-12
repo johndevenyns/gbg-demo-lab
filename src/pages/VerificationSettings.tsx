@@ -39,6 +39,8 @@ import {
 import { VerificationTypeConfig, MdlProvider, MdlProviderFormData } from "@/types/verification";
 import { UserManagement } from "@/components/admin/UserManagement";
 import { TestProfileManagement } from "@/components/admin/TestProfileManagement";
+import { AdminResourceIdSettings } from "@/components/admin/AdminResourceIdSettings";
+import { Key } from "lucide-react";
 
 // Icon mapping for verification types
 const iconMap: Record<string, React.ReactNode> = {
@@ -444,6 +446,10 @@ export default function VerificationSettings() {
               <UserCheck className="w-4 h-4" />
               Test Profiles
             </TabsTrigger>
+            <TabsTrigger value="my-resource-ids" className="flex items-center gap-2">
+              <Key className="w-4 h-4" />
+              My Resource IDs
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="types" className="space-y-6">
@@ -533,6 +539,10 @@ export default function VerificationSettings() {
 
           <TabsContent value="profiles" className="space-y-6">
             <TestProfileManagement />
+          </TabsContent>
+
+          <TabsContent value="my-resource-ids" className="space-y-6">
+            <AdminResourceIdSettings />
           </TabsContent>
         </Tabs>
       </main>
