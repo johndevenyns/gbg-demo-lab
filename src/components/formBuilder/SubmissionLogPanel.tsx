@@ -142,7 +142,7 @@ export function SubmissionLogPanel({ logs, onClearLogs }: SubmissionLogPanelProp
                               >
                                 {log.method}
                               </Badge>
-                              <span className="text-sm font-mono truncate max-w-[250px]">
+                              <span className="text-sm font-mono break-all">
                                 {log.endpoint}
                               </span>
                             </div>
