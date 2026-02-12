@@ -57,6 +57,8 @@ const rowToDemo = (row: any): DemoEnvironment => {
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     isActive: row.is_active ?? true,
+    createdBy: row.created_by || undefined,
+    createdByEmail: row.created_by_email || undefined,
   };
 };
 
@@ -146,7 +148,7 @@ export const demosApi = {
     return data ? rowToDemo(data) : null;
   },
 
-  async create(customerName: string, template: IndustryTemplate): Promise<DemoEnvironment> {
+  async create(customerName: string, template: IndustryTemplate, createdByUserId?: string, createdByEmail?: string): Promise<DemoEnvironment> {
     const templateData = INDUSTRY_TEMPLATES[template];
     const slug = generateSlug(customerName);
     const buttonColor = templateData.buttonColor || '#6366f1';
@@ -175,6 +177,8 @@ export const demosApi = {
         failurePageConfig: failurePage,
       })),
       is_active: true,
+      created_by: createdByUserId || null,
+      created_by_email: createdByEmail || null,
     };
 
     const { data, error } = await supabase

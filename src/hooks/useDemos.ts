@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { demosApi } from "@/lib/api/demos";
 import { DemoEnvironment, IndustryTemplate } from "@/types/demo";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 export function useDemos() {
   return useQuery({
@@ -32,8 +33,10 @@ export function useCreateDemo() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: ({ customerName, template }: { customerName: string; template: IndustryTemplate }) =>
-      demosApi.create(customerName, template),
+    mutationFn: async ({ customerName, template }: { customerName: string; template: IndustryTemplate }) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      return demosApi.create(customerName, template, user?.id, user?.email ?? undefined);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['demos'] });
       toast.success("Demo environment created successfully");

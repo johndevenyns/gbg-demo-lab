@@ -46,6 +46,8 @@ export type Database = {
           approved_url: string | null
           button_color: string | null
           created_at: string | null
+          created_by: string | null
+          created_by_email: string | null
           customer_name: string
           customer_site_url: string | null
           form_steps: Json | null
@@ -86,6 +88,8 @@ export type Database = {
           approved_url?: string | null
           button_color?: string | null
           created_at?: string | null
+          created_by?: string | null
+          created_by_email?: string | null
           customer_name: string
           customer_site_url?: string | null
           form_steps?: Json | null
@@ -126,6 +130,8 @@ export type Database = {
           approved_url?: string | null
           button_color?: string | null
           created_at?: string | null
+          created_by?: string | null
+          created_by_email?: string | null
           customer_name?: string
           customer_site_url?: string | null
           form_steps?: Json | null
