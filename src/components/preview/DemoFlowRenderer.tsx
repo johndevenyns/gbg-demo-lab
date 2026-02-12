@@ -34,6 +34,8 @@ const getContrastTextColor = (hexColor: string): string => {
   // Return dark text for light backgrounds, white text for dark backgrounds
   return luminance > 0.5 ? '#1a1a1a' : '#ffffff';
 };
+const SUPABASE_FUNCTIONS_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
+
 export interface SubmissionLogData {
   type: 'request' | 'response';
   endpoint: string;
@@ -782,7 +784,7 @@ export function DemoFlowRenderer({
     // Log request
     onSubmissionLog?.({
       type: 'request',
-      endpoint: 'address-verification',
+      endpoint: `${SUPABASE_FUNCTIONS_URL}/address-verification`,
       method: 'POST',
       data: requestBody as Record<string, unknown>,
     });
@@ -801,7 +803,7 @@ export function DemoFlowRenderer({
         // Log error response
         onSubmissionLog?.({
           type: 'response',
-          endpoint: 'address-verification',
+          endpoint: `${SUPABASE_FUNCTIONS_URL}/address-verification`,
           method: 'POST',
           status: error ? 500 : 200,
           data: (data || { error: error?.message || 'Unknown error' }) as Record<string, unknown>,
@@ -820,7 +822,7 @@ export function DemoFlowRenderer({
       // Log success response
       onSubmissionLog?.({
         type: 'response',
-        endpoint: 'address-verification',
+        endpoint: `${SUPABASE_FUNCTIONS_URL}/address-verification`,
         method: 'POST',
         status: 200,
         data: data as Record<string, unknown>,
@@ -841,7 +843,7 @@ export function DemoFlowRenderer({
       // Log error
       onSubmissionLog?.({
         type: 'response',
-        endpoint: 'address-verification',
+        endpoint: `${SUPABASE_FUNCTIONS_URL}/address-verification`,
         method: 'POST',
         status: 500,
         data: { error: err instanceof Error ? err.message : 'Network error' },
@@ -1145,7 +1147,7 @@ export function DemoFlowRenderer({
     // Log request
     onSubmissionLog?.({
       type: 'request',
-      endpoint: 'create-verification-session',
+      endpoint: `${SUPABASE_FUNCTIONS_URL}/create-verification-session`,
       method: 'POST',
       data: requestBody,
     });
@@ -1163,7 +1165,7 @@ export function DemoFlowRenderer({
         // Log error response
         onSubmissionLog?.({
           type: 'response',
-          endpoint: 'create-verification-session',
+          endpoint: `${SUPABASE_FUNCTIONS_URL}/create-verification-session`,
           method: 'POST',
           status: 500,
           data: { error: invokeError.message },
@@ -1178,7 +1180,7 @@ export function DemoFlowRenderer({
       // Log response
       onSubmissionLog?.({
         type: 'response',
-        endpoint: 'create-verification-session',
+        endpoint: `${SUPABASE_FUNCTIONS_URL}/create-verification-session`,
         method: 'POST',
         status: data.success ? 200 : 400,
         data: data,
