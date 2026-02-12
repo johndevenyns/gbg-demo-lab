@@ -8,59 +8,20 @@ const corsHeaders = {
 const BASE_URL = 'https://app.art-of-sales-engineering.com';
 const LEGACY_BASE_URL = 'https://paulandcarolynn.com';
 
-// Normalize URLs to use the public base URL
 const normalizeUrl = (url?: string) =>
   typeof url === 'string' && url.length > 0
     ? url.replace(LEGACY_BASE_URL, BASE_URL)
     : url;
 
-// Field mappings from form field types to API customerData field names
-const FIELD_MAPPINGS: Record<string, string> = {
-  // Personal fields
-  firstName: 'firstName',
-  lastName: 'lastName',
-  middleName: 'middleName',
-  email: 'email',
-  phone: 'phone',
-  dateOfBirth: 'dateOfBirth',
-  
-  // Address fields
-  addressStreet: 'address',
-  addressCity: 'city',
-  addressState: 'state',
-  addressZip: 'postalCode',
-  addressCountry: 'country',
-  
-  // Identity fields
-  ssn: 'ssn',
-  documentNumber: 'documentNumber',
-  documentType: 'documentType',
-  nationality: 'nationality',
-  gender: 'gender',
-};
-
 interface CreateSessionRequest {
-  // Form data from all steps
   formData: Record<string, string>;
-  
-  // Verification configuration
   verificationType: 'docBio' | 'dataBio' | 'dataOnly';
-  
-  // Resource ID for the verification journey
   resourceId?: string;
-  
-  // Demo environment settings
   customerName: string;
   returnUrl?: string;
   includeQr?: boolean;
-  
-  // Optional reference ID prefix
   referenceIdPrefix?: string;
-  
-  // Logo URL (top level in API request)
   logoUrl?: string;
-  
-  // Branding configuration
   branding?: {
     headerTextColor?: string;
     headerBgColor?: string;
@@ -80,28 +41,109 @@ interface SessionResponse {
   expiresAt?: string;
 }
 
+/**
+ * Build the flat API payload matching the external verification service format.
+ * DataBio uses a flat structure with ssn4, dlNumber, dlState, birthday, address,
+ * phone, and an options object. DocBio/DataOnly use a nested customerData approach.
+ */
+function buildPayload(req: CreateSessionRequest, referenceId: string) {
+  const fd = req.formData || {};
+  const firstName = (fd.firstName || '').trim().toUpperCase();
+  const lastName = (fd.lastName || '').trim().toUpperCase();
+
+  // Combine address components into a single string
+  const addressParts: string[] = [];
+  if (fd.addressStreet) addressParts.push(fd.addressStreet);
+  if (fd.addressCity) addressParts.push(fd.addressCity);
+  if (fd.addressState) addressParts.push(fd.addressState);
+  if (fd.addressZip) addressParts.push(fd.addressZip);
+  if (fd.addressCountry) addressParts.push(fd.addressCountry);
+  const combinedAddress = addressParts.join(', ');
+
+  // Common fields shared by all verification types
+  const base: Record<string, unknown> = {
+    verificationType: req.verificationType,
+    firstName,
+    lastName,
+    returnUrl: req.returnUrl || '',
+    includeQr: req.includeQr ?? true,
+    referenceId,
+    environment: 'us',
+    // Branding — flat at top level
+    headerTextColor: req.branding?.headerTextColor || '',
+    headerBgColor: req.branding?.headerBgColor || '',
+    buttonColor: req.branding?.buttonColor || '',
+  };
+
+  if (req.resourceId) base.resourceId = req.resourceId;
+  if (req.logoUrl) base.logoUrl = req.logoUrl;
+
+  if (req.verificationType === 'dataBio') {
+    // DataBio: flat fields + options object
+    base.customerName = `${firstName} ${lastName}`;
+    if (fd.ssn) base.ssn4 = fd.ssn;
+    if (fd.phone) base.phone = fd.phone.replace(/\D/g, '');
+    if (fd.dateOfBirth) base.birthday = fd.dateOfBirth;
+    if (combinedAddress) base.address = combinedAddress;
+    if (fd.dlNumber || fd.documentNumber) base.dlNumber = fd.dlNumber || fd.documentNumber;
+    if (fd.dlState || fd.addressState) base.dlState = fd.dlState || fd.addressState;
+
+    base.options = {
+      biometrics: { enabled: true, faceCount: 1 },
+      documents: { enabled: true, count: 2 },
+      previousAddress: { enabled: false },
+    };
+  } else {
+    // DocBio / DataOnly: nested customerData
+    base.customerName = req.customerName || 'Verification Demo';
+
+    const customerData: Record<string, string> = {};
+    const fieldMap: Record<string, string> = {
+      firstName: 'firstName', lastName: 'lastName', middleName: 'middleName',
+      email: 'email', phone: 'phone', dateOfBirth: 'dateOfBirth',
+      addressStreet: 'address', addressCity: 'city', addressState: 'state',
+      addressZip: 'postalCode', addressCountry: 'country',
+      ssn: 'ssn', documentNumber: 'documentNumber', documentType: 'documentType',
+      nationality: 'nationality', gender: 'gender',
+    };
+
+    for (const [field, apiKey] of Object.entries(fieldMap)) {
+      if (fd[field]) customerData[apiKey] = fd[field].trim();
+    }
+    if (combinedAddress) customerData.address = combinedAddress;
+
+    base.customerData = customerData;
+
+    if (req.branding) {
+      base.branding = {
+        headerTextColor: req.branding.headerTextColor,
+        headerBgColor: req.branding.headerBgColor,
+        buttonColor: req.branding.buttonColor,
+      };
+    }
+  }
+
+  return base;
+}
+
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
     const API_KEY = Deno.env.get('VERIFICATION_API_KEY');
-    
+
     if (!API_KEY) {
       console.error('VERIFICATION_API_KEY not configured');
       return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: 'Service configuration error' 
-        }),
+        JSON.stringify({ success: false, error: 'Service configuration error' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     const requestData: CreateSessionRequest = await req.json();
-    
+
     console.log('=== CREATE VERIFICATION SESSION REQUEST ===');
     console.log('verificationType:', requestData.verificationType);
     console.log('customerName:', requestData.customerName);
@@ -109,85 +151,25 @@ serve(async (req) => {
     console.log('includeQr:', requestData.includeQr);
     console.log('formDataKeys:', Object.keys(requestData.formData || {}));
 
-    // Validate required fields
     const firstName = requestData.formData?.firstName?.trim();
     const lastName = requestData.formData?.lastName?.trim();
-    
+
     if (!firstName || !lastName) {
       return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: 'firstName and lastName are required' 
-        }),
+        JSON.stringify({ success: false, error: 'firstName and lastName are required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Build customerData by mapping form fields to API-expected format
-    const customerData: Record<string, string> = {};
-    
-    if (requestData.formData) {
-      for (const [fieldName, value] of Object.entries(requestData.formData)) {
-        const apiFieldName = FIELD_MAPPINGS[fieldName];
-        if (apiFieldName && value) {
-          customerData[apiFieldName] = value.trim();
-        }
-      }
-      
-      // Combine address fields into a single address string if components exist
-      const addressParts = [];
-      if (requestData.formData.addressStreet) addressParts.push(requestData.formData.addressStreet);
-      if (requestData.formData.addressCity) addressParts.push(requestData.formData.addressCity);
-      if (requestData.formData.addressState) addressParts.push(requestData.formData.addressState);
-      if (requestData.formData.addressZip) addressParts.push(requestData.formData.addressZip);
-      if (requestData.formData.addressCountry) addressParts.push(requestData.formData.addressCountry);
-      
-      if (addressParts.length > 0) {
-        customerData.address = addressParts.join(', ');
-      }
-    }
-
-    // Generate reference ID
     const referenceIdPrefix = requestData.referenceIdPrefix || 'demo';
     const referenceId = `${referenceIdPrefix}-${Date.now()}`;
 
-    // Build API request payload
-    const requestPayload: Record<string, any> = {
-      returnUrl: requestData.returnUrl || '',
-      customerName: requestData.customerName || 'Verification Demo',
-      includeQr: requestData.includeQr ?? true,
-      verificationType: requestData.verificationType,
-      referenceId,
-      // firstName and lastName at top level (required by API)
-      firstName,
-      lastName,
-      customerData,
-    };
-
-    // Add resource ID if provided
-    if (requestData.resourceId) {
-      requestPayload.resourceId = requestData.resourceId;
-    }
-
-    // Add branding if provided
-    if (requestData.branding) {
-      requestPayload.branding = {
-        headerTextColor: requestData.branding.headerTextColor,
-        headerBgColor: requestData.branding.headerBgColor,
-        buttonColor: requestData.branding.buttonColor,
-      };
-    }
-    
-    // Add logoUrl at top level if provided
-    if (requestData.logoUrl) {
-      requestPayload.logoUrl = requestData.logoUrl;
-    }
+    const requestPayload = buildPayload(requestData, referenceId);
 
     console.log('=== FULL API REQUEST PAYLOAD ===');
     console.log(JSON.stringify(requestPayload, null, 2));
     console.log('=== END PAYLOAD ===');
 
-    // Call the verification session API
     const response = await fetch(`${BASE_URL}/api/verification/sessions`, {
       method: 'POST',
       headers: {
@@ -205,8 +187,8 @@ serve(async (req) => {
     if (!response.ok) {
       console.error('API Error:', response.status, responseText);
       return new Response(
-        JSON.stringify({ 
-          success: false, 
+        JSON.stringify({
+          success: false,
           error: 'Unable to create verification session. Please try again.',
           apiStatus: response.status,
           apiResponse: responseText?.slice(0, 500) || null,
@@ -221,23 +203,16 @@ serve(async (req) => {
     } catch {
       console.error('Failed to parse API response:', responseText);
       return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: 'Invalid response from verification service' 
-        }),
+        JSON.stringify({ success: false, error: 'Invalid response from verification service' }),
         { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Normalize URLs (handle legacy domain)
     const verifyUrl = normalizeUrl(apiResponse.verifyUrl);
     const shortUrl = normalizeUrl(apiResponse.qrCode?.shortUrl);
-    
-    // Generate QR code URL - use API response or fallback to QR server
     const qrCodeUrl = normalizeUrl(apiResponse.qrCode?.imageUrl) ||
       `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(verifyUrl ?? apiResponse.verifyUrl)}`;
 
-    // Build response with relevant fields
     const result: SessionResponse = {
       success: true,
       sessionId: apiResponse.sessionId,
@@ -259,12 +234,8 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Create verification session error:', error);
-    
     return new Response(
-      JSON.stringify({ 
-        success: false, 
-        error: 'Unable to create verification session. Please try again.'
-      }),
+      JSON.stringify({ success: false, error: 'Unable to create verification session. Please try again.' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
