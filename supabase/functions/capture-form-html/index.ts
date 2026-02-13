@@ -300,7 +300,16 @@ function extractFormById(html: string, formId: string, baseUrl: URL): string | n
       startIndex = html.indexOf(divMatch[0]);
       startMatch = divMatch;
     } else {
-      return null;
+      // Try to find an element with this as an attribute name (e.g., Angular _ngcontent-* attributes)
+      const attrPattern = new RegExp(`<[^>]+\\s${escapeRegex(formId)}[\\s=>][^>]*>`, 'i');
+      const attrMatch = html.match(attrPattern);
+      if (attrMatch) {
+        startIndex = html.indexOf(attrMatch[0]);
+        startMatch = attrMatch;
+        console.log(`Found element by attribute name "${formId}" instead of id`);
+      } else {
+        return null;
+      }
     }
   }
   
