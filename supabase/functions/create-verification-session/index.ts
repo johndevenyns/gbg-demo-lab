@@ -53,11 +53,11 @@ function buildPayload(req: CreateSessionRequest, referenceId: string) {
 
   // Combine address components into a single string
   const addressParts: string[] = [];
-  if (fd.addressStreet) addressParts.push(fd.addressStreet);
-  if (fd.addressCity) addressParts.push(fd.addressCity);
-  if (fd.addressState) addressParts.push(fd.addressState);
-  if (fd.addressZip) addressParts.push(fd.addressZip);
-  if (fd.addressCountry) addressParts.push(fd.addressCountry);
+  if (fd.streetAddress) addressParts.push(fd.streetAddress);
+  if (fd.apartment) addressParts.push(fd.apartment);
+  if (fd.city) addressParts.push(fd.city);
+  if (fd.state) addressParts.push(fd.state);
+  if (fd.zipCode) addressParts.push(fd.zipCode);
   const combinedAddress = addressParts.join(', ');
 
   // Common fields shared by all verification types
@@ -81,12 +81,12 @@ function buildPayload(req: CreateSessionRequest, referenceId: string) {
   if (req.verificationType === 'dataBio') {
     // DataBio: flat fields + options object
     base.customerName = `${firstName} ${lastName}`;
-    if (fd.ssn) base.ssn4 = fd.ssn;
+    if (fd.ssn4) base.ssn4 = fd.ssn4;
     if (fd.phone) base.phone = fd.phone.replace(/\D/g, '');
     if (fd.dateOfBirth) base.birthday = fd.dateOfBirth;
     if (combinedAddress) base.address = combinedAddress;
     if (fd.dlNumber || fd.documentNumber) base.dlNumber = fd.dlNumber || fd.documentNumber;
-    if (fd.dlState || fd.addressState) base.dlState = fd.dlState || fd.addressState;
+    if (fd.dlState || fd.state) base.dlState = fd.dlState || fd.state;
 
     base.options = {
       biometrics: { enabled: true, faceCount: 1 },
@@ -101,9 +101,9 @@ function buildPayload(req: CreateSessionRequest, referenceId: string) {
     const fieldMap: Record<string, string> = {
       firstName: 'firstName', lastName: 'lastName', middleName: 'middleName',
       email: 'email', phone: 'phone', dateOfBirth: 'dateOfBirth',
-      addressStreet: 'address', addressCity: 'city', addressState: 'state',
-      addressZip: 'postalCode', addressCountry: 'country',
-      ssn: 'ssn', documentNumber: 'documentNumber', documentType: 'documentType',
+      streetAddress: 'address', city: 'city', state: 'state',
+      zipCode: 'postalCode',
+      ssn4: 'ssn', ssn: 'ssn', documentNumber: 'documentNumber', documentType: 'documentType',
       nationality: 'nationality', gender: 'gender',
     };
 

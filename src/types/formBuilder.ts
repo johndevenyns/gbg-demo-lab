@@ -160,10 +160,10 @@ export const MINIMAL_TEMPLATES: FormTemplate[] = [
         description: 'Where do you live?',
         order: 3,
         fields: [
-          { id: 'f7', type: 'address_street', label: 'Street Address', name: 'addressStreet', required: true, order: 1 },
-          { id: 'f8', type: 'address_city', label: 'City', name: 'addressCity', required: true, order: 2 },
-          { id: 'f9', type: 'address_state', label: 'State', name: 'addressState', required: true, order: 3 },
-          { id: 'f10', type: 'address_zip', label: 'ZIP Code', name: 'addressZip', required: true, order: 4 },
+          { id: 'f7', type: 'address_street', label: 'Street Address', name: 'streetAddress', required: true, order: 1 },
+          { id: 'f8', type: 'address_city', label: 'City', name: 'city', required: true, order: 2 },
+          { id: 'f9', type: 'address_state', label: 'State', name: 'state', required: true, order: 3 },
+          { id: 'f10', type: 'address_zip', label: 'ZIP Code', name: 'zipCode', required: true, order: 4 },
         ]
       }
     ]

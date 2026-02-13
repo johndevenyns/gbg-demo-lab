@@ -43,16 +43,18 @@ import {
 
 // Profile fields matching expected CSV headers
 const PROFILE_FIELDS = [
-  { name: 'idNote', label: 'ID Note' },
-  { name: 'apiResultCode', label: 'API Result Code' },
   { name: 'firstName', label: 'First Name' },
   { name: 'lastName', label: 'Last Name' },
-  { name: 'addressStreet', label: 'Address' },
-  { name: 'addressCity', label: 'City' },
-  { name: 'addressState', label: 'State' },
-  { name: 'addressZip', label: 'ZIP' },
+  { name: 'streetAddress', label: 'Street Address' },
+  { name: 'apartment', label: 'Apartment' },
+  { name: 'city', label: 'City' },
+  { name: 'state', label: 'State' },
+  { name: 'zipCode', label: 'ZIP Code' },
+  { name: 'ssn4', label: 'SSN4' },
+  { name: 'email', label: 'Email' },
+  { name: 'phone', label: 'Phone' },
   { name: 'dateOfBirth', label: 'DOB' },
-  { name: 'ssn', label: 'SSN4' },
+  { name: 'ssn', label: 'Full SSN' },
 ];
 
 // CSV header to field_data key mapping
@@ -61,27 +63,29 @@ const CSV_HEADER_MAP: Record<string, string> = {
   'api result code': 'apiResultCode',
   'first name': 'firstName',
   'last name': 'lastName',
-  'address': 'addressStreet',
-  'city': 'addressCity',
-  'state': 'addressState',
-  'zip': 'addressZip',
+  'streetaddress': 'streetAddress',
+  'street address': 'streetAddress',
+  'apartment': 'apartment',
+  'city': 'city',
+  'state': 'state',
+  'zip': 'zipCode',
+  'zipcode': 'zipCode',
   'dob': 'dateOfBirth',
-  'ssn4': 'ssn',
+  'dateofbirth': 'dateOfBirth',
+  'ssn4': 'ssn4',
+  'ssn': 'ssn',
+  'email': 'email',
+  'phone': 'phone',
   // Also accept the field_data keys directly
   'idnote': 'idNote',
   'apiresultcode': 'apiResultCode',
   'firstname': 'firstName',
   'lastname': 'lastName',
-  'addressstreet': 'addressStreet',
-  'addresscity': 'addressCity',
-  'addressstate': 'addressState',
-  'addresszip': 'addressZip',
-  'dateofbirth': 'dateOfBirth',
 };
 
-const SAMPLE_CSV = `ID Note,API Result Code,First Name,Last Name,Address,City,State,ZIP,DOB,SSN4
-"Valid DL - Pass",pass,John,Smith,123 Main Street,Austin,TX,78701,1985-06-15,1234
-"Expired DL - Fail",fail,Jane,Doe,456 Fake Street,Nowhere,XX,00000,1990-01-01,0000`;
+const SAMPLE_CSV = `ID Note,API Result Code,firstName,lastName,streetAddress,apartment,city,state,zipCode,ssn4,email,phone,dateOfBirth,ssn
+"Valid DL - Pass",pass,John,Smith,222333 PEACHTREE PLACE,,ATLANTA,GA,30318,6789,test@gbg.com,9193740211,2/28/1975,123-45-6789
+"Expired DL - Fail",fail,Bob,France,5555 MOUNTAIN ROAD,Unit 2B,ATLANTA,GA,30153,4321,testfail@gbg.com,9193740211,7/1/1951,987-65-4321`;
 
 function downloadSampleCsv() {
   const blob = new Blob([SAMPLE_CSV], { type: 'text/csv' });

@@ -478,7 +478,7 @@ export type FormFieldType =
   | 'address_city'
   | 'address_state'
   | 'address_zip'
-  | 'address_country'
+  | 'address_country' // deprecated
   | 'first_name'
   | 'last_name'
   | 'middle_name'
@@ -514,12 +514,13 @@ export const AVAILABLE_FORM_FIELDS: Omit<FormField, 'id' | 'order'>[] = [
   { type: 'email', label: 'Email Address', name: 'email', placeholder: 'email@example.com', required: true },
   { type: 'phone', label: 'Phone Number', name: 'phone', placeholder: '(555) 123-4567', required: true },
   { type: 'date_of_birth', label: 'Date of Birth', name: 'dateOfBirth', placeholder: 'MM/DD/YYYY', required: true },
-  { type: 'ssn', label: 'SSN (Last 4)', name: 'ssn', placeholder: '****', required: false },
-  { type: 'address_street', label: 'Street Address', name: 'addressStreet', placeholder: '123 Main St', required: true },
-  { type: 'address_city', label: 'City', name: 'addressCity', placeholder: 'City', required: true },
-  { type: 'address_state', label: 'State', name: 'addressState', placeholder: 'State', required: true },
-  { type: 'address_zip', label: 'ZIP Code', name: 'addressZip', placeholder: '12345', required: true },
-  { type: 'address_country', label: 'Country', name: 'addressCountry', placeholder: 'Country', required: true },
+  { type: 'ssn', label: 'SSN (Last 4)', name: 'ssn4', placeholder: '****', required: false },
+  { type: 'address_street', label: 'Street Address', name: 'streetAddress', placeholder: '123 Main St', required: true },
+  { type: 'text', label: 'Apartment / Unit', name: 'apartment', placeholder: 'Apt, Suite, Unit', required: false },
+  { type: 'address_city', label: 'City', name: 'city', placeholder: 'City', required: true },
+  { type: 'address_state', label: 'State', name: 'state', placeholder: 'State', required: true },
+  { type: 'address_zip', label: 'ZIP Code', name: 'zipCode', placeholder: '12345', required: true },
+  { type: 'text', label: 'Full SSN', name: 'ssn', placeholder: '***-**-****', required: false },
   { type: 'gender', label: 'Gender', name: 'gender', placeholder: 'Select gender', required: false },
   { type: 'nationality', label: 'Nationality', name: 'nationality', placeholder: 'Select nationality', required: false },
   { type: 'document_type', label: 'Document Type', name: 'documentType', placeholder: 'Select document type', required: false },
@@ -564,7 +565,7 @@ export const INDUSTRY_TEMPLATES: Record<IndustryTemplate, Partial<DemoEnvironmen
         order: 2,
         fields: [
           { id: 'f5', type: 'date_of_birth', label: 'Date of Birth', name: 'dateOfBirth', required: true, order: 1 },
-          { id: 'f6', type: 'ssn', label: 'SSN (Last 4)', name: 'ssn', required: true, order: 2 },
+          { id: 'f6', type: 'ssn', label: 'SSN (Last 4)', name: 'ssn4', required: true, order: 2 },
         ]
       },
       {
@@ -572,10 +573,10 @@ export const INDUSTRY_TEMPLATES: Record<IndustryTemplate, Partial<DemoEnvironmen
         title: 'Address',
         order: 3,
         fields: [
-          { id: 'f7', type: 'address_street', label: 'Street Address', name: 'addressStreet', required: true, order: 1 },
-          { id: 'f8', type: 'address_city', label: 'City', name: 'addressCity', required: true, order: 2 },
-          { id: 'f9', type: 'address_state', label: 'State', name: 'addressState', required: true, order: 3 },
-          { id: 'f10', type: 'address_zip', label: 'ZIP Code', name: 'addressZip', required: true, order: 4 },
+          { id: 'f7', type: 'address_street', label: 'Street Address', name: 'streetAddress', required: true, order: 1 },
+          { id: 'f8', type: 'address_city', label: 'City', name: 'city', required: true, order: 2 },
+          { id: 'f9', type: 'address_state', label: 'State', name: 'state', required: true, order: 3 },
+          { id: 'f10', type: 'address_zip', label: 'ZIP Code', name: 'zipCode', required: true, order: 4 },
         ]
       }
     ]
@@ -635,11 +636,11 @@ export const INDUSTRY_TEMPLATES: Record<IndustryTemplate, Partial<DemoEnvironmen
         title: 'Verification',
         order: 2,
         fields: [
-          { id: 'f5', type: 'address_street', label: 'Street Address', name: 'addressStreet', required: true, order: 1 },
-          { id: 'f6', type: 'address_city', label: 'City', name: 'addressCity', required: true, order: 2 },
-          { id: 'f7', type: 'address_state', label: 'State', name: 'addressState', required: true, order: 3 },
-          { id: 'f8', type: 'address_zip', label: 'ZIP Code', name: 'addressZip', required: true, order: 4 },
-          { id: 'f9', type: 'ssn', label: 'SSN (Last 4)', name: 'ssn', required: true, order: 5 },
+          { id: 'f5', type: 'address_street', label: 'Street Address', name: 'streetAddress', required: true, order: 1 },
+          { id: 'f6', type: 'address_city', label: 'City', name: 'city', required: true, order: 2 },
+          { id: 'f7', type: 'address_state', label: 'State', name: 'state', required: true, order: 3 },
+          { id: 'f8', type: 'address_zip', label: 'ZIP Code', name: 'zipCode', required: true, order: 4 },
+          { id: 'f9', type: 'ssn', label: 'SSN (Last 4)', name: 'ssn4', required: true, order: 5 },
         ]
       }
     ]
@@ -713,11 +714,11 @@ export const INDUSTRY_TEMPLATES: Record<IndustryTemplate, Partial<DemoEnvironmen
         order: 2,
         fields: [
           { id: 'f5', type: 'date_of_birth', label: 'Date of Birth', name: 'dateOfBirth', required: true, order: 1 },
-          { id: 'f6', type: 'ssn', label: 'SSN (Last 4)', name: 'ssn', required: true, order: 2 },
-          { id: 'f7', type: 'address_street', label: 'Street Address', name: 'addressStreet', required: true, order: 3 },
-          { id: 'f8', type: 'address_city', label: 'City', name: 'addressCity', required: true, order: 4 },
-          { id: 'f9', type: 'address_state', label: 'State', name: 'addressState', required: true, order: 5 },
-          { id: 'f10', type: 'address_zip', label: 'ZIP Code', name: 'addressZip', required: true, order: 6 },
+          { id: 'f6', type: 'ssn', label: 'SSN (Last 4)', name: 'ssn4', required: true, order: 2 },
+          { id: 'f7', type: 'address_street', label: 'Street Address', name: 'streetAddress', required: true, order: 3 },
+          { id: 'f8', type: 'address_city', label: 'City', name: 'city', required: true, order: 4 },
+          { id: 'f9', type: 'address_state', label: 'State', name: 'state', required: true, order: 5 },
+          { id: 'f10', type: 'address_zip', label: 'ZIP Code', name: 'zipCode', required: true, order: 6 },
         ]
       }
     ]
