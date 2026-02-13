@@ -343,7 +343,8 @@ export function FormStepCard({
         ${isOver ? 'ring-2 ring-primary/50 bg-primary/5' : ''}
       `}
     >
-      <CardHeader className="py-3 px-4">
+      <CardHeader className="py-3 px-4 space-y-2">
+        {/* Row 1: Drag handle, step number, title, actions */}
         <div className="flex items-center gap-3">
           <div
             {...attributes}
@@ -353,7 +354,7 @@ export function FormStepCard({
             <GripVertical className="w-5 h-5 text-muted-foreground" />
           </div>
           
-          <Badge variant="outline" className="font-mono">
+          <Badge variant="outline" className="font-mono shrink-0">
             Step {stepNumber}
           </Badge>
           
@@ -374,15 +375,15 @@ export function FormStepCard({
               </Button>
             </div>
           ) : (
-            <div className="flex items-center gap-2 flex-1">
+            <div className="flex items-center gap-2 flex-1 min-w-0">
               <button
-                className="flex-1 text-left font-semibold hover:text-primary transition-colors"
+                className="text-left font-semibold hover:text-primary transition-colors truncate"
                 onClick={() => setIsEditingTitle(true)}
               >
                 {step.title}
               </button>
               {/* Title Alignment Selector */}
-              <div className="flex items-center border rounded-md overflow-hidden">
+              <div className="flex items-center border rounded-md overflow-hidden shrink-0">
                 <button
                   type="button"
                   className={`px-2 py-1 text-xs transition-colors ${step.titleAlignment === 'left' || !step.titleAlignment ? 'bg-primary/20 text-primary' : 'hover:bg-muted'}`}
@@ -411,47 +412,20 @@ export function FormStepCard({
             </div>
           )}
           
-          {/* Address Validation Toggle - Only show if step has address fields */}
-          {(() => {
-            const addressFieldsInStep = step.fields.filter(f => ADDRESS_VALIDATION_FIELDS.includes(f.type));
-            const hasAddressFields = addressFieldsInStep.length > 0;
-            
-            if (!hasAddressFields) return null;
-            
-            return (
-              <div className="flex items-center gap-1.5">
-                <Switch
-                  checked={step.addressValidationEnabled || false}
-                  onCheckedChange={(checked) => onUpdateStep({ addressValidationEnabled: checked })}
-                  className="scale-75"
-                />
-                <span 
-                  className={`text-xs flex items-center gap-1 ${step.addressValidationEnabled ? 'text-green-600' : 'text-muted-foreground'}`}
-                  title={step.addressValidationEnabled 
-                    ? `Validating: ${addressFieldsInStep.map(f => ADDRESS_FIELD_LABELS[f.type] || f.label).join(', ')}`
-                    : 'Enable to validate address fields with Loqate API'
-                  }
-                >
-                  <MapPinCheck className="w-3 h-3" />
-                  Address
-                  {step.addressValidationEnabled && (
-                    <span className="text-[10px] text-green-500 ml-0.5">
-                      ({addressFieldsInStep.length})
-                    </span>
-                  )}
-                </span>
-                {step.addressValidationEnabled && (
-                  <input
-                    type="text"
-                    value={step.addressValidationLabel || ''}
-                    onChange={(e) => onUpdateStep({ addressValidationLabel: e.target.value })}
-                    placeholder="Validating Address..."
-                    className="ml-2 h-6 w-36 text-xs px-2 rounded border border-border bg-background text-foreground placeholder:text-muted-foreground"
-                  />
-                )}
-              </div>
-            );
-          })()}
+          <div className="flex items-center gap-1 shrink-0">
+            {canDelete && (
+              <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" onClick={onRemoveStep}>
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            )}
+            <Button size="icon" variant="ghost" className="h-8 w-8" onClick={onToggleExpand}>
+              {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            </Button>
+          </div>
+        </div>
+
+        {/* Row 2: Badges, address validation, field count */}
+        <div className="flex items-center gap-2 flex-wrap pl-10">
           {step.stepType === 'verification' && (
             <Badge variant="outline" className="text-xs bg-purple-500/10 text-purple-600 border-purple-500/30">
               <QrCode className="w-3 h-3 mr-1" />
@@ -523,20 +497,48 @@ export function FormStepCard({
             </Badge>
           )}
           
+          {/* Address Validation */}
+          {(() => {
+            const addressFieldsInStep = step.fields.filter(f => ADDRESS_VALIDATION_FIELDS.includes(f.type));
+            if (addressFieldsInStep.length === 0) return null;
+            return (
+              <div className="flex items-center gap-1.5">
+                <Switch
+                  checked={step.addressValidationEnabled || false}
+                  onCheckedChange={(checked) => onUpdateStep({ addressValidationEnabled: checked })}
+                  className="scale-75"
+                />
+                <span 
+                  className={`text-xs flex items-center gap-1 ${step.addressValidationEnabled ? 'text-green-600' : 'text-muted-foreground'}`}
+                  title={step.addressValidationEnabled 
+                    ? `Validating: ${addressFieldsInStep.map(f => ADDRESS_FIELD_LABELS[f.type] || f.label).join(', ')}`
+                    : 'Enable to validate address fields with Loqate API'
+                  }
+                >
+                  <MapPinCheck className="w-3 h-3" />
+                  Address
+                  {step.addressValidationEnabled && (
+                    <span className="text-[10px] text-green-500 ml-0.5">
+                      ({addressFieldsInStep.length})
+                    </span>
+                  )}
+                </span>
+                {step.addressValidationEnabled && (
+                  <input
+                    type="text"
+                    value={step.addressValidationLabel || ''}
+                    onChange={(e) => onUpdateStep({ addressValidationLabel: e.target.value })}
+                    placeholder="Validating Address..."
+                    className="ml-1 h-6 w-36 text-xs px-2 rounded border border-border bg-background text-foreground placeholder:text-muted-foreground"
+                  />
+                )}
+              </div>
+            );
+          })()}
+
           <Badge variant="secondary" className="text-xs">
             {step.fields.length} fields
           </Badge>
-          
-          <div className="flex items-center gap-1">
-            {canDelete && (
-              <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" onClick={onRemoveStep}>
-                <Trash2 className="w-4 h-4" />
-              </Button>
-            )}
-            <Button size="icon" variant="ghost" className="h-8 w-8" onClick={onToggleExpand}>
-              {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-            </Button>
-          </div>
         </div>
       </CardHeader>
       
