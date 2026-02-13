@@ -1249,6 +1249,15 @@ export function DemoFlowRenderer({
   // Poll for verification status
   const pollVerificationStatus = useCallback(async () => {
     if (!verificationSessionId) return;
+    
+    // Don't poll if flow is already complete
+    if (flowComplete) {
+      if (pollingRef.current) {
+        clearInterval(pollingRef.current);
+        pollingRef.current = null;
+      }
+      return;
+    }
 
     const pollEndpoint = `${SUPABASE_FUNCTIONS_URL}/get-verification-status`;
 
@@ -1277,6 +1286,12 @@ export function DemoFlowRenderer({
 
       // Log completed/final status responses to submission log
       if (data.isComplete) {
+        // Stop polling immediately
+        if (pollingRef.current) {
+          clearInterval(pollingRef.current);
+          pollingRef.current = null;
+        }
+
         onSubmissionLog?.({
           type: 'response',
           endpoint: pollEndpoint,
@@ -1285,12 +1300,6 @@ export function DemoFlowRenderer({
           data: data as Record<string, unknown>,
           duration,
         });
-
-        // Stop polling
-        if (pollingRef.current) {
-          clearInterval(pollingRef.current);
-          pollingRef.current = null;
-        }
 
         if (data.isPassed) {
           completeFlow(true, referenceId || undefined);
@@ -1301,7 +1310,7 @@ export function DemoFlowRenderer({
     } catch (err) {
       console.error('Status poll error:', err);
     }
-  }, [verificationSessionId, referenceId, completeFlow, onSubmissionLog]);
+  }, [verificationSessionId, referenceId, completeFlow, onSubmissionLog, flowComplete]);
 
   // Start polling when verification session is created
   useEffect(() => {

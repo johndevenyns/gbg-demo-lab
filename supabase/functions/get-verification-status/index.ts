@@ -61,6 +61,22 @@ serve(async (req) => {
 
     if (!response.ok) {
       console.error('API Error:', response.status, responseText);
+      
+      // For rate limiting, return a retriable response (not 500)
+      if (response.status === 429) {
+        return new Response(
+          JSON.stringify({ 
+            success: true, 
+            status: 'pending',
+            sessionId: sessionId,
+            isComplete: false,
+            isPassed: false,
+            error: 'Rate limited, will retry' 
+          }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
       return new Response(
         JSON.stringify({ 
           success: false, 
