@@ -479,6 +479,7 @@ export type FormFieldType =
   | 'address_state'
   | 'address_zip'
   | 'address_country' // deprecated
+  | 'apartment'
   | 'first_name'
   | 'last_name'
   | 'middle_name'
@@ -516,7 +517,7 @@ export const AVAILABLE_FORM_FIELDS: Omit<FormField, 'id' | 'order'>[] = [
   { type: 'date_of_birth', label: 'Date of Birth', name: 'dateOfBirth', placeholder: 'MM/DD/YYYY', required: true },
   { type: 'ssn', label: 'SSN (Last 4)', name: 'ssn4', placeholder: '****', required: false },
   { type: 'address_street', label: 'Street Address', name: 'streetAddress', placeholder: '123 Main St', required: true },
-  { type: 'text', label: 'Apartment / Unit', name: 'apartment', placeholder: 'Apt, Suite, Unit', required: false },
+  { type: 'apartment', label: 'Apartment / Unit', name: 'apartment', placeholder: 'Apt, Suite, Unit', required: false },
   { type: 'address_city', label: 'City', name: 'city', placeholder: 'City', required: true },
   { type: 'address_state', label: 'State', name: 'state', placeholder: 'State', required: true },
   { type: 'address_zip', label: 'ZIP Code', name: 'zipCode', placeholder: '12345', required: true },
