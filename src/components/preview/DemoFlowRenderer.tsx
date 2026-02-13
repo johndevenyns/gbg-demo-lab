@@ -767,11 +767,11 @@ export function DemoFlowRenderer({
     isApiError: boolean;
   }> => {
     // Build combined address from form data
-    const street = formData.addressStreet || '';
-    const city = formData.addressCity || '';
-    const state = formData.addressState || '';
-    const zip = formData.addressZip || '';
-    const country = formData.addressCountry || 'USA';
+    const street = formData.streetAddress || '';
+    const city = formData.city || '';
+    const state = formData.state || '';
+    const zip = formData.zipCode || '';
+    const country = 'USA';
     
     const combinedAddress = [street, city, state, zip].filter(Boolean).join(', ');
     
@@ -931,10 +931,10 @@ export function DemoFlowRenderer({
 
       if (!validation.isValid || validation.isApiError) {
         // Build combined address for display
-        const street = formData.addressStreet || '';
-        const city = formData.addressCity || '';
-        const state = formData.addressState || '';
-        const zip = formData.addressZip || '';
+        const street = formData.streetAddress || '';
+        const city = formData.city || '';
+        const state = formData.state || '';
+        const zip = formData.zipCode || '';
         const combinedAddress = [street, city, state, zip].filter(Boolean).join(', ');
         
         setAddressValidation({
