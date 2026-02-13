@@ -440,6 +440,15 @@ export function FormStepCard({
                     </span>
                   )}
                 </span>
+                {step.addressValidationEnabled && (
+                  <input
+                    type="text"
+                    value={step.addressValidationLabel || ''}
+                    onChange={(e) => onUpdateStep({ addressValidationLabel: e.target.value })}
+                    placeholder="Validating Address..."
+                    className="ml-2 h-6 w-36 text-xs px-2 rounded border border-border bg-background text-foreground placeholder:text-muted-foreground"
+                  />
+                )}
               </div>
             );
           })()}
