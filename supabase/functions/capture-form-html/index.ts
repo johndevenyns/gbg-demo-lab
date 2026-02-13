@@ -56,6 +56,20 @@ interface CapturedFormPatterns {
   detectedBorderRadius?: string;
   detectedBorderWidth?: string;
   detectedFrameworks?: DetectedFramework[];
+  // Enhanced font data
+  fontLinks?: string[];        // Google Fonts, Adobe Fonts, etc. link URLs
+  fontFaceRules?: string[];    // Raw @font-face CSS rules
+  detectedFontWeights?: string[];  // All font weights found
+  detectedFontStyles?: string[];   // italic, normal, etc.
+  detectedLetterSpacing?: string;
+  detectedLineHeight?: string;
+  detectedTextTransform?: string;
+  detectedLabelLetterSpacing?: string;
+  detectedLabelTextTransform?: string;
+  detectedInputLetterSpacing?: string;
+  detectedButtonLetterSpacing?: string;
+  detectedButtonTextTransform?: string;
+  detectedLabelLineHeight?: string;
 }
 
 interface CapturedFormData {
@@ -246,9 +260,37 @@ Deno.serve(async (req) => {
       console.warn('Failed to fetch branding:', e);
     }
 
+    console.log('Extracting font resources...');
+    const fontData = extractFontResources(rawHtml, allCss, baseUrl);
+    console.log(`Found ${fontData.fontLinks.length} font links, ${fontData.fontFaceRules.length} @font-face rules`);
+
     console.log('Analyzing form display patterns...');
     const patterns = analyzeFormPatterns(formHtml, relevantCss);
     patterns.detectedFrameworks = detectedFrameworks;
+    patterns.fontLinks = fontData.fontLinks;
+    patterns.fontFaceRules = fontData.fontFaceRules;
+    
+    // Enhanced typography extraction
+    const typo = extractDetailedTypography(formHtml, relevantCss, allCss);
+    if (typo.fontFamily) patterns.detectedFontFamily = typo.fontFamily;
+    if (typo.fontSize) patterns.detectedFontSize = typo.fontSize;
+    if (typo.inputFontSize) patterns.detectedInputFontSize = typo.inputFontSize;
+    if (typo.labelFontSize) patterns.detectedLabelFontSize = typo.labelFontSize;
+    if (typo.labelFontWeight) patterns.detectedLabelFontWeight = typo.labelFontWeight;
+    if (typo.labelColor) patterns.detectedLabelColor = typo.labelColor;
+    patterns.detectedFontWeights = typo.fontWeights;
+    patterns.detectedFontStyles = typo.fontStyles;
+    patterns.detectedLetterSpacing = typo.letterSpacing;
+    patterns.detectedLineHeight = typo.lineHeight;
+    patterns.detectedTextTransform = typo.textTransform;
+    patterns.detectedLabelLetterSpacing = typo.labelLetterSpacing;
+    patterns.detectedLabelTextTransform = typo.labelTextTransform;
+    patterns.detectedLabelLineHeight = typo.labelLineHeight;
+    patterns.detectedInputLetterSpacing = typo.inputLetterSpacing;
+    patterns.detectedButtonLetterSpacing = typo.buttonLetterSpacing;
+    patterns.detectedButtonTextTransform = typo.buttonTextTransform;
+    
+    console.log('Detected font family:', patterns.detectedFontFamily);
     console.log('Detected label style:', patterns.labelStyle);
     console.log('Labels visible:', patterns.labelsVisible);
     console.log('Uses placeholders:', patterns.usesPlaceholders);
@@ -1578,5 +1620,165 @@ function analyzeFormPatterns(formHtml: string, formCss: string): CapturedFormPat
     detectedLabelSpacing: undefined,
     detectedBorderRadius,
     detectedBorderWidth,
+  };
+}
+
+// ==================== FONT RESOURCE EXTRACTION ====================
+
+function extractFontResources(html: string, allCss: string, baseUrl: URL): {
+  fontLinks: string[];
+  fontFaceRules: string[];
+} {
+  const fontLinks: string[] = [];
+  const fontFaceRules: string[] = [];
+
+  // Extract Google Fonts links
+  const googleFontsPattern = /<link[^>]*href=["'](https:\/\/fonts\.googleapis\.com\/[^"']+)["'][^>]*>/gi;
+  let match;
+  while ((match = googleFontsPattern.exec(html)) !== null) {
+    fontLinks.push(match[1]);
+  }
+
+  // Extract Google Fonts preconnect
+  const gstaticPattern = /<link[^>]*href=["'](https:\/\/fonts\.gstatic\.com[^"']*)["'][^>]*>/gi;
+  while ((match = gstaticPattern.exec(html)) !== null) {
+    // We need gstatic preconnect for fonts to load
+    if (!fontLinks.includes(match[1])) fontLinks.push(match[1]);
+  }
+
+  // Extract Adobe Fonts (Typekit) links
+  const typekitPattern = /<link[^>]*href=["'](https:\/\/use\.typekit\.net\/[^"']+)["'][^>]*>/gi;
+  while ((match = typekitPattern.exec(html)) !== null) {
+    fontLinks.push(match[1]);
+  }
+
+  // Adobe Fonts script tags
+  const typekitScriptPattern = /<script[^>]*src=["'](https:\/\/use\.typekit\.net\/[^"']+)["'][^>]*>/gi;
+  while ((match = typekitScriptPattern.exec(html)) !== null) {
+    fontLinks.push(match[1]);
+  }
+
+  // Extract fonts.bunny.net, fontshare, or other font CDN links
+  const fontCdnPattern = /<link[^>]*href=["'](https:\/\/(?:fonts\.bunny\.net|api\.fontshare\.com|cdn\.fonts\.net|fast\.fonts\.net|cloud\.typography\.com)[^"']+)["'][^>]*>/gi;
+  while ((match = fontCdnPattern.exec(html)) !== null) {
+    fontLinks.push(match[1]);
+  }
+
+  // Extract all @font-face rules from CSS
+  const fontFacePattern = /@font-face\s*\{[^}]+\}/gi;
+  while ((match = fontFacePattern.exec(allCss)) !== null) {
+    fontFaceRules.push(match[0]);
+  }
+
+  // Also check inline styles in HTML for @font-face
+  const styleBlocks = html.match(/<style[^>]*>([\s\S]*?)<\/style>/gi) || [];
+  for (const block of styleBlocks) {
+    const content = block.replace(/<\/?style[^>]*>/gi, '');
+    while ((match = fontFacePattern.exec(content)) !== null) {
+      fontFaceRules.push(match[0]);
+    }
+  }
+
+  // Deduplicate
+  return {
+    fontLinks: [...new Set(fontLinks)],
+    fontFaceRules: [...new Set(fontFaceRules)],
+  };
+}
+
+// ==================== DETAILED TYPOGRAPHY EXTRACTION ====================
+
+function extractDetailedTypography(formHtml: string, formCss: string, allCss: string): {
+  fontFamily?: string;
+  fontSize?: string;
+  inputFontSize?: string;
+  labelFontSize?: string;
+  labelFontWeight?: string;
+  labelColor?: string;
+  fontWeights: string[];
+  fontStyles: string[];
+  letterSpacing?: string;
+  lineHeight?: string;
+  textTransform?: string;
+  labelLetterSpacing?: string;
+  labelTextTransform?: string;
+  labelLineHeight?: string;
+  inputLetterSpacing?: string;
+  buttonLetterSpacing?: string;
+  buttonTextTransform?: string;
+} {
+  const cssToSearch = formCss + '\n' + allCss;
+
+  // Extract font-family with priority: form-specific CSS > body > html > :root
+  const fontFamilyPatterns = [
+    // Form-specific
+    /(?:form|\.form|#form)[^{]*\{[^}]*font-family:\s*([^;]+)/i,
+    // Input-specific
+    /input[^{]*\{[^}]*font-family:\s*([^;]+)/i,
+    // Body
+    /body[^{]*\{[^}]*font-family:\s*([^;]+)/i,
+    // HTML
+    /html[^{]*\{[^}]*font-family:\s*([^;]+)/i,
+    // :root with CSS variable
+    /:root[^{]*\{[^}]*--[a-z-]*font[a-z-]*:\s*([^;]+)/i,
+    // Any font-family declaration
+    /font-family:\s*([^;]+)/i,
+  ];
+
+  let fontFamily: string | undefined;
+  for (const pattern of fontFamilyPatterns) {
+    const match = cssToSearch.match(pattern);
+    if (match?.[1]) {
+      fontFamily = match[1].trim().replace(/["']/g, '').replace(/\s*!important/, '');
+      break;
+    }
+  }
+
+  // Also check inline styles on the form HTML for font-family
+  if (!fontFamily) {
+    const inlineFont = formHtml.match(/style=["'][^"']*font-family:\s*([^;"']+)/i);
+    if (inlineFont?.[1]) fontFamily = inlineFont[1].trim();
+  }
+
+  // Extract all unique font weights used
+  const fontWeights = new Set<string>();
+  const fwPattern = /font-weight:\s*([^;}\s]+)/gi;
+  let fwMatch;
+  while ((fwMatch = fwPattern.exec(formCss)) !== null) {
+    fontWeights.add(fwMatch[1].trim());
+  }
+
+  // Extract font styles (italic, etc.)
+  const fontStyles = new Set<string>();
+  const fsPattern = /font-style:\s*([^;}\s]+)/gi;
+  let fsMatch;
+  while ((fsMatch = fsPattern.exec(formCss)) !== null) {
+    fontStyles.add(fsMatch[1].trim());
+  }
+
+  // Extract specific typography properties
+  const extract = (pattern: RegExp): string | undefined => {
+    const m = formCss.match(pattern) || cssToSearch.match(pattern);
+    return m?.[1]?.trim();
+  };
+
+  return {
+    fontFamily,
+    fontSize: extract(/input[^{]*\{[^}]*font-size:\s*([^;}\s]+)/i) || extract(/body[^{]*\{[^}]*font-size:\s*([^;}\s]+)/i),
+    inputFontSize: extract(/input[^{]*\{[^}]*font-size:\s*([^;}\s]+)/i),
+    labelFontSize: extract(/label[^{]*\{[^}]*font-size:\s*([^;}\s]+)/i),
+    labelFontWeight: extract(/label[^{]*\{[^}]*font-weight:\s*([^;}\s]+)/i),
+    labelColor: extract(/label[^{]*\{[^}]*(?<!background-)color:\s*([^;}\s]+)/i),
+    fontWeights: [...fontWeights],
+    fontStyles: [...fontStyles],
+    letterSpacing: extract(/input[^{]*\{[^}]*letter-spacing:\s*([^;}\s]+)/i) || extract(/body[^{]*\{[^}]*letter-spacing:\s*([^;}\s]+)/i),
+    lineHeight: extract(/input[^{]*\{[^}]*line-height:\s*([^;}\s]+)/i) || extract(/body[^{]*\{[^}]*line-height:\s*([^;}\s]+)/i),
+    textTransform: extract(/input[^{]*\{[^}]*text-transform:\s*([^;}\s]+)/i),
+    labelLetterSpacing: extract(/label[^{]*\{[^}]*letter-spacing:\s*([^;}\s]+)/i),
+    labelTextTransform: extract(/label[^{]*\{[^}]*text-transform:\s*([^;}\s]+)/i),
+    labelLineHeight: extract(/label[^{]*\{[^}]*line-height:\s*([^;}\s]+)/i),
+    inputLetterSpacing: extract(/input[^{]*\{[^}]*letter-spacing:\s*([^;}\s]+)/i),
+    buttonLetterSpacing: extract(/button[^{]*\{[^}]*letter-spacing:\s*([^;}\s]+)/i),
+    buttonTextTransform: extract(/button[^{]*\{[^}]*text-transform:\s*([^;}\s]+)/i),
   };
 }
