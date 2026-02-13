@@ -151,20 +151,6 @@ export function ResultPage({ config, formStyle, buttonColor, onButtonClick }: Re
           </p>
         )}
 
-        {/* Reference ID */}
-        {config.showReferenceId && config.referenceId && (
-          <div 
-            className="rounded-lg px-4 py-3 inline-block"
-            style={{
-              backgroundColor: style.inputBgColor || '#f9fafb',
-              border: `1px solid ${style.inputBorderColor || '#e5e7eb'}`,
-            }}
-          >
-            <p className="text-xs mb-1" style={{ color: mutedTextColor }}>Reference ID</p>
-            <p className="font-mono font-medium" style={{ color: textColor }}>{config.referenceId}</p>
-          </div>
-        )}
-
         {/* Custom content (HTML) */}
         {config.customContent && (
           <div 
@@ -172,6 +158,13 @@ export function ResultPage({ config, formStyle, buttonColor, onButtonClick }: Re
             style={{ color: textColor }}
             dangerouslySetInnerHTML={{ __html: config.customContent }}
           />
+        )}
+
+        {/* Reference ID - small, just above the button */}
+        {config.showReferenceId && config.referenceId && (
+          <p className="font-mono text-xs" style={{ color: mutedTextColor }}>
+            Ref: {config.referenceId}
+          </p>
         )}
 
         {/* Button */}
