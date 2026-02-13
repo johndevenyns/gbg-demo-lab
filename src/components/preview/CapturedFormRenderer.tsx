@@ -100,7 +100,6 @@ export function CapturedFormRenderer({
 function buildIframeContent(formStyle: FormStyleConfig): string {
   const { capturedFormHtml, capturedFormCss, capturedFormJs, capturedSourceUrl } = formStyle;
   
-  // Generate a base URL from the source for relative asset references
   let baseHref = '';
   if (capturedSourceUrl) {
     try {
@@ -111,6 +110,17 @@ function buildIframeContent(formStyle: FormStyleConfig): string {
     }
   }
 
+  // Build framework CDN links from detected frameworks
+  const frameworks = (formStyle.capturedPatterns as any)?.detectedFrameworks || [];
+  const cdnCssLinks = frameworks
+    .flatMap((f: any) => f.cdnCss || [])
+    .map((url: string) => `<link rel="stylesheet" href="${url}" crossorigin="anonymous">`)
+    .join('\n  ');
+  const cdnJsLinks = frameworks
+    .flatMap((f: any) => f.cdnJs || [])
+    .map((url: string) => `<script src="${url}" crossorigin="anonymous"><\/script>`)
+    .join('\n  ');
+
   return `
 <!DOCTYPE html>
 <html lang="en">
@@ -118,40 +128,22 @@ function buildIframeContent(formStyle: FormStyleConfig): string {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   ${baseHref}
+  ${cdnCssLinks}
   <style>
-    /* Reset and base styles */
-    *, *::before, *::after {
-      box-sizing: border-box;
-    }
-    
+    *, *::before, *::after { box-sizing: border-box; }
     body {
       margin: 0;
       padding: 16px;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background: transparent;
     }
-    
-    /* Disable form submission for preview */
-    form {
-      pointer-events: auto;
-    }
-    
-    form button[type="submit"],
-    form input[type="submit"] {
-      cursor: pointer;
-    }
+    form { pointer-events: auto; }
+    form button[type="submit"], form input[type="submit"] { cursor: pointer; }
 
-    /* Captured CSS from the original site */
     ${capturedFormCss || ''}
-    
-    /* Additional floating label styles that might be needed */
-    .focused label,
-    .has-focus label,
-    .is-focused label,
-    label.floating,
-    label.active,
-    label.shrink,
-    label.label-active {
+
+    .focused label, .has-focus label, .is-focused label,
+    label.floating, label.active, label.shrink, label.label-active {
       transform: translateY(-100%) scale(0.75);
       transform-origin: top left;
     }
@@ -161,32 +153,20 @@ function buildIframeContent(formStyle: FormStyleConfig): string {
   <div class="captured-form-container">
     ${capturedFormHtml || ''}
   </div>
-  
+  ${cdnJsLinks}
   <script>
-    // Prevent form submission in preview
-    document.addEventListener('submit', function(e) {
-      e.preventDefault();
-      console.log('Form submission prevented in preview mode');
-    });
-    
-    // Execute captured JavaScript
     try {
       ${capturedFormJs || ''}
     } catch (e) {
       console.warn('Error executing captured form JavaScript:', e);
     }
     
-    // Notify parent of height changes
     function notifyHeight() {
       const height = document.body.scrollHeight;
       window.parent.postMessage({ type: 'iframe-height', height: height }, '*');
     }
-    
-    // Observe DOM changes to update height
     const observer = new MutationObserver(notifyHeight);
     observer.observe(document.body, { childList: true, subtree: true, attributes: true });
-    
-    // Initial height notification
     setTimeout(notifyHeight, 100);
     setTimeout(notifyHeight, 500);
   </script>
