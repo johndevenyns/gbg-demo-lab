@@ -42,10 +42,44 @@ export function StoredUserDataConfig({
   const passData = storedTestData?.passData || defaultPassData;
   const failData = storedTestData?.failData || defaultFailData;
 
-  // Get all unique field names from form steps
-  const uniqueFields = formSteps
-    .flatMap((step) => step.fields.map((f) => ({ name: f.name, label: f.label, type: f.type })))
-    .filter((field, index, self) => index === self.findIndex((f) => f.name === field.name));
+  // Build a comprehensive list of fields: form steps + stored data keys + available field defaults
+  // This ensures fields like email, phone, SSN, apartment show up even if not on the form
+  const uniqueFields = (() => {
+    const fieldMap = new Map<string, { name: string; label: string; type: string }>();
+    
+    // 1. Add fields from form steps
+    formSteps.forEach(step => {
+      step.fields.forEach(f => {
+        if (!fieldMap.has(f.name)) {
+          fieldMap.set(f.name, { name: f.name, label: f.label, type: f.type });
+        }
+      });
+    });
+    
+    // 2. Add fields from stored test data (pass + fail)
+    const allDataKeys = new Set([
+      ...Object.keys(passData),
+      ...Object.keys(failData),
+    ]);
+    
+    // 3. Add fields from global profiles
+    globalProfiles.forEach(p => {
+      if (p.field_data && typeof p.field_data === 'object') {
+        Object.keys(p.field_data as Record<string, unknown>).forEach(k => allDataKeys.add(k));
+      }
+    });
+    
+    // Look up labels from AVAILABLE_FORM_FIELDS for any keys not already in the map
+    allDataKeys.forEach(key => {
+      if (!fieldMap.has(key)) {
+        const known = AVAILABLE_FORM_FIELDS.find(f => f.name === key);
+        const label = known?.label || key.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase()).trim();
+        fieldMap.set(key, { name: key, label, type: known?.type || 'text' });
+      }
+    });
+    
+    return Array.from(fieldMap.values());
+  })();
 
   const handleFieldChange = (type: 'pass' | 'fail', fieldName: string, value: string) => {
     const newData: StoredTestData = {
@@ -155,23 +189,9 @@ export function StoredUserDataConfig({
         </div>
 
         {uniqueFields.length === 0 && (
-          <div className="border-t pt-4 mt-4">
-            <p className="text-sm text-muted-foreground mb-3">
-              Or configure common verification fields:
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {AVAILABLE_FORM_FIELDS.slice(0, 8).map((field) => (
-                <div key={field.name} className="space-y-1">
-                  <Label className="text-sm text-muted-foreground">{field.label}</Label>
-                  <Input
-                    value={data[field.name] || ''}
-                    onChange={(e) => handleFieldChange(type, field.name, e.target.value)}
-                    placeholder={field.placeholder}
-                    className="h-9"
-                  />
-                </div>
-              ))}
-            </div>
+          <div className="text-center py-8 text-muted-foreground">
+            <User className="w-8 h-8 mx-auto mb-2 opacity-50" />
+            <p>No fields configured. Add fields to form steps or load a profile.</p>
           </div>
         )}
       </div>
