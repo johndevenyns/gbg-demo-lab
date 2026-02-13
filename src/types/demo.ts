@@ -426,6 +426,7 @@ export interface FormStep {
   fields: FormField[];
   // Special elements
   addressValidationEnabled?: boolean;
+  addressValidationLabel?: string; // Custom label for the loading button during address validation
   submitButton?: boolean;
   verificationPath?: 'docbio' | 'databio' | 'dataonly' | 'mdl';
   // Button configuration

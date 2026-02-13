@@ -1998,7 +1998,8 @@ export function DemoFlowRenderer({
 
   // Don't show nav buttons for certain step types that handle their own navigation
   const stepTypesWithOwnNav = ['api', 'decision', 'unified_verification'];
-  const showNavButtons = !stepTypesWithOwnNav.includes(currentStep?.stepType || '') && !isLoading;
+  const isAddressValidating = isLoading && currentStep?.addressValidationEnabled;
+  const showNavButtons = !stepTypesWithOwnNav.includes(currentStep?.stepType || '') && (!isLoading || isAddressValidating);
 
   // Handle result page button clicks
   const handleResultButtonClick = (isSuccess: boolean) => {
@@ -2149,44 +2150,57 @@ export function DemoFlowRenderer({
       {/* Navigation buttons */}
       {showNavButtons && (
         <div className="flex gap-3 pt-4">
-          {buttonConfig.back.enabled && (
-            <Button variant="outline" onClick={goToPrevStep} className="flex-1">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              {buttonConfig.back.label}
-            </Button>
-          )}
-          
-          {buttonConfig.next.enabled && currentStep?.stepType !== 'page' && (
+          {isAddressValidating ? (
             <button 
-              onClick={goToNextStep} 
-              className="flex-1 inline-flex items-center justify-center gap-2 transition-all"
+              disabled
+              className="flex-1 inline-flex items-center justify-center gap-2 transition-all opacity-90 cursor-not-allowed"
               style={getButtonStyles()}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = effectiveButtonHoverBgColor;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = effectiveButtonBgColor;
-              }}
             >
-              {buttonConfig.next.label}
-              <ArrowRight className="w-4 h-4" />
+              <Loader2 className="w-4 h-4 animate-spin" />
+              {currentStep?.addressValidationLabel || 'Validating Address...'}
             </button>
-          )}
-          
-          {buttonConfig.submit.enabled && currentStep?.stepType !== 'page' && (
-            <button 
-              onClick={goToNextStep}
-              className="flex-1 inline-flex items-center justify-center gap-2 transition-all"
-              style={getButtonStyles()}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = effectiveButtonHoverBgColor;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = effectiveButtonBgColor;
-              }}
-            >
-              {buttonConfig.submit.label}
-            </button>
+          ) : (
+            <>
+              {buttonConfig.back.enabled && (
+                <Button variant="outline" onClick={goToPrevStep} className="flex-1">
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  {buttonConfig.back.label}
+                </Button>
+              )}
+              
+              {buttonConfig.next.enabled && currentStep?.stepType !== 'page' && (
+                <button 
+                  onClick={goToNextStep} 
+                  className="flex-1 inline-flex items-center justify-center gap-2 transition-all"
+                  style={getButtonStyles()}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = effectiveButtonHoverBgColor;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = effectiveButtonBgColor;
+                  }}
+                >
+                  {buttonConfig.next.label}
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              )}
+              
+              {buttonConfig.submit.enabled && currentStep?.stepType !== 'page' && (
+                <button 
+                  onClick={goToNextStep}
+                  className="flex-1 inline-flex items-center justify-center gap-2 transition-all"
+                  style={getButtonStyles()}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = effectiveButtonHoverBgColor;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = effectiveButtonBgColor;
+                  }}
+                >
+                  {buttonConfig.submit.label}
+                </button>
+              )}
+            </>
           )}
         </div>
       )}
