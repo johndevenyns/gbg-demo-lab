@@ -124,56 +124,74 @@ Deno.serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `You are an expert UI/UX designer and CSS specialist. When analyzing form screenshots, you must extract PRECISE styling information with extreme accuracy. 
+            content: `You are an expert UI/UX designer, CSS specialist, and TYPOGRAPHY EXPERT. When analyzing form screenshots, you must extract PRECISE styling information with extreme accuracy. 
 
 KEY REQUIREMENTS:
-1. FONT IDENTIFICATION: Identify the exact font family being used. Look for characteristics:
-   - Sans-serif fonts: Inter, Roboto, Open Sans, Lato, Montserrat, Helvetica, Arial, SF Pro, Segoe UI
-   - Serif fonts: Georgia, Times New Roman, Merriweather, Playfair Display
-   - Look at letter shapes, x-height, terminal styles to identify the font
-   - If uncertain, describe the font style (e.g., "geometric sans-serif similar to Inter")
+1. FONT IDENTIFICATION (CRITICAL - be extremely precise):
+   - Look carefully at letterforms, x-height, ascender/descender proportions, terminal styles, aperture widths
+   - Common sans-serif fonts to distinguish between:
+     * Inter: Slightly tall x-height, open apertures, distinct lowercase 'a' with curved tail, 'l' has slight curve at bottom
+     * Roboto: Mechanical skeleton with friendly curves, wider than Inter, distinctive 'R' with curved leg
+     * Open Sans: Humanist design, generous x-height, open letterforms, slightly rounded
+     * Lato: Semi-rounded details, warm, slightly condensed compared to Open Sans
+     * Montserrat: Geometric, larger x-height, based on urban typography, wider 'e' and 'a'
+     * Helvetica/Arial: Neo-grotesque, horizontal stroke terminals, narrow apertures
+     * SF Pro / -apple-system: Apple's system font, similar to Helvetica but with larger x-height
+     * Segoe UI: Microsoft's UI font, humanist design, slightly narrower than Open Sans
+     * Source Sans Pro: Adobe's first open source, clean readability, distinct 'i' dot
+     * Nunito: Rounded terminal, friendly, balanced proportions
+     * Poppins: Geometric, circular letterforms, even stroke width
+     * DM Sans: Low contrast, geometric, slightly playful
+     * Plus Jakarta Sans: Modern geometric, slightly squarish proportions
+     * Figtree: Friendly geometric, open counters
+   - Common serif fonts: Georgia, Times New Roman, Merriweather, Playfair Display, Lora, PT Serif
+   - Monospace: JetBrains Mono, Fira Code, SF Mono, Consolas, Monaco
+   - ALWAYS provide fallback stack (e.g., "Inter, -apple-system, BlinkMacSystemFont, sans-serif")
+   - If uncertain between 2-3 fonts, describe visual characteristics: "Geometric sans-serif with rounded terminals, most likely Nunito or DM Sans"
 
-2. FONT SIZES: Provide exact pixel values. Common patterns:
-   - Labels: typically 12-14px
-   - Input text: typically 14-16px
-   - Buttons: typically 14-16px
-   - Estimate based on visual proportions
+2. FONT SIZES: Provide exact pixel values based on visual proportions
+3. FONT WEIGHT: Be precise - 300 (light), 400 (regular), 500 (medium), 600 (semibold), 700 (bold)
+4. LETTER SPACING: Note if text appears tightly or loosely spaced (e.g., "-0.01em", "0.05em", "normal")
+5. LINE HEIGHT: Estimate based on vertical spacing between text lines
+6. TEXT TRANSFORM: Note uppercase, capitalize, or normal case usage in labels and buttons
+7. TEXT DECORATION: Note any underline, strikethrough, etc.
 
-3. LABEL POSITIONING: Identify exactly how labels are displayed:
+8. LABEL POSITIONING: Identify exactly how labels are displayed:
    - "above": Labels sit above inputs with clear separation
    - "floating": Labels animate/float when input is focused
    - "inline": Labels sit to the left of inputs
    - "placeholder-only": No visible labels, only placeholder text
    - "hidden": No labels or placeholders visible
 
-4. PLACEHOLDER TEXT: Read and transcribe the exact placeholder text shown in each field
-
-5. COLORS: Extract exact hex color codes. Be precise - #f5f5f5 is different from #ffffff
-
-6. SPACING: Estimate padding and margins in pixels
-
-7. BUTTON STYLING: Note everything - background, text color, border-radius, padding, shadow, text transform (uppercase, capitalize, none)
-
-8. LAYOUT: Is it single column? Two column? Inline fields?`
+9. PLACEHOLDER TEXT: Read and transcribe exact placeholder text
+10. COLORS: Extract exact hex color codes. Be precise - #f5f5f5 is different from #ffffff
+11. SPACING: Estimate padding and margins in pixels
+12. BUTTON STYLING: Note everything - background, text color, border-radius, padding, shadow, text transform
+13. LAYOUT: Single column? Two column? Inline fields?`
           },
           {
             role: 'user',
             content: [
               {
                 type: 'text',
-                text: `Analyze this form screenshot with EXTREME PRECISION. Extract:
+                text: `Analyze this form screenshot with EXTREME PRECISION. Focus especially on TYPOGRAPHY:
 
-1. The EXACT font family being used (be specific - "Inter", "Roboto", "Arial", etc.)
-2. Precise font sizes in pixels for labels, inputs, and buttons
-3. How labels are positioned relative to inputs
-4. All placeholder text visible in any input fields
-5. All label text visible
-6. Exact colors as hex codes
-7. Button text and styling details
-8. Layout pattern (single column, two column, etc.)
-9. Any helper text or descriptions under fields
+1. The EXACT font family - look at letter shapes, terminals, x-height. Compare to known web fonts.
+2. EXACT font weights for labels, inputs, buttons, headings (use numeric values: 300, 400, 500, 600, 700)
+3. EXACT font sizes in pixels for every text element
+4. Letter spacing - tight, normal, or loose? Provide em or px values
+5. Line height for multi-line text
+6. Text transform (uppercase labels? capitalized buttons?)
+7. Text decoration (underlined links?)
+8. Font style (any italic text?)
+9. All colors as precise hex codes
+10. Label positioning relative to inputs
+11. All placeholder text and label text verbatim
+12. Button text and complete styling
+13. Layout pattern
+14. Any helper text or descriptions
 
-Be as accurate as possible - this will be used to replicate the exact form design.`,
+This will be used to replicate the EXACT form design including pixel-perfect typography.`,
               },
               {
                 type: 'image_url',

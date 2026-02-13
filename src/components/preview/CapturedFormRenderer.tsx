@@ -111,7 +111,8 @@ function buildIframeContent(formStyle: FormStyleConfig): string {
   }
 
   // Build framework CDN links from detected frameworks
-  const frameworks = (formStyle.capturedPatterns as any)?.detectedFrameworks || [];
+  const patterns = formStyle.capturedPatterns as any;
+  const frameworks = patterns?.detectedFrameworks || [];
   const cdnCssLinks = frameworks
     .flatMap((f: any) => f.cdnCss || [])
     .map((url: string) => `<link rel="stylesheet" href="${url}" crossorigin="anonymous">`)
@@ -121,6 +122,28 @@ function buildIframeContent(formStyle: FormStyleConfig): string {
     .map((url: string) => `<script src="${url}" crossorigin="anonymous"><\/script>`)
     .join('\n  ');
 
+  // Build font resource links (Google Fonts, Adobe Fonts, etc.)
+  const fontLinks = (patterns?.fontLinks || [])
+    .map((url: string) => {
+      if (url.endsWith('.js')) {
+        return `<script src="${url}" crossorigin="anonymous"><\/script>`;
+      }
+      if (url.includes('fonts.gstatic.com')) {
+        return `<link rel="preconnect" href="${url}" crossorigin>`;
+      }
+      return `<link rel="stylesheet" href="${url}" crossorigin="anonymous">`;
+    })
+    .join('\n  ');
+
+  // Build @font-face rules
+  const fontFaceRules = (patterns?.fontFaceRules || []).join('\n    ');
+
+  // Detect font-family from patterns for the body default
+  const detectedFont = patterns?.detectedFontFamily || '';
+  const bodyFontFamily = detectedFont
+    ? `${detectedFont}, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif`
+    : `-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif`;
+
   return `
 <!DOCTYPE html>
 <html lang="en">
@@ -128,14 +151,21 @@ function buildIframeContent(formStyle: FormStyleConfig): string {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   ${baseHref}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  ${fontLinks}
   ${cdnCssLinks}
   <style>
+    ${fontFaceRules}
+
     *, *::before, *::after { box-sizing: border-box; }
     body {
       margin: 0;
       padding: 16px;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-family: ${bodyFontFamily};
       background: transparent;
+      ${patterns?.detectedLetterSpacing ? `letter-spacing: ${patterns.detectedLetterSpacing};` : ''}
+      ${patterns?.detectedLineHeight ? `line-height: ${patterns.detectedLineHeight};` : ''}
     }
     form { pointer-events: auto; }
     form button[type="submit"], form input[type="submit"] { cursor: pointer; }
