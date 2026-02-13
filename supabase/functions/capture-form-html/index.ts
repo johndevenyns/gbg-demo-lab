@@ -684,358 +684,61 @@ function generateFrameworkAwareJs(
   formIds: Set<string>,
   frameworks: DetectedFramework[]
 ): string {
-  const jsFragments: string[] = [];
-  const frameworkNames = new Set(frameworks.map(f => f.name));
+  const js: string[] = [];
+  const fwNames = new Set(frameworks.map(f => f.name));
 
-  // First, extract inline scripts relevant to the form
-  const scriptPattern = /<script(?![^>]*\ssrc=)[^>]*>([\s\S]*?)<\/script>/gi;
-  let scriptMatch;
-  while ((scriptMatch = scriptPattern.exec(html)) !== null) {
-    const scriptContent = scriptMatch[1].trim();
-    if (!scriptContent) continue;
-    if (isScriptRelevantToForm(scriptContent, formId, formClasses, formIds)) {
-      jsFragments.push(scriptContent);
-    }
+  // Extract inline scripts relevant to the form
+  const sp = /<script(?![^>]*\ssrc=)[^>]*>([\s\S]*?)<\/script>/gi;
+  let sm;
+  while ((sm = sp.exec(html)) !== null) {
+    const c = sm[1].trim();
+    if (c && isScriptRelevantToForm(c, formId, formClasses, formIds)) js.push(c);
   }
 
-  // Generate framework-specific interaction handlers
+  // Compact universal floating label + framework scripts
+  js.push(`(function(){
+var S='.form-floating,.mat-form-field,.mdc-text-field,.MuiFormControl-root,.input-field,.form-group,.field-wrapper,.form-field,.floating-label';
+function init(){document.querySelectorAll('input,textarea,select').forEach(function(i){
+var w=i.closest(S)||i.parentElement;if(!w)return;
+var l=w.querySelector('label,.mat-label,.mdc-floating-label,.MuiInputLabel-root');
+i.addEventListener('focus',function(){w.classList.add('focused','is-focused');if(l)l.classList.add('floating','active','shrink','MuiInputLabel-shrink');});
+i.addEventListener('blur',function(){w.classList.remove('focused','is-focused');if(!i.value&&l)l.classList.remove('floating','active','shrink','MuiInputLabel-shrink');});
+if(i.value&&l)l.classList.add('floating','active','shrink','MuiInputLabel-shrink');
+});}init();setTimeout(init,500);setTimeout(init,1500);
+document.addEventListener('submit',function(e){e.preventDefault();});
+document.querySelectorAll('a').forEach(function(a){a.addEventListener('click',function(e){e.preventDefault();});});
+document.querySelectorAll('[type=checkbox],[type=radio]').forEach(function(i){i.addEventListener('change',function(){
+var l=document.querySelector('label[for=\"'+i.id+'\"]')||i.closest('label');if(l){if(i.checked)l.classList.add('checked');else l.classList.remove('checked');}});});
+document.querySelectorAll('select').forEach(function(s){s.style.appearance='auto';});
+})();`);
 
-  // Universal floating label support
-  jsFragments.push(generateUniversalFloatingLabelScript());
-
-  // Angular Material-specific
-  if (frameworkNames.has('angular-material') || frameworkNames.has('angular')) {
-    jsFragments.push(generateAngularMaterialScript());
+  // Angular Material: style mat-form-field containers
+  if (fwNames.has('angular-material') || fwNames.has('angular')) {
+    js.push(`(function(){document.querySelectorAll('.mat-form-field').forEach(function(f){
+f.style.display='block';f.style.marginBottom='16px';f.style.position='relative';
+var l=f.querySelector('label,.mat-label'),i=f.querySelector('input,textarea,select,.mat-input-element');
+if(l&&i){l.style.cssText='position:absolute;top:50%;left:12px;transform:translateY(-50%);transition:all .15s;pointer-events:none;font-size:16px;color:rgba(0,0,0,.6)';
+i.style.cssText='width:100%;padding:20px 12px 6px;font-size:16px;border:1px solid rgba(0,0,0,.23);border-radius:4px;outline:none;box-sizing:border-box;background:transparent';
+i.addEventListener('focus',function(){l.style.top='6px';l.style.transform='translateY(0) scale(.75)';l.style.color='#1976d2';i.style.borderColor='#1976d2';});
+i.addEventListener('blur',function(){if(!i.value){l.style.top='50%';l.style.transform='translateY(-50%) scale(1)';}l.style.color='rgba(0,0,0,.6)';i.style.borderColor='rgba(0,0,0,.23)';});
+if(i.value){l.style.top='6px';l.style.transform='translateY(0) scale(.75)';}}});
+document.querySelectorAll('.material-icons').forEach(function(ic){ic.style.fontFamily='Material Icons';ic.style.fontSize='24px';});})();`);
   }
 
-  // Bootstrap-specific
-  if (frameworkNames.has('bootstrap')) {
-    jsFragments.push(generateBootstrapScript());
+  // Bootstrap floating labels
+  if (fwNames.has('bootstrap')) {
+    js.push(`(function(){document.querySelectorAll('.form-floating').forEach(function(c){
+var i=c.querySelector('.form-control,.form-select'),l=c.querySelector('label');
+if(i&&l){var fl=function(){l.style.opacity='.65';l.style.transform='scale(.85) translateY(-.5rem) translateX(.15rem)';};
+var ul=function(){if(!i.value){l.style.opacity='1';l.style.transform='none';}};
+i.addEventListener('focus',fl);i.addEventListener('blur',ul);if(i.value)fl();}});})();`);
   }
 
-  // MUI-specific
-  if (frameworkNames.has('mui')) {
-    jsFragments.push(generateMUIScript());
-  }
-
-  // Materialize-specific
-  if (frameworkNames.has('materialize')) {
-    jsFragments.push(generateMaterializeScript());
-  }
-
-  // Universal form enhancement (works across all frameworks)
-  jsFragments.push(generateUniversalFormScript());
-
-  return jsFragments.join('\n\n');
+  return js.join('\n');
 }
 
-function generateUniversalFloatingLabelScript(): string {
-  return `
-// Universal Floating Label Support
-(function() {
-  const selectors = [
-    // Bootstrap 5
-    '.form-floating > .form-control, .form-floating > .form-select',
-    // Material Design / Angular Material
-    '.mat-form-field input, .mat-form-field textarea, .mat-form-field select',
-    '.mdc-text-field__input',
-    '.mdc-floating-label',
-    // MUI
-    '.MuiInputBase-input, .MuiInput-input, .MuiOutlinedInput-input, .MuiFilledInput-input',
-    // Materialize
-    '.input-field input, .input-field textarea',
-    // Generic floating patterns
-    '.floating-label input, .float-label input',
-    '[data-floating-label] input',
-    // Any input inside a wrapper that has a label sibling
-    '.form-group input, .field-wrapper input, .input-wrapper input, .form-field input',
-  ];
 
-  function initFloatingLabels() {
-    const allInputs = document.querySelectorAll(selectors.join(', '));
-    
-    allInputs.forEach(function(input) {
-      const wrapper = input.closest('.form-floating, .mat-form-field, .mdc-text-field, .MuiFormControl-root, .input-field, .form-group, .field-wrapper, .input-wrapper, .form-field, .floating-label, .float-label') || input.parentElement;
-      if (!wrapper) return;
-      
-      const label = wrapper.querySelector('label, .mat-label, .mdc-floating-label, .MuiInputLabel-root, .MuiFormLabel-root');
-      
-      function activate() {
-        wrapper.classList.add('focused', 'has-focus', 'is-focused', 'mat-focused', 'mdc-text-field--focused', 'Mui-focused');
-        if (label) label.classList.add('floating', 'active', 'shrink', 'label-active', 'mdc-floating-label--float-above', 'MuiInputLabel-shrink', 'MuiFormLabel-filled');
-      }
-      
-      function deactivate() {
-        wrapper.classList.remove('focused', 'has-focus', 'is-focused', 'mat-focused', 'mdc-text-field--focused', 'Mui-focused');
-        if (!input.value && !input.placeholder) {
-          if (label) label.classList.remove('floating', 'active', 'shrink', 'label-active', 'mdc-floating-label--float-above', 'MuiInputLabel-shrink');
-        }
-      }
-      
-      input.addEventListener('focus', activate);
-      input.addEventListener('blur', deactivate);
-      
-      // Initialize state for pre-filled inputs
-      if (input.value) activate();
-    });
-  }
 
-  // Run now and also after a delay for dynamic content
-  initFloatingLabels();
-  setTimeout(initFloatingLabels, 500);
-  setTimeout(initFloatingLabels, 1500);
-})();
-`.trim();
-}
-
-function generateAngularMaterialScript(): string {
-  return `
-// Angular Material Compatibility Layer
-(function() {
-  // Style mat-form-field containers
-  document.querySelectorAll('.mat-form-field').forEach(function(field) {
-    field.style.display = 'block';
-    field.style.marginBottom = '16px';
-    field.style.position = 'relative';
-    
-    const label = field.querySelector('label, .mat-label');
-    const input = field.querySelector('input, textarea, select, .mat-input-element');
-    
-    if (label && input) {
-      // Position label for floating effect
-      label.style.position = 'absolute';
-      label.style.top = '50%';
-      label.style.left = '12px';
-      label.style.transform = 'translateY(-50%)';
-      label.style.transition = 'all 0.15s ease';
-      label.style.pointerEvents = 'none';
-      label.style.fontSize = '16px';
-      label.style.color = 'rgba(0,0,0,0.6)';
-      
-      // Style the input
-      input.style.width = '100%';
-      input.style.padding = '20px 12px 6px';
-      input.style.fontSize = '16px';
-      input.style.border = '1px solid rgba(0,0,0,0.23)';
-      input.style.borderRadius = '4px';
-      input.style.outline = 'none';
-      input.style.boxSizing = 'border-box';
-      input.style.backgroundColor = 'transparent';
-      
-      function floatLabel() {
-        label.style.top = '6px';
-        label.style.transform = 'translateY(0) scale(0.75)';
-        label.style.transformOrigin = 'top left';
-        label.style.color = '#1976d2';
-        input.style.borderColor = '#1976d2';
-        input.style.borderWidth = '2px';
-      }
-      
-      function unfloatLabel() {
-        if (!input.value) {
-          label.style.top = '50%';
-          label.style.transform = 'translateY(-50%) scale(1)';
-        }
-        label.style.color = 'rgba(0,0,0,0.6)';
-        input.style.borderColor = 'rgba(0,0,0,0.23)';
-        input.style.borderWidth = '1px';
-      }
-      
-      input.addEventListener('focus', floatLabel);
-      input.addEventListener('blur', unfloatLabel);
-      if (input.value) floatLabel();
-    }
-  });
-  
-  // Style Material Icons
-  document.querySelectorAll('.material-icons').forEach(function(icon) {
-    icon.style.fontFamily = 'Material Icons';
-    icon.style.fontSize = '24px';
-    icon.style.verticalAlign = 'middle';
-  });
-})();
-`.trim();
-}
-
-function generateBootstrapScript(): string {
-  return `
-// Bootstrap Form Enhancement
-(function() {
-  // Handle Bootstrap 5 floating labels
-  document.querySelectorAll('.form-floating').forEach(function(container) {
-    const input = container.querySelector('.form-control, .form-select');
-    const label = container.querySelector('label');
-    if (input && label) {
-      input.addEventListener('focus', function() {
-        label.style.opacity = '0.65';
-        label.style.transform = 'scale(0.85) translateY(-0.5rem) translateX(0.15rem)';
-      });
-      input.addEventListener('blur', function() {
-        if (!input.value) {
-          label.style.opacity = '1';
-          label.style.transform = 'none';
-        }
-      });
-      if (input.value) {
-        label.style.opacity = '0.65';
-        label.style.transform = 'scale(0.85) translateY(-0.5rem) translateX(0.15rem)';
-      }
-    }
-  });
-  
-  // Handle Bootstrap validation states
-  document.querySelectorAll('.was-validated .form-control, .is-invalid, .is-valid').forEach(function(input) {
-    if (input.classList.contains('is-invalid')) {
-      input.style.borderColor = '#dc3545';
-    } else if (input.classList.contains('is-valid')) {
-      input.style.borderColor = '#198754';
-    }
-  });
-  
-  // Handle input-group addons
-  document.querySelectorAll('.input-group').forEach(function(group) {
-    group.style.display = 'flex';
-    group.style.alignItems = 'stretch';
-    const prepend = group.querySelector('.input-group-text');
-    if (prepend) {
-      prepend.style.display = 'flex';
-      prepend.style.alignItems = 'center';
-      prepend.style.padding = '6px 12px';
-      prepend.style.backgroundColor = '#e9ecef';
-      prepend.style.border = '1px solid #ced4da';
-      prepend.style.borderRadius = '4px 0 0 4px';
-    }
-  });
-})();
-`.trim();
-}
-
-function generateMUIScript(): string {
-  return `
-// MUI (Material UI) Compatibility Layer
-(function() {
-  document.querySelectorAll('.MuiFormControl-root, [class*="MuiTextField"]').forEach(function(field) {
-    const input = field.querySelector('input, textarea, select');
-    const label = field.querySelector('.MuiInputLabel-root, .MuiFormLabel-root, label');
-    
-    if (input && label) {
-      // MUI outlined variant floating label
-      input.addEventListener('focus', function() {
-        label.classList.add('MuiInputLabel-shrink', 'Mui-focused');
-        field.classList.add('Mui-focused');
-        const fieldset = field.querySelector('fieldset');
-        if (fieldset) fieldset.style.borderColor = '#1976d2';
-      });
-      
-      input.addEventListener('blur', function() {
-        label.classList.remove('Mui-focused');
-        field.classList.remove('Mui-focused');
-        if (!input.value) {
-          label.classList.remove('MuiInputLabel-shrink');
-        }
-        const fieldset = field.querySelector('fieldset');
-        if (fieldset) fieldset.style.borderColor = 'rgba(0,0,0,0.23)';
-      });
-      
-      if (input.value) {
-        label.classList.add('MuiInputLabel-shrink', 'MuiFormLabel-filled');
-      }
-    }
-  });
-})();
-`.trim();
-}
-
-function generateMaterializeScript(): string {
-  return `
-// Materialize CSS Compatibility Layer
-(function() {
-  document.querySelectorAll('.input-field').forEach(function(field) {
-    const input = field.querySelector('input, textarea');
-    const label = field.querySelector('label');
-    
-    if (input && label) {
-      label.style.position = 'absolute';
-      label.style.top = '0';
-      label.style.left = '0';
-      label.style.transition = 'all 0.2s ease';
-      label.style.pointerEvents = 'none';
-      
-      input.addEventListener('focus', function() {
-        label.classList.add('active');
-        label.style.transform = 'translateY(-14px) scale(0.8)';
-        label.style.color = '#26a69a';
-      });
-      
-      input.addEventListener('blur', function() {
-        if (!input.value) {
-          label.classList.remove('active');
-          label.style.transform = 'none';
-          label.style.color = '#9e9e9e';
-        }
-      });
-      
-      if (input.value) {
-        label.classList.add('active');
-        label.style.transform = 'translateY(-14px) scale(0.8)';
-      }
-    }
-  });
-})();
-`.trim();
-}
-
-function generateUniversalFormScript(): string {
-  return `
-// Universal Form Enhancement
-(function() {
-  // Prevent actual form submission
-  document.addEventListener('submit', function(e) {
-    e.preventDefault();
-    console.log('Form submission prevented in preview mode');
-  });
-  
-  // Handle password visibility toggles
-  document.querySelectorAll('[data-toggle="password"], .password-toggle, .toggle-password, [type="password"] + button, [type="password"] + span').forEach(function(toggle) {
-    toggle.addEventListener('click', function(e) {
-      e.preventDefault();
-      const wrapper = toggle.closest('.form-group, .input-group, .field-wrapper, .password-field') || toggle.parentElement;
-      const input = wrapper ? wrapper.querySelector('input[type="password"], input[type="text"]') : null;
-      if (input) {
-        input.type = input.type === 'password' ? 'text' : 'password';
-      }
-    });
-  });
-  
-  // Handle custom select dropdowns
-  document.querySelectorAll('select').forEach(function(select) {
-    select.style.appearance = 'auto';
-    select.style.webkitAppearance = 'auto';
-  });
-  
-  // Handle checkbox and radio visual states
-  document.querySelectorAll('input[type="checkbox"], input[type="radio"]').forEach(function(input) {
-    input.addEventListener('change', function() {
-      const label = document.querySelector('label[for="' + input.id + '"]') || input.closest('label');
-      if (label) {
-        if (input.checked) {
-          label.classList.add('checked', 'is-checked', 'active');
-        } else {
-          label.classList.remove('checked', 'is-checked', 'active');
-        }
-      }
-    });
-  });
-
-  // Ensure all links are non-functional in preview
-  document.querySelectorAll('a').forEach(function(a) {
-    a.addEventListener('click', function(e) {
-      e.preventDefault();
-    });
-  });
-})();
-`.trim();
-}
 
 // ==================== ORIGINAL EXTRACTION FUNCTIONS (ENHANCED) ====================
 
