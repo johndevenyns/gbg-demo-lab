@@ -1756,10 +1756,11 @@ export function DemoFlowRenderer({
                     Session: {verificationSessionId.substring(0, 8)}...
                   </p>
                 )}
-                {(vfStatus === 'pending' || vfStatus === 'in_progress') && (
-                  <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Waiting for verification...
+                {(vfStatus === 'pending' || vfStatus === 'in_progress' || vfStatus === 'processing') && (
+                  <div className="flex flex-col items-center justify-center gap-2 py-3">
+                    <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                    <p className="text-sm font-medium">Verification Pending</p>
+                    <p className="text-xs text-muted-foreground">Please complete the verification on your device</p>
                   </div>
                 )}
               </div>
@@ -1835,10 +1836,11 @@ export function DemoFlowRenderer({
                     Session: {verificationSessionId.substring(0, 8)}...
                   </p>
                 )}
-                {(currentStatus === 'pending' || currentStatus === 'in_progress') && (
-                  <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Waiting for verification...
+                {(currentStatus === 'pending' || currentStatus === 'in_progress' || currentStatus === 'processing') && (
+                  <div className="flex flex-col items-center justify-center gap-2 py-3">
+                    <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                    <p className="text-sm font-medium">Verification Pending</p>
+                    <p className="text-xs text-muted-foreground">Please complete the verification on your device</p>
                   </div>
                 )}
               </div>
