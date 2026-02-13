@@ -1250,20 +1250,42 @@ export function DemoFlowRenderer({
   const pollVerificationStatus = useCallback(async () => {
     if (!verificationSessionId) return;
 
+    const pollEndpoint = `${SUPABASE_FUNCTIONS_URL}/get-verification-status`;
+
     try {
+      const startTime = Date.now();
       const { data, error: invokeError } = await supabase.functions.invoke('get-verification-status', {
         body: { sessionId: verificationSessionId },
       });
+      const duration = Date.now() - startTime;
 
       if (invokeError) {
         console.error('Status poll error:', invokeError);
+        onSubmissionLog?.({
+          type: 'response',
+          endpoint: pollEndpoint,
+          method: 'POST',
+          status: 500,
+          data: { error: invokeError.message } as Record<string, unknown>,
+          duration,
+        });
         return;
       }
 
       console.log('Verification status:', data);
       setPollingStatus(data.status);
 
+      // Log completed/final status responses to submission log
       if (data.isComplete) {
+        onSubmissionLog?.({
+          type: 'response',
+          endpoint: pollEndpoint,
+          method: 'POST',
+          status: 200,
+          data: data as Record<string, unknown>,
+          duration,
+        });
+
         // Stop polling
         if (pollingRef.current) {
           clearInterval(pollingRef.current);
@@ -1279,7 +1301,7 @@ export function DemoFlowRenderer({
     } catch (err) {
       console.error('Status poll error:', err);
     }
-  }, [verificationSessionId, referenceId, completeFlow]);
+  }, [verificationSessionId, referenceId, completeFlow, onSubmissionLog]);
 
   // Start polling when verification session is created
   useEffect(() => {
