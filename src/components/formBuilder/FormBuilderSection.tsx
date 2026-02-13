@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,6 +19,7 @@ import {
   AlignLeft, AlignCenter, AlignRight
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useTestProfiles } from '@/hooks/useTestProfiles';
 
 interface FormBuilderSectionProps {
   demo: DemoEnvironment;
@@ -27,6 +28,7 @@ interface FormBuilderSectionProps {
 
 export function FormBuilderSection({ demo, onUpdate }: FormBuilderSectionProps) {
   const { toast } = useToast();
+  const { data: globalProfiles = [] } = useTestProfiles();
   const [activeTab, setActiveTab] = useState('builder');
   const [saveTemplateOpen, setSaveTemplateOpen] = useState(false);
   const [templateRefreshTrigger, setTemplateRefreshTrigger] = useState(0);
@@ -99,35 +101,11 @@ export function FormBuilderSection({ demo, onUpdate }: FormBuilderSectionProps) 
   }, [onUpdate]);
 
   const handleToggleFillButton = useCallback((type: 'pass' | 'fail', enabled: boolean) => {
-    const DEFAULT_PASS_DATA: Record<string, string> = {
-      firstName: 'John',
-      lastName: 'Smith',
-      email: 'test@gbg.com',
-      phone: '9193740211',
-      dateOfBirth: '2/28/1975',
-      ssn4: '6789',
-      streetAddress: '222333 PEACHTREE PLACE',
-      apartment: '',
-      city: 'ATLANTA',
-      state: 'GA',
-      zipCode: '30318',
-      ssn: '123-45-6789',
-    };
-    
-    const DEFAULT_FAIL_DATA: Record<string, string> = {
-      firstName: 'Bob',
-      lastName: 'France',
-      email: 'testfail@gbg.com',
-      phone: '9193740211',
-      dateOfBirth: '7/1/1951',
-      ssn4: '4321',
-      streetAddress: '5555 MOUNTAIN ROAD',
-      apartment: 'Unit 2B',
-      city: 'ATLANTA',
-      state: 'GA',
-      zipCode: '30153',
-      ssn: '987-65-4321',
-    };
+    // Pull defaults from global profiles
+    const firstPass = globalProfiles.find((p) => p.profile_type === 'pass');
+    const firstFail = globalProfiles.find((p) => p.profile_type === 'fail');
+    const defaultPassData: Record<string, string> = firstPass?.field_data ?? {};
+    const defaultFailData: Record<string, string> = firstFail?.field_data ?? {};
     
     const currentData = demo.storedTestData || { passData: {}, failData: {} };
     
@@ -136,10 +114,10 @@ export function FormBuilderSection({ demo, onUpdate }: FormBuilderSectionProps) 
     let updatedFailData = currentData.failData;
     
     if (enabled && type === 'pass' && (!currentData.passData || Object.keys(currentData.passData).length === 0)) {
-      updatedPassData = DEFAULT_PASS_DATA;
+      updatedPassData = defaultPassData;
     }
     if (enabled && type === 'fail' && (!currentData.failData || Object.keys(currentData.failData).length === 0)) {
-      updatedFailData = DEFAULT_FAIL_DATA;
+      updatedFailData = defaultFailData;
     }
     
     const updatedData: StoredTestData = {
@@ -150,7 +128,7 @@ export function FormBuilderSection({ demo, onUpdate }: FormBuilderSectionProps) 
       showFillFailButton: type === 'fail' ? enabled : currentData.showFillFailButton,
     };
     onUpdate({ storedTestData: updatedData });
-  }, [demo.storedTestData, onUpdate]);
+  }, [demo.storedTestData, onUpdate, globalProfiles]);
 
   const showFillPass = demo.storedTestData?.showFillPassButton ?? false;
   const showFillFail = demo.storedTestData?.showFillFailButton ?? false;
