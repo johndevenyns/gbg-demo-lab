@@ -1,23 +1,16 @@
-import { useState, useRef } from "react";
-import { QrCode, Download, Copy, Check, ExternalLink } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { useState } from "react";
+import { QrCode, Download, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 
-export function QrCodeGeneratorDialog() {
+export default function QrCodePreview() {
   const { toast } = useToast();
-  const [url, setUrl] = useState("");
-  const [size, setSize] = useState(300);
+  const params = new URLSearchParams(window.location.search);
+  const [url, setUrl] = useState(params.get("url") || "");
+  const [size, setSize] = useState(Number(params.get("size")) || 300);
   const [copied, setCopied] = useState(false);
-  const imgRef = useRef<HTMLImageElement>(null);
 
   const trimmedUrl = url.trim();
   const isValid = trimmedUrl.startsWith("http://") || trimmedUrl.startsWith("https://");
@@ -48,18 +41,14 @@ export function QrCodeGeneratorDialog() {
   };
 
   return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button variant="outline">
-          <QrCode className="w-4 h-4 mr-2" />
-          QR Generator
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>QR Code Generator</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-4">
+    <div className="min-h-screen bg-background flex items-center justify-center p-6">
+      <div className="w-full max-w-md space-y-6">
+        <div className="flex items-center gap-2 justify-center">
+          <QrCode className="w-6 h-6 text-primary" />
+          <h1 className="text-2xl font-semibold text-foreground">QR Code Generator</h1>
+        </div>
+
+        <div className="space-y-4 rounded-lg border border-border bg-card p-6 shadow-sm">
           <div className="space-y-2">
             <Label htmlFor="qr-url">URL</Label>
             <Input
@@ -87,15 +76,14 @@ export function QrCodeGeneratorDialog() {
             <div className="flex flex-col items-center gap-4 pt-2">
               <div className="border border-border rounded-lg p-3 bg-white">
                 <img
-                  ref={imgRef}
                   src={qrSrc}
                   alt="Generated QR code"
-                  width={Math.min(size, 250)}
-                  height={Math.min(size, 250)}
+                  width={Math.min(size, 280)}
+                  height={Math.min(size, 280)}
                   className="object-contain"
                 />
               </div>
-              <div className="flex gap-2 flex-wrap justify-center">
+              <div className="flex gap-2">
                 <Button variant="outline" size="sm" onClick={handleCopyImage}>
                   {copied ? <Check className="w-4 h-4 mr-1" /> : <Copy className="w-4 h-4 mr-1" />}
                   {copied ? "Copied" : "Copy"}
@@ -104,19 +92,11 @@ export function QrCodeGeneratorDialog() {
                   <Download className="w-4 h-4 mr-1" />
                   Download
                 </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => window.open(`/qr-preview?url=${encodeURIComponent(trimmedUrl)}&size=${size}`, '_blank')}
-                >
-                  <ExternalLink className="w-4 h-4 mr-1" />
-                  Preview
-                </Button>
               </div>
             </div>
           )}
         </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   );
 }
