@@ -22,6 +22,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
+import { QrCodeGeneratorDialog } from "@/components/admin/QrCodeGeneratorDialog";
 
 const industryIcons: Record<IndustryTemplate, React.ReactNode> = {
   bank: <Landmark className="w-5 h-5" />,
@@ -274,10 +275,13 @@ export default function AdminDashboard() {
       <main className="admin-container py-8">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-lg font-semibold">Demo Environments</h2>
-          <Button variant="outline" onClick={() => navigate('/admin/global-settings')}>
-            <Settings className="w-4 h-4 mr-2" />
-            Global Settings
-          </Button>
+          <div className="flex items-center gap-2">
+            <QrCodeGeneratorDialog />
+            <Button variant="outline" onClick={() => navigate('/admin/global-settings')}>
+              <Settings className="w-4 h-4 mr-2" />
+              Global Settings
+            </Button>
+          </div>
         </div>
 
         {/* Stats Overview */}
