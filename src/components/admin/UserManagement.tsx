@@ -111,7 +111,10 @@ export function UserManagement() {
       if (data?.error) throw new Error(data.error);
 
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
-      toast({ title: 'Admin added', description: `${newUserEmail} now has admin access.` });
+      const msg = data?.created
+        ? `Account created for ${newUserEmail} with admin access. A password reset email has been sent.`
+        : `${newUserEmail} now has admin access.`;
+      toast({ title: 'Admin added', description: msg });
       setNewUserEmail('');
       setAddDialogOpen(false);
     } catch (err: any) {
@@ -174,8 +177,8 @@ export function UserManagement() {
                     value={newUserEmail}
                     onChange={(e) => setNewUserEmail(e.target.value)}
                   />
-                  <p className="text-xs text-muted-foreground">
-                    The user must already have a registered account.
+                   <p className="text-xs text-muted-foreground">
+                    If no account exists, one will be created and a password reset email sent.
                   </p>
                 </div>
               </div>

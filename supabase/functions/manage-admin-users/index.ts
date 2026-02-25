@@ -169,13 +169,31 @@ serve(async (req) => {
         );
       }
 
-      const targetUser = users.users.find(u => u.email?.toLowerCase() === email.toLowerCase());
+      let targetUser = users.users.find(u => u.email?.toLowerCase() === email.toLowerCase());
       
+      // If user doesn't exist, create them with a temporary password
       if (!targetUser) {
-        return new Response(
-          JSON.stringify({ error: "No user found with that email address. They must register first." }),
-          { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+        const tempPassword = crypto.randomUUID() + "Aa1!";
+        const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
+          email: email.toLowerCase(),
+          password: tempPassword,
+          email_confirm: true,
+        });
+
+        if (createError || !newUser?.user) {
+          return new Response(
+            JSON.stringify({ error: "Failed to create user: " + (createError?.message || "Unknown error") }),
+            { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        targetUser = newUser.user;
+
+        // Send password reset so user can set their own password
+        await adminClient.auth.admin.generateLink({
+          type: 'recovery',
+          email: email.toLowerCase(),
+        });
       }
 
       // Check if already an admin
@@ -206,7 +224,7 @@ serve(async (req) => {
       }
 
       return new Response(
-        JSON.stringify({ success: true, userId: targetUser.id }),
+        JSON.stringify({ success: true, userId: targetUser.id, created: !users.users.find(u => u.email?.toLowerCase() === email.toLowerCase()) }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
