@@ -62,7 +62,8 @@ serve(async (req) => {
     }
 
     // Parse request body
-    const { action, email, userId: targetUserId } = await req.json();
+    const body = await req.json();
+    const { action, email, userId: targetUserId, password: initialPassword, newPassword } = body;
 
     // List all admin users with their emails
     if (action === "list") {
@@ -104,7 +105,7 @@ serve(async (req) => {
       );
     }
 
-    // Reset password for a user
+    // Reset password for a user (admin sets new password directly)
     if (action === "resetPassword") {
       if (!targetUserId) {
         return new Response(
@@ -113,7 +114,28 @@ serve(async (req) => {
         );
       }
 
-      // Get user's email
+      // newPassword is already parsed from body above
+
+      if (newPassword) {
+        // Admin is setting a new password directly
+        const { error: updateError } = await adminClient.auth.admin.updateUserById(targetUserId, {
+          password: newPassword,
+        });
+
+        if (updateError) {
+          return new Response(
+            JSON.stringify({ error: "Failed to update password: " + updateError.message }),
+            { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        return new Response(
+          JSON.stringify({ success: true, message: "Password has been updated successfully." }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Otherwise send a password reset email
       const { data: usersData, error: usersError } = await adminClient.auth.admin.listUsers();
       
       if (usersError) {
@@ -132,7 +154,6 @@ serve(async (req) => {
         );
       }
 
-      // Send password reset email
       const { error: resetError } = await adminClient.auth.admin.generateLink({
         type: 'recovery',
         email: targetUser.email,
@@ -159,6 +180,8 @@ serve(async (req) => {
         );
       }
 
+      // initialPassword is already parsed from body above
+
       // Look up user by email using admin client
       const { data: users, error: lookupError } = await adminClient.auth.admin.listUsers();
       
@@ -170,13 +193,14 @@ serve(async (req) => {
       }
 
       let targetUser = users.users.find(u => u.email?.toLowerCase() === email.toLowerCase());
+      let wasCreated = false;
       
-      // If user doesn't exist, create them with a temporary password
+      // If user doesn't exist, create them
       if (!targetUser) {
-        const tempPassword = crypto.randomUUID() + "Aa1!";
+        const passwordToUse = initialPassword || (crypto.randomUUID() + "Aa1!");
         const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
           email: email.toLowerCase(),
-          password: tempPassword,
+          password: passwordToUse,
           email_confirm: true,
         });
 
@@ -188,12 +212,15 @@ serve(async (req) => {
         }
 
         targetUser = newUser.user;
+        wasCreated = true;
 
-        // Send password reset so user can set their own password
-        await adminClient.auth.admin.generateLink({
-          type: 'recovery',
-          email: email.toLowerCase(),
-        });
+        // If no initial password was set, send password reset so user can set their own
+        if (!initialPassword) {
+          await adminClient.auth.admin.generateLink({
+            type: 'recovery',
+            email: email.toLowerCase(),
+          });
+        }
       }
 
       // Check if already an admin
@@ -224,7 +251,7 @@ serve(async (req) => {
       }
 
       return new Response(
-        JSON.stringify({ success: true, userId: targetUser.id, created: !users.users.find(u => u.email?.toLowerCase() === email.toLowerCase()) }),
+        JSON.stringify({ success: true, userId: targetUser.id, created: wasCreated, hadPassword: !!initialPassword }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
