@@ -2,3 +2,4 @@ export { FormStyleMethodSelector, sourceToMethod, type FormStyleMethod } from '.
 export { AIScreenshotSection } from './AIScreenshotSection';
 export { ExactCaptureSection } from './ExactCaptureSection';
 export { TemplatesSection } from './TemplatesSection';
+export { CompareFixButton } from './CompareFixButton';
