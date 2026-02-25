@@ -12,6 +12,7 @@ import VerificationSettings from "./pages/VerificationSettings";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
+import QrCodePreview from "./pages/QrCodePreview";
 
 const queryClient = new QueryClient();
 
@@ -51,6 +52,7 @@ const App = () => (
           />
           <Route path="/demo/:slug" element={<DemoPreview />} />
           <Route path="/embed/:slug" element={<DemoEmbed />} />
+          <Route path="/qr-preview" element={<QrCodePreview />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
