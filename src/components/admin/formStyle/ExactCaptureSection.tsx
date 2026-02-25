@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Globe, Loader2, Paintbrush, CheckCircle, AlertCircle } from 'lucide-react';
+import { CompareFixButton } from './CompareFixButton';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -197,6 +198,7 @@ export function ExactCaptureSection({
   const [captureStatus, setCaptureStatus] = useState<'idle' | 'capturing' | 'success' | 'error'>('idle');
   const [captureMessage, setCaptureMessage] = useState<string>('');
   const [availableFormIds, setAvailableFormIds] = useState<string[]>([]);
+  const [originalScreenshot, setOriginalScreenshot] = useState<string | null>(null);
 
   const handleCaptureFormById = async () => {
     if (!captureUrl) {
@@ -236,6 +238,7 @@ export function ExactCaptureSection({
       }
 
       setCapturedData(response.data);
+      if (response.data.formScreenshot) setOriginalScreenshot(response.data.formScreenshot);
       setCaptureStatus('success');
 
       const patternInfo = response.data.patterns
@@ -473,6 +476,15 @@ export function ExactCaptureSection({
               </div>
             )}
           </div>
+        )}
+
+        {/* Compare & Fix with AI */}
+        {hasCapturedForm && (
+          <CompareFixButton
+            formStyle={formStyle}
+            onUpdateStyle={onUpdateStyle}
+            originalScreenshot={originalScreenshot || capturedData?.formScreenshot || null}
+          />
         )}
       </CardContent>
     </Card>

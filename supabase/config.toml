@@ -26,3 +26,6 @@ verify_jwt = false
 
 [functions.capture-form-html]
 verify_jwt = false
+
+[functions.compare-form-styles]
+verify_jwt = false

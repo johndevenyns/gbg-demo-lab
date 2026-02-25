@@ -272,4 +272,42 @@ export const formAnalysisApi = {
     
     return data;
   },
+
+  async compareFormScreenshots(
+    originalScreenshot: string,
+    renderedScreenshot: string,
+    currentCss?: string,
+    mimeType?: string
+  ): Promise<CompareFormResponse> {
+    const { data, error } = await supabase.functions.invoke('compare-form-styles', {
+      body: { originalScreenshot, renderedScreenshot, currentCss, mimeType },
+    });
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    return data;
+  },
 };
+
+export interface CompareFormResponse {
+  success: boolean;
+  error?: string;
+  data?: {
+    matchScore: number;
+    differences: Array<{
+      element: string;
+      issue: string;
+      severity: 'critical' | 'major' | 'minor';
+    }>;
+    cssFixes: string;
+    fontFix?: {
+      fontFamily?: string;
+      googleFontsUrl?: string;
+    };
+    colorFixes?: Record<string, string>;
+    typographyFixes?: Record<string, string>;
+    spacingFixes?: Record<string, string>;
+  };
+}

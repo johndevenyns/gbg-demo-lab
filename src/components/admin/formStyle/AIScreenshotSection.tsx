@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { Upload, Loader2, Camera, Sparkles, CheckCircle } from 'lucide-react';
+import { CompareFixButton } from './CompareFixButton';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -453,6 +454,15 @@ export function AIScreenshotSection({
               <Badge variant="outline">Layout: {formStyle.capturedPatterns.fieldLayout}</Badge>
             </div>
           </div>
+        )}
+
+        {/* Compare & Fix with AI */}
+        {(hasAIStyles || uploadedScreenshot) && (
+          <CompareFixButton
+            formStyle={formStyle}
+            onUpdateStyle={onUpdateStyle}
+            originalScreenshot={uploadedScreenshot ? uploadedScreenshot.split(',')[1] : null}
+          />
         )}
       </CardContent>
     </Card>
