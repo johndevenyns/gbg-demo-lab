@@ -10,6 +10,7 @@ import DemoPreview from "./pages/DemoPreview";
 import DemoEmbed from "./pages/DemoEmbed";
 import VerificationSettings from "./pages/VerificationSettings";
 import Auth from "./pages/Auth";
+import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -23,6 +24,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Navigate to="/admin" replace />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route
             path="/admin"
             element={

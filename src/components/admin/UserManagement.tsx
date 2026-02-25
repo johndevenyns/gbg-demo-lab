@@ -25,6 +25,7 @@ export function UserManagement() {
   const queryClient = useQueryClient();
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [newUserEmail, setNewUserEmail] = useState('');
+  const [newUserPassword, setNewUserPassword] = useState('');
   const [isAddingUser, setIsAddingUser] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
 
@@ -92,7 +93,7 @@ export function UserManagement() {
     },
   });
 
-  // Add new admin by user ID (from auth.users lookup)
+  // Add new admin by email, optionally with initial password
   const handleAddAdmin = async () => {
     if (!newUserEmail.trim()) {
       setAddError('Please enter an email address');
@@ -103,19 +104,30 @@ export function UserManagement() {
     setAddError(null);
 
     try {
+      const body: any = { action: 'add', email: newUserEmail.trim() };
+      if (newUserPassword.trim()) {
+        body.password = newUserPassword.trim();
+      }
+
       const { data, error } = await supabase.functions.invoke('manage-admin-users', {
-        body: { action: 'add', email: newUserEmail.trim() },
+        body,
       });
 
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
 
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
-      const msg = data?.created
-        ? `Account created for ${newUserEmail} with admin access. A password reset email has been sent.`
-        : `${newUserEmail} now has admin access.`;
+      let msg: string;
+      if (data?.created && data?.hadPassword) {
+        msg = `Account created for ${newUserEmail} with admin access and the specified password.`;
+      } else if (data?.created) {
+        msg = `Account created for ${newUserEmail} with admin access. A password reset email has been sent.`;
+      } else {
+        msg = `${newUserEmail} now has admin access.`;
+      }
       toast({ title: 'Admin added', description: msg });
       setNewUserEmail('');
+      setNewUserPassword('');
       setAddDialogOpen(false);
     } catch (err: any) {
       setAddError(err.message || 'Failed to add admin user');
@@ -177,8 +189,18 @@ export function UserManagement() {
                     value={newUserEmail}
                     onChange={(e) => setNewUserEmail(e.target.value)}
                   />
-                   <p className="text-xs text-muted-foreground">
-                    If no account exists, one will be created and a password reset email sent.
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="initial-password">Initial Password (optional)</Label>
+                  <Input
+                    id="initial-password"
+                    type="password"
+                    placeholder="Leave blank to send reset email"
+                    value={newUserPassword}
+                    onChange={(e) => setNewUserPassword(e.target.value)}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    If no account exists, one will be created. Leave password blank to send a reset email instead.
                   </p>
                 </div>
               </div>

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Plus, Search, Settings, ExternalLink, Trash2, Copy, Building2, Car, Gamepad2, Shield, Landmark, Layers, Heart, ShoppingBag, ImageOff, LogOut } from "lucide-react";
+import { ChangePasswordDialog } from "@/components/admin/ChangePasswordDialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -260,6 +261,7 @@ export default function AdminDashboard() {
                 <Plus className="w-4 h-4 mr-2" />
                 New Demo
               </Button>
+              <ChangePasswordDialog />
               <Button variant="ghost" size="icon" onClick={handleSignOut} title="Sign out">
                 <LogOut className="w-4 h-4" />
               </Button>
