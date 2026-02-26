@@ -1,5 +1,5 @@
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Save, Eye, Loader2, Settings, Globe, Palette, Layout, PlayCircle, Calendar, User, PanelLeftClose, PanelLeft } from "lucide-react";
+import { ArrowLeft, Save, Eye, Loader2, Settings, Globe, Palette, Layout, PlayCircle, Calendar, User, PanelLeftClose, PanelLeft, Copy, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -36,6 +36,7 @@ const sections: { id: ConfigSection; label: string; icon: React.ElementType; des
 
 // Site Settings Section
 function SiteSettingsSection({ demo, onUpdate }: { demo: DemoEnvironment; onUpdate: (updates: Partial<DemoEnvironment>) => void }) {
+  const { toast } = useToast();
   const formatDate = (dateStr?: string) => {
     if (!dateStr) return 'Unknown';
     return new Date(dateStr).toLocaleDateString('en-US', {
@@ -43,8 +44,34 @@ function SiteSettingsSection({ demo, onUpdate }: { demo: DemoEnvironment; onUpda
     });
   };
 
+  const publicUrl = `${window.location.origin}/demo/${demo.slug}`;
+
+  const copyPublicUrl = () => {
+    navigator.clipboard.writeText(publicUrl);
+    toast({ title: "URL copied", description: "Public demo URL copied to clipboard." });
+  };
+
   return (
     <div className="space-y-6">
+      {/* Shareable URL */}
+      <Card className="glass-card">
+        <CardHeader>
+          <CardTitle>Public Demo URL</CardTitle>
+          <CardDescription>Share this link with anyone — no login required</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-2">
+            <Input value={publicUrl} readOnly className="font-mono text-sm flex-1" />
+            <Button variant="outline" size="icon" onClick={copyPublicUrl} title="Copy URL">
+              <Copy className="w-4 h-4" />
+            </Button>
+            <Button variant="outline" size="icon" onClick={() => window.open(publicUrl, '_blank')} title="Open in new tab">
+              <ExternalLink className="w-4 h-4" />
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
       <Card className="glass-card">
         <CardHeader>
           <CardTitle>Site Settings</CardTitle>
