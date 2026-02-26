@@ -1,5 +1,5 @@
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Save, Eye, Loader2, Settings, Globe, Palette, Layout, PlayCircle, Calendar, User } from "lucide-react";
+import { ArrowLeft, Save, Eye, Loader2, Settings, Globe, Palette, Layout, PlayCircle, Calendar, User, PanelLeftClose, PanelLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,7 +9,8 @@ import { useDemo, useUpdateDemo } from "@/hooks/useDemos";
 import { DemoEnvironment } from "@/types/demo";
 import { FormStyleConfig, DEFAULT_FORM_STYLE } from "@/types/formStyle";
 import { useToast } from "@/hooks/use-toast";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { SiteMirrorCard } from "@/components/admin/SiteMirrorCard";
 import { FormBuilderSection } from "@/components/formBuilder";
 
@@ -159,6 +160,9 @@ export default function DemoConfig() {
     setSearchParams({ section });
   };
   
+  // Sidebar collapsed state
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
+  
   // Local state for form fields
   const [localDemo, setLocalDemo] = useState<DemoEnvironment | null>(null);
   
@@ -269,37 +273,56 @@ export default function DemoConfig() {
       {/* Main content with sidebar */}
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar Navigation */}
-        <aside className="w-64 border-r border-border bg-card/30 flex-shrink-0 hidden md:block">
-          <nav className="p-4 space-y-1">
-            {sections.map((section) => {
-              const Icon = section.icon;
-              const isActive = activeSection === section.id;
-              
-              return (
-                <button
-                  key={section.id}
-                  onClick={() => setActiveSection(section.id)}
-                  className={cn(
-                    "w-full flex items-start gap-3 px-3 py-3 rounded-lg text-left transition-all",
-                    isActive
-                      ? "bg-primary/10 text-primary border border-primary/20"
-                      : "hover:bg-muted/50 text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  <Icon className={cn("w-5 h-5 mt-0.5 shrink-0", isActive && "text-primary")} />
-                  <div className="min-w-0">
-                    <div className={cn("font-medium text-sm", isActive && "text-primary")}>
-                      {section.label}
-                    </div>
-                    <div className="text-xs text-muted-foreground truncate">
-                      {section.description}
-                    </div>
-                  </div>
-                </button>
-              );
-            })}
-          </nav>
-        </aside>
+        <TooltipProvider delayDuration={0}>
+          <aside className={cn(
+            "border-r border-border bg-card/30 flex-shrink-0 hidden md:flex flex-col transition-all duration-200",
+            sidebarCollapsed ? "w-14" : "w-48"
+          )}>
+            <nav className="flex-1 p-2 space-y-1">
+              {sections.map((section) => {
+                const Icon = section.icon;
+                const isActive = activeSection === section.id;
+                
+                return (
+                  <Tooltip key={section.id}>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={() => setActiveSection(section.id)}
+                        className={cn(
+                          "w-full flex items-center gap-2 rounded-lg transition-all",
+                          sidebarCollapsed ? "justify-center p-2.5" : "px-3 py-2.5 text-left",
+                          isActive
+                            ? "bg-primary/10 text-primary border border-primary/20"
+                            : "hover:bg-muted/50 text-muted-foreground hover:text-foreground"
+                        )}
+                      >
+                        <Icon className={cn("w-4 h-4 shrink-0", isActive && "text-primary")} />
+                        {!sidebarCollapsed && (
+                          <span className={cn("text-sm font-medium truncate", isActive && "text-primary")}>
+                            {section.label}
+                          </span>
+                        )}
+                      </button>
+                    </TooltipTrigger>
+                    {sidebarCollapsed && (
+                      <TooltipContent side="right" className="text-xs">
+                        {section.label}
+                      </TooltipContent>
+                    )}
+                  </Tooltip>
+                );
+              })}
+            </nav>
+            <div className="p-2 border-t border-border">
+              <button
+                onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                className="w-full flex items-center justify-center p-2 rounded-lg hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-all"
+              >
+                {sidebarCollapsed ? <PanelLeft className="w-4 h-4" /> : <PanelLeftClose className="w-4 h-4" />}
+              </button>
+            </div>
+          </aside>
+        </TooltipProvider>
 
         {/* Mobile Section Selector */}
         <div className="md:hidden border-b border-border bg-card/30 p-2 overflow-x-auto">
