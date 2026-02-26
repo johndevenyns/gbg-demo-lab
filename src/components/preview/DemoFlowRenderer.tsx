@@ -679,6 +679,25 @@ export function DemoFlowRenderer({
     transition: 'all 0.2s ease',
   });
 
+  // Helper to get reverse (back) button styles - theme-isolated
+  const effectiveReverseBgColor = style.reverseButtonBgColor || 'transparent';
+  const effectiveReverseTextColor = style.reverseButtonTextColor || '#6b7280';
+  const effectiveReverseHoverBgColor = style.reverseButtonHoverBgColor || effectiveReverseBgColor;
+  const effectiveReverseBorderColor = style.reverseButtonBorderColor || '#e5e7eb';
+
+  const getReverseButtonStyles = (): React.CSSProperties => ({
+    backgroundColor: effectiveReverseBgColor,
+    color: effectiveReverseTextColor,
+    padding: getButtonPadding(style.reverseButtonPadding || style.buttonPadding),
+    borderRadius: getButtonBorderRadius(style.reverseButtonBorderRadius || style.buttonBorderRadius),
+    fontWeight: getButtonFontWeight(style.reverseButtonFontWeight || 'medium'),
+    boxShadow: getButtonShadow(style.reverseButtonShadow || 'none'),
+    fontFamily: style.fontFamily,
+    fontSize: '14px',
+    border: `${style.reverseButtonBorderWidth || '1'}px solid ${effectiveReverseBorderColor}`,
+    cursor: 'pointer',
+    transition: 'all 0.2s ease',
+  });
   const currentStep = steps[currentStepIndex];
   const isFirstStep = currentStepIndex === 0;
   const isLastStep = currentStepIndex === steps.length - 1;
@@ -2199,10 +2218,16 @@ export function DemoFlowRenderer({
           ) : (
             <>
               {buttonConfig.back.enabled && (
-                <Button variant="outline" onClick={goToPrevStep} className="flex-1">
-                  <ArrowLeft className="w-4 h-4 mr-2" />
+                <button 
+                  onClick={goToPrevStep} 
+                  className="flex-1 inline-flex items-center justify-center gap-2"
+                  style={getReverseButtonStyles()}
+                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = effectiveReverseHoverBgColor; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = effectiveReverseBgColor; }}
+                >
+                  <ArrowLeft className="w-4 h-4" />
                   {buttonConfig.back.label}
-                </Button>
+                </button>
               )}
               
               {buttonConfig.next.enabled && currentStep?.stepType !== 'page' && (
@@ -2245,10 +2270,16 @@ export function DemoFlowRenderer({
       {/* Back button for step types that handle their own forward navigation */}
       {showBackOnly && (
         <div className="flex gap-3 pt-4">
-          <Button variant="outline" onClick={goToPrevStep} className="flex-1">
-            <ArrowLeft className="w-4 h-4 mr-2" />
+          <button 
+            onClick={goToPrevStep} 
+            className="flex-1 inline-flex items-center justify-center gap-2"
+            style={getReverseButtonStyles()}
+            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = effectiveReverseHoverBgColor; }}
+            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = effectiveReverseBgColor; }}
+          >
+            <ArrowLeft className="w-4 h-4" />
             {buttonConfig.back.label}
-          </Button>
+          </button>
         </div>
       )}
       </div>
