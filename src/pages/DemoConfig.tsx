@@ -160,8 +160,19 @@ export default function DemoConfig() {
     setSearchParams({ section });
   };
   
-  // Sidebar collapsed state
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
+  // Sidebar collapsed state (persisted)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    const stored = localStorage.getItem('demoConfigSidebarCollapsed');
+    return stored !== null ? stored === 'true' : true;
+  });
+  
+  const toggleSidebar = () => {
+    setSidebarCollapsed(prev => {
+      const next = !prev;
+      localStorage.setItem('demoConfigSidebarCollapsed', String(next));
+      return next;
+    });
+  };
   
   // Local state for form fields
   const [localDemo, setLocalDemo] = useState<DemoEnvironment | null>(null);
@@ -315,7 +326,7 @@ export default function DemoConfig() {
             </nav>
             <div className="p-2 border-t border-border">
               <button
-                onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                onClick={toggleSidebar}
                 className="w-full flex items-center justify-center p-2 rounded-lg hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-all"
               >
                 {sidebarCollapsed ? <PanelLeft className="w-4 h-4" /> : <PanelLeftClose className="w-4 h-4" />}
