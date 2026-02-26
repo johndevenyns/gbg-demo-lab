@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Shield, Smartphone, Plus, Pencil, Trash2, GripVertical, Check, X, LogOut, Settings, Users, UserCheck, LayoutTemplate } from "lucide-react";
+import { ArrowLeft, Shield, Smartphone, Plus, Pencil, Trash2, GripVertical, Check, X, LogOut, Settings, Users, UserCheck, LayoutTemplate, ListChecks } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -41,6 +41,7 @@ import { UserManagement } from "@/components/admin/UserManagement";
 import { TestProfileManagement } from "@/components/admin/TestProfileManagement";
 import { AdminResourceIdSettings } from "@/components/admin/AdminResourceIdSettings";
 import { FormTemplateManagement } from "@/components/admin/FormTemplateManagement";
+import { GlobalFieldConfigManagement } from "@/components/admin/GlobalFieldConfigManagement";
 import { Key } from "lucide-react";
 
 // Icon mapping for verification types
@@ -455,6 +456,10 @@ export default function VerificationSettings() {
               <LayoutTemplate className="w-4 h-4" />
               Form Templates
             </TabsTrigger>
+            <TabsTrigger value="field-config" className="flex items-center gap-2">
+              <ListChecks className="w-4 h-4" />
+              Field Configuration
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="types" className="space-y-6">
@@ -552,6 +557,10 @@ export default function VerificationSettings() {
 
           <TabsContent value="templates" className="space-y-6">
             <FormTemplateManagement />
+          </TabsContent>
+
+          <TabsContent value="field-config" className="space-y-6">
+            <GlobalFieldConfigManagement />
           </TabsContent>
         </Tabs>
       </main>
