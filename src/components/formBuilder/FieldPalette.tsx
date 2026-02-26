@@ -2,11 +2,12 @@ import { useDraggable } from '@dnd-kit/core';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { AVAILABLE_FORM_FIELDS, FormField } from '@/types/demo';
+import { FormField } from '@/types/demo';
+import { useGlobalFieldConfigs, GlobalFieldConfig } from '@/hooks/useGlobalFieldConfigs';
 import { 
   User, Mail, Phone, Calendar, Hash, MapPin, Building, DollarSign, 
   FileText, Type, CheckSquare, GripVertical, Search, Heading, AlignLeft, 
-  Minus, ShieldCheck, CircleDot
+  Minus, ShieldCheck, CircleDot, Plug
 } from 'lucide-react';
 import { useState, useMemo } from 'react';
 
@@ -36,21 +37,10 @@ const FIELD_ICONS: Record<string, React.ReactNode> = {
   gender: <User className="w-4 h-4" />,
   nationality: <MapPin className="w-4 h-4" />,
   yes_no: <CircleDot className="w-4 h-4" />,
-  // Content elements
   heading: <Heading className="w-4 h-4" />,
   paragraph: <AlignLeft className="w-4 h-4" />,
   divider: <Minus className="w-4 h-4" />,
   consent_checkbox: <ShieldCheck className="w-4 h-4" />,
-};
-
-const FIELD_CATEGORIES = {
-  content: ['heading', 'paragraph', 'divider', 'consent_checkbox'],
-  personal: ['first_name', 'last_name', 'middle_name', 'date_of_birth', 'gender', 'nationality'],
-  contact: ['email', 'phone'],
-  address: ['address_street', 'apartment', 'address_city', 'address_state', 'address_zip', 'address_country'],
-  identity: ['ssn', 'document_type', 'document_number'],
-  financial: ['employer', 'income'],
-  custom: ['text', 'textarea', 'checkbox', 'select', 'yes_no'],
 };
 
 // Address fields that can be validated by Loqate API
@@ -65,8 +55,30 @@ export const ADDRESS_FIELD_LABELS: Record<string, string> = {
   address_country: 'Country',
 };
 
+// Convert a GlobalFieldConfig row to the palette field shape
+function configToField(config: GlobalFieldConfig): Omit<FormField, 'id' | 'order'> & { _isApiField?: boolean } {
+  const base: Omit<FormField, 'id' | 'order'> & { _isApiField?: boolean } = {
+    type: config.field_type as any,
+    label: config.display_name,
+    name: config.api_name || config.display_name.toLowerCase().replace(/\s+/g, '_'),
+    placeholder: config.placeholder || undefined,
+    required: config.required_by_default,
+    _isApiField: config.is_api_field,
+  };
+  // Add content defaults for content elements
+  if (config.field_type === 'heading') base.content = 'Section Title';
+  if (config.field_type === 'paragraph') base.content = 'Add your text here...';
+  if (config.field_type === 'consent_checkbox') {
+    base.consentText = 'I agree to the Terms of Service and Privacy Policy';
+    base.consentRequired = true;
+  }
+  return base;
+}
+
+const CATEGORY_ORDER = ['content', 'personal', 'contact', 'address', 'identity', 'financial', 'custom'];
+
 interface DraggableFieldProps {
-  field: Omit<FormField, 'id' | 'order'>;
+  field: Omit<FormField, 'id' | 'order'> & { _isApiField?: boolean };
   index: number;
 }
 
@@ -75,7 +87,7 @@ function DraggableField({ field, index }: DraggableFieldProps) {
     id: `palette-${field.type}-${index}`,
     data: {
       type: 'field',
-      field,
+      field: { ...field, _isApiField: undefined }, // strip internal flag before drag data
       fromPalette: true,
     },
   });
@@ -97,6 +109,9 @@ function DraggableField({ field, index }: DraggableFieldProps) {
         {FIELD_ICONS[field.type] || <Type className="w-4 h-4" />}
       </span>
       <span className="text-sm font-medium flex-1 truncate">{field.label}</span>
+      {field._isApiField && (
+        <Plug className="w-3 h-3 text-primary opacity-60" />
+      )}
       {field.required && (
         <Badge variant="secondary" className="text-xs px-1">req</Badge>
       )}
@@ -107,28 +122,49 @@ function DraggableField({ field, index }: DraggableFieldProps) {
 export function FieldPalette() {
   const [search, setSearch] = useState('');
   const [expandedCategory, setExpandedCategory] = useState<string | null>('content');
+  const { data: globalConfigs } = useGlobalFieldConfigs();
+
+  // Convert global configs to palette fields, falling back to nothing (DB is seeded)
+  const allFields = useMemo(() => {
+    if (!globalConfigs || globalConfigs.length === 0) return [];
+    return globalConfigs.map(configToField);
+  }, [globalConfigs]);
 
   const filteredFields = useMemo(() => {
-    if (!search) return AVAILABLE_FORM_FIELDS;
+    if (!search) return allFields;
     const lower = search.toLowerCase();
-    return AVAILABLE_FORM_FIELDS.filter(f => 
+    return allFields.filter(f => 
       f.label.toLowerCase().includes(lower) || 
-      f.type.toLowerCase().includes(lower)
+      f.type.toLowerCase().includes(lower) ||
+      f.name.toLowerCase().includes(lower)
     );
-  }, [search]);
+  }, [search, allFields]);
 
+  // Group by category from global configs
   const groupedFields = useMemo(() => {
-    const groups: Record<string, typeof AVAILABLE_FORM_FIELDS> = {};
+    if (!globalConfigs || globalConfigs.length === 0) return {};
+    const groups: Record<string, (Omit<FormField, 'id' | 'order'> & { _isApiField?: boolean })[]> = {};
     
-    Object.entries(FIELD_CATEGORIES).forEach(([category, types]) => {
-      const categoryFields = filteredFields.filter(f => types.includes(f.type));
-      if (categoryFields.length > 0) {
-        groups[category] = categoryFields;
-      }
+    globalConfigs.forEach((config, idx) => {
+      const cat = config.category;
+      const field = filteredFields.find(f => f.name === (config.api_name || config.display_name.toLowerCase().replace(/\s+/g, '_')) && f.type === config.field_type);
+      if (!field) return;
+      if (!groups[cat]) groups[cat] = [];
+      groups[cat].push(field);
+    });
+
+    // Sort categories
+    const sorted: Record<string, typeof filteredFields> = {};
+    CATEGORY_ORDER.forEach(cat => {
+      if (groups[cat]) sorted[cat] = groups[cat];
+    });
+    // Add any remaining categories
+    Object.keys(groups).forEach(cat => {
+      if (!sorted[cat]) sorted[cat] = groups[cat];
     });
     
-    return groups;
-  }, [filteredFields]);
+    return sorted;
+  }, [filteredFields, globalConfigs]);
 
   const categoryLabels: Record<string, string> = {
     content: 'Content & Text',
@@ -155,30 +191,29 @@ export function FieldPalette() {
         </div>
       </CardHeader>
       <CardContent className="space-y-3 overflow-y-auto max-h-[calc(100vh-300px)]">
-        {/* Field Categories */}
         {Object.entries(groupedFields).map(([category, fields]) => (
           <div key={category}>
             <button
               onClick={() => setExpandedCategory(expandedCategory === category ? null : category)}
               className="w-full flex items-center justify-between py-1.5 px-2 text-sm font-medium text-muted-foreground hover:text-foreground rounded-md hover:bg-accent/50 transition-colors"
             >
-              {categoryLabels[category]}
+              {categoryLabels[category] || category}
               <Badge variant="outline" className="text-xs">{fields.length}</Badge>
             </button>
             {(expandedCategory === category || search) && (
               <div className="mt-2 space-y-1.5 pl-1">
                 {fields.map((field, index) => (
-                  <DraggableField key={`${field.type}-${index}`} field={field} index={index} />
+                  <DraggableField key={`${field.type}-${field.name}-${index}`} field={field} index={index} />
                 ))}
               </div>
             )}
           </div>
         ))}
         
-        {Object.keys(groupedFields).length === 0 && search && (
+        {Object.keys(groupedFields).length === 0 && (
           <div className="text-center py-8 text-muted-foreground">
             <Type className="w-8 h-8 mx-auto mb-2 opacity-50" />
-            <p className="text-sm">No fields match your search</p>
+            <p className="text-sm">{search ? 'No fields match your search' : 'Loading fields…'}</p>
           </div>
         )}
       </CardContent>

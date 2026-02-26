@@ -206,6 +206,48 @@ export type Database = {
         }
         Relationships: []
       }
+      global_field_configs: {
+        Row: {
+          api_name: string
+          category: string
+          created_at: string
+          display_name: string
+          display_order: number
+          field_type: string
+          id: string
+          is_api_field: boolean
+          placeholder: string | null
+          required_by_default: boolean
+          updated_at: string
+        }
+        Insert: {
+          api_name?: string
+          category?: string
+          created_at?: string
+          display_name: string
+          display_order?: number
+          field_type: string
+          id?: string
+          is_api_field?: boolean
+          placeholder?: string | null
+          required_by_default?: boolean
+          updated_at?: string
+        }
+        Update: {
+          api_name?: string
+          category?: string
+          created_at?: string
+          display_name?: string
+          display_order?: number
+          field_type?: string
+          id?: string
+          is_api_field?: boolean
+          placeholder?: string | null
+          required_by_default?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       mdl_providers: {
         Row: {
           config_options: Json | null
