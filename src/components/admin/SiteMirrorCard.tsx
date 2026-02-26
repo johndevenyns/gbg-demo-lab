@@ -17,10 +17,10 @@ import { cn } from "@/lib/utils";
 
 type PreviewViewport = 'desktop' | 'tablet' | 'phone';
 
-const viewportConfig: Record<PreviewViewport, { width: string; label: string; icon: React.ElementType }> = {
-  desktop: { width: '100%', label: 'Desktop', icon: Monitor },
-  tablet: { width: '768px', label: 'Tablet', icon: Tablet },
-  phone: { width: '390px', label: 'Phone', icon: Smartphone },
+const viewportConfig: Record<PreviewViewport, { width: string; iframeWidth: number | null; label: string; icon: React.ElementType }> = {
+  desktop: { width: '100%', iframeWidth: 1280, label: 'Desktop', icon: Monitor },
+  tablet: { width: '768px', iframeWidth: null, label: 'Tablet', icon: Tablet },
+  phone: { width: '390px', iframeWidth: null, label: 'Phone', icon: Smartphone },
 };
 
 export type { CaptureMode } from "./SiteMirrorTabs";
@@ -134,23 +134,69 @@ interface SiteMirrorCardProps {
           <CardContent>
             {hasContentForMethod ? (
               <ScrollArea className="w-full rounded-lg border bg-muted/30">
-                <div className="flex justify-center p-4" style={{ minWidth: previewViewport === 'desktop' ? '100%' : undefined }}>
+                <div
+                  className={cn(
+                    "transition-all duration-300",
+                    previewViewport === 'desktop' ? "w-full" : "flex justify-center p-4"
+                  )}
+                  style={previewViewport !== 'desktop' ? { minWidth: vpConfig.width } : undefined}
+                >
                   <div
-                    className="border rounded-lg overflow-hidden bg-background shadow-sm transition-all duration-300"
-                    style={{ width: vpConfig.width, maxWidth: '100%', ...(previewViewport !== 'desktop' && { minWidth: vpConfig.width }) }}
+                    className={cn(
+                      "overflow-hidden bg-background transition-all duration-300",
+                      previewViewport !== 'desktop' && "border rounded-lg shadow-sm"
+                    )}
+                    style={previewViewport !== 'desktop' ? { width: vpConfig.width } : undefined}
                   >
-                    <iframe
-                      srcDoc={generatePreviewDocument({
-                        formStyle: demo.formStyle || DEFAULT_FORM_STYLE,
-                        buttonColor: demo.buttonColor || '#3b82f6',
-                        headerHtml: headerHtml || '',
-                        footerHtml: footerHtml || '',
-                        cssContent: cssContent || undefined,
-                      })}
-                      className="w-full h-[400px] border-0"
-                      title="Live site preview"
-                      sandbox="allow-same-origin"
-                    />
+                    {previewViewport === 'desktop' ? (
+                      <div className="w-full overflow-hidden" style={{ height: '500px' }}>
+                        <iframe
+                          srcDoc={generatePreviewDocument({
+                            formStyle: demo.formStyle || DEFAULT_FORM_STYLE,
+                            buttonColor: demo.buttonColor || '#3b82f6',
+                            headerHtml: headerHtml || '',
+                            footerHtml: footerHtml || '',
+                            cssContent: cssContent || undefined,
+                          })}
+                          className="border-0 origin-top-left"
+                          style={{
+                            width: '1280px',
+                            height: '625px',
+                            transform: 'scale(var(--preview-scale))',
+                          }}
+                          title="Live site preview"
+                          sandbox="allow-same-origin"
+                          ref={(el) => {
+                            if (el) {
+                              const container = el.parentElement;
+                              if (container) {
+                                const scale = container.clientWidth / 1280;
+                                el.style.setProperty('--preview-scale', String(scale));
+                                const observer = new ResizeObserver(() => {
+                                  const s = container.clientWidth / 1280;
+                                  el.style.setProperty('--preview-scale', String(s));
+                                  container.style.height = `${625 * s}px`;
+                                });
+                                observer.observe(container);
+                              }
+                            }
+                          }}
+                        />
+                      </div>
+                    ) : (
+                      <iframe
+                        srcDoc={generatePreviewDocument({
+                          formStyle: demo.formStyle || DEFAULT_FORM_STYLE,
+                          buttonColor: demo.buttonColor || '#3b82f6',
+                          headerHtml: headerHtml || '',
+                          footerHtml: footerHtml || '',
+                          cssContent: cssContent || undefined,
+                        })}
+                        className="w-full h-[500px] border-0"
+                        title="Live site preview"
+                        sandbox="allow-same-origin"
+                      />
+                    )}
                   </div>
                 </div>
                 <ScrollBar orientation="horizontal" />
