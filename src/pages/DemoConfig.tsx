@@ -55,8 +55,16 @@ function SiteSettingsSection({ demo, onUpdate }: { demo: DemoEnvironment; onUpda
     <div className="space-y-6">
       <Card className="glass-card">
         <CardHeader>
-          <CardTitle>Site Settings</CardTitle>
-          <CardDescription>Core configuration for this demo environment</CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Site Settings</CardTitle>
+              <CardDescription>Core configuration for this demo environment</CardDescription>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">{demo.isActive ? 'Active' : 'Inactive'}</span>
+              <Switch checked={demo.isActive} onCheckedChange={(v) => onUpdate({ isActive: v })} />
+            </div>
+          </div>
         </CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
@@ -66,13 +74,6 @@ function SiteSettingsSection({ demo, onUpdate }: { demo: DemoEnvironment; onUpda
           <div className="space-y-2">
             <Label>Reference ID Prefix</Label>
             <Input value={demo.referenceIdPrefix || ""} onChange={(e) => onUpdate({ referenceIdPrefix: e.target.value })} />
-          </div>
-          <div className="md:col-span-2 flex items-center justify-between p-4 rounded-lg bg-muted/50">
-            <div>
-              <Label>Active</Label>
-              <p className="text-sm text-muted-foreground">Demo is accessible to users</p>
-            </div>
-            <Switch checked={demo.isActive} onCheckedChange={(v) => onUpdate({ isActive: v })} />
           </div>
           <div className="md:col-span-2 space-y-2">
             <Label>Public Demo URL</Label>
