@@ -2027,10 +2027,13 @@ export function DemoFlowRenderer({
     }
   };
 
-  // Don't show nav buttons for certain step types that handle their own navigation
+  // Don't show forward nav buttons for certain step types that handle their own navigation
   const stepTypesWithOwnNav = ['api', 'decision', 'unified_verification'];
+  const isOwnNavStep = stepTypesWithOwnNav.includes(currentStep?.stepType || '');
   const isAddressValidating = isLoading && currentStep?.addressValidationEnabled;
-  const showNavButtons = !stepTypesWithOwnNav.includes(currentStep?.stepType || '') && (!isLoading || isAddressValidating);
+  const showNavButtons = !isOwnNavStep && (!isLoading || isAddressValidating);
+  // Still show back button for own-nav steps when configured
+  const showBackOnly = isOwnNavStep && buttonConfig.back.enabled && !isLoading;
 
   // Handle result page button clicks
   const handleResultButtonClick = (isSuccess: boolean) => {
@@ -2236,6 +2239,16 @@ export function DemoFlowRenderer({
               )}
             </>
           )}
+        </div>
+      )}
+
+      {/* Back button for step types that handle their own forward navigation */}
+      {showBackOnly && (
+        <div className="flex gap-3 pt-4">
+          <Button variant="outline" onClick={goToPrevStep} className="flex-1">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            {buttonConfig.back.label}
+          </Button>
         </div>
       )}
       </div>
