@@ -1,9 +1,11 @@
- import { useState, useRef } from "react";
- import { Globe, Loader2, ExternalLink, X, Eye, Paintbrush, Check, Ban } from "lucide-react";
+import { useState, useRef, useCallback } from "react";
+import { Globe, Loader2, ExternalLink, X, Eye, Paintbrush, Check, Ban, Code, ChevronDown, ChevronRight, RotateCcw } from "lucide-react";
  import { Button } from "@/components/ui/button";
  import { Input } from "@/components/ui/input";
- import { Label } from "@/components/ui/label";
- import { Card, CardContent } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
  import { scrapingApi, ScrapedBranding, FormElementStyles } from "@/lib/api/scraping";
  import { useToast } from "@/hooks/use-toast";
  import { DemoEnvironment } from "@/types/demo";
@@ -109,6 +111,51 @@ export function HtmlCaptureTab({ demo, url, onUrlChange, onApply, isConfigured }
     const [isLoading, setIsLoading] = useState(false);
     const [scrapedData, setScrapedData] = useState<ScrapedBranding | null>(null);
     const abortControllerRef = useRef<AbortController | null>(null);
+    
+    // Editable HTML/CSS state
+    const [editedHeaderHtml, setEditedHeaderHtml] = useState<string>('');
+    const [editedFooterHtml, setEditedFooterHtml] = useState<string>('');
+    const [editedCss, setEditedCss] = useState<string>('');
+    const [editorOpen, setEditorOpen] = useState(false);
+    const [hasEdits, setHasEdits] = useState(false);
+
+    // Track edits
+    const handleHeaderEdit = useCallback((val: string) => {
+      setEditedHeaderHtml(val);
+      setHasEdits(true);
+    }, []);
+    const handleFooterEdit = useCallback((val: string) => {
+      setEditedFooterHtml(val);
+      setHasEdits(true);
+    }, []);
+    const handleCssEdit = useCallback((val: string) => {
+      setEditedCss(val);
+      setHasEdits(true);
+    }, []);
+
+    const resetEdits = useCallback(() => {
+      if (!scrapedData) return;
+      setEditedHeaderHtml(scrapedData.headerHtml || '');
+      setEditedFooterHtml(scrapedData.footerHtml || '');
+      setEditedCss(scrapedData.cssContent || '');
+      setHasEdits(false);
+    }, [scrapedData]);
+
+    // Build a preview using the edited values
+    const getPreviewHtml = useCallback(() => {
+      if (!scrapedData) return '';
+      const formStyle = demo.formStyle || DEFAULT_FORM_STYLE;
+      const buttonColor = scrapedData.colors.buttonColor;
+      const formHtml = generateFormHtml(formStyle, buttonColor);
+      return `<!DOCTYPE html><html><head><meta charset="utf-8">
+        <style>body{margin:0;padding:0;font-family:${formStyle.fontFamily};}*{box-sizing:border-box;}</style>
+        ${editedCss ? `<style>${editedCss}</style>` : ''}
+        </head><body>
+        ${editedHeaderHtml || ''}
+        <div style="padding:40px 20px;background:#f5f5f5;min-height:200px;">${formHtml}</div>
+        ${editedFooterHtml || ''}
+        </body></html>`;
+    }, [scrapedData, editedHeaderHtml, editedFooterHtml, editedCss, demo.formStyle]);
 
     const handleFetch = async () => {
       if (!url.trim()) {
@@ -138,6 +185,11 @@ export function HtmlCaptureTab({ demo, url, onUrlChange, onApply, isConfigured }
             });
           } else {
             setScrapedData(d);
+            // Populate editors
+            setEditedHeaderHtml(d.headerHtml || '');
+            setEditedFooterHtml(d.footerHtml || '');
+            setEditedCss(d.cssContent || '');
+            setHasEdits(false);
             const parts: string[] = [];
             if (hasHeader) parts.push("header");
             if (hasFooter) parts.push("footer");
@@ -197,14 +249,14 @@ export function HtmlCaptureTab({ demo, url, onUrlChange, onApply, isConfigured }
 
        const updates: Partial<DemoEnvironment> = {
          customerSiteUrl: url,
-        // Only write to HTML-specific fields — don't overwrite shared branding/formStyle
-        mirrorHtmlHeaderHtml: scrapedData.headerHtml,
-        mirrorHtmlFooterHtml: scrapedData.footerHtml,
-        mirrorHtmlCss: scrapedData.cssContent,
+        // Use the edited values (which default to original if untouched)
+        mirrorHtmlHeaderHtml: editedHeaderHtml,
+        mirrorHtmlFooterHtml: editedFooterHtml,
+        mirrorHtmlCss: editedCss,
        };
 
        onApply(updates);
-       toast({ title: "HTML Fetch Applied", description: "Header, footer, and CSS have been saved" });
+       toast({ title: "HTML Fetch Applied", description: hasEdits ? "Edited header, footer, and CSS have been saved" : "Header, footer, and CSS have been saved" });
     };
  
    return (
@@ -266,9 +318,13 @@ export function HtmlCaptureTab({ demo, url, onUrlChange, onApply, isConfigured }
                 </Button>
               </div>
              
+             {hasEdits && (
+               <p className="text-xs text-amber-600 font-medium">⚠ You have unsaved edits — the preview reflects your changes.</p>
+             )}
+
              <div className="border rounded-lg overflow-hidden bg-background">
                <iframe
-                  srcDoc={generateHtmlPreviewHtml(scrapedData, demo.formStyle || DEFAULT_FORM_STYLE, scrapedData.colors.buttonColor)}
+                  srcDoc={getPreviewHtml()}
                   className="w-full h-[400px] border-0"
                   title="HTML fetch preview"
                   sandbox="allow-same-origin"
@@ -345,17 +401,56 @@ export function HtmlCaptureTab({ demo, url, onUrlChange, onApply, isConfigured }
                </div>
              )}
  
-             {/* HTML/CSS Code Preview */}
-             {scrapedData.headerHtml && (
-               <div className="space-y-2">
-                 <Label>Header HTML ({scrapedData.headerHtml.length} chars)</Label>
-                 <div className="bg-muted/50 rounded-lg p-2 max-h-24 overflow-y-auto">
-                   <pre className="text-xs font-mono whitespace-pre-wrap break-all">
-                     {scrapedData.headerHtml.substring(0, 300)}...
-                   </pre>
-                 </div>
+             {/* HTML/CSS Editor */}
+             <Collapsible open={editorOpen} onOpenChange={setEditorOpen}>
+               <div className="flex items-center justify-between">
+                 <CollapsibleTrigger asChild>
+                   <Button variant="ghost" size="sm" className="gap-2 p-0 h-auto font-semibold text-sm">
+                     {editorOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                     <Code className="w-4 h-4" />
+                     Edit HTML / CSS
+                   </Button>
+                 </CollapsibleTrigger>
+                 {hasEdits && (
+                   <Button variant="ghost" size="sm" onClick={resetEdits} className="text-xs gap-1">
+                     <RotateCcw className="w-3 h-3" />
+                     Reset
+                   </Button>
+                 )}
                </div>
-             )}
+               <CollapsibleContent className="space-y-3 pt-3">
+                 <p className="text-xs text-muted-foreground">
+                   Edit the extracted HTML and CSS below. Changes update the preview in real-time. Use this to remove unwanted elements (hero sections, spacers) or fix layout issues.
+                 </p>
+                 <div className="space-y-1">
+                   <Label className="text-xs">Header HTML ({editedHeaderHtml.length.toLocaleString()} chars)</Label>
+                   <Textarea
+                     value={editedHeaderHtml}
+                     onChange={(e) => handleHeaderEdit(e.target.value)}
+                     className="font-mono text-xs min-h-[120px] max-h-[300px]"
+                     placeholder="No header HTML extracted"
+                   />
+                 </div>
+                 <div className="space-y-1">
+                   <Label className="text-xs">Footer HTML ({editedFooterHtml.length.toLocaleString()} chars)</Label>
+                   <Textarea
+                     value={editedFooterHtml}
+                     onChange={(e) => handleFooterEdit(e.target.value)}
+                     className="font-mono text-xs min-h-[120px] max-h-[300px]"
+                     placeholder="No footer HTML extracted"
+                   />
+                 </div>
+                 <div className="space-y-1">
+                   <Label className="text-xs">CSS ({editedCss.length.toLocaleString()} chars)</Label>
+                   <Textarea
+                     value={editedCss}
+                     onChange={(e) => handleCssEdit(e.target.value)}
+                     className="font-mono text-xs min-h-[120px] max-h-[300px]"
+                     placeholder="No CSS extracted"
+                   />
+                 </div>
+               </CollapsibleContent>
+             </Collapsible>
            </CardContent>
          </Card>
        )}
