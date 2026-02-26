@@ -7,6 +7,7 @@ export interface AuthState {
   session: Session | null;
   isLoading: boolean;
   isAdmin: boolean;
+  isGlobalAdmin: boolean;
 }
 
 export function useAuth() {
@@ -14,6 +15,7 @@ export function useAuth() {
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isGlobalAdmin, setIsGlobalAdmin] = useState(false);
 
   // Check if user has admin role
   const checkAdminRole = useCallback(async (userId: string) => {
@@ -21,20 +23,22 @@ export function useAuth() {
       const { data, error } = await supabase
         .from('user_roles')
         .select('role')
-        .eq('user_id', userId)
-        .eq('role', 'admin')
-        .maybeSingle();
+        .eq('user_id', userId);
       
       if (error) {
         console.error('Error checking admin role:', error);
         setIsAdmin(false);
+        setIsGlobalAdmin(false);
         return;
       }
       
-      setIsAdmin(!!data);
+      const roles = (data || []).map((r: any) => r.role);
+      setIsAdmin(roles.includes('admin') || roles.includes('global_admin'));
+      setIsGlobalAdmin(roles.includes('global_admin'));
     } catch (err) {
       console.error('Error checking admin role:', err);
       setIsAdmin(false);
+      setIsGlobalAdmin(false);
     }
   }, []);
 
@@ -52,6 +56,7 @@ export function useAuth() {
           }, 0);
         } else {
           setIsAdmin(false);
+          setIsGlobalAdmin(false);
         }
         
         setIsLoading(false);
@@ -100,6 +105,7 @@ export function useAuth() {
       setUser(null);
       setSession(null);
       setIsAdmin(false);
+      setIsGlobalAdmin(false);
     }
     return { error };
   };
@@ -109,6 +115,7 @@ export function useAuth() {
     session,
     isLoading,
     isAdmin,
+    isGlobalAdmin,
     signIn,
     signUp,
     signOut,

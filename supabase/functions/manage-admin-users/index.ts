@@ -51,19 +51,20 @@ serve(async (req) => {
       .from("user_roles")
       .select("role")
       .eq("user_id", userId)
-      .eq("role", "admin")
+      .eq("role", "global_admin")
       .maybeSingle();
 
     if (adminError || !adminCheck) {
       return new Response(
-        JSON.stringify({ error: "You must be an admin to manage users" }),
+        JSON.stringify({ error: "You must be a global admin to manage users" }),
         { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     // Parse request body
     const body = await req.json();
-    const { action, email, userId: targetUserId, password: initialPassword, newPassword } = body;
+    const { action, email, userId: targetUserId, password: initialPassword, newPassword, role: requestedRole } = body;
+    const roleToAssign = requestedRole === 'global_admin' ? 'global_admin' : 'admin';
 
     // List all admin users with their emails
     if (action === "list") {
@@ -71,7 +72,7 @@ serve(async (req) => {
       const { data: roles, error: rolesError } = await adminClient
         .from("user_roles")
         .select("*")
-        .eq("role", "admin")
+        .in("role", ["admin", "global_admin"])
         .order("created_at", { ascending: false });
 
       if (rolesError) {
@@ -223,25 +224,32 @@ serve(async (req) => {
         }
       }
 
-      // Check if already an admin
+      // Check if already has this role
       const { data: existingRole } = await adminClient
         .from("user_roles")
         .select("id")
         .eq("user_id", targetUser.id)
-        .eq("role", "admin")
+        .eq("role", roleToAssign)
         .maybeSingle();
 
       if (existingRole) {
         return new Response(
-          JSON.stringify({ error: "This user is already an admin" }),
+          JSON.stringify({ error: `This user already has the ${roleToAssign} role` }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
 
-      // Add admin role
+      // Remove any existing role before assigning the new one
+      await adminClient
+        .from("user_roles")
+        .delete()
+        .eq("user_id", targetUser.id)
+        .in("role", ["admin", "global_admin"]);
+
+      // Add role
       const { error: insertError } = await adminClient
         .from("user_roles")
-        .insert({ user_id: targetUser.id, role: "admin" });
+        .insert({ user_id: targetUser.id, role: roleToAssign });
 
       if (insertError) {
         return new Response(
@@ -251,7 +259,7 @@ serve(async (req) => {
       }
 
       return new Response(
-        JSON.stringify({ success: true, userId: targetUser.id, created: wasCreated, hadPassword: !!initialPassword }),
+        JSON.stringify({ success: true, userId: targetUser.id, created: wasCreated, hadPassword: !!initialPassword, role: roleToAssign }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -268,7 +276,7 @@ serve(async (req) => {
         .from("user_roles")
         .delete()
         .eq("user_id", targetUserId)
-        .eq("role", "admin");
+        .in("role", ["admin", "global_admin"]);
 
       if (deleteError) {
         return new Response(
