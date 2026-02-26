@@ -63,9 +63,9 @@ export function GlobalFieldConfigManagement() {
   const [form, setForm] = useState<GlobalFieldConfigInsert>(emptyForm);
   const [deleteTarget, setDeleteTarget] = useState<GlobalFieldConfig | null>(null);
 
-  const openAdd = () => {
+  const openAdd = (category?: string) => {
     setEditingId(null);
-    setForm({ ...emptyForm, display_order: (fields.length + 1) * 10 });
+    setForm({ ...emptyForm, display_order: (fields.length + 1) * 10, category: category || 'custom' });
     setDialogOpen(true);
   };
 
@@ -94,24 +94,19 @@ export function GlobalFieldConfigManagement() {
     setDialogOpen(false);
   };
 
-  // Group fields by category
+  // Group fields by category — show ALL categories so user can add to empty ones
   const grouped = CATEGORIES.map(cat => ({
     ...cat,
     fields: fields.filter(f => f.category === cat.value),
-  })).filter(g => g.fields.length > 0);
+  }));
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-lg font-semibold">Field Configuration</h2>
-          <p className="text-sm text-muted-foreground">
-            Manage form fields available in the builder. Fields marked as API fields are posted to the verification API.
-          </p>
-        </div>
-        <Button onClick={openAdd} className="gap-2">
-          <Plus className="w-4 h-4" /> Add Field
-        </Button>
+      <div>
+        <h2 className="text-lg font-semibold">Field Configuration</h2>
+        <p className="text-sm text-muted-foreground">
+          Manage form fields available in the builder. Fields marked as API fields are posted to the verification API.
+        </p>
       </div>
 
       {isLoading ? (
@@ -121,10 +116,20 @@ export function GlobalFieldConfigManagement() {
           {grouped.map(group => (
             <Card key={group.value} className="glass-card">
               <CardHeader className="pb-3">
-                <CardTitle className="text-base">{group.label}</CardTitle>
-                <CardDescription>{group.fields.length} field{group.fields.length !== 1 ? 's' : ''}</CardDescription>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-base">{group.label}</CardTitle>
+                    <CardDescription>{group.fields.length} field{group.fields.length !== 1 ? 's' : ''}</CardDescription>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={() => openAdd(group.value)} className="gap-1.5">
+                    <Plus className="w-3.5 h-3.5" /> Add
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
+                {group.fields.length === 0 ? (
+                  <p className="text-sm text-muted-foreground py-4 text-center">No fields yet. Click Add to create one.</p>
+                ) : (
                 <div className="divide-y divide-border">
                   {group.fields.map(field => (
                     <div key={field.id} className="flex items-center gap-4 py-3 first:pt-0 last:pb-0">
@@ -162,6 +167,7 @@ export function GlobalFieldConfigManagement() {
                     </div>
                   ))}
                 </div>
+                )}
               </CardContent>
             </Card>
           ))}
