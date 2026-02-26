@@ -53,25 +53,6 @@ function SiteSettingsSection({ demo, onUpdate }: { demo: DemoEnvironment; onUpda
 
   return (
     <div className="space-y-6">
-      {/* Shareable URL */}
-      <Card className="glass-card">
-        <CardHeader>
-          <CardTitle>Public Demo URL</CardTitle>
-          <CardDescription>Share this link with anyone — no login required</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center gap-2">
-            <Input value={publicUrl} readOnly className="font-mono text-sm flex-1" />
-            <Button variant="outline" size="icon" onClick={copyPublicUrl} title="Copy URL">
-              <Copy className="w-4 h-4" />
-            </Button>
-            <Button variant="outline" size="icon" onClick={() => window.open(publicUrl, '_blank')} title="Open in new tab">
-              <ExternalLink className="w-4 h-4" />
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
       <Card className="glass-card">
         <CardHeader>
           <CardTitle>Site Settings</CardTitle>
@@ -92,6 +73,19 @@ function SiteSettingsSection({ demo, onUpdate }: { demo: DemoEnvironment; onUpda
               <p className="text-sm text-muted-foreground">Demo is accessible to users</p>
             </div>
             <Switch checked={demo.isActive} onCheckedChange={(v) => onUpdate({ isActive: v })} />
+          </div>
+          <div className="md:col-span-2 space-y-2">
+            <Label>Public Demo URL</Label>
+            <p className="text-xs text-muted-foreground">Share this link with anyone — no login required</p>
+            <div className="flex items-center gap-2">
+              <Input value={publicUrl} readOnly className="font-mono text-sm flex-1" />
+              <Button variant="outline" size="icon" onClick={copyPublicUrl} title="Copy URL">
+                <Copy className="w-4 h-4" />
+              </Button>
+              <Button variant="outline" size="icon" onClick={() => window.open(publicUrl, '_blank')} title="Open in new tab">
+                <ExternalLink className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
