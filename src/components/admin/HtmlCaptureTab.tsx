@@ -356,7 +356,7 @@ export function HtmlCaptureTab({ demo, url, onUrlChange, onApply, isConfigured }
                 <p className="text-xs text-amber-600 font-medium">⚠ You have unsaved edits — the preview reflects your changes.</p>
               )}
 
-             <div className="border rounded-lg overflow-hidden bg-background">
+              <div className="border rounded-lg overflow-hidden" style={{ backgroundColor: '#ffffff' }}>
                <iframe
                   srcDoc={getPreviewHtml()}
                   className="w-full h-[400px] border-0"

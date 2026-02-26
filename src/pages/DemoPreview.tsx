@@ -100,18 +100,18 @@ export default function DemoPreview() {
   
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#f5f5f5' }}>
+        <Loader2 className="w-8 h-8 animate-spin" style={{ color: '#6b7280' }} />
       </div>
     );
   }
   
   if (error || !demo || !demo.isActive) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#f5f5f5' }}>
         <div className="text-center">
-          <h1 className="text-2xl font-bold mb-2">Demo Not Found</h1>
-          <p className="text-muted-foreground">This demo environment doesn't exist or is inactive.</p>
+          <h1 className="text-2xl font-bold mb-2" style={{ color: '#1f2937' }}>Demo Not Found</h1>
+          <p style={{ color: '#6b7280' }}>This demo environment doesn't exist or is inactive.</p>
         </div>
       </div>
     );
@@ -122,7 +122,7 @@ export default function DemoPreview() {
   const hasMirroredFooter = Boolean(previewDocument?.footerHtml?.trim());
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen flex flex-col" style={{ backgroundColor: previewDocument?.formStyle?.contentAreaBgColor || '#f5f5f5', color: '#1a1a2e' }}>
       {/* Mirrored Header - using iframe for CSS isolation */}
       {hasMirroredHeader && previewDocument && (
         <iframe

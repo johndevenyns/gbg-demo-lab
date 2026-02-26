@@ -95,9 +95,11 @@ export function FormPreviewPanel({ demo }: FormPreviewPanelProps) {
 
               {/* Preview Container */}
               <div 
-                className="bg-background rounded-xl border border-border p-6 max-w-xl mx-auto"
+                className="rounded-xl border border-border p-6 max-w-xl mx-auto"
                 style={{ 
-                  fontFamily: demo.formStyle?.fontFamily || 'Inter, system-ui, sans-serif'
+                  fontFamily: demo.formStyle?.fontFamily || 'Inter, system-ui, sans-serif',
+                  backgroundColor: demo.formStyle?.formBgColor || '#ffffff',
+                  color: demo.formStyle?.labelColor || '#374151',
                 }}
               >
                 {demo.formSteps.length > 0 ? (
