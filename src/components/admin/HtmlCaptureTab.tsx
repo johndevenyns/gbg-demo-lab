@@ -132,29 +132,19 @@
      }
    };
  
-   const handleApply = () => {
-     if (!scrapedData) return;
- 
-     let formStyleConfig: FormStyleConfig | undefined;
-     if (scrapedData.formStyles) {
-       formStyleConfig = formElementStylesToConfig(scrapedData.formStyles);
-     }
- 
-      const updates: Partial<DemoEnvironment> = {
-        customerSiteUrl: url,
-        logoUrl: scrapedData.logoUrl || demo.logoUrl,
-        headerBgColor: scrapedData.colors.headerBgColor,
-        headerTextColor: scrapedData.colors.headerTextColor,
-        buttonColor: scrapedData.colors.buttonColor,
-       // Store in dedicated HTML fetch fields (won't overwrite screenshot fetch)
-       mirrorHtmlHeaderHtml: scrapedData.headerHtml,
-       mirrorHtmlFooterHtml: scrapedData.footerHtml,
-       mirrorHtmlCss: scrapedData.cssContent,
-        ...(formStyleConfig && { formStyle: formStyleConfig }),
-      };
+    const handleApply = () => {
+      if (!scrapedData) return;
 
-      onApply(updates);
-      toast({ title: "HTML Fetch Applied", description: "Header, footer, and CSS have been saved" });
+       const updates: Partial<DemoEnvironment> = {
+         customerSiteUrl: url,
+        // Only write to HTML-specific fields — don't overwrite shared branding/formStyle
+        mirrorHtmlHeaderHtml: scrapedData.headerHtml,
+        mirrorHtmlFooterHtml: scrapedData.footerHtml,
+        mirrorHtmlCss: scrapedData.cssContent,
+       };
+
+       onApply(updates);
+       toast({ title: "HTML Fetch Applied", description: "Header, footer, and CSS have been saved" });
     };
  
    return (

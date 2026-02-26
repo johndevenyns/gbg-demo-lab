@@ -276,32 +276,22 @@ function formElementStylesToConfig(styles: FormElementStyles): FormStyleConfig {
         return `<div style="width: 100%; overflow: hidden; position: relative; height: 0; padding-bottom: ${footerHeightPercent}%;"><img src="${src}" style="position: absolute; width: 100%; top: -${footerTopPercent}%; left: 0;" alt="Site footer" /></div>`;
      };
  
-     let formStyleConfig: FormStyleConfig | undefined;
-     if (scrapedData.formStyles) {
-       formStyleConfig = formElementStylesToConfig(scrapedData.formStyles);
-     }
- 
-     const updates: Partial<DemoEnvironment> = {
-       customerSiteUrl: url,
-       logoUrl: scrapedData.logoUrl || demo.logoUrl,
-       headerBgColor: scrapedData.colors.headerBgColor,
-       headerTextColor: scrapedData.colors.headerTextColor,
-       buttonColor: scrapedData.colors.buttonColor,
-       // Store desktop as the primary (used in preview)
-       mirrorScreenshotHeaderHtml: generateHeaderHtml(desktopSrc, viewportCropSettings.desktop),
-       mirrorScreenshotFooterHtml: generateFooterHtml(desktopSrc, viewportCropSettings.desktop),
-       mirrorScreenshotCss: JSON.stringify({
-         viewportScreenshots: {
-           desktop: { src: desktopSrc, crop: viewportCropSettings.desktop },
-           tablet: { src: tabletSrc, crop: viewportCropSettings.tablet },
-           mobile: { src: mobileSrc, crop: viewportCropSettings.mobile },
-         }
-       }),
-       ...(formStyleConfig && { formStyle: formStyleConfig }),
-     };
- 
-      onApply(updates);
-      toast({ title: "Screenshot Fetch Applied", description: "All viewport screenshots have been saved" });
+      const updates: Partial<DemoEnvironment> = {
+        customerSiteUrl: url,
+        // Only write to screenshot-specific fields — don't overwrite shared branding/formStyle
+        mirrorScreenshotHeaderHtml: generateHeaderHtml(desktopSrc, viewportCropSettings.desktop),
+        mirrorScreenshotFooterHtml: generateFooterHtml(desktopSrc, viewportCropSettings.desktop),
+        mirrorScreenshotCss: JSON.stringify({
+          viewportScreenshots: {
+            desktop: { src: desktopSrc, crop: viewportCropSettings.desktop },
+            tablet: { src: tabletSrc, crop: viewportCropSettings.tablet },
+            mobile: { src: mobileSrc, crop: viewportCropSettings.mobile },
+          }
+        }),
+      };
+
+       onApply(updates);
+       toast({ title: "Screenshot Fetch Applied", description: "All viewport screenshots have been saved" });
     };
  
    const selectedScreenshot = getSelectedScreenshot();
