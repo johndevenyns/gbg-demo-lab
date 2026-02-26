@@ -772,8 +772,31 @@ export function DemoFlowRenderer({
       toast.error(`No ${type} test data configured`);
       return;
     }
+
+    // Support both canonical and legacy/alternate field names used by older demos
+    const aliasGroups: string[][] = [
+      ['streetAddress', 'addressStreet', 'street_address'],
+      ['city', 'addressCity', 'address_city'],
+      ['state', 'addressState', 'address_state'],
+      ['zipCode', 'addressZip', 'zip', 'zipcode', 'zip_code', 'address_zip'],
+      ['country', 'addressCountry', 'address_country'],
+    ];
+
+    const expandedData: Record<string, string> = { ...data };
+
+    aliasGroups.forEach((group) => {
+      const sourceKey = group.find((key) => typeof data[key] === 'string' && data[key].trim() !== '');
+      if (!sourceKey) return;
+
+      const value = data[sourceKey];
+      group.forEach((key) => {
+        if (!expandedData[key]) {
+          expandedData[key] = value;
+        }
+      });
+    });
     
-    setFormData(prev => ({ ...prev, ...data }));
+    setFormData(prev => ({ ...prev, ...expandedData }));
     toast.success(`Form filled with ${type} test data`);
   }, [storedTestData]);
 
