@@ -2114,10 +2114,11 @@ export function DemoFlowRenderer({
       {(
       <div className="space-y-2">
         <h2 
-          className="text-2xl font-semibold text-foreground" 
+          className="text-2xl font-semibold" 
           style={{ 
             fontFamily: style.fontFamily,
             textAlign: currentStep?.titleAlignment || 'left',
+            color: style.titleColor || '#1a1a2e',
           }}
         >
           {currentStep?.title}
