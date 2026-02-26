@@ -120,18 +120,65 @@ export function HtmlCaptureTab({ demo, url, onUrlChange, onApply, isConfigured }
       abortControllerRef.current = controller;
       setIsLoading(true);
       try {
-        const response = await scrapingApi.scrapeSiteBranding(url, controller.signal);
+      const response = await scrapingApi.scrapeSiteBranding(url, controller.signal);
         if (controller.signal.aborted) return;
         if (response.success && response.data) {
-          setScrapedData(response.data);
-          toast({ title: "Site Fetched", description: "HTML and CSS extracted successfully" });
+          const d = response.data;
+          const hasHeader = !!(d.headerHtml && d.headerHtml.trim().length > 0);
+          const hasFooter = !!(d.footerHtml && d.footerHtml.trim().length > 0);
+          const hasCss = !!(d.cssContent && d.cssContent.trim().length > 0);
+
+          if (!hasHeader && !hasFooter && !hasCss) {
+            // Got a response but nothing useful was extracted
+            setScrapedData(null);
+            toast({
+              title: "No Content Extracted",
+              description: "The site was reached but no header, footer, or CSS could be extracted. The site may use JavaScript rendering, block automated access, or lack semantic HTML elements.",
+              variant: "destructive",
+            });
+          } else {
+            setScrapedData(d);
+            const parts: string[] = [];
+            if (hasHeader) parts.push("header");
+            if (hasFooter) parts.push("footer");
+            if (hasCss) parts.push("CSS");
+            const missing: string[] = [];
+            if (!hasHeader) missing.push("header");
+            if (!hasFooter) missing.push("footer");
+
+            if (missing.length > 0) {
+              toast({
+                title: "Partial Extraction",
+                description: `Extracted ${parts.join(", ")} but could not find: ${missing.join(", ")}. The site may lack semantic <header>/<footer> tags.`,
+              });
+            } else {
+              toast({ title: "Site Fetched", description: `Header, footer, and CSS extracted successfully (${(d.cssContent?.length || 0).toLocaleString()} chars of CSS)` });
+            }
+          }
         } else {
-          toast({ title: "Fetch Failed", description: response.error || "Could not extract content", variant: "destructive" });
+          const errMsg = response.error || "Could not extract content";
+          const isBlocked = errMsg.toLowerCase().includes('403') || errMsg.toLowerCase().includes('blocked') || errMsg.toLowerCase().includes('forbidden');
+          const isTimeout = errMsg.toLowerCase().includes('timeout') || errMsg.toLowerCase().includes('timed out');
+          let description = errMsg;
+          if (isBlocked) {
+            description = `The site blocked the fetch request (403 Forbidden). Try the Screenshot method instead, or check if the URL is correct.`;
+          } else if (isTimeout) {
+            description = `The request timed out. The site may be slow or blocking automated access. Try again or use the Screenshot method.`;
+          }
+          toast({ title: "Fetch Failed", description, variant: "destructive" });
         }
       } catch (error: any) {
         if (controller.signal.aborted) return;
         console.error("Error fetching:", error);
-        toast({ title: "Error", description: "Failed to fetch site. Check Firecrawl connector.", variant: "destructive" });
+        const msg = error?.message || '';
+        const isCors = msg.includes('CORS') || msg.includes('NetworkError') || msg.includes('Failed to fetch');
+        toast({
+          title: "Connection Error",
+          description: isCors
+            ? "Could not reach the site — the connection may have been blocked by the site's security settings. Try the Screenshot method instead."
+            : `Failed to fetch site: ${msg || 'Unknown error'}. Ensure the Firecrawl connector is configured.`,
+          variant: "destructive",
+        });
       } finally {
         if (!controller.signal.aborted) setIsLoading(false);
         abortControllerRef.current = null;
