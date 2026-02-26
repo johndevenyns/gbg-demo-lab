@@ -1,5 +1,5 @@
- import { useState, useMemo } from "react";
- import { Camera, Loader2, ExternalLink, Eye, Check, Monitor, Tablet, Smartphone, Paintbrush, RefreshCw, Crop } from "lucide-react";
+import { useState, useMemo, useRef } from "react";
+import { Camera, Loader2, ExternalLink, Eye, Check, Monitor, Tablet, Smartphone, Paintbrush, RefreshCw, Crop, Ban } from "lucide-react";
  import { Button } from "@/components/ui/button";
  import { Input } from "@/components/ui/input";
  import { Label } from "@/components/ui/label";
@@ -162,20 +162,21 @@ function formElementStylesToConfig(styles: FormElementStyles): FormStyleConfig {
    isConfigured: boolean;
  }
  
- export function ScreenshotCaptureTab({ demo, url, onUrlChange, onApply, isConfigured }: ScreenshotCaptureTabProps) {
-   const { toast } = useToast();
-   const [isLoading, setIsLoading] = useState(false);
-   const [scrapedData, setScrapedData] = useState<ScrapedBranding | null>(null);
-   const [selectedViewport, setSelectedViewport] = useState<ViewportSize>('desktop');
-   const [viewportCropSettings, setViewportCropSettings] = useState<ViewportCropSettings>(DEFAULT_VIEWPORT_CROP_SETTINGS);
-  const [previewKey, setPreviewKey] = useState(0);
-  const [showSavedCropEditor, setShowSavedCropEditor] = useState(false);
-  const [savedCropSettings, setSavedCropSettings] = useState<CropSettings>(DEFAULT_CROP_SETTINGS);
-  const [savedPreviewKey, setSavedPreviewKey] = useState(0);
-  
-  const refreshPreview = () => {
-    setPreviewKey((k) => k + 1);
-  };
+export function ScreenshotCaptureTab({ demo, url, onUrlChange, onApply, isConfigured }: ScreenshotCaptureTabProps) {
+    const { toast } = useToast();
+    const [isLoading, setIsLoading] = useState(false);
+    const [scrapedData, setScrapedData] = useState<ScrapedBranding | null>(null);
+    const [selectedViewport, setSelectedViewport] = useState<ViewportSize>('desktop');
+    const [viewportCropSettings, setViewportCropSettings] = useState<ViewportCropSettings>(DEFAULT_VIEWPORT_CROP_SETTINGS);
+   const [previewKey, setPreviewKey] = useState(0);
+   const [showSavedCropEditor, setShowSavedCropEditor] = useState(false);
+   const [savedCropSettings, setSavedCropSettings] = useState<CropSettings>(DEFAULT_CROP_SETTINGS);
+   const [savedPreviewKey, setSavedPreviewKey] = useState(0);
+   const abortControllerRef = useRef<AbortController | null>(null);
+   
+   const refreshPreview = () => {
+     setPreviewKey((k) => k + 1);
+   };
  
    // Get current viewport's crop settings
    const cropSettings = viewportCropSettings[selectedViewport];
@@ -223,28 +224,40 @@ function formElementStylesToConfig(styles: FormElementStyles): FormStyleConfig {
      return scrapedData.screenshot;
    };
  
-    const handleFetch = async () => {
-      if (!url.trim()) {
-        toast({ title: "URL Required", description: "Please enter a website URL", variant: "destructive" });
-        return;
-      }
- 
-      setIsLoading(true);
-      try {
-        const response = await scrapingApi.scrapeSiteBranding(url);
-        if (response.success && response.data) {
-          setScrapedData(response.data);
-          toast({ title: "Screenshots Fetched", description: "Site screenshots are ready for cropping" });
-        } else {
-          toast({ title: "Fetch Failed", description: response.error || "Could not fetch screenshots", variant: "destructive" });
-        }
-      } catch (error) {
-        console.error("Error fetching:", error);
-        toast({ title: "Error", description: "Failed to fetch screenshots. Check Firecrawl connector.", variant: "destructive" });
-      } finally {
-        setIsLoading(false);
-      }
-    };
+     const handleFetch = async () => {
+       if (!url.trim()) {
+         toast({ title: "URL Required", description: "Please enter a website URL", variant: "destructive" });
+         return;
+       }
+
+       const controller = new AbortController();
+       abortControllerRef.current = controller;
+       setIsLoading(true);
+       try {
+         const response = await scrapingApi.scrapeSiteBranding(url, controller.signal);
+         if (controller.signal.aborted) return;
+         if (response.success && response.data) {
+           setScrapedData(response.data);
+           toast({ title: "Screenshots Fetched", description: "Site screenshots are ready for cropping" });
+         } else {
+           toast({ title: "Fetch Failed", description: response.error || "Could not fetch screenshots", variant: "destructive" });
+         }
+       } catch (error: any) {
+         if (controller.signal.aborted) return;
+         console.error("Error fetching:", error);
+         toast({ title: "Error", description: "Failed to fetch screenshots. Check Firecrawl connector.", variant: "destructive" });
+       } finally {
+         if (!controller.signal.aborted) setIsLoading(false);
+         abortControllerRef.current = null;
+       }
+     };
+
+     const handleCancel = () => {
+       abortControllerRef.current?.abort();
+       abortControllerRef.current = null;
+       setIsLoading(false);
+       toast({ title: "Cancelled", description: "Fetch operation was cancelled" });
+     };
  
    const handleApply = () => {
      if (!scrapedData) return;
@@ -325,12 +338,18 @@ function formElementStylesToConfig(styles: FormElementStyles): FormStyleConfig {
                   <><Camera className="w-4 h-4 mr-2" />Fetch Screenshots</>
                 )}
               </Button>
-             {url && (
-               <Button variant="outline" size="icon" onClick={() => window.open(url, '_blank')} title="Open site">
-                 <ExternalLink className="w-4 h-4" />
-               </Button>
-             )}
-           </div>
+              {isLoading && (
+                <Button variant="destructive" size="sm" onClick={handleCancel}>
+                  <Ban className="w-4 h-4 mr-1" />
+                  Cancel
+                </Button>
+              )}
+              {url && !isLoading && (
+                <Button variant="outline" size="icon" onClick={() => window.open(url, '_blank')} title="Open site">
+                  <ExternalLink className="w-4 h-4" />
+                </Button>
+              )}
+            </div>
          </CardContent>
        </Card>
  

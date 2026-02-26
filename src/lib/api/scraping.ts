@@ -116,12 +116,14 @@ export interface CaptureFormResponse {
 }
 
 export const scrapingApi = {
-  async scrapeSiteBranding(url: string): Promise<ScrapeResponse> {
+  async scrapeSiteBranding(url: string, signal?: AbortSignal): Promise<ScrapeResponse> {
     const { data, error } = await supabase.functions.invoke('scrape-site-branding', {
       body: { url },
+      ...(signal ? { signal } : {}),
     });
 
     if (error) {
+      if (signal?.aborted) return { success: false, error: 'Cancelled' };
       return { success: false, error: error.message };
     }
     
@@ -134,6 +136,7 @@ export const scrapingApi = {
     options?: {
       triggerSelector?: string;
       waitTime?: number;
+      signal?: AbortSignal;
     }
   ): Promise<ScrapeFormStylesResponse> {
     const { data, error } = await supabase.functions.invoke('scrape-form-styles', {
@@ -143,9 +146,11 @@ export const scrapingApi = {
         triggerSelector: options?.triggerSelector,
         waitTime: options?.waitTime,
       },
+      ...(options?.signal ? { signal: options.signal } : {}),
     });
 
     if (error) {
+      if (options?.signal?.aborted) return { success: false, error: 'Cancelled' };
       return { success: false, error: error.message };
     }
     
@@ -159,6 +164,7 @@ export const scrapingApi = {
     options?: {
       triggerSelector?: string;
       waitTime?: number;
+      signal?: AbortSignal;
     }
   ): Promise<CaptureFormResponse> {
     const { data, error } = await supabase.functions.invoke('capture-form-html', {
@@ -168,9 +174,11 @@ export const scrapingApi = {
         triggerSelector: options?.triggerSelector,
         waitTime: options?.waitTime,
       },
+      ...(options?.signal ? { signal: options.signal } : {}),
     });
 
     if (error) {
+      if (options?.signal?.aborted) return { success: false, error: 'Cancelled' };
       return { success: false, error: error.message };
     }
     
@@ -261,12 +269,14 @@ export interface AnalyzeScreenshotResponse {
 }
 
 export const formAnalysisApi = {
-  async analyzeFormScreenshot(imageBase64: string, mimeType: string): Promise<AnalyzeScreenshotResponse> {
+  async analyzeFormScreenshot(imageBase64: string, mimeType: string, signal?: AbortSignal): Promise<AnalyzeScreenshotResponse> {
     const { data, error } = await supabase.functions.invoke('analyze-form-screenshot', {
       body: { imageBase64, mimeType },
+      ...(signal ? { signal } : {}),
     });
 
     if (error) {
+      if (signal?.aborted) return { success: false, error: 'Cancelled' };
       return { success: false, error: error.message };
     }
     
