@@ -7,6 +7,7 @@ import { SiteMirrorTabs, CaptureTab, CaptureMode } from "./SiteMirrorTabs";
 import { HtmlCaptureTab } from "./HtmlCaptureTab";
 import { ScreenshotCaptureTab } from "./ScreenshotCaptureTab";
 import { EmbedFormSection } from "./EmbedFormSection";
+import { HeaderElementPicker } from "./HeaderElementPicker";
 import { useToast } from "@/hooks/use-toast";
 import { DemoEnvironment } from "@/types/demo";
 import { DEFAULT_FORM_STYLE } from "@/types/formStyle";
@@ -142,11 +143,25 @@ interface SiteMirrorCardProps {
                  )}
                </div>
              </div>
-           )}
-         </CardContent>
-       </Card>
-     );
-   };
+            )}
+
+            {/* Header CTA Element Picker */}
+            {hasAnyContent && headerHtml && (
+              <div className="mt-4">
+                <HeaderElementPicker
+                  headerHtml={headerHtml}
+                  cssContent={cssContent || undefined}
+                  currentSelector={demo.headerCtaSelector}
+                  onSelectorChange={(selector) => {
+                    onApplyBranding({ headerCtaSelector: selector || '' }, true);
+                  }}
+                />
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      );
+    };
  
     return (
       <div className="space-y-6">

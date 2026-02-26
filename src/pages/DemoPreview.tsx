@@ -3,7 +3,7 @@ import { useDemoBySlug } from "@/hooks/useDemos";
 import { useAuth } from "@/hooks/useAuth";
 import { Loader2, ArrowLeft, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useEffect, useCallback, useMemo } from "react";
+import { useEffect, useCallback, useMemo, useRef } from "react";
 import { DemoFlowRenderer } from "@/components/preview/DemoFlowRenderer";
 import { DEFAULT_SUCCESS_CONFIG, DEFAULT_FAILURE_CONFIG } from "@/components/preview/ResultPage";
 import { DEFAULT_FORM_STYLE } from "@/types/formStyle";
@@ -36,6 +36,18 @@ export default function DemoPreview() {
   const { slug } = useParams<{ slug: string }>();
   const { isAdmin, isLoading: authLoading } = useAuth();
   const { data: demo, isLoading, error } = useDemoBySlug(slug || "");
+  const formRef = useRef<HTMLDivElement>(null);
+
+  // Listen for scroll-to-form messages from the header iframe CTA
+  useEffect(() => {
+    const handler = (e: MessageEvent) => {
+      if (e.data?.type === 'scroll-to-form' && formRef.current) {
+        formRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    };
+    window.addEventListener('message', handler);
+    return () => window.removeEventListener('message', handler);
+  }, []);
 
   const handleFlowComplete = useCallback((success: boolean, referenceId?: string) => {
     console.log('Flow complete:', { success, referenceId });
@@ -82,6 +94,7 @@ export default function DemoPreview() {
       footerHtml,
       cssContent,
       formStyle,
+      headerCtaSelector: demo.headerCtaSelector || '',
     };
   }, [demo]);
   
@@ -123,18 +136,31 @@ export default function DemoPreview() {
                   body { margin: 0; padding: 0; }
                   * { box-sizing: border-box; }
                   a { pointer-events: none; }
+                  ${previewDocument.headerCtaSelector ? `${previewDocument.headerCtaSelector} { pointer-events: auto !important; cursor: pointer !important; }` : ''}
                 </style>
                 ${previewDocument.cssContent ? `<style>${previewDocument.cssContent}</style>` : ''}
               </head>
               <body>
                 ${previewDocument.headerHtml}
+                ${previewDocument.headerCtaSelector ? `
+                <script>
+                  document.addEventListener('click', function(e) {
+                    var target = e.target.closest('${previewDocument.headerCtaSelector.replace(/'/g, "\\'")}');
+                    if (target) {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      window.parent.postMessage({ type: 'scroll-to-form' }, '*');
+                    }
+                  }, true);
+                </script>
+                ` : ''}
               </body>
             </html>
           `}
           className="w-full border-0"
           style={{ height: 'auto', minHeight: '60px' }}
           title="Site header"
-          sandbox="allow-same-origin"
+          sandbox="allow-same-origin allow-scripts"
           onLoad={(e) => {
             // Auto-resize iframe to content height
             const iframe = e.target as HTMLIFrameElement;
@@ -157,6 +183,7 @@ export default function DemoPreview() {
       >
         <div className="max-w-xl mx-auto px-4">
           <div 
+            ref={formRef}
             className="p-8"
             style={{
               backgroundColor: (previewDocument?.formStyle?.formBgColor || 'white'),

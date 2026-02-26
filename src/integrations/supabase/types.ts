@@ -53,6 +53,7 @@ export type Database = {
           form_steps: Json | null
           form_style: Json | null
           header_bg_color: string | null
+          header_cta_selector: string | null
           header_text_color: string | null
           id: string
           include_address_verification: boolean | null
@@ -95,6 +96,7 @@ export type Database = {
           form_steps?: Json | null
           form_style?: Json | null
           header_bg_color?: string | null
+          header_cta_selector?: string | null
           header_text_color?: string | null
           id?: string
           include_address_verification?: boolean | null
@@ -137,6 +139,7 @@ export type Database = {
           form_steps?: Json | null
           form_style?: Json | null
           header_bg_color?: string | null
+          header_cta_selector?: string | null
           header_text_color?: string | null
           id?: string
           include_address_verification?: boolean | null

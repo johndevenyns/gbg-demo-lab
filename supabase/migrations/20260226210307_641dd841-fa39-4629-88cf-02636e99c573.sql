@@ -1,0 +1,1 @@
+ALTER TABLE public.demo_environments ADD COLUMN header_cta_selector text DEFAULT NULL;
