@@ -151,14 +151,11 @@ serve(async (req) => {
     console.log('includeQr:', requestData.includeQr);
     console.log('formDataKeys:', Object.keys(requestData.formData || {}));
 
-    const firstName = requestData.formData?.firstName?.trim();
-    const lastName = requestData.formData?.lastName?.trim();
+    const firstName = requestData.formData?.firstName?.trim() || '';
+    const lastName = requestData.formData?.lastName?.trim() || '';
 
-    if (!firstName || !lastName) {
-      return new Response(
-        JSON.stringify({ success: false, error: 'firstName and lastName are required' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    if (!firstName && !lastName) {
+      console.warn('No firstName/lastName provided in formData — proceeding with empty names');
     }
 
     const referenceIdPrefix = requestData.referenceIdPrefix || 'demo';
