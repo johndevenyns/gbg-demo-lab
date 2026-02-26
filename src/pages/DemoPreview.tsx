@@ -176,7 +176,7 @@ export default function DemoPreview() {
 
       {/* Main Form Content */}
       <main
-        className="flex-1 py-12"
+        className="flex-1 py-4"
         style={{
           backgroundColor: previewDocument?.formStyle?.contentAreaBgColor || 'transparent',
         }}
