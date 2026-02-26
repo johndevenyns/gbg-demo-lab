@@ -18,7 +18,7 @@ export function sourceToMethod(source: FormStyleSource): FormStyleMethod {
     case 'mirrored':
       return 'ai-screenshot'; // Mirrored via screenshot analysis is categorized as ai-screenshot
     default:
-      return 'template'; // Default to template
+      return 'custom'; // Default to customize
   }
 }
 
