@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -129,6 +129,47 @@ export function FormBuilderSection({ demo, onUpdate }: FormBuilderSectionProps) 
     };
     onUpdate({ storedTestData: updatedData });
   }, [demo.storedTestData, onUpdate, globalProfiles]);
+
+  // Auto-sync stored test data from global profiles when profiles load/change
+  const syncedProfilesRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (globalProfiles.length === 0) return;
+    const showPass = demo.storedTestData?.showFillPassButton === true;
+    const showFail = demo.storedTestData?.showFillFailButton === true;
+    if (!showPass && !showFail) return;
+
+    // Build a fingerprint to avoid unnecessary updates
+    const fingerprint = JSON.stringify(globalProfiles.map(p => ({ id: p.id, updated: p.updated_at })));
+    if (syncedProfilesRef.current === fingerprint) return;
+    syncedProfilesRef.current = fingerprint;
+
+    const firstPass = globalProfiles.find((p) => p.profile_type === 'pass');
+    const firstFail = globalProfiles.find((p) => p.profile_type === 'fail');
+
+    const currentData = demo.storedTestData || { passData: {}, failData: {} };
+    let needsUpdate = false;
+    let updatedPassData = currentData.passData;
+    let updatedFailData = currentData.failData;
+
+    if (showPass && firstPass) {
+      const profileData = firstPass.field_data as Record<string, string>;
+      if (JSON.stringify(updatedPassData) !== JSON.stringify(profileData)) {
+        updatedPassData = profileData;
+        needsUpdate = true;
+      }
+    }
+    if (showFail && firstFail) {
+      const profileData = firstFail.field_data as Record<string, string>;
+      if (JSON.stringify(updatedFailData) !== JSON.stringify(profileData)) {
+        updatedFailData = profileData;
+        needsUpdate = true;
+      }
+    }
+
+    if (needsUpdate) {
+      onUpdate({ storedTestData: { ...currentData, passData: updatedPassData, failData: updatedFailData } });
+    }
+  }, [globalProfiles, demo.storedTestData, onUpdate]);
 
   const showFillPass = demo.storedTestData?.showFillPassButton ?? false;
   const showFillFail = demo.storedTestData?.showFillFailButton ?? false;
