@@ -1937,10 +1937,6 @@ export function DemoFlowRenderer({
           // For doc/bio paths, show QR code and status
           return (
             <div className="text-center py-8 space-y-6">
-              <div>
-                <p className="text-lg font-medium">{typeConfig?.customTitle || 'Identity Verification'}</p>
-                <p className="text-muted-foreground text-sm">{typeConfig?.customDescription || 'Scan the QR code to continue on your mobile device'}</p>
-              </div>
               
               {/* QR Code section */}
               {(typeConfig?.qrCodeEnabled !== false) && (
@@ -2113,7 +2109,7 @@ export function DemoFlowRenderer({
       </div>
 
       {/* Step title with Fill buttons aligned right — hidden for verification steps that render their own title */}
-      {!(currentStep?.stepType === 'unified_verification' || currentStep?.stepType === 'verification' || currentStep?.stepType === 'verification_flow') && (
+      {(
       <div className="space-y-2">
         <h2 
           className="text-2xl font-semibold text-foreground" 
