@@ -2112,7 +2112,8 @@ export function DemoFlowRenderer({
         ))}
       </div>
 
-      {/* Step title with Fill buttons aligned right */}
+      {/* Step title with Fill buttons aligned right — hidden for verification steps that render their own title */}
+      {!(currentStep?.stepType === 'unified_verification' || currentStep?.stepType === 'verification' || currentStep?.stepType === 'verification_flow') && (
       <div className="space-y-2">
         <h2 
           className="text-2xl font-semibold text-foreground" 
@@ -2176,6 +2177,7 @@ export function DemoFlowRenderer({
           <p className="text-sm text-muted-foreground">{currentStep.description}</p>
         )}
       </div>
+      )}
 
       {/* Step content */}
       {renderStepContent()}
