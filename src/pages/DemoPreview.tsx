@@ -133,8 +133,8 @@ export default function DemoPreview() {
                 <meta charset="utf-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1">
                 <style>
-                  body { margin: 0; padding: 0; }
-                  * { box-sizing: border-box; }
+                  body { margin: 0; padding: 0; overflow: hidden; }
+                  html { overflow: hidden; }
                   a { pointer-events: none; }
                   ${previewDocument.headerCtaSelector ? `${previewDocument.headerCtaSelector} { pointer-events: auto !important; cursor: pointer !important; }` : ''}
                 </style>
@@ -162,10 +162,13 @@ export default function DemoPreview() {
           title="Site header"
           sandbox="allow-same-origin allow-scripts"
           onLoad={(e) => {
-            // Auto-resize iframe to content height
             const iframe = e.target as HTMLIFrameElement;
             try {
-              const height = iframe.contentDocument?.body?.scrollHeight || 80;
+              const body = iframe.contentDocument?.body;
+              const firstChild = body?.firstElementChild as HTMLElement;
+              // Use the first child's height (the actual header) rather than body scrollHeight
+              // which can be inflated by scraped CSS
+              const height = firstChild?.offsetHeight || body?.scrollHeight || 80;
               iframe.style.height = `${height}px`;
             } catch {
               iframe.style.height = '80px';
@@ -236,8 +239,8 @@ export default function DemoPreview() {
                 <meta charset="utf-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1">
                 <style>
-                  body { margin: 0; padding: 0; }
-                  * { box-sizing: border-box; }
+                  body { margin: 0; padding: 0; overflow: hidden; }
+                  html { overflow: hidden; }
                   a { pointer-events: none; }
                 </style>
                 ${previewDocument.cssContent ? `<style>${previewDocument.cssContent}</style>` : ''}
@@ -252,10 +255,11 @@ export default function DemoPreview() {
           title="Site footer"
           sandbox="allow-same-origin"
           onLoad={(e) => {
-            // Auto-resize iframe to content height
             const iframe = e.target as HTMLIFrameElement;
             try {
-              const height = iframe.contentDocument?.body?.scrollHeight || 200;
+              const body = iframe.contentDocument?.body;
+              const firstChild = body?.firstElementChild as HTMLElement;
+              const height = firstChild?.offsetHeight || body?.scrollHeight || 200;
               iframe.style.height = `${height}px`;
             } catch {
               iframe.style.height = '200px';
