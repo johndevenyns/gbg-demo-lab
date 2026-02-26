@@ -478,7 +478,7 @@ export function ScreenshotCaptureTab({ demo, url, onUrlChange, onApply, isConfig
                   Refresh Preview
                 </Button>
               </div>
-               <div className="border rounded-lg overflow-hidden bg-background">
+               <div className="border rounded-lg overflow-hidden" style={{ backgroundColor: '#ffffff' }}>
                  <iframe
                   key={previewKey}
                    srcDoc={generateScreenshotPreviewHtml(
@@ -606,7 +606,7 @@ export function ScreenshotCaptureTab({ demo, url, onUrlChange, onApply, isConfig
                    Refresh
                  </Button>
                </div>
-               <div className="border rounded-lg overflow-hidden bg-background">
+               <div className="border rounded-lg overflow-hidden" style={{ backgroundColor: '#ffffff' }}>
                  <iframe
                    key={savedPreviewKey}
                    srcDoc={(() => {

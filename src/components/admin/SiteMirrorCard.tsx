@@ -143,10 +143,13 @@ interface SiteMirrorCardProps {
                 >
                   <div
                     className={cn(
-                      "overflow-hidden bg-background transition-all duration-300",
+                      "overflow-hidden transition-all duration-300",
                       previewViewport !== 'desktop' && "border rounded-lg shadow-sm"
                     )}
-                    style={previewViewport !== 'desktop' ? { width: vpConfig.width } : undefined}
+                    style={{ 
+                      ...(previewViewport !== 'desktop' ? { width: vpConfig.width } : undefined),
+                      backgroundColor: '#ffffff',
+                    }}
                   >
                     {previewViewport === 'desktop' ? (
                       <div className="w-full overflow-hidden" style={{ height: '500px' }}>
