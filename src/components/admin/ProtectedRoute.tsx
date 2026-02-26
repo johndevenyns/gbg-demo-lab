@@ -30,7 +30,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
       // Try to call the bootstrap function - it will fail if admins exist
       // This is a safe way to check without exposing admin data
       const { error } = await supabase.rpc('bootstrap_first_admin', {
-        target_user_id: '00000000-0000-0000-0000-000000000000' // Dummy UUID that will fail but tell us if admins exist
+        target_user_id: '00000000-0000-0000-0000-000000000000'
       });
       
       if (error?.message?.includes('Admin users already exist')) {

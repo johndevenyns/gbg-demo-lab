@@ -10,12 +10,13 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Trash2, UserPlus, Users, AlertCircle, Shield, KeyRound } from 'lucide-react';
+import { Loader2, Trash2, UserPlus, Users, AlertCircle, Shield, KeyRound, Crown } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface UserRole {
   id: string;
   user_id: string;
-  role: 'admin';
+  role: 'admin' | 'global_admin';
   created_at: string;
   email?: string;
 }
@@ -26,6 +27,7 @@ export function UserManagement() {
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [newUserEmail, setNewUserEmail] = useState('');
   const [newUserPassword, setNewUserPassword] = useState('');
+  const [newUserRole, setNewUserRole] = useState<'admin' | 'global_admin'>('admin');
   const [isAddingUser, setIsAddingUser] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
 
@@ -104,7 +106,7 @@ export function UserManagement() {
     setAddError(null);
 
     try {
-      const body: any = { action: 'add', email: newUserEmail.trim() };
+      const body: any = { action: 'add', email: newUserEmail.trim(), role: newUserRole };
       if (newUserPassword.trim()) {
         body.password = newUserPassword.trim();
       }
@@ -128,6 +130,7 @@ export function UserManagement() {
       toast({ title: 'Admin added', description: msg });
       setNewUserEmail('');
       setNewUserPassword('');
+      setNewUserRole('admin');
       setAddDialogOpen(false);
     } catch (err: any) {
       setAddError(err.message || 'Failed to add admin user');
@@ -203,6 +206,21 @@ export function UserManagement() {
                     If no account exists, one will be created. Leave password blank to send a reset email instead.
                   </p>
                 </div>
+                <div className="space-y-2">
+                  <Label>Role</Label>
+                  <Select value={newUserRole} onValueChange={(v) => setNewUserRole(v as 'admin' | 'global_admin')}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="admin">Admin</SelectItem>
+                      <SelectItem value="global_admin">Global Admin</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Global Admins can manage users, verification types, field configs, and templates. Admins can manage demos and their own resource IDs.
+                  </p>
+                </div>
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setAddDialogOpen(false)}>
@@ -251,8 +269,12 @@ export function UserManagement() {
                     {user.email || 'Unknown'}
                   </TableCell>
                   <TableCell>
-                    <Badge variant="secondary" className="bg-primary/10 text-primary">
-                      {user.role}
+                    <Badge variant="secondary" className={user.role === 'global_admin' ? 'bg-amber-500/10 text-amber-600' : 'bg-primary/10 text-primary'}>
+                      {user.role === 'global_admin' ? (
+                        <><Crown className="w-3 h-3 mr-1" /> Global Admin</>
+                      ) : (
+                        user.role
+                      )}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-muted-foreground">

@@ -364,7 +364,7 @@ function AddProviderDialog({
 
 export default function VerificationSettings() {
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
+  const { user, signOut, isGlobalAdmin } = useAuth();
   const [addProviderOpen, setAddProviderOpen] = useState(false);
   
   const { data: verificationTypes = [], isLoading: typesLoading } = useVerificationTypes();
@@ -430,20 +430,26 @@ export default function VerificationSettings() {
 
       {/* Main Content */}
       <main className="admin-container py-8">
-        <Tabs defaultValue="users" className="space-y-6">
+        <Tabs defaultValue={isGlobalAdmin ? "users" : "my-resource-ids"} className="space-y-6">
           <TabsList>
-            <TabsTrigger value="users" className="flex items-center gap-2">
-              <Users className="w-4 h-4" />
-              User Management
-            </TabsTrigger>
-            <TabsTrigger value="types" className="flex items-center gap-2">
-              <Shield className="w-4 h-4" />
-              Verification Types
-            </TabsTrigger>
-            <TabsTrigger value="providers" className="flex items-center gap-2">
-              <Smartphone className="w-4 h-4" />
-              mDL Providers
-            </TabsTrigger>
+            {isGlobalAdmin && (
+              <TabsTrigger value="users" className="flex items-center gap-2">
+                <Users className="w-4 h-4" />
+                User Management
+              </TabsTrigger>
+            )}
+            {isGlobalAdmin && (
+              <TabsTrigger value="types" className="flex items-center gap-2">
+                <Shield className="w-4 h-4" />
+                Verification Types
+              </TabsTrigger>
+            )}
+            {isGlobalAdmin && (
+              <TabsTrigger value="providers" className="flex items-center gap-2">
+                <Smartphone className="w-4 h-4" />
+                mDL Providers
+              </TabsTrigger>
+            )}
             <TabsTrigger value="profiles" className="flex items-center gap-2">
               <UserCheck className="w-4 h-4" />
               Test Profiles
@@ -452,14 +458,18 @@ export default function VerificationSettings() {
               <Key className="w-4 h-4" />
               My Resource IDs
             </TabsTrigger>
-            <TabsTrigger value="templates" className="flex items-center gap-2">
-              <LayoutTemplate className="w-4 h-4" />
-              Form Templates
-            </TabsTrigger>
-            <TabsTrigger value="field-config" className="flex items-center gap-2">
-              <ListChecks className="w-4 h-4" />
-              Field Configuration
-            </TabsTrigger>
+            {isGlobalAdmin && (
+              <TabsTrigger value="templates" className="flex items-center gap-2">
+                <LayoutTemplate className="w-4 h-4" />
+                Form Templates
+              </TabsTrigger>
+            )}
+            {isGlobalAdmin && (
+              <TabsTrigger value="field-config" className="flex items-center gap-2">
+                <ListChecks className="w-4 h-4" />
+                Field Configuration
+              </TabsTrigger>
+            )}
           </TabsList>
 
           <TabsContent value="types" className="space-y-6">
