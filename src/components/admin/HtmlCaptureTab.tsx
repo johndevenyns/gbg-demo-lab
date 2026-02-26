@@ -244,19 +244,42 @@ export function HtmlCaptureTab({ demo, url, onUrlChange, onApply, isConfigured }
       toast({ title: "Cancelled", description: "Fetch operation was cancelled" });
     };
  
-    const handleApply = () => {
+    const isFormStyleDefault = !demo.formStyle || demo.formStyle.source === 'default' || demo.formStyle.source === 'template';
+
+    const handleApplySiteLayout = () => {
       if (!scrapedData) return;
 
        const updates: Partial<DemoEnvironment> = {
          customerSiteUrl: url,
-        // Use the edited values (which default to original if untouched)
         mirrorHtmlHeaderHtml: editedHeaderHtml,
         mirrorHtmlFooterHtml: editedFooterHtml,
         mirrorHtmlCss: editedCss,
        };
 
-       onApply(updates);
-       toast({ title: "HTML Fetch Applied", description: hasEdits ? "Edited header, footer, and CSS have been saved" : "Header, footer, and CSS have been saved" });
+       // Auto-apply form styling if form hasn't been customized and we have extracted styles
+       if (isFormStyleDefault && scrapedData.formStyles) {
+         const formStyle = formElementStylesToConfig(scrapedData.formStyles);
+         updates.formStyle = formStyle;
+         updates.buttonColor = scrapedData.colors.buttonColor;
+         onApply(updates);
+         toast({ title: "Site Layout & Form Styling Applied", description: "Header, footer, CSS, and form styling have been saved. Form styling was auto-applied since it hadn't been customized." });
+       } else {
+         onApply(updates);
+         toast({ title: "Site Layout Applied", description: hasEdits ? "Edited header, footer, and CSS have been saved" : "Header, footer, and CSS have been saved" });
+       }
+    };
+
+    const handleApplyFormStyling = () => {
+      if (!scrapedData?.formStyles) return;
+
+      const formStyle = formElementStylesToConfig(scrapedData.formStyles);
+      const updates: Partial<DemoEnvironment> = {
+        formStyle,
+        buttonColor: scrapedData.colors.buttonColor,
+      };
+
+      onApply(updates);
+      toast({ title: "Form Styling Applied", description: "Form input styles, colors, and button styling from the captured site have been applied" });
     };
  
    return (
@@ -307,20 +330,31 @@ export function HtmlCaptureTab({ demo, url, onUrlChange, onApply, isConfigured }
        {scrapedData && (
          <Card>
            <CardContent className="pt-4 space-y-4">
-             <div className="flex items-center justify-between">
-               <Label className="text-base font-semibold flex items-center gap-2">
-                 <Eye className="w-4 h-4" />
-                 Preview Extracted Content
-               </Label>
-                <Button onClick={handleApply} size="sm" className="gradient-primary">
-                  <Check className="w-4 h-4 mr-2" />
-                  Apply HTML Fetch
-                </Button>
-              </div>
-             
-             {hasEdits && (
-               <p className="text-xs text-amber-600 font-medium">⚠ You have unsaved edits — the preview reflects your changes.</p>
-             )}
+              <div className="flex items-center justify-between">
+                <Label className="text-base font-semibold flex items-center gap-2">
+                  <Eye className="w-4 h-4" />
+                  Preview Extracted Content
+                </Label>
+                <div className="flex items-center gap-2">
+                  {scrapedData.formStyles && (
+                    <Button onClick={handleApplyFormStyling} size="sm" variant="outline">
+                      <Paintbrush className="w-4 h-4 mr-2" />
+                      Apply Form Styling
+                    </Button>
+                  )}
+                  <Button onClick={handleApplySiteLayout} size="sm" className="gradient-primary">
+                    <Check className="w-4 h-4 mr-2" />
+                    Apply Site Layout
+                  </Button>
+                </div>
+               </div>
+
+              {isFormStyleDefault && scrapedData.formStyles && (
+                <p className="text-xs text-muted-foreground">💡 Form styling hasn't been customized — applying site layout will also apply the extracted form styling automatically.</p>
+              )}
+              {hasEdits && (
+                <p className="text-xs text-amber-600 font-medium">⚠ You have unsaved edits — the preview reflects your changes.</p>
+              )}
 
              <div className="border rounded-lg overflow-hidden bg-background">
                <iframe
