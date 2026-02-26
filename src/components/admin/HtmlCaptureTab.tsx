@@ -1,5 +1,5 @@
- import { useState } from "react";
- import { Globe, Loader2, ExternalLink, X, Eye, Paintbrush, Check } from "lucide-react";
+ import { useState, useRef } from "react";
+ import { Globe, Loader2, ExternalLink, X, Eye, Paintbrush, Check, Ban } from "lucide-react";
  import { Button } from "@/components/ui/button";
  import { Input } from "@/components/ui/input";
  import { Label } from "@/components/ui/label";
@@ -104,33 +104,46 @@
    return config;
  }
  
- export function HtmlCaptureTab({ demo, url, onUrlChange, onApply, isConfigured }: HtmlCaptureTabProps) {
-   const { toast } = useToast();
-   const [isLoading, setIsLoading] = useState(false);
-   const [scrapedData, setScrapedData] = useState<ScrapedBranding | null>(null);
- 
-   const handleFetch = async () => {
-     if (!url.trim()) {
-       toast({ title: "URL Required", description: "Please enter a website URL", variant: "destructive" });
-       return;
-     }
- 
-     setIsLoading(true);
-     try {
-       const response = await scrapingApi.scrapeSiteBranding(url);
-       if (response.success && response.data) {
-         setScrapedData(response.data);
-         toast({ title: "Site Fetched", description: "HTML and CSS extracted successfully" });
-       } else {
-         toast({ title: "Fetch Failed", description: response.error || "Could not extract content", variant: "destructive" });
-       }
-     } catch (error) {
-       console.error("Error fetching:", error);
-       toast({ title: "Error", description: "Failed to fetch site. Check Firecrawl connector.", variant: "destructive" });
-     } finally {
-       setIsLoading(false);
-     }
-   };
+export function HtmlCaptureTab({ demo, url, onUrlChange, onApply, isConfigured }: HtmlCaptureTabProps) {
+    const { toast } = useToast();
+    const [isLoading, setIsLoading] = useState(false);
+    const [scrapedData, setScrapedData] = useState<ScrapedBranding | null>(null);
+    const abortControllerRef = useRef<AbortController | null>(null);
+
+    const handleFetch = async () => {
+      if (!url.trim()) {
+        toast({ title: "URL Required", description: "Please enter a website URL", variant: "destructive" });
+        return;
+      }
+
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
+      setIsLoading(true);
+      try {
+        const response = await scrapingApi.scrapeSiteBranding(url, controller.signal);
+        if (controller.signal.aborted) return;
+        if (response.success && response.data) {
+          setScrapedData(response.data);
+          toast({ title: "Site Fetched", description: "HTML and CSS extracted successfully" });
+        } else {
+          toast({ title: "Fetch Failed", description: response.error || "Could not extract content", variant: "destructive" });
+        }
+      } catch (error: any) {
+        if (controller.signal.aborted) return;
+        console.error("Error fetching:", error);
+        toast({ title: "Error", description: "Failed to fetch site. Check Firecrawl connector.", variant: "destructive" });
+      } finally {
+        if (!controller.signal.aborted) setIsLoading(false);
+        abortControllerRef.current = null;
+      }
+    };
+
+    const handleCancel = () => {
+      abortControllerRef.current?.abort();
+      abortControllerRef.current = null;
+      setIsLoading(false);
+      toast({ title: "Cancelled", description: "Fetch operation was cancelled" });
+    };
  
     const handleApply = () => {
       if (!scrapedData) return;
@@ -168,20 +181,26 @@
              </div>
            </div>
            
-           <div className="flex items-center gap-2">
-             <Button onClick={handleFetch} disabled={isLoading || !url.trim()}>
-               {isLoading ? (
-                 <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Fetching...</>
-               ) : (
-                 <><Globe className="w-4 h-4 mr-2" />Fetch HTML/CSS</>
-               )}
-             </Button>
-             {url && (
-               <Button variant="outline" size="icon" onClick={() => window.open(url, '_blank')} title="Open site">
-                 <ExternalLink className="w-4 h-4" />
-               </Button>
-             )}
-           </div>
+            <div className="flex items-center gap-2">
+              <Button onClick={handleFetch} disabled={isLoading || !url.trim()}>
+                {isLoading ? (
+                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Fetching...</>
+                ) : (
+                  <><Globe className="w-4 h-4 mr-2" />Fetch HTML/CSS</>
+                )}
+              </Button>
+              {isLoading && (
+                <Button variant="destructive" size="sm" onClick={handleCancel}>
+                  <Ban className="w-4 h-4 mr-1" />
+                  Cancel
+                </Button>
+              )}
+              {url && !isLoading && (
+                <Button variant="outline" size="icon" onClick={() => window.open(url, '_blank')} title="Open site">
+                  <ExternalLink className="w-4 h-4" />
+                </Button>
+              )}
+            </div>
          </CardContent>
        </Card>
  

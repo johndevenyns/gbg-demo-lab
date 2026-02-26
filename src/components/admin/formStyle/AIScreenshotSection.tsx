@@ -1,5 +1,5 @@
-import { useState, useCallback } from 'react';
-import { Upload, Loader2, Camera, Sparkles, CheckCircle } from 'lucide-react';
+import { useState, useCallback, useRef } from 'react';
+import { Upload, Loader2, Camera, Sparkles, CheckCircle, Ban } from 'lucide-react';
 import { CompareFixButton } from './CompareFixButton';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -59,6 +59,7 @@ export function AIScreenshotSection({
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [uploadedScreenshot, setUploadedScreenshot] = useState<string | null>(null);
   const [analysisComplete, setAnalysisComplete] = useState(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const handleScreenshotUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -87,6 +88,9 @@ export function AIScreenshotSection({
     setIsAnalyzing(true);
     setAnalysisComplete(false);
 
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
     try {
       const reader = new FileReader();
       reader.onload = async (e) => {
@@ -94,7 +98,9 @@ export function AIScreenshotSection({
         const base64 = dataUrl.split(',')[1];
         setUploadedScreenshot(dataUrl);
 
-        const response = await formAnalysisApi.analyzeFormScreenshot(base64, file.type);
+        const response = await formAnalysisApi.analyzeFormScreenshot(base64, file.type, controller.signal);
+
+        if (controller.signal.aborted) return;
 
         if (!response.success || !response.data) {
           throw new Error(response.error || 'Failed to analyze screenshot');
@@ -350,6 +356,7 @@ export function AIScreenshotSection({
 
       reader.readAsDataURL(file);
     } catch (error) {
+      if (controller.signal.aborted) return;
       console.error('Screenshot analysis error:', error);
       toast({
         title: 'Analysis Failed',
@@ -357,10 +364,19 @@ export function AIScreenshotSection({
         variant: 'destructive',
       });
       setIsAnalyzing(false);
+    } finally {
+      abortControllerRef.current = null;
     }
 
     event.target.value = '';
   }, [onUpdateStyle, onUpdateButtonColor, toast]);
+
+  const handleCancelAnalysis = useCallback(() => {
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = null;
+    setIsAnalyzing(false);
+    toast({ title: 'Cancelled', description: 'Screenshot analysis was cancelled' });
+  }, [toast]);
 
   // Check if we have AI-analyzed styles (mirrored source with capturedPatterns but no capturedFormHtml)
   const hasAIStyles = formStyle.source === 'mirrored' && formStyle.capturedPatterns && !formStyle.capturedFormHtml;
@@ -396,6 +412,12 @@ export function AIScreenshotSection({
               <p className="text-sm text-muted-foreground">
                 {isAnalyzing ? 'Analyzing...' : analysisComplete ? 'Analysis complete!' : 'Screenshot uploaded'}
               </p>
+              {isAnalyzing && (
+                <Button variant="destructive" size="sm" onClick={handleCancelAnalysis}>
+                  <Ban className="w-4 h-4 mr-1" />
+                  Cancel
+                </Button>
+              )}
             </div>
           ) : (
             <div className="space-y-2">
