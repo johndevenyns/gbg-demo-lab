@@ -9,6 +9,7 @@ import { useDemo, useUpdateDemo } from "@/hooks/useDemos";
 import { DemoEnvironment } from "@/types/demo";
 import { FormStyleConfig, DEFAULT_FORM_STYLE } from "@/types/formStyle";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { useState, useEffect, useCallback } from "react";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { SiteMirrorCard } from "@/components/admin/SiteMirrorCard";
@@ -150,8 +151,12 @@ export default function DemoConfig() {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
   const { data: demo, isLoading, error } = useDemo(id || "");
   const updateDemoMutation = useUpdateDemo();
+  
+  // Per-user localStorage key for sidebar state
+  const sidebarKey = user?.id ? `demoConfigSidebarCollapsed_${user.id}` : 'demoConfigSidebarCollapsed';
   
   // Get active section from URL or default to 'settings'
   const activeSection = (searchParams.get('section') as ConfigSection) || 'settings';
@@ -160,16 +165,16 @@ export default function DemoConfig() {
     setSearchParams({ section });
   };
   
-  // Sidebar collapsed state (persisted)
+  // Sidebar collapsed state (persisted per user)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
-    const stored = localStorage.getItem('demoConfigSidebarCollapsed');
+    const stored = localStorage.getItem(sidebarKey);
     return stored !== null ? stored === 'true' : true;
   });
   
   const toggleSidebar = () => {
     setSidebarCollapsed(prev => {
       const next = !prev;
-      localStorage.setItem('demoConfigSidebarCollapsed', String(next));
+      localStorage.setItem(sidebarKey, String(next));
       return next;
     });
   };
