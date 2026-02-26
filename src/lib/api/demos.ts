@@ -5,6 +5,34 @@ import { FormStyleConfig, DEFAULT_FORM_STYLE } from "@/types/formStyle";
 import { ResultPageConfig } from "@/components/preview/ResultPage";
 import { generateIndustryResultPages } from "@/lib/resultPageDefaults";
 
+// Canonical field name mapping: legacy/alternate names → standard API-compatible names
+const FIELD_NAME_ALIASES: Record<string, string> = {
+  addressStreet: 'streetAddress',
+  address_street_value: 'streetAddress',
+  addressCity: 'city',
+  address_city_value: 'city',
+  addressState: 'state',
+  address_state_value: 'state',
+  addressZip: 'zipCode',
+  address_zip_value: 'zipCode',
+  addressCountry: 'country',
+  address_country_value: 'country',
+};
+
+// Normalize field names in form steps to canonical API-compatible names
+const normalizeFormSteps = (steps: FormStep[]): FormStep[] => {
+  return steps.map(step => ({
+    ...step,
+    fields: step.fields.map(field => {
+      const canonicalName = FIELD_NAME_ALIASES[field.name];
+      if (canonicalName) {
+        return { ...field, name: canonicalName };
+      }
+      return field;
+    }),
+  }));
+};
+
 // Helper to convert database row to DemoEnvironment
 const rowToDemo = (row: any): DemoEnvironment => {
   // Parse storedTestData from its dedicated column
@@ -38,7 +66,7 @@ const rowToDemo = (row: any): DemoEnvironment => {
     buttonColor: row.button_color || '#6366f1',
     includeQr: row.include_qr ?? true,
     includeAddressVerification: row.include_address_verification ?? false,
-    formSteps: (row.form_steps as FormStep[]) || [],
+    formSteps: normalizeFormSteps((row.form_steps as FormStep[]) || []),
     customerSiteUrl: row.customer_site_url || '',
     scrapedHeaderHtml: row.scraped_header_html || '',
     scrapedFooterHtml: row.scraped_footer_html || '',
