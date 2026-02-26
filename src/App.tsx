@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ProtectedRoute } from "@/components/admin/ProtectedRoute";
+import { useThemePreference } from "@/hooks/useThemePreference";
 import AdminDashboard from "./pages/AdminDashboard";
 import DemoConfig from "./pages/DemoConfig";
 import DemoPreview from "./pages/DemoPreview";
@@ -16,9 +17,12 @@ import QrCodePreview from "./pages/QrCodePreview";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
+function AppContent() {
+  // Initialize theme at root level
+  useThemePreference();
+  
+  return (
+    <>
       <Toaster />
       <Sonner />
       <BrowserRouter>
@@ -56,6 +60,14 @@ const App = () => (
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
+    </>
+  );
+}
+
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
+      <AppContent />
     </TooltipProvider>
   </QueryClientProvider>
 );

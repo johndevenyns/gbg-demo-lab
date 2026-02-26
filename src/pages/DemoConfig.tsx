@@ -13,6 +13,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useState, useEffect, useCallback } from "react";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { SiteMirrorCard } from "@/components/admin/SiteMirrorCard";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { FormBuilderSection } from "@/components/formBuilder";
 
  // Lazy import FormStyleCard to pass into SiteMirrorCard
@@ -281,6 +282,7 @@ export default function DemoConfig() {
                 {updateDemoMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
                 Save
               </Button>
+              <ThemeToggle />
             </div>
           </div>
         </div>
