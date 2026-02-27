@@ -69,6 +69,24 @@ export function UserManagement() {
     },
   });
 
+  // Update role mutation
+  const updateRoleMutation = useMutation({
+    mutationFn: async ({ userId, role }: { userId: string; role: 'admin' | 'global_admin' }) => {
+      const { data, error } = await supabase.functions.invoke('manage-admin-users', {
+        body: { action: 'updateRole', userId, role },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      toast({ title: 'Role updated', description: 'User role has been changed.' });
+    },
+    onError: (error: Error) => {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    },
+  });
+
   // Reset password mutation
   const resetPasswordMutation = useMutation({
     mutationFn: async (userId: string) => {
@@ -269,13 +287,25 @@ export function UserManagement() {
                     {user.email || 'Unknown'}
                   </TableCell>
                   <TableCell>
-                    <Badge variant="secondary" className={user.role === 'global_admin' ? 'bg-amber-500/10 text-amber-600' : 'bg-primary/10 text-primary'}>
-                      {user.role === 'global_admin' ? (
-                        <><Crown className="w-3 h-3 mr-1" /> Global Admin</>
-                      ) : (
-                        user.role
-                      )}
-                    </Badge>
+                    <Select
+                      value={user.role}
+                      onValueChange={(v) => updateRoleMutation.mutate({ userId: user.user_id, role: v as 'admin' | 'global_admin' })}
+                      disabled={updateRoleMutation.isPending}
+                    >
+                      <SelectTrigger className="w-[160px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="admin">
+                          <Badge variant="secondary" className="bg-primary/10 text-primary">Admin</Badge>
+                        </SelectItem>
+                        <SelectItem value="global_admin">
+                          <Badge variant="secondary" className="bg-amber-500/10 text-amber-600">
+                            <Crown className="w-3 h-3 mr-1" /> Global Admin
+                          </Badge>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
                   </TableCell>
                   <TableCell className="text-muted-foreground">
                     {new Date(user.created_at).toLocaleDateString()}
