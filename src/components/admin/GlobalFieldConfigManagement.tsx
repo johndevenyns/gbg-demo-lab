@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Pencil, Trash2, Check, X, ArrowUpDown, Plug, FileText } from "lucide-react";
+import { Plus, Pencil, Trash2, Check, X, ArrowUpDown, Plug, FileText, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -34,12 +34,29 @@ const CATEGORIES = [
 ];
 
 const FIELD_TYPES = [
-  'text', 'email', 'phone', 'date', 'ssn', 'first_name', 'last_name', 'middle_name',
-  'date_of_birth', 'gender', 'nationality', 'address_street', 'address_city',
-  'address_state', 'address_zip', 'address_country', 'apartment', 'employer', 'income',
-  'document_type', 'document_number', 'select', 'checkbox', 'textarea', 'yes_no',
-  'heading', 'paragraph', 'divider', 'consent_checkbox',
+  { value: 'text', label: 'Text' },
+  { value: 'email', label: 'Email' },
+  { value: 'phone', label: 'Phone Number' },
+  { value: 'number', label: 'Number' },
+  { value: 'date', label: 'Date' },
+  { value: 'date_of_birth', label: 'Date of Birth' },
+  { value: 'ssn', label: 'SSN (Masked)' },
+  { value: 'textarea', label: 'Text Area' },
+  { value: 'select', label: 'Dropdown' },
+  { value: 'checkbox', label: 'Checkbox' },
+  { value: 'yes_no', label: 'Yes / No' },
+  { value: 'consent_checkbox', label: 'Consent Checkbox' },
+  { value: 'heading', label: 'Heading (Display Only)' },
+  { value: 'paragraph', label: 'Paragraph (Display Only)' },
+  { value: 'divider', label: 'Divider (Display Only)' },
 ];
+
+// Fields whose api_name maps to Loqate address verification parameters
+const ADDRESS_VERIFICATION_API_NAMES = new Set([
+  'address_street', 'address_city', 'address_state', 'address_zip', 'address_country',
+  'streetAddress', 'city', 'state', 'zipCode', 'country',
+  'Address1', 'Locality', 'AdministrativeArea', 'PostalCode', 'Country',
+]);
 
 const emptyForm: GlobalFieldConfigInsert = {
   field_type: 'text',
@@ -148,9 +165,14 @@ export function GlobalFieldConfigManagement() {
                           {field.required_by_default && (
                             <Badge variant="outline" className="text-xs">Required</Badge>
                           )}
+                          {field.is_api_field && ADDRESS_VERIFICATION_API_NAMES.has(field.api_name) && (
+                            <Badge variant="outline" className="text-xs gap-1 border-green-500/50 text-green-600 dark:text-green-400">
+                              <MapPin className="w-3 h-3" /> Address Verified
+                            </Badge>
+                          )}
                         </div>
                         <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
-                          <span className="font-mono">type: {field.field_type}</span>
+                          <span className="font-mono">type: {FIELD_TYPES.find(t => t.value === field.field_type)?.label || field.field_type}</span>
                           {field.is_api_field && field.api_name && (
                             <span className="font-mono">api: {field.api_name}</span>
                           )}
@@ -194,7 +216,7 @@ export function GlobalFieldConfigManagement() {
                 <Select value={form.field_type} onValueChange={v => setForm(p => ({ ...p, field_type: v }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {FIELD_TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                    {FIELD_TYPES.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
