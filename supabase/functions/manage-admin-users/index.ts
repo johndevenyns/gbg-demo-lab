@@ -264,6 +264,39 @@ serve(async (req) => {
       );
     }
 
+    if (action === "updateRole") {
+      if (!targetUserId || !requestedRole) {
+        return new Response(
+          JSON.stringify({ error: "User ID and role are required" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Remove existing admin roles
+      await adminClient
+        .from("user_roles")
+        .delete()
+        .eq("user_id", targetUserId)
+        .in("role", ["admin", "global_admin"]);
+
+      // Insert new role
+      const { error: insertError } = await adminClient
+        .from("user_roles")
+        .insert({ user_id: targetUserId, role: roleToAssign });
+
+      if (insertError) {
+        return new Response(
+          JSON.stringify({ error: "Failed to update role: " + insertError.message }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      return new Response(
+        JSON.stringify({ success: true, role: roleToAssign }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     if (action === "remove") {
       if (!targetUserId) {
         return new Response(
