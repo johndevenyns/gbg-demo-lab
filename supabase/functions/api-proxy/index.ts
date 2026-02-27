@@ -36,13 +36,47 @@ serve(async (req) => {
       );
     }
 
-    // Validate URL format
+    // Validate URL format and block dangerous hosts (SSRF protection)
+    let parsedUrl: URL;
     try {
-      new URL(requestData.endpointUrl);
+      parsedUrl = new URL(requestData.endpointUrl);
     } catch {
       return new Response(
         JSON.stringify({ error: 'Invalid endpointUrl format' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Block private/internal network access
+    const hostname = parsedUrl.hostname.toLowerCase();
+    const blockedPatterns = [
+      /^localhost$/,
+      /^127\.\d+\.\d+\.\d+$/,
+      /^10\.\d+\.\d+\.\d+$/,
+      /^172\.(1[6-9]|2\d|3[0-1])\.\d+\.\d+$/,
+      /^192\.168\.\d+\.\d+$/,
+      /^169\.254\.\d+\.\d+$/,          // Cloud metadata
+      /^0\.0\.0\.0$/,
+      /^::1$/,
+      /^fc00:/,                          // IPv6 private
+      /^fe80:/,                          // IPv6 link-local
+      /metadata\.google\.internal$/,
+      /\.internal$/,
+    ];
+
+    if (blockedPatterns.some(p => p.test(hostname))) {
+      console.warn('Blocked SSRF attempt to:', hostname);
+      return new Response(
+        JSON.stringify({ error: 'Access to internal/private networks is not allowed' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Block non-HTTP(S) protocols
+    if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
+      return new Response(
+        JSON.stringify({ error: 'Only HTTP and HTTPS protocols are allowed' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 

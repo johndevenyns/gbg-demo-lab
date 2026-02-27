@@ -1,3 +1,5 @@
+import { requireAdmin, unauthorizedResponse } from "../_shared/auth.ts";
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -55,6 +57,10 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // Require admin authentication
+    const admin = await requireAdmin(req);
+    if (!admin) return unauthorizedResponse(corsHeaders);
+
     const { url, selector, triggerSelector, waitTime } = await req.json() as ScrapeOptions;
 
     if (!url) {
