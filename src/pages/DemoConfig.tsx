@@ -1,5 +1,5 @@
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Save, Eye, Loader2, Settings, Globe, Palette, Layout, PlayCircle, Calendar, User, PanelLeftClose, PanelLeft, Copy, ExternalLink } from "lucide-react";
+import { ArrowLeft, Save, Eye, Loader2, Settings, Globe, Palette, Layout, PlayCircle, Calendar, User, PanelLeftClose, PanelLeft, Copy, ExternalLink, Briefcase } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,6 +15,7 @@ import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/comp
 import { SiteMirrorCard } from "@/components/admin/SiteMirrorCard";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { FormBuilderSection } from "@/components/formBuilder";
+import { UseCaseSection } from "@/components/admin/UseCaseSection";
 
  // Lazy import FormStyleCard to pass into SiteMirrorCard
  import { FormStyleCard } from "@/components/admin/FormStyleCard";
@@ -24,12 +25,13 @@ import { BrandingScrapeSection } from "@/components/admin/BrandingScrapeSection"
 import { cn } from "@/lib/utils";
 
 // Navigation sections
-type ConfigSection = 'settings' | 'mirror' | 'branding' | 'form-builder' | 'preview';
+type ConfigSection = 'settings' | 'mirror' | 'branding' | 'use-cases' | 'form-builder' | 'preview';
 
 const sections: { id: ConfigSection; label: string; icon: React.ElementType; description: string }[] = [
   { id: 'settings', label: 'Site Settings', icon: Settings, description: 'Core configuration' },
   { id: 'mirror', label: 'Appearance', icon: Globe, description: 'Site & form styling' },
   { id: 'branding', label: 'Mobile Branding', icon: Palette, description: 'Colors & logo' },
+  { id: 'use-cases', label: 'Use Cases', icon: Briefcase, description: 'Pre-form journeys' },
   { id: 'form-builder', label: 'Form Builder', icon: Layout, description: 'Steps & fields' },
   { id: 'preview', label: 'Live Preview', icon: PlayCircle, description: 'Test the flow' },
 ];
@@ -272,6 +274,8 @@ export default function DemoConfig() {
         );
       case 'branding':
         return <BrandingSection demo={localDemo} onUpdate={handleUpdate} />;
+      case 'use-cases':
+        return <UseCaseSection demoId={localDemo.id} industryTemplate={localDemo.industryTemplate} />;
       case 'form-builder':
         return <FormBuilderSection demo={localDemo} onUpdate={handleUpdate} />;
       case 'preview':
