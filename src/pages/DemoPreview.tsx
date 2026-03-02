@@ -3,10 +3,12 @@ import { useDemoBySlug } from "@/hooks/useDemos";
 import { useAuth } from "@/hooks/useAuth";
 import { Loader2, ArrowLeft, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useEffect, useCallback, useMemo, useRef } from "react";
+import { useEffect, useCallback, useMemo, useRef, useState } from "react";
 import { DemoFlowRenderer } from "@/components/preview/DemoFlowRenderer";
 import { DEFAULT_SUCCESS_CONFIG, DEFAULT_FAILURE_CONFIG } from "@/components/preview/ResultPage";
 import { DEFAULT_FORM_STYLE } from "@/types/formStyle";
+import { useUseCases } from "@/hooks/useUseCases";
+import { UseCaseLandingPage } from "@/components/preview/UseCaseLandingPage";
 
 // Helper functions for form styling
 function getFormBorderRadius(radius?: string): string {
@@ -36,7 +38,18 @@ export default function DemoPreview() {
   const { slug } = useParams<{ slug: string }>();
   const { isAdmin, isLoading: authLoading } = useAuth();
   const { data: demo, isLoading, error } = useDemoBySlug(slug || "");
+  const { data: useCases = [] } = useUseCases(demo?.id);
   const formRef = useRef<HTMLDivElement>(null);
+  const [showForm, setShowForm] = useState(false);
+
+  // Find the default use case (or first enabled one)
+  const defaultUseCase = useMemo(() => {
+    const enabled = useCases.filter(uc => uc.isEnabled);
+    return enabled.find(uc => uc.isDefault) || enabled[0] || null;
+  }, [useCases]);
+
+  // If no use cases, go straight to form
+  const hasUseCases = useCases.filter(uc => uc.isEnabled).length > 0;
 
   // Listen for scroll-to-form messages from the header iframe CTA
   useEffect(() => {
@@ -177,56 +190,68 @@ export default function DemoPreview() {
         />
       )}
 
-      {/* Main Form Content */}
+      {/* Main Content - Use Case Landing or Form */}
       <main
         className="flex-1 py-4"
         style={{
           backgroundColor: previewDocument?.formStyle?.contentAreaBgColor || 'transparent',
         }}
       >
-        <div className="max-w-xl mx-auto px-4">
-          <div 
-            ref={formRef}
-            className="p-8"
-            style={{
-              backgroundColor: (previewDocument?.formStyle?.formBgColor || 'white'),
-              borderRadius: getFormBorderRadius(previewDocument?.formStyle?.formBorderRadius),
-              boxShadow: getFormShadow(previewDocument?.formStyle?.formShadow),
-              border: `${previewDocument?.formStyle?.formBorderWidth || '1'}px solid ${previewDocument?.formStyle?.formBorderColor || '#e5e7eb'}`,
+        {hasUseCases && !showForm && defaultUseCase ? (
+          <UseCaseLandingPage
+            useCase={defaultUseCase}
+            buttonColor={demo.buttonColor}
+            onContinue={() => {
+              setShowForm(true);
+              // Scroll to form after render
+              setTimeout(() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
             }}
-          >
-            {demo.formSteps.length > 0 ? (
-              <DemoFlowRenderer
-                key={demo.id}
-                steps={demo.formSteps}
-                buttonColor={demo.buttonColor}
-                formStyle={demo.formStyle}
-                successPageConfig={demo.successPageConfig || DEFAULT_SUCCESS_CONFIG}
-                failurePageConfig={demo.failurePageConfig || DEFAULT_FAILURE_CONFIG}
-                approvedUrl={demo.approvedUrl}
-                rejectedUrl={demo.rejectedUrl}
-                customerName={demo.customerName}
-                returnUrl={demo.returnUrl}
-                includeQr={demo.includeQr}
-                referenceIdPrefix={demo.referenceIdPrefix}
-                storedTestData={demo.storedTestData}
-                showTestButtons={true}
-                logoUrl={demo.logoUrl}
-                headerBgColor={demo.headerBgColor}
-                headerTextColor={demo.headerTextColor}
-                resourceId={demo.resourceId}
-                resourceIdDocBio={demo.resourceIdDocBio}
-                resourceIdDataBio={demo.resourceIdDataBio}
-                resourceIdDataOnly={demo.resourceIdDataOnly}
-                onComplete={handleFlowComplete}
-              />
-            ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                <p>No form steps configured</p>
-              </div>
-            )}
+          />
+        ) : (
+          <div className="max-w-xl mx-auto px-4">
+            <div 
+              ref={formRef}
+              className="p-8"
+              style={{
+                backgroundColor: (previewDocument?.formStyle?.formBgColor || 'white'),
+                borderRadius: getFormBorderRadius(previewDocument?.formStyle?.formBorderRadius),
+                boxShadow: getFormShadow(previewDocument?.formStyle?.formShadow),
+                border: `${previewDocument?.formStyle?.formBorderWidth || '1'}px solid ${previewDocument?.formStyle?.formBorderColor || '#e5e7eb'}`,
+              }}
+            >
+              {demo.formSteps.length > 0 ? (
+                <DemoFlowRenderer
+                  key={demo.id}
+                  steps={demo.formSteps}
+                  buttonColor={demo.buttonColor}
+                  formStyle={demo.formStyle}
+                  successPageConfig={demo.successPageConfig || DEFAULT_SUCCESS_CONFIG}
+                  failurePageConfig={demo.failurePageConfig || DEFAULT_FAILURE_CONFIG}
+                  approvedUrl={demo.approvedUrl}
+                  rejectedUrl={demo.rejectedUrl}
+                  customerName={demo.customerName}
+                  returnUrl={demo.returnUrl}
+                  includeQr={demo.includeQr}
+                  referenceIdPrefix={demo.referenceIdPrefix}
+                  storedTestData={demo.storedTestData}
+                  showTestButtons={true}
+                  logoUrl={demo.logoUrl}
+                  headerBgColor={demo.headerBgColor}
+                  headerTextColor={demo.headerTextColor}
+                  resourceId={demo.resourceId}
+                  resourceIdDocBio={demo.resourceIdDocBio}
+                  resourceIdDataBio={demo.resourceIdDataBio}
+                  resourceIdDataOnly={demo.resourceIdDataOnly}
+                  onComplete={handleFlowComplete}
+                />
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <p>No form steps configured</p>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </main>
 
       {/* Mirrored Footer - using iframe for CSS isolation */}

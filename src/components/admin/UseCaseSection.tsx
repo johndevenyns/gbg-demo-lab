@@ -11,7 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import {
   Briefcase, Plus, Trash2, ChevronDown, ChevronRight, GripVertical,
   Pill, Video, Car, Crown, Landmark, CreditCard, LogIn, ShoppingBag,
-  ShieldCheck, Package, Sparkles,
+  ShieldCheck, Package, Sparkles, Star,
 } from 'lucide-react';
 import { DemoUseCase, UseCaseEntryMethod, UseCasePageContent, ALL_USE_CASE_TEMPLATES, UseCaseTemplate } from '@/types/useCase';
 import { useUseCases, useCreateUseCase, useUpdateUseCase, useDeleteUseCase } from '@/hooks/useUseCases';
@@ -43,6 +43,7 @@ export function UseCaseSection({ demoId, industryTemplate }: UseCaseSectionProps
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const handleAddFromTemplate = useCallback((template: UseCaseTemplate) => {
+    const isFirst = useCases.length === 0;
     createMutation.mutate({
       demoId,
       title: template.title,
@@ -52,11 +53,13 @@ export function UseCaseSection({ demoId, industryTemplate }: UseCaseSectionProps
       entryMethod: template.entryMethod,
       pageContent: template.pageContent,
       isEnabled: true,
+      isDefault: isFirst,
       industryTemplate: template.industryTemplate,
     });
   }, [createMutation, demoId, useCases.length]);
 
   const handleAddBlank = useCallback(() => {
+    const isFirst = useCases.length === 0;
     createMutation.mutate({
       demoId,
       title: 'New Use Case',
@@ -70,8 +73,18 @@ export function UseCaseSection({ demoId, industryTemplate }: UseCaseSectionProps
         ctaLabel: 'Verify Identity to Continue',
       },
       isEnabled: true,
+      isDefault: isFirst,
     });
   }, [createMutation, demoId, useCases.length]);
+
+  const handleSetDefault = useCallback((id: string) => {
+    // Clear existing default first, then set new one
+    const currentDefault = useCases.find(uc => uc.isDefault);
+    if (currentDefault && currentDefault.id !== id) {
+      updateMutation.mutate({ id: currentDefault.id, demoId, updates: { isDefault: false } });
+    }
+    updateMutation.mutate({ id, demoId, updates: { isDefault: true } });
+  }, [updateMutation, demoId, useCases]);
 
   const handleUpdate = useCallback((id: string, updates: Partial<DemoUseCase>) => {
     updateMutation.mutate({ id, demoId, updates });
@@ -166,6 +179,9 @@ export function UseCaseSection({ demoId, industryTemplate }: UseCaseSectionProps
                             <Badge variant="outline" className="text-[10px] shrink-0">
                               {ENTRY_METHOD_LABELS[uc.entryMethod]}
                             </Badge>
+                            {uc.isDefault && (
+                              <Badge className="text-[10px] shrink-0 bg-primary/15 text-primary border-primary/30">Default</Badge>
+                            )}
                             {!uc.isEnabled && (
                               <Badge variant="secondary" className="text-[10px] shrink-0">Disabled</Badge>
                             )}
@@ -250,9 +266,19 @@ export function UseCaseSection({ demoId, industryTemplate }: UseCaseSectionProps
 
                         {/* Footer actions */}
                         <div className="flex items-center justify-between border-t pt-4">
-                          <div className="flex items-center gap-2">
-                            <Switch checked={uc.isEnabled} onCheckedChange={(v) => handleUpdate(uc.id, { isEnabled: v })} id={`uc-enabled-${uc.id}`} />
-                            <label htmlFor={`uc-enabled-${uc.id}`} className="text-sm text-muted-foreground cursor-pointer">Enabled</label>
+                          <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-2">
+                              <Switch checked={uc.isEnabled} onCheckedChange={(v) => handleUpdate(uc.id, { isEnabled: v })} id={`uc-enabled-${uc.id}`} />
+                              <label htmlFor={`uc-enabled-${uc.id}`} className="text-sm text-muted-foreground cursor-pointer">Enabled</label>
+                            </div>
+                            {!uc.isDefault && (
+                              <Button variant="outline" size="sm" onClick={() => handleSetDefault(uc.id)}>
+                                <Star className="w-3 h-3 mr-1" /> Set as Default
+                              </Button>
+                            )}
+                            {uc.isDefault && (
+                              <span className="text-xs text-primary flex items-center gap-1"><Star className="w-3 h-3 fill-primary" /> Default landing page</span>
+                            )}
                           </div>
                           <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => handleDelete(uc.id)}>
                             <Trash2 className="w-4 h-4 mr-1" /> Delete

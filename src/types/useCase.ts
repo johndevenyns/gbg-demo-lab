@@ -34,6 +34,7 @@ export interface DemoUseCase {
   pageContent: UseCasePageContent;
   formStepOverrides?: Record<string, unknown>;
   isEnabled: boolean;
+  isDefault: boolean;
   industryTemplate?: string;
   createdAt: string;
   updatedAt: string;
