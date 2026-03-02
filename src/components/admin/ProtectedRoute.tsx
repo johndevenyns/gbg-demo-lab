@@ -3,14 +3,14 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Loader2 } from 'lucide-react';
+import { Loader2, LogOut } from 'lucide-react';
 
 interface ProtectedRouteProps {
   children: ReactNode;
 }
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { user, isLoading, isAdmin } = useAuth();
+  const { user, isLoading, isAdmin, signOut } = useAuth();
   const location = useLocation();
   const [isBootstrapping, setIsBootstrapping] = useState(false);
   const [bootstrapError, setBootstrapError] = useState<string | null>(null);
@@ -134,6 +134,9 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
               <p className="text-sm text-muted-foreground">
                 Logged in as: {user.email}
               </p>
+              <Button variant="outline" className="mt-4" onClick={() => signOut()}>
+                <LogOut className="w-4 h-4 mr-2" /> Sign out
+              </Button>
             </div>
           )}
         </div>
