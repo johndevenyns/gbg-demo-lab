@@ -18,6 +18,7 @@ function mapRow(row: Record<string, unknown>): DemoUseCase {
     pageContent: (row.page_content as UseCasePageContent) ?? {},
     formStepOverrides: (row.form_step_overrides as Record<string, unknown>) ?? undefined,
     isEnabled: row.is_enabled as boolean,
+    isDefault: (row.is_default as boolean) ?? false,
     industryTemplate: (row.industry_template as string) ?? undefined,
     createdAt: row.created_at as string,
     updatedAt: row.updated_at as string,
@@ -88,6 +89,7 @@ export function useUpdateUseCase() {
       if (updates.pageContent !== undefined) dbUpdates.page_content = updates.pageContent;
       if (updates.formStepOverrides !== undefined) dbUpdates.form_step_overrides = updates.formStepOverrides;
       if (updates.isEnabled !== undefined) dbUpdates.is_enabled = updates.isEnabled;
+      if (updates.isDefault !== undefined) dbUpdates.is_default = updates.isDefault;
 
       const { data, error } = await supabase
         .from('demo_use_cases')

@@ -185,6 +185,7 @@ export type Database = {
           icon_name: string | null
           id: string
           industry_template: string | null
+          is_default: boolean
           is_enabled: boolean
           page_content: Json | null
           title: string
@@ -201,6 +202,7 @@ export type Database = {
           icon_name?: string | null
           id?: string
           industry_template?: string | null
+          is_default?: boolean
           is_enabled?: boolean
           page_content?: Json | null
           title: string
@@ -217,6 +219,7 @@ export type Database = {
           icon_name?: string | null
           id?: string
           industry_template?: string | null
+          is_default?: boolean
           is_enabled?: boolean
           page_content?: Json | null
           title?: string
