@@ -173,6 +173,65 @@ export type Database = {
         }
         Relationships: []
       }
+      demo_use_cases: {
+        Row: {
+          access_code: string | null
+          created_at: string
+          demo_id: string
+          description: string | null
+          display_order: number
+          entry_method: string
+          form_step_overrides: Json | null
+          icon_name: string | null
+          id: string
+          industry_template: string | null
+          is_enabled: boolean
+          page_content: Json | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          access_code?: string | null
+          created_at?: string
+          demo_id: string
+          description?: string | null
+          display_order?: number
+          entry_method?: string
+          form_step_overrides?: Json | null
+          icon_name?: string | null
+          id?: string
+          industry_template?: string | null
+          is_enabled?: boolean
+          page_content?: Json | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          access_code?: string | null
+          created_at?: string
+          demo_id?: string
+          description?: string | null
+          display_order?: number
+          entry_method?: string
+          form_step_overrides?: Json | null
+          icon_name?: string | null
+          id?: string
+          industry_template?: string | null
+          is_enabled?: boolean
+          page_content?: Json | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "demo_use_cases_demo_id_fkey"
+            columns: ["demo_id"]
+            isOneToOne: false
+            referencedRelation: "demo_environments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       form_templates: {
         Row: {
           category: string | null
