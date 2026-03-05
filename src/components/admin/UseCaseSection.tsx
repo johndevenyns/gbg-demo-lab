@@ -16,6 +16,7 @@ import {
 import { DemoUseCase, UseCaseEntryMethod, UseCasePageContent, ALL_USE_CASE_TEMPLATES, UseCaseTemplate } from '@/types/useCase';
 import { useUseCases, useCreateUseCase, useUpdateUseCase, useDeleteUseCase } from '@/hooks/useUseCases';
 import { IndustryTemplate } from '@/types/demo';
+import { UseCaseProductsEditor } from './UseCaseProductsEditor';
 
 // Icon map for use case cards
 const ICON_MAP: Record<string, React.ElementType> = {
@@ -245,7 +246,16 @@ export function UseCaseSection({ demoId, industryTemplate }: UseCaseSectionProps
                               <Label>CTA Description</Label>
                               <Input value={uc.pageContent?.ctaDescription ?? ''} onChange={(e) => handleUpdatePageContent(uc.id, uc.pageContent, { ctaDescription: e.target.value })} />
                             </div>
-                            {(uc.pageContent?.productName !== undefined || uc.industryTemplate === 'retail' || uc.industryTemplate === 'healthcare' || uc.industryTemplate === 'rental_car') && (
+                            {/* Products Editor */}
+                            <div className="md:col-span-2 border-t pt-4 mt-2">
+                              <UseCaseProductsEditor
+                                products={uc.pageContent?.products ?? []}
+                                onChange={(products) => handleUpdatePageContent(uc.id, uc.pageContent, { products })}
+                              />
+                            </div>
+
+                            {/* Legacy single product fields (shown if no products array and industry matches) */}
+                            {(!uc.pageContent?.products || uc.pageContent.products.length === 0) && (uc.pageContent?.productName !== undefined || uc.industryTemplate === 'retail' || uc.industryTemplate === 'healthcare' || uc.industryTemplate === 'rental_car') && (
                               <>
                                 <div className="space-y-2">
                                   <Label>Product Name</Label>

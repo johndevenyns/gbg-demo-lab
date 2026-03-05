@@ -18,8 +18,19 @@ export interface UseCasePageContent {
   productDescription?: string;
   productImageUrl?: string;
   productPrice?: string;
+  // Multiple product options for selection
+  products?: UseCaseProduct[];
   // Custom styling
   accentColor?: string;
+}
+
+export interface UseCaseProduct {
+  id: string;
+  name: string;
+  description?: string;
+  price?: string;
+  imageUrl?: string;
+  iconName?: string;
 }
 
 export interface DemoUseCase {
@@ -118,33 +129,39 @@ export const RENTAL_CAR_USE_CASE_TEMPLATES: UseCaseTemplate[] = [
 // Bank templates
 export const BANK_USE_CASE_TEMPLATES: UseCaseTemplate[] = [
   {
-    title: 'Open Checking Account',
-    description: 'New customer opens a checking account.',
+    title: 'Open New Account',
+    description: 'Customer selects a banking product and verifies identity to open an account.',
     iconName: 'Landmark',
     entryMethod: 'direct_selection',
     industryTemplate: 'bank',
     pageContent: {
-      heroTitle: 'Checking Accounts',
-      heroSubtitle: 'Everyday banking made simple with no monthly fees.',
+      heroTitle: 'Banking Products',
+      heroSubtitle: 'Choose the account that fits your financial goals.',
       ctaLabel: 'Verify Identity to Open Account',
       ctaDescription: 'Federal regulations require identity verification for new accounts.',
-      productName: 'Everyday Checking',
-      productDescription: 'No minimum balance, free online banking, and mobile deposits.',
-    },
-  },
-  {
-    title: 'Apply for Credit Card',
-    description: 'Customer applies for a new credit card.',
-    iconName: 'CreditCard',
-    entryMethod: 'direct_selection',
-    industryTemplate: 'bank',
-    pageContent: {
-      heroTitle: 'Credit Cards',
-      heroSubtitle: 'Earn rewards on every purchase.',
-      ctaLabel: 'Verify Identity to Apply',
-      ctaDescription: 'We\'ll need to verify your identity as part of the application.',
-      productName: 'Rewards Credit Card',
-      productDescription: '2% cash back on all purchases, no annual fee.',
+      products: [
+        {
+          id: 'checking',
+          name: 'Everyday Checking',
+          description: 'No minimum balance, free online banking, and mobile deposits.',
+          price: '$0/mo',
+          iconName: 'Landmark',
+        },
+        {
+          id: 'savings',
+          name: 'High-Yield Savings',
+          description: 'Earn 4.5% APY with no monthly fees. Start saving smarter.',
+          price: '4.5% APY',
+          iconName: 'Package',
+        },
+        {
+          id: 'credit-card',
+          name: 'Rewards Credit Card',
+          description: '2% cash back on all purchases, no annual fee.',
+          price: '$0 annual fee',
+          iconName: 'CreditCard',
+        },
+      ],
     },
   },
   {
