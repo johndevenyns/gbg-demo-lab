@@ -200,7 +200,7 @@ export function UseCaseSection({ demoId, industryTemplate }: UseCaseSectionProps
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div className="space-y-2">
                             <Label>Title</Label>
-                            <Input value={uc.title} onChange={(e) => handleUpdate(uc.id, { title: e.target.value })} />
+                            <DebouncedInput value={uc.title} onValueChange={(v) => handleUpdate(uc.id, { title: v })} />
                           </div>
                           <div className="space-y-2">
                             <Label>Entry Method</Label>
@@ -215,12 +215,12 @@ export function UseCaseSection({ demoId, industryTemplate }: UseCaseSectionProps
                           </div>
                           <div className="md:col-span-2 space-y-2">
                             <Label>Description</Label>
-                            <Input value={uc.description ?? ''} onChange={(e) => handleUpdate(uc.id, { description: e.target.value })} placeholder="Brief description of this use case" />
+                            <DebouncedInput value={uc.description ?? ''} onValueChange={(v) => handleUpdate(uc.id, { description: v })} placeholder="Brief description of this use case" />
                           </div>
                           {uc.entryMethod === 'access_code' && (
                             <div className="space-y-2">
                               <Label>Access Code</Label>
-                              <Input value={uc.accessCode ?? ''} onChange={(e) => handleUpdate(uc.id, { accessCode: e.target.value })} placeholder="e.g. UPGRADE2024" className="font-mono" />
+                              <DebouncedInput value={uc.accessCode ?? ''} onValueChange={(v) => handleUpdate(uc.id, { accessCode: v })} placeholder="e.g. UPGRADE2024" className="font-mono" />
                             </div>
                           )}
                         </div>
