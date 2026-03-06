@@ -112,13 +112,40 @@ export function HtmlCaptureTab({ demo, url, onUrlChange, onApply, isConfigured }
     const [scrapedData, setScrapedData] = useState<ScrapedBranding | null>(null);
     const abortControllerRef = useRef<AbortController | null>(null);
     
-    // Editable HTML/CSS state
+    // Editable HTML/CSS state (for fresh fetch)
     const [editedHeaderHtml, setEditedHeaderHtml] = useState<string>('');
     const [editedFooterHtml, setEditedFooterHtml] = useState<string>('');
     const [editedCss, setEditedCss] = useState<string>('');
     const [editorOpen, setEditorOpen] = useState(false);
     const [hasEdits, setHasEdits] = useState(false);
 
+    // Editable HTML/CSS state (for saved/applied content)
+    const [savedHeaderHtml, setSavedHeaderHtml] = useState<string>(demo.mirrorHtmlHeaderHtml || '');
+    const [savedFooterHtml, setSavedFooterHtml] = useState<string>(demo.mirrorHtmlFooterHtml || '');
+    const [savedCss, setSavedCss] = useState<string>(demo.mirrorHtmlCss || '');
+    const [savedEditorOpen, setSavedEditorOpen] = useState(false);
+    const [hasSavedEdits, setHasSavedEdits] = useState(false);
+
+    const handleSavedHeaderEdit = useCallback((val: string) => { setSavedHeaderHtml(val); setHasSavedEdits(true); }, []);
+    const handleSavedFooterEdit = useCallback((val: string) => { setSavedFooterHtml(val); setHasSavedEdits(true); }, []);
+    const handleSavedCssEdit = useCallback((val: string) => { setSavedCss(val); setHasSavedEdits(true); }, []);
+
+    const resetSavedEdits = useCallback(() => {
+      setSavedHeaderHtml(demo.mirrorHtmlHeaderHtml || '');
+      setSavedFooterHtml(demo.mirrorHtmlFooterHtml || '');
+      setSavedCss(demo.mirrorHtmlCss || '');
+      setHasSavedEdits(false);
+    }, [demo.mirrorHtmlHeaderHtml, demo.mirrorHtmlFooterHtml, demo.mirrorHtmlCss]);
+
+    const handleSaveEdits = useCallback(() => {
+      onApply({
+        mirrorHtmlHeaderHtml: savedHeaderHtml,
+        mirrorHtmlFooterHtml: savedFooterHtml,
+        mirrorHtmlCss: savedCss,
+      });
+      setHasSavedEdits(false);
+      toast({ title: "Changes Saved", description: "Header, footer, and CSS updates have been saved." });
+    }, [savedHeaderHtml, savedFooterHtml, savedCss, onApply, toast]);
     // Track edits
     const handleHeaderEdit = useCallback((val: string) => {
       setEditedHeaderHtml(val);
