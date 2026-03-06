@@ -1,8 +1,7 @@
 import { useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { DebouncedInput, DebouncedTextarea } from '@/components/ui/debounced-input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Plus, Trash2, Package } from 'lucide-react';
 import { UseCaseProduct } from '@/types/useCase';
 
