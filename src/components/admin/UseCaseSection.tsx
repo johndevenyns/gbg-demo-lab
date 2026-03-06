@@ -1,13 +1,12 @@
 import { useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Textarea } from '@/components/ui/textarea';
+import { DebouncedInput, DebouncedTextarea } from '@/components/ui/debounced-input';
 import {
   Briefcase, Plus, Trash2, ChevronDown, ChevronRight, GripVertical,
   Pill, Video, Car, Crown, Landmark, CreditCard, LogIn, ShoppingBag,
@@ -201,7 +200,7 @@ export function UseCaseSection({ demoId, industryTemplate }: UseCaseSectionProps
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div className="space-y-2">
                             <Label>Title</Label>
-                            <Input value={uc.title} onChange={(e) => handleUpdate(uc.id, { title: e.target.value })} />
+                            <DebouncedInput value={uc.title} onValueChange={(v) => handleUpdate(uc.id, { title: v })} />
                           </div>
                           <div className="space-y-2">
                             <Label>Entry Method</Label>
@@ -216,12 +215,12 @@ export function UseCaseSection({ demoId, industryTemplate }: UseCaseSectionProps
                           </div>
                           <div className="md:col-span-2 space-y-2">
                             <Label>Description</Label>
-                            <Input value={uc.description ?? ''} onChange={(e) => handleUpdate(uc.id, { description: e.target.value })} placeholder="Brief description of this use case" />
+                            <DebouncedInput value={uc.description ?? ''} onValueChange={(v) => handleUpdate(uc.id, { description: v })} placeholder="Brief description of this use case" />
                           </div>
                           {uc.entryMethod === 'access_code' && (
                             <div className="space-y-2">
                               <Label>Access Code</Label>
-                              <Input value={uc.accessCode ?? ''} onChange={(e) => handleUpdate(uc.id, { accessCode: e.target.value })} placeholder="e.g. UPGRADE2024" className="font-mono" />
+                              <DebouncedInput value={uc.accessCode ?? ''} onValueChange={(v) => handleUpdate(uc.id, { accessCode: v })} placeholder="e.g. UPGRADE2024" className="font-mono" />
                             </div>
                           )}
                         </div>
@@ -232,19 +231,19 @@ export function UseCaseSection({ demoId, industryTemplate }: UseCaseSectionProps
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
                               <Label>Hero Title</Label>
-                              <Input value={uc.pageContent?.heroTitle ?? ''} onChange={(e) => handleUpdatePageContent(uc.id, uc.pageContent, { heroTitle: e.target.value })} />
+                              <DebouncedInput value={uc.pageContent?.heroTitle ?? ''} onValueChange={(v) => handleUpdatePageContent(uc.id, uc.pageContent, { heroTitle: v })} />
                             </div>
                             <div className="space-y-2">
                               <Label>Hero Subtitle</Label>
-                              <Input value={uc.pageContent?.heroSubtitle ?? ''} onChange={(e) => handleUpdatePageContent(uc.id, uc.pageContent, { heroSubtitle: e.target.value })} />
+                              <DebouncedInput value={uc.pageContent?.heroSubtitle ?? ''} onValueChange={(v) => handleUpdatePageContent(uc.id, uc.pageContent, { heroSubtitle: v })} />
                             </div>
                             <div className="space-y-2">
                               <Label>CTA Button Label</Label>
-                              <Input value={uc.pageContent?.ctaLabel ?? ''} onChange={(e) => handleUpdatePageContent(uc.id, uc.pageContent, { ctaLabel: e.target.value })} />
+                              <DebouncedInput value={uc.pageContent?.ctaLabel ?? ''} onValueChange={(v) => handleUpdatePageContent(uc.id, uc.pageContent, { ctaLabel: v })} />
                             </div>
                             <div className="space-y-2">
                               <Label>CTA Description</Label>
-                              <Input value={uc.pageContent?.ctaDescription ?? ''} onChange={(e) => handleUpdatePageContent(uc.id, uc.pageContent, { ctaDescription: e.target.value })} />
+                              <DebouncedInput value={uc.pageContent?.ctaDescription ?? ''} onValueChange={(v) => handleUpdatePageContent(uc.id, uc.pageContent, { ctaDescription: v })} />
                             </div>
                             {/* Products Editor */}
                             <div className="md:col-span-2 border-t pt-4 mt-2">
@@ -259,15 +258,15 @@ export function UseCaseSection({ demoId, industryTemplate }: UseCaseSectionProps
                               <>
                                 <div className="space-y-2">
                                   <Label>Product Name</Label>
-                                  <Input value={uc.pageContent?.productName ?? ''} onChange={(e) => handleUpdatePageContent(uc.id, uc.pageContent, { productName: e.target.value })} />
+                                  <DebouncedInput value={uc.pageContent?.productName ?? ''} onValueChange={(v) => handleUpdatePageContent(uc.id, uc.pageContent, { productName: v })} />
                                 </div>
                                 <div className="space-y-2">
                                   <Label>Product Price</Label>
-                                  <Input value={uc.pageContent?.productPrice ?? ''} onChange={(e) => handleUpdatePageContent(uc.id, uc.pageContent, { productPrice: e.target.value })} placeholder="e.g. $49/day" />
+                                  <DebouncedInput value={uc.pageContent?.productPrice ?? ''} onValueChange={(v) => handleUpdatePageContent(uc.id, uc.pageContent, { productPrice: v })} placeholder="e.g. $49/day" />
                                 </div>
                                 <div className="md:col-span-2 space-y-2">
                                   <Label>Product Description</Label>
-                                  <Textarea value={uc.pageContent?.productDescription ?? ''} onChange={(e) => handleUpdatePageContent(uc.id, uc.pageContent, { productDescription: e.target.value })} rows={2} />
+                                  <DebouncedTextarea value={uc.pageContent?.productDescription ?? ''} onValueChange={(v) => handleUpdatePageContent(uc.id, uc.pageContent, { productDescription: v })} rows={2} />
                                 </div>
                               </>
                             )}

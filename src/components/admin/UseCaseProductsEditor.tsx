@@ -1,8 +1,7 @@
 import { useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { DebouncedInput, DebouncedTextarea } from '@/components/ui/debounced-input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Plus, Trash2, Package } from 'lucide-react';
 import { UseCaseProduct } from '@/types/useCase';
 
@@ -68,26 +67,26 @@ export function UseCaseProductsEditor({ products, onChange }: UseCaseProductsEdi
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <Label className="text-xs">Name</Label>
-              <Input
+              <DebouncedInput
                 value={product.name}
-                onChange={(e) => handleUpdate(idx, { name: e.target.value })}
+                onValueChange={(v) => handleUpdate(idx, { name: v })}
                 className="h-8 text-sm"
               />
             </div>
             <div className="space-y-1">
               <Label className="text-xs">Price / Rate</Label>
-              <Input
+              <DebouncedInput
                 value={product.price ?? ''}
-                onChange={(e) => handleUpdate(idx, { price: e.target.value })}
+                onValueChange={(v) => handleUpdate(idx, { price: v })}
                 placeholder="e.g. $0/mo"
                 className="h-8 text-sm"
               />
             </div>
             <div className="col-span-2 space-y-1">
               <Label className="text-xs">Description</Label>
-              <Textarea
+              <DebouncedTextarea
                 value={product.description ?? ''}
-                onChange={(e) => handleUpdate(idx, { description: e.target.value })}
+                onValueChange={(v) => handleUpdate(idx, { description: v })}
                 rows={2}
                 className="text-sm"
               />
