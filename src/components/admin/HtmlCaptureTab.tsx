@@ -112,13 +112,40 @@ export function HtmlCaptureTab({ demo, url, onUrlChange, onApply, isConfigured }
     const [scrapedData, setScrapedData] = useState<ScrapedBranding | null>(null);
     const abortControllerRef = useRef<AbortController | null>(null);
     
-    // Editable HTML/CSS state
+    // Editable HTML/CSS state (for fresh fetch)
     const [editedHeaderHtml, setEditedHeaderHtml] = useState<string>('');
     const [editedFooterHtml, setEditedFooterHtml] = useState<string>('');
     const [editedCss, setEditedCss] = useState<string>('');
     const [editorOpen, setEditorOpen] = useState(false);
     const [hasEdits, setHasEdits] = useState(false);
 
+    // Editable HTML/CSS state (for saved/applied content)
+    const [savedHeaderHtml, setSavedHeaderHtml] = useState<string>(demo.mirrorHtmlHeaderHtml || '');
+    const [savedFooterHtml, setSavedFooterHtml] = useState<string>(demo.mirrorHtmlFooterHtml || '');
+    const [savedCss, setSavedCss] = useState<string>(demo.mirrorHtmlCss || '');
+    const [savedEditorOpen, setSavedEditorOpen] = useState(false);
+    const [hasSavedEdits, setHasSavedEdits] = useState(false);
+
+    const handleSavedHeaderEdit = useCallback((val: string) => { setSavedHeaderHtml(val); setHasSavedEdits(true); }, []);
+    const handleSavedFooterEdit = useCallback((val: string) => { setSavedFooterHtml(val); setHasSavedEdits(true); }, []);
+    const handleSavedCssEdit = useCallback((val: string) => { setSavedCss(val); setHasSavedEdits(true); }, []);
+
+    const resetSavedEdits = useCallback(() => {
+      setSavedHeaderHtml(demo.mirrorHtmlHeaderHtml || '');
+      setSavedFooterHtml(demo.mirrorHtmlFooterHtml || '');
+      setSavedCss(demo.mirrorHtmlCss || '');
+      setHasSavedEdits(false);
+    }, [demo.mirrorHtmlHeaderHtml, demo.mirrorHtmlFooterHtml, demo.mirrorHtmlCss]);
+
+    const handleSaveEdits = useCallback(() => {
+      onApply({
+        mirrorHtmlHeaderHtml: savedHeaderHtml,
+        mirrorHtmlFooterHtml: savedFooterHtml,
+        mirrorHtmlCss: savedCss,
+      });
+      setHasSavedEdits(false);
+      toast({ title: "Changes Saved", description: "Header, footer, and CSS updates have been saved." });
+    }, [savedHeaderHtml, savedFooterHtml, savedCss, onApply, toast]);
     // Track edits
     const handleHeaderEdit = useCallback((val: string) => {
       setEditedHeaderHtml(val);
@@ -490,61 +517,124 @@ export function HtmlCaptureTab({ demo, url, onUrlChange, onApply, isConfigured }
        )}
  
        {/* Current Applied State */}
-       {isConfigured && !scrapedData && (
-         <Card className="border-primary/30">
-          <CardContent className="pt-4 space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-primary">
-                  <Check className="w-4 h-4" />
-                  <span className="font-medium">Currently Applied HTML Fetch</span>
+        {isConfigured && !scrapedData && (
+          <Card className="border-primary/30">
+           <CardContent className="pt-4 space-y-4">
+               <div className="flex items-center justify-between">
+                 <div className="flex items-center gap-2 text-primary">
+                   <Check className="w-4 h-4" />
+                   <span className="font-medium">Currently Applied HTML Fetch</span>
+                 </div>
+                 <span className="text-xs text-muted-foreground">
+                   From: {demo.customerSiteUrl}
+                 </span>
+               </div>
+  
+               <div className="space-y-2">
+                 <Label className="flex items-center gap-2">
+                   <Eye className="w-4 h-4" />
+                   Saved HTML Preview
+                </Label>
+                <div className="border rounded-lg overflow-hidden bg-background">
+                  <iframe
+                    srcDoc={(() => {
+                      const formStyle = demo.formStyle || DEFAULT_FORM_STYLE;
+                     return generatePreviewDocument({
+                       formStyle,
+                       buttonColor: demo.buttonColor || '#3b82f6',
+                       headerHtml: (hasSavedEdits ? savedHeaderHtml : demo.mirrorHtmlHeaderHtml) || '<div style="padding: 20px; background: #f0f0f0; text-align: center; color: #666;">No header fetched</div>',
+                       footerHtml: (hasSavedEdits ? savedFooterHtml : demo.mirrorHtmlFooterHtml) || '<div style="padding: 20px; background: #f0f0f0; text-align: center; color: #666;">No footer fetched</div>',
+                       cssContent: (hasSavedEdits ? savedCss : demo.mirrorHtmlCss) || undefined,
+                     });
+                     })()}
+                     className="w-full h-[350px] border-0"
+                     title="Saved HTML fetch preview"
+                     sandbox="allow-same-origin"
+                  />
                 </div>
-                <span className="text-xs text-muted-foreground">
-                  From: {demo.customerSiteUrl}
-                </span>
               </div>
- 
-              <div className="space-y-2">
-                <Label className="flex items-center gap-2">
-                  <Eye className="w-4 h-4" />
-                  Saved HTML Preview
-               </Label>
-               <div className="border rounded-lg overflow-hidden bg-background">
-                 <iframe
-                   srcDoc={(() => {
-                     const formStyle = demo.formStyle || DEFAULT_FORM_STYLE;
-                    return generatePreviewDocument({
-                      formStyle,
-                      buttonColor: demo.buttonColor || '#3b82f6',
-                      headerHtml: demo.mirrorHtmlHeaderHtml || '<div style="padding: 20px; background: #f0f0f0; text-align: center; color: #666;">No header fetched</div>',
-                      footerHtml: demo.mirrorHtmlFooterHtml || '<div style="padding: 20px; background: #f0f0f0; text-align: center; color: #666;">No footer fetched</div>',
-                      cssContent: demo.mirrorHtmlCss || undefined,
-                    });
-                    })()}
-                    className="w-full h-[350px] border-0"
-                    title="Saved HTML fetch preview"
-                    sandbox="allow-same-origin"
-                 />
-               </div>
-             </div>
- 
-             {/* Content Stats */}
-             <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
-               <div className="flex items-center gap-1">
-                 <span className="font-medium">Header:</span>
-                 <span>{demo.mirrorHtmlHeaderHtml ? `${demo.mirrorHtmlHeaderHtml.length} chars` : 'None'}</span>
-               </div>
-               <div className="flex items-center gap-1">
-                 <span className="font-medium">Footer:</span>
-                 <span>{demo.mirrorHtmlFooterHtml ? `${demo.mirrorHtmlFooterHtml.length} chars` : 'None'}</span>
-               </div>
-               <div className="flex items-center gap-1">
-                 <span className="font-medium">CSS:</span>
-                 <span>{demo.mirrorHtmlCss ? `${demo.mirrorHtmlCss.length} chars` : 'None'}</span>
-               </div>
-             </div>
-           </CardContent>
-         </Card>
-       )}
-     </div>
-   );
- }
+
+              {hasSavedEdits && (
+                <p className="text-xs text-amber-600 font-medium">⚠ You have unsaved edits — the preview reflects your changes.</p>
+              )}
+  
+              {/* Content Stats */}
+              <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
+                <div className="flex items-center gap-1">
+                  <span className="font-medium">Header:</span>
+                  <span>{(hasSavedEdits ? savedHeaderHtml : demo.mirrorHtmlHeaderHtml) ? `${(hasSavedEdits ? savedHeaderHtml : demo.mirrorHtmlHeaderHtml)!.length} chars` : 'None'}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="font-medium">Footer:</span>
+                  <span>{(hasSavedEdits ? savedFooterHtml : demo.mirrorHtmlFooterHtml) ? `${(hasSavedEdits ? savedFooterHtml : demo.mirrorHtmlFooterHtml)!.length} chars` : 'None'}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="font-medium">CSS:</span>
+                  <span>{(hasSavedEdits ? savedCss : demo.mirrorHtmlCss) ? `${(hasSavedEdits ? savedCss : demo.mirrorHtmlCss)!.length} chars` : 'None'}</span>
+                </div>
+              </div>
+
+              {/* HTML/CSS Editor for saved content */}
+              <Collapsible open={savedEditorOpen} onOpenChange={setSavedEditorOpen}>
+                <div className="flex items-center justify-between">
+                  <CollapsibleTrigger asChild>
+                    <Button variant="ghost" size="sm" className="gap-2 p-0 h-auto font-semibold text-sm">
+                      {savedEditorOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                      <Code className="w-4 h-4" />
+                      Edit HTML / CSS
+                    </Button>
+                  </CollapsibleTrigger>
+                  <div className="flex items-center gap-2">
+                    {hasSavedEdits && (
+                      <>
+                        <Button variant="ghost" size="sm" onClick={resetSavedEdits} className="text-xs gap-1">
+                          <RotateCcw className="w-3 h-3" />
+                          Reset
+                        </Button>
+                        <Button size="sm" onClick={handleSaveEdits} className="gradient-primary text-xs gap-1">
+                          <Check className="w-3 h-3" />
+                          Save Changes
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                </div>
+                <CollapsibleContent className="space-y-3 pt-3">
+                  <p className="text-xs text-muted-foreground">
+                    Edit the saved HTML and CSS below. Changes update the preview in real-time. Click "Save Changes" to persist.
+                  </p>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Header HTML ({savedHeaderHtml.length.toLocaleString()} chars)</Label>
+                    <Textarea
+                      value={savedHeaderHtml}
+                      onChange={(e) => handleSavedHeaderEdit(e.target.value)}
+                      className="font-mono text-xs min-h-[120px] max-h-[300px]"
+                      placeholder="No header HTML"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Footer HTML ({savedFooterHtml.length.toLocaleString()} chars)</Label>
+                    <Textarea
+                      value={savedFooterHtml}
+                      onChange={(e) => handleSavedFooterEdit(e.target.value)}
+                      className="font-mono text-xs min-h-[120px] max-h-[300px]"
+                      placeholder="No footer HTML"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">CSS ({savedCss.length.toLocaleString()} chars)</Label>
+                    <Textarea
+                      value={savedCss}
+                      onChange={(e) => handleSavedCssEdit(e.target.value)}
+                      className="font-mono text-xs min-h-[120px] max-h-[300px]"
+                      placeholder="No CSS"
+                    />
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    );
+  }
