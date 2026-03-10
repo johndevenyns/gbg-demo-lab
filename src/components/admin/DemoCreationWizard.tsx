@@ -106,6 +106,7 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
   const [customerName, setCustomerName] = useState("");
   const [siteUrl, setSiteUrl] = useState("");
   const [enableMirroring, setEnableMirroring] = useState(false);
+  const [selectedUseCases, setSelectedUseCases] = useState<string[]>([]);
   const [selectedVerificationTypes, setSelectedVerificationTypes] = useState<string[]>([]);
   const [selectedMdlProviders, setSelectedMdlProviders] = useState<string[]>([]);
   
