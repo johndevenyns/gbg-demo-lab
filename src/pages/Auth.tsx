@@ -28,8 +28,14 @@ export default function Auth() {
   const [isResetting, setIsResetting] = useState(false);
 
   useEffect(() => {
-    if (!isLoading && user && isAdmin) {
-      navigate('/admin');
+    if (!isLoading && user) {
+      if (isAdmin) {
+        navigate('/admin');
+      } else {
+        // User is authenticated but not an admin — show error and sign out
+        setError('Your account does not have admin access. Please contact a global admin.');
+        supabase.auth.signOut();
+      }
     }
   }, [user, isLoading, isAdmin, navigate]);
 
