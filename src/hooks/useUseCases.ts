@@ -1,125 +1,223 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { DemoUseCase, UseCasePageContent } from '@/types/useCase';
-import { TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
+import { GlobalUseCase, DemoUseCaseLink, UseCasePageContent } from '@/types/useCase';
 import { toast } from 'sonner';
 
-// Map DB row to app type
-function mapRow(row: Record<string, unknown>): DemoUseCase {
+// ── Global Use Cases (managed by global admins) ──
+
+function mapGlobalRow(row: Record<string, unknown>): GlobalUseCase {
   return {
     id: row.id as string,
-    demoId: row.demo_id as string,
     title: row.title as string,
     description: (row.description as string) ?? undefined,
     iconName: (row.icon_name as string) ?? 'Package',
+    defaultFormSteps: (row.default_form_steps as Record<string, unknown>[]) ?? [],
+    defaultVerificationType: (row.default_verification_type as string) ?? 'docBio',
+    defaultPageContent: (row.default_page_content as UseCasePageContent) ?? {},
     displayOrder: row.display_order as number,
-    entryMethod: row.entry_method as DemoUseCase['entryMethod'],
-    accessCode: (row.access_code as string) ?? undefined,
-    pageContent: (row.page_content as UseCasePageContent) ?? {},
-    formStepOverrides: (row.form_step_overrides as Record<string, unknown>) ?? undefined,
     isEnabled: row.is_enabled as boolean,
-    isDefault: (row.is_default as boolean) ?? false,
-    industryTemplate: (row.industry_template as string) ?? undefined,
     createdAt: row.created_at as string,
     updatedAt: row.updated_at as string,
   };
 }
 
-export function useUseCases(demoId: string | undefined) {
+export function useGlobalUseCases() {
   return useQuery({
-    queryKey: ['use-cases', demoId],
+    queryKey: ['global-use-cases'],
     queryFn: async () => {
-      if (!demoId) return [];
       const { data, error } = await supabase
-        .from('demo_use_cases')
+        .from('global_use_cases')
         .select('*')
-        .eq('demo_id', demoId)
         .order('display_order');
       if (error) throw error;
-      return (data ?? []).map(mapRow);
+      return (data ?? []).map(mapGlobalRow);
     },
-    enabled: !!demoId,
   });
 }
 
-export function useCreateUseCase() {
+export function useCreateGlobalUseCase() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (uc: Omit<DemoUseCase, 'id' | 'createdAt' | 'updatedAt'>) => {
-      const insertData: TablesInsert<'demo_use_cases'> = {
-        demo_id: uc.demoId,
-        title: uc.title,
-        description: uc.description ?? null,
-        icon_name: uc.iconName,
-        display_order: uc.displayOrder,
-        entry_method: uc.entryMethod,
-        access_code: uc.accessCode ?? null,
-        page_content: uc.pageContent as unknown as TablesInsert<'demo_use_cases'>['page_content'],
-        form_step_overrides: (uc.formStepOverrides ?? null) as unknown as TablesInsert<'demo_use_cases'>['form_step_overrides'],
-        is_enabled: uc.isEnabled,
-        industry_template: uc.industryTemplate ?? null,
-      };
+    mutationFn: async (uc: Omit<GlobalUseCase, 'id' | 'createdAt' | 'updatedAt'>) => {
       const { data, error } = await supabase
-        .from('demo_use_cases')
-        .insert([insertData])
+        .from('global_use_cases')
+        .insert([{
+          title: uc.title,
+          description: uc.description ?? null,
+          icon_name: uc.iconName,
+          default_form_steps: JSON.parse(JSON.stringify(uc.defaultFormSteps)) as unknown as null,
+          default_verification_type: uc.defaultVerificationType,
+          default_page_content: uc.defaultPageContent as unknown as null,
+          display_order: uc.displayOrder,
+          is_enabled: uc.isEnabled,
+        }])
         .select()
         .single();
       if (error) throw error;
-      return mapRow(data);
+      return mapGlobalRow(data);
     },
-    onSuccess: (data) => {
-      qc.invalidateQueries({ queryKey: ['use-cases', data.demoId] });
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['global-use-cases'] });
       toast.success('Use case created');
     },
     onError: (e) => toast.error(`Failed to create use case: ${e.message}`),
   });
 }
 
-export function useUpdateUseCase() {
+export function useUpdateGlobalUseCase() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, demoId, updates }: { id: string; demoId: string; updates: Partial<DemoUseCase> }) => {
+    mutationFn: async ({ id, updates }: { id: string; updates: Partial<GlobalUseCase> }) => {
       const dbUpdates: Record<string, unknown> = {};
       if (updates.title !== undefined) dbUpdates.title = updates.title;
       if (updates.description !== undefined) dbUpdates.description = updates.description;
       if (updates.iconName !== undefined) dbUpdates.icon_name = updates.iconName;
+      if (updates.defaultFormSteps !== undefined) dbUpdates.default_form_steps = JSON.parse(JSON.stringify(updates.defaultFormSteps));
+      if (updates.defaultVerificationType !== undefined) dbUpdates.default_verification_type = updates.defaultVerificationType;
+      if (updates.defaultPageContent !== undefined) dbUpdates.default_page_content = updates.defaultPageContent;
       if (updates.displayOrder !== undefined) dbUpdates.display_order = updates.displayOrder;
-      if (updates.entryMethod !== undefined) dbUpdates.entry_method = updates.entryMethod;
-      if (updates.accessCode !== undefined) dbUpdates.access_code = updates.accessCode;
-      if (updates.pageContent !== undefined) dbUpdates.page_content = updates.pageContent;
-      if (updates.formStepOverrides !== undefined) dbUpdates.form_step_overrides = updates.formStepOverrides;
       if (updates.isEnabled !== undefined) dbUpdates.is_enabled = updates.isEnabled;
-      if (updates.isDefault !== undefined) dbUpdates.is_default = updates.isDefault;
 
       const { data, error } = await supabase
-        .from('demo_use_cases')
+        .from('global_use_cases')
         .update(dbUpdates)
         .eq('id', id)
         .select()
         .single();
       if (error) throw error;
-      return { ...mapRow(data), demoId };
+      return mapGlobalRow(data);
     },
-    onSuccess: (data) => {
-      qc.invalidateQueries({ queryKey: ['use-cases', data.demoId] });
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['global-use-cases'] });
       toast.success('Use case updated');
     },
     onError: (e) => toast.error(`Failed to update use case: ${e.message}`),
   });
 }
 
-export function useDeleteUseCase() {
+export function useDeleteGlobalUseCase() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, demoId }: { id: string; demoId: string }) => {
-      const { error } = await supabase.from('demo_use_cases').delete().eq('id', id);
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('global_use_cases').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['global-use-cases'] });
+      toast.success('Use case deleted');
+    },
+    onError: (e) => toast.error(`Failed to delete use case: ${e.message}`),
+  });
+}
+
+// ── Demo Use Case Links (per-demo linking) ──
+
+function mapLinkRow(row: Record<string, unknown>): DemoUseCaseLink {
+  return {
+    id: row.id as string,
+    demoId: row.demo_id as string,
+    useCaseId: row.use_case_id as string,
+    isEnabled: row.is_enabled as boolean,
+    displayOrder: row.display_order as number,
+    formStepsOverride: (row.form_steps_override as Record<string, unknown>[]) ?? null,
+    verificationTypeOverride: (row.verification_type_override as string) ?? null,
+    pageContentOverride: (row.page_content_override as UseCasePageContent) ?? null,
+    createdAt: row.created_at as string,
+    updatedAt: row.updated_at as string,
+  };
+}
+
+export function useDemoUseCaseLinks(demoId: string | undefined) {
+  return useQuery({
+    queryKey: ['demo-use-case-links', demoId],
+    queryFn: async () => {
+      if (!demoId) return [];
+      // Fetch links with joined global use case data
+      const { data, error } = await supabase
+        .from('demo_use_case_links')
+        .select('*, global_use_cases(*)')
+        .eq('demo_id', demoId)
+        .order('display_order');
+      if (error) throw error;
+      return (data ?? []).map((row: Record<string, unknown>) => {
+        const link = mapLinkRow(row);
+        const globalData = row.global_use_cases as Record<string, unknown> | null;
+        if (globalData) {
+          link.globalUseCase = mapGlobalRow(globalData);
+        }
+        return link;
+      });
+    },
+    enabled: !!demoId,
+  });
+}
+
+export function useAddDemoUseCaseLink() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ demoId, useCaseId, displayOrder }: { demoId: string; useCaseId: string; displayOrder: number }) => {
+      const { data, error } = await supabase
+        .from('demo_use_case_links')
+        .insert([{
+          demo_id: demoId,
+          use_case_id: useCaseId,
+          display_order: displayOrder,
+          is_enabled: true,
+        }])
+        .select('*, global_use_cases(*)')
+        .single();
+      if (error) throw error;
+      const link = mapLinkRow(data);
+      const globalData = (data as Record<string, unknown>).global_use_cases as Record<string, unknown> | null;
+      if (globalData) link.globalUseCase = mapGlobalRow(globalData);
+      return link;
+    },
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: ['demo-use-case-links', data.demoId] });
+      toast.success('Use case added to demo');
+    },
+    onError: (e) => toast.error(`Failed to add use case: ${e.message}`),
+  });
+}
+
+export function useUpdateDemoUseCaseLink() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, demoId, updates }: { id: string; demoId: string; updates: Partial<DemoUseCaseLink> }) => {
+      const dbUpdates: Record<string, unknown> = {};
+      if (updates.isEnabled !== undefined) dbUpdates.is_enabled = updates.isEnabled;
+      if (updates.displayOrder !== undefined) dbUpdates.display_order = updates.displayOrder;
+      if (updates.formStepsOverride !== undefined) dbUpdates.form_steps_override = updates.formStepsOverride ? JSON.parse(JSON.stringify(updates.formStepsOverride)) : null;
+      if (updates.verificationTypeOverride !== undefined) dbUpdates.verification_type_override = updates.verificationTypeOverride;
+      if (updates.pageContentOverride !== undefined) dbUpdates.page_content_override = updates.pageContentOverride;
+
+      const { error } = await supabase
+        .from('demo_use_case_links')
+        .update(dbUpdates)
+        .eq('id', id);
       if (error) throw error;
       return { demoId };
     },
     onSuccess: (data) => {
-      qc.invalidateQueries({ queryKey: ['use-cases', data.demoId] });
-      toast.success('Use case deleted');
+      qc.invalidateQueries({ queryKey: ['demo-use-case-links', data.demoId] });
+      toast.success('Use case link updated');
     },
-    onError: (e) => toast.error(`Failed to delete use case: ${e.message}`),
+    onError: (e) => toast.error(`Failed to update: ${e.message}`),
+  });
+}
+
+export function useRemoveDemoUseCaseLink() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, demoId }: { id: string; demoId: string }) => {
+      const { error } = await supabase.from('demo_use_case_links').delete().eq('id', id);
+      if (error) throw error;
+      return { demoId };
+    },
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: ['demo-use-case-links', data.demoId] });
+      toast.success('Use case removed from demo');
+    },
+    onError: (e) => toast.error(`Failed to remove: ${e.message}`),
   });
 }

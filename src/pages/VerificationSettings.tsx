@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Shield, Smartphone, Plus, Pencil, Trash2, GripVertical, Check, X, LogOut, Settings, Users, UserCheck, LayoutTemplate, ListChecks } from "lucide-react";
+import { ArrowLeft, Shield, Smartphone, Plus, Pencil, Trash2, GripVertical, Check, X, LogOut, Settings, Users, UserCheck, LayoutTemplate, ListChecks, Briefcase } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -42,6 +42,7 @@ import { TestProfileManagement } from "@/components/admin/TestProfileManagement"
 import { AdminResourceIdSettings } from "@/components/admin/AdminResourceIdSettings";
 import { FormTemplateManagement } from "@/components/admin/FormTemplateManagement";
 import { GlobalFieldConfigManagement } from "@/components/admin/GlobalFieldConfigManagement";
+import { GlobalUseCaseManagement } from "@/components/admin/GlobalUseCaseManagement";
 import { Key } from "lucide-react";
 
 // Icon mapping for verification types
@@ -470,6 +471,12 @@ export default function VerificationSettings() {
                 Field Configuration
               </TabsTrigger>
             )}
+            {isGlobalAdmin && (
+              <TabsTrigger value="use-cases" className="flex items-center gap-2">
+                <Briefcase className="w-4 h-4" />
+                Use Cases
+              </TabsTrigger>
+            )}
           </TabsList>
 
           <TabsContent value="types" className="space-y-6">
@@ -571,6 +578,10 @@ export default function VerificationSettings() {
 
           <TabsContent value="field-config" className="space-y-6">
             <GlobalFieldConfigManagement />
+          </TabsContent>
+
+          <TabsContent value="use-cases" className="space-y-6">
+            <GlobalUseCaseManagement />
           </TabsContent>
         </Tabs>
       </main>
