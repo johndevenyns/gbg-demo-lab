@@ -30,6 +30,12 @@ export function UserManagement() {
   const [newUserRole, setNewUserRole] = useState<'admin' | 'global_admin'>('admin');
   const [isAddingUser, setIsAddingUser] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
+  const [setPasswordDialogOpen, setSetPasswordDialogOpen] = useState(false);
+  const [setPasswordUserId, setSetPasswordUserId] = useState<string | null>(null);
+  const [setPasswordEmail, setSetPasswordEmail] = useState('');
+  const [setPasswordValue, setSetPasswordValue] = useState('');
+  const [setPasswordError, setSetPasswordError] = useState<string | null>(null);
+  const [isSettingPassword, setIsSettingPassword] = useState(false);
 
   // Fetch admin users with emails via edge function
   const { data: adminUsers = [], isLoading } = useQuery({
@@ -113,6 +119,40 @@ export function UserManagement() {
     },
   });
 
+  // Set password for a user (admin sets it directly)
+  const handleSetPassword = async () => {
+    setSetPasswordError(null);
+    if (!setPasswordValue.trim() || setPasswordValue.length < 6) {
+      setSetPasswordError('Password must be at least 6 characters.');
+      return;
+    }
+    setIsSettingPassword(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('manage-admin-users', {
+        body: { action: 'resetPassword', userId: setPasswordUserId, newPassword: setPasswordValue },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast({ title: 'Password updated', description: `Password has been set for ${setPasswordEmail}.` });
+      setSetPasswordDialogOpen(false);
+      setSetPasswordValue('');
+      setSetPasswordUserId(null);
+      setSetPasswordEmail('');
+    } catch (err: any) {
+      setSetPasswordError(err.message || 'Failed to set password');
+    } finally {
+      setIsSettingPassword(false);
+    }
+  };
+
+  const openSetPasswordDialog = (userId: string, email: string) => {
+    setSetPasswordUserId(userId);
+    setSetPasswordEmail(email);
+    setSetPasswordValue('');
+    setSetPasswordError(null);
+    setSetPasswordDialogOpen(true);
+  };
+
   // Add new admin by email, optionally with initial password
   const handleAddAdmin = async () => {
     if (!newUserEmail.trim()) {
@@ -168,6 +208,7 @@ export function UserManagement() {
   }
 
   return (
+    <>
     <Card className="glass-card">
       <CardHeader>
         <div className="flex items-center justify-between">
@@ -316,15 +357,10 @@ export function UserManagement() {
                         variant="ghost"
                         size="icon"
                         className="text-muted-foreground hover:text-primary hover:bg-primary/10"
-                        onClick={() => resetPasswordMutation.mutate(user.user_id)}
-                        disabled={resetPasswordMutation.isPending}
-                        title="Send password reset email"
+                        onClick={() => openSetPasswordDialog(user.user_id, user.email || 'Unknown')}
+                        title="Set password"
                       >
-                        {resetPasswordMutation.isPending ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                          <KeyRound className="w-4 h-4" />
-                        )}
+                        <KeyRound className="w-4 h-4" />
                       </Button>
                       <Button
                         variant="ghost"
@@ -345,5 +381,41 @@ export function UserManagement() {
         )}
       </CardContent>
     </Card>
+
+      {/* Set Password Dialog */}
+      <Dialog open={setPasswordDialogOpen} onOpenChange={(v) => { setSetPasswordDialogOpen(v); if (!v) { setSetPasswordError(null); setSetPasswordValue(''); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Set Password</DialogTitle>
+            <DialogDescription>Set a new password for {setPasswordEmail}.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            {setPasswordError && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{setPasswordError}</AlertDescription>
+              </Alert>
+            )}
+            <div className="space-y-2">
+              <Label>New Password</Label>
+              <Input
+                type="password"
+                value={setPasswordValue}
+                onChange={(e) => setSetPasswordValue(e.target.value)}
+                placeholder="••••••••"
+                minLength={6}
+              />
+              <p className="text-xs text-muted-foreground">Must be at least 6 characters.</p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSetPasswordDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleSetPassword} disabled={isSettingPassword}>
+              {isSettingPassword ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Setting...</> : 'Set Password'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
