@@ -132,12 +132,21 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
     setCustomerName("");
     setSiteUrl("");
     setEnableMirroring(false);
+    setSelectedUseCases([]);
     setSelectedVerificationTypes([]);
     setSelectedMdlProviders([]);
     setProcessingTasks([]);
     setCurrentTaskIndex(0);
     setCreatedDemoId(null);
     setProcessingError(null);
+  };
+
+  const toggleUseCase = (useCaseId: string) => {
+    setSelectedUseCases(prev =>
+      prev.includes(useCaseId)
+        ? prev.filter(id => id !== useCaseId)
+        : [...prev, useCaseId]
+    );
   };
 
   const toggleVerificationType = (typeKey: string) => {
