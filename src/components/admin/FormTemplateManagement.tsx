@@ -15,6 +15,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { FormStep, INDUSTRY_TEMPLATES, IndustryTemplate, DemoEnvironment } from '@/types/demo';
+import { Switch } from '@/components/ui/switch';
 import { FormStyleConfig, DEFAULT_FORM_STYLE } from '@/types/formStyle';
 import { FormBuilderCanvas } from '@/components/formBuilder/FormBuilderCanvas';
 import { supabase } from '@/integrations/supabase/client';
