@@ -166,6 +166,8 @@ export default function DemoPreview() {
     ? (selectedUseCase.formSteps as unknown as FormStep[])
     : demo.formSteps;
 
+  // Show landing only if there are multiple use cases and none is selected yet,
+  // OR if a single use case explicitly has showLandingPage enabled
   const showLanding = hasUseCases && !selectedUseCase;
 
   return (
