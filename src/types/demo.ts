@@ -66,8 +66,9 @@ export interface DemoEnvironment {
   mirrorScreenshotFooterHtml?: string;
   mirrorScreenshotCss?: string;
   
-  // CTA element selector — CSS selector of a header element that scrolls to the form
+  // CTA element selector — CSS selector of a header element that links to a use case
   headerCtaSelector?: string;
+  headerCtaUseCaseId?: string;
   // Form styling
   formStyle?: FormStyleConfig;
   

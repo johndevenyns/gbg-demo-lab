@@ -1,0 +1,1 @@
+ALTER TABLE public.demo_environments ADD COLUMN header_cta_use_case_id uuid REFERENCES public.global_use_cases(id) ON DELETE SET NULL DEFAULT NULL;

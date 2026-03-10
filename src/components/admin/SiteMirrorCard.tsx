@@ -11,6 +11,7 @@ import { EmbedFormSection } from "./EmbedFormSection";
 import { HeaderElementPicker } from "./HeaderElementPicker";
 import { useToast } from "@/hooks/use-toast";
 import { DemoEnvironment } from "@/types/demo";
+import { DemoUseCaseLink } from "@/types/useCase";
 import { DEFAULT_FORM_STYLE } from "@/types/formStyle";
 import { generatePreviewDocument } from "@/lib/formStyleUtils";
 import { cn } from "@/lib/utils";
@@ -27,11 +28,12 @@ export type { CaptureMode } from "./SiteMirrorTabs";
  
 interface SiteMirrorCardProps {
   demo: DemoEnvironment;
+  useCaseLinks: DemoUseCaseLink[];
   onApplyBranding: (updates: Partial<DemoEnvironment>, autoSave?: boolean) => void;
   formStyleContent?: React.ReactNode;
 }
  
- export function SiteMirrorCard({ demo, onApplyBranding, formStyleContent }: SiteMirrorCardProps) {
+ export function SiteMirrorCard({ demo, useCaseLinks, onApplyBranding, formStyleContent }: SiteMirrorCardProps) {
    const { toast } = useToast();
     const [url, setUrl] = useState(demo.customerSiteUrl || "");
     const [previewViewport, setPreviewViewport] = useState<PreviewViewport>('desktop');
@@ -247,8 +249,13 @@ interface SiteMirrorCardProps {
                   headerHtml={headerHtml}
                   cssContent={cssContent || undefined}
                   currentSelector={demo.headerCtaSelector}
-                  onSelectorChange={(selector) => {
-                    onApplyBranding({ headerCtaSelector: selector || '' }, true);
+                  currentUseCaseId={demo.headerCtaUseCaseId}
+                  useCaseLinks={useCaseLinks}
+                  onSelectorChange={(selector, useCaseId) => {
+                    onApplyBranding({ 
+                      headerCtaSelector: selector || '', 
+                      headerCtaUseCaseId: useCaseId || '' 
+                    }, true);
                   }}
                 />
               </div>

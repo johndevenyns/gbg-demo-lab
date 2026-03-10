@@ -79,6 +79,7 @@ const rowToDemo = (row: any): DemoEnvironment => {
     mirrorScreenshotFooterHtml: row.mirror_screenshot_footer_html || '',
     mirrorScreenshotCss: row.mirror_screenshot_css || '',
     headerCtaSelector: row.header_cta_selector || '',
+    headerCtaUseCaseId: row.header_cta_use_case_id || undefined,
     formStyle: formStyle ? { ...DEFAULT_FORM_STYLE, ...formStyle } : DEFAULT_FORM_STYLE,
     successPageConfig: formStyle?.successPageConfig,
     failurePageConfig: formStyle?.failurePageConfig,
@@ -127,6 +128,7 @@ const demoToRow = (demo: Partial<DemoEnvironment>) => {
   if (demo.mirrorScreenshotFooterHtml !== undefined) row.mirror_screenshot_footer_html = demo.mirrorScreenshotFooterHtml;
   if (demo.mirrorScreenshotCss !== undefined) row.mirror_screenshot_css = demo.mirrorScreenshotCss;
   if (demo.headerCtaSelector !== undefined) row.header_cta_selector = demo.headerCtaSelector;
+  if (demo.headerCtaUseCaseId !== undefined) row.header_cta_use_case_id = demo.headerCtaUseCaseId || null;
   // Store result page configs inside form_style to avoid new DB columns
   if (demo.formStyle !== undefined || demo.successPageConfig !== undefined || demo.failurePageConfig !== undefined) {
     const existingStyle = demo.formStyle || {};

@@ -4,35 +4,28 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DemoUseCaseLink } from "@/types/useCase";
 
 interface HeaderElementPickerProps {
   headerHtml: string;
   cssContent?: string;
   currentSelector?: string;
-  onSelectorChange: (selector: string | undefined) => void;
+  currentUseCaseId?: string;
+  useCaseLinks: DemoUseCaseLink[];
+  onSelectorChange: (selector: string | undefined, useCaseId: string | undefined) => void;
 }
 
-/**
- * Generates a unique CSS selector for a given DOM element.
- * Prefers id, then classes, then tag+nth-child.
- */
 function generateSelector(el: Element): string {
   if (el.id) return `#${el.id}`;
-
   const tag = el.tagName.toLowerCase();
-
-  // Try tag + class combo
   if (el.classList.length > 0) {
     const classSelector = `${tag}.${Array.from(el.classList).join(".")}`;
-    // Check uniqueness within parent
     const parent = el.parentElement;
     if (parent && parent.querySelectorAll(classSelector).length === 1) {
       return classSelector;
     }
   }
-
-  // Fallback: walk up to build a path
   const parts: string[] = [];
   let current: Element | null = el;
   while (current && current.tagName.toLowerCase() !== "body" && current.tagName.toLowerCase() !== "html") {
@@ -62,6 +55,8 @@ export function HeaderElementPicker({
   headerHtml,
   cssContent,
   currentSelector,
+  currentUseCaseId,
+  useCaseLinks,
   onSelectorChange,
 }: HeaderElementPickerProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -69,11 +64,15 @@ export function HeaderElementPicker({
   const [hoveredSelector, setHoveredSelector] = useState<string | null>(null);
   const [selectedSelector, setSelectedSelector] = useState<string>(currentSelector || "");
   const [selectedLabel, setSelectedLabel] = useState<string>("");
+  const [selectedUseCaseId, setSelectedUseCaseId] = useState<string>(currentUseCaseId || "");
 
-  // Sync from parent
   useEffect(() => {
     setSelectedSelector(currentSelector || "");
   }, [currentSelector]);
+
+  useEffect(() => {
+    setSelectedUseCaseId(currentUseCaseId || "");
+  }, [currentUseCaseId]);
 
   const getIframeDoc = useCallback(() => {
     try {
@@ -86,10 +85,7 @@ export function HeaderElementPicker({
   const injectPickerStyles = useCallback(() => {
     const doc = getIframeDoc();
     if (!doc) return;
-
-    // Remove old picker styles
     doc.getElementById("cta-picker-style")?.remove();
-
     const style = doc.createElement("style");
     style.id = "cta-picker-style";
     style.textContent = `
@@ -128,7 +124,6 @@ export function HeaderElementPicker({
   const startPicking = useCallback(() => {
     const doc = getIframeDoc();
     if (!doc) return;
-
     setPickingMode(true);
     injectPickerStyles();
     doc.body.classList.add("cta-picker-active");
@@ -136,8 +131,6 @@ export function HeaderElementPicker({
     const handleMouseOver = (e: Event) => {
       const target = e.target as Element;
       if (!target || target === doc.body || target === doc.documentElement) return;
-
-      // Only highlight clickable elements (a, button) or their parents
       const clickable = target.closest("a, button, [role='button'], [onclick]") || target;
       clearHighlights();
       clickable.setAttribute("data-cta-hover", "true");
@@ -151,18 +144,13 @@ export function HeaderElementPicker({
       const clickable = target.closest("a, button, [role='button'], [onclick]") || target;
       const sel = generateSelector(clickable);
       const label = clickable.textContent?.trim().substring(0, 50) || clickable.tagName.toLowerCase();
-      
       setSelectedSelector(sel);
       setSelectedLabel(label);
       setPickingMode(false);
       clearHighlights();
       doc.body.classList.remove("cta-picker-active");
-
-      // Clean up listeners
       doc.removeEventListener("mouseover", handleMouseOver);
       doc.removeEventListener("click", handleClick, true);
-
-      // Highlight selected
       clickable.setAttribute("data-cta-selected", "true");
     };
 
@@ -178,14 +166,18 @@ export function HeaderElementPicker({
     doc.body.classList.remove("cta-picker-active");
   }, [getIframeDoc, clearHighlights]);
 
-  const handleApplySelector = () => {
-    onSelectorChange(selectedSelector || undefined);
+  const handleApply = () => {
+    onSelectorChange(
+      selectedSelector || undefined,
+      selectedUseCaseId || undefined
+    );
   };
 
   const handleClear = () => {
     setSelectedSelector("");
     setSelectedLabel("");
-    onSelectorChange(undefined);
+    setSelectedUseCaseId("");
+    onSelectorChange(undefined, undefined);
     const doc = getIframeDoc();
     if (doc) {
       doc.querySelectorAll("[data-cta-selected]").forEach((el) => el.removeAttribute("data-cta-selected"));
@@ -194,10 +186,10 @@ export function HeaderElementPicker({
 
   const handleIframeLoad = () => {
     injectPickerStyles();
-    if (selectedSelector) {
-      highlightSelected();
-    }
+    if (selectedSelector) highlightSelected();
   };
+
+  const enabledLinks = useCaseLinks.filter(l => l.isEnabled && l.globalUseCase);
 
   const iframeSrcDoc = `<!DOCTYPE html><html><head><meta charset="utf-8">
     <style>body{margin:0;padding:0;}*{box-sizing:border-box;}a{pointer-events:auto !important;}</style>
@@ -209,7 +201,7 @@ export function HeaderElementPicker({
       <div className="flex items-center justify-between">
         <Label className="text-sm font-semibold flex items-center gap-2">
           <MousePointerClick className="w-4 h-4" />
-          Link Header Element to Form
+          Link Header Element to Use Case
         </Label>
         {currentSelector && (
           <Badge variant="secondary" className="text-xs">
@@ -219,7 +211,7 @@ export function HeaderElementPicker({
       </div>
 
       <p className="text-xs text-muted-foreground">
-        Select a button or link in the header (e.g., "Get a demo") that will scroll to the form when clicked on the live page.
+        Select a button or link in the header (e.g., "Get a demo") and choose which use case it should navigate to when clicked.
       </p>
 
       {/* Header preview for picking */}
@@ -273,7 +265,7 @@ export function HeaderElementPicker({
 
         {selectedSelector && !pickingMode && (
           <>
-            <Button variant="default" size="sm" onClick={handleApplySelector} className="gap-1">
+            <Button variant="default" size="sm" onClick={handleApply} className="gap-1" disabled={!selectedUseCaseId}>
               <Check className="w-3 h-3" /> Save
             </Button>
             <Button variant="ghost" size="sm" onClick={handleClear} className="gap-1">
@@ -282,6 +274,31 @@ export function HeaderElementPicker({
           </>
         )}
       </div>
+
+      {/* Use case selector - shown when an element is picked */}
+      {selectedSelector && !pickingMode && (
+        <div className="space-y-2">
+          <Label className="text-xs font-medium">Navigate to Use Case</Label>
+          {enabledLinks.length === 0 ? (
+            <p className="text-xs text-muted-foreground">
+              No use cases linked to this demo. Add use cases in the Use Cases tab first.
+            </p>
+          ) : (
+            <Select value={selectedUseCaseId} onValueChange={setSelectedUseCaseId}>
+              <SelectTrigger className="h-8 text-xs">
+                <SelectValue placeholder="Select a use case..." />
+              </SelectTrigger>
+              <SelectContent>
+                {enabledLinks.map((link) => (
+                  <SelectItem key={link.useCaseId} value={link.useCaseId}>
+                    {link.globalUseCase?.title || 'Unknown Use Case'}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        </div>
+      )}
 
       {/* Selected element info */}
       {selectedSelector && !pickingMode && (
@@ -296,6 +313,14 @@ export function HeaderElementPicker({
             <span className="font-medium">Selector:</span>{" "}
             <code className="font-mono text-xs bg-muted px-1 rounded">{selectedSelector}</code>
           </div>
+          {selectedUseCaseId && enabledLinks.length > 0 && (
+            <div>
+              <span className="font-medium">Links to:</span>{" "}
+              <span className="text-foreground">
+                {enabledLinks.find(l => l.useCaseId === selectedUseCaseId)?.globalUseCase?.title || 'Unknown'}
+              </span>
+            </div>
+          )}
         </div>
       )}
 
@@ -309,7 +334,7 @@ export function HeaderElementPicker({
             placeholder='e.g. a.cta-button, #get-demo'
             className="font-mono text-xs h-8"
           />
-          <Button variant="outline" size="sm" onClick={handleApplySelector} className="h-8 text-xs" disabled={!selectedSelector}>
+          <Button variant="outline" size="sm" onClick={handleApply} className="h-8 text-xs" disabled={!selectedSelector || !selectedUseCaseId}>
             Apply
           </Button>
         </div>

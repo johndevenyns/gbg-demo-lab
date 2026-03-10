@@ -15,6 +15,7 @@ import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/comp
 import { SiteMirrorCard } from "@/components/admin/SiteMirrorCard";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { UseCaseSection } from "@/components/admin/UseCaseSection";
+import { useDemoUseCaseLinks } from "@/hooks/useUseCases";
 
  // Lazy import FormStyleCard to pass into SiteMirrorCard
  import { FormStyleCard } from "@/components/admin/FormStyleCard";
@@ -177,6 +178,7 @@ export default function DemoConfig() {
   const { user } = useAuth();
   const { data: demo, isLoading, error } = useDemo(id || "");
   const updateDemoMutation = useUpdateDemo();
+  const { data: useCaseLinks = [] } = useDemoUseCaseLinks(id);
   
   // Per-user localStorage key for sidebar state
   const sidebarKey = user?.id ? `demoConfigSidebarCollapsed_${user.id}` : 'demoConfigSidebarCollapsed';
@@ -258,7 +260,8 @@ export default function DemoConfig() {
       case 'mirror':
         return (
          <SiteMirrorCard 
-           demo={localDemo} 
+            demo={localDemo}
+            useCaseLinks={useCaseLinks}
            onApplyBranding={handleUpdate}
            formStyleContent={
               <FormStyleCard
