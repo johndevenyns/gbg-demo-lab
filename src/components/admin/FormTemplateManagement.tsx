@@ -62,6 +62,8 @@ interface SavedTemplate {
   category: string;
   form_steps: FormStep[];
   form_style: FormStyleConfig | null;
+  show_fill_pass: boolean;
+  show_fill_fail: boolean;
   created_at: string;
   updated_at: string;
 }
