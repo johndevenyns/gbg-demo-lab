@@ -25,14 +25,13 @@ import { BrandingScrapeSection } from "@/components/admin/BrandingScrapeSection"
 import { cn } from "@/lib/utils";
 
 // Navigation sections
-type ConfigSection = 'settings' | 'mirror' | 'branding' | 'use-cases' | 'form-builder' | 'preview';
+type ConfigSection = 'settings' | 'mirror' | 'branding' | 'use-cases' | 'preview';
 
 const sections: { id: ConfigSection; label: string; icon: React.ElementType; description: string }[] = [
   { id: 'settings', label: 'Site Settings', icon: Settings, description: 'Core configuration' },
   { id: 'mirror', label: 'Appearance', icon: Globe, description: 'Site & form styling' },
   { id: 'branding', label: 'Mobile Branding', icon: Palette, description: 'Colors & logo' },
-  { id: 'use-cases', label: 'Use Cases', icon: Briefcase, description: 'Pre-form journeys' },
-  { id: 'form-builder', label: 'Form Builder', icon: Layout, description: 'Steps & fields' },
+  { id: 'use-cases', label: 'Use Cases', icon: Briefcase, description: 'Journeys & form builder' },
   { id: 'preview', label: 'Live Preview', icon: PlayCircle, description: 'Test the flow' },
 ];
 
