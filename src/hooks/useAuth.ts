@@ -21,6 +21,7 @@ export function useAuth() {
   // Check if user has admin role
   const checkAdminRole = useCallback(async (userId: string) => {
     try {
+      setRoleChecked(false);
       const { data, error } = await supabase
         .from('user_roles')
         .select('role')
@@ -40,6 +41,8 @@ export function useAuth() {
       console.error('Error checking admin role:', err);
       setIsAdmin(false);
       setIsGlobalAdmin(false);
+    } finally {
+      setRoleChecked(true);
     }
   }, []);
 
