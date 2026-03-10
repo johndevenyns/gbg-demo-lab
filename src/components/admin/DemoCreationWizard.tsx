@@ -246,11 +246,23 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
         }
       }
 
-      // Task 4: Configure verification types
+      // Link use cases
+      if (selectedUseCases.length > 0) {
+        updateTaskStatus('use-cases', 'in_progress');
+        for (let i = 0; i < selectedUseCases.length; i++) {
+          await addUseCaseLink.mutateAsync({
+            demoId: demo.id,
+            useCaseId: selectedUseCases[i],
+            displayOrder: i,
+          });
+        }
+        updateTaskStatus('use-cases', 'complete');
+      }
+
+      // Configure verification types
       if (selectedVerificationTypes.length > 0) {
         updateTaskStatus('verification', 'in_progress');
         
-        // Determine primary verification type
         const primaryType = selectedVerificationTypes[0];
         const verificationType = primaryType === 'docbio' ? 'docBio' 
           : primaryType === 'databio' ? 'dataBio' 
@@ -258,10 +270,7 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
 
         await updateDemo.mutateAsync({
           id: demo.id,
-          updates: {
-            verificationType,
-            // Store selected types and providers in formSteps or a config field
-          }
+          updates: { verificationType }
         });
         updateTaskStatus('verification', 'complete');
       }
