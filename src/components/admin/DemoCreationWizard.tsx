@@ -186,6 +186,10 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
       tasks.push({ id: 'apply', label: 'Applying branding to demo', status: 'pending' });
     }
     
+    if (selectedUseCases.length > 0) {
+      tasks.push({ id: 'use-cases', label: 'Linking use cases', status: 'pending' });
+    }
+    
     if (selectedVerificationTypes.length > 0) {
       tasks.push({ id: 'verification', label: 'Configuring verification types', status: 'pending' });
     }
