@@ -54,6 +54,7 @@ export type Database = {
           form_style: Json | null
           header_bg_color: string | null
           header_cta_selector: string | null
+          header_cta_use_case_id: string | null
           header_text_color: string | null
           id: string
           include_address_verification: boolean | null
@@ -97,6 +98,7 @@ export type Database = {
           form_style?: Json | null
           header_bg_color?: string | null
           header_cta_selector?: string | null
+          header_cta_use_case_id?: string | null
           header_text_color?: string | null
           id?: string
           include_address_verification?: boolean | null
@@ -140,6 +142,7 @@ export type Database = {
           form_style?: Json | null
           header_bg_color?: string | null
           header_cta_selector?: string | null
+          header_cta_use_case_id?: string | null
           header_text_color?: string | null
           id?: string
           include_address_verification?: boolean | null
@@ -171,7 +174,15 @@ export type Database = {
           use_uploaded_logo?: boolean | null
           verification_type?: Database["public"]["Enums"]["verification_type"]
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "demo_environments_header_cta_use_case_id_fkey"
+            columns: ["header_cta_use_case_id"]
+            isOneToOne: false
+            referencedRelation: "global_use_cases"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       demo_use_case_links: {
         Row: {
