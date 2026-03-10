@@ -10,7 +10,7 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { user, isLoading, isAdmin, signOut } = useAuth();
+  const { user, isLoading, isAdmin, roleChecked, signOut } = useAuth();
   const location = useLocation();
   const [isBootstrapping, setIsBootstrapping] = useState(false);
   const [bootstrapError, setBootstrapError] = useState<string | null>(null);
@@ -19,10 +19,10 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
 
   // Check if any admins exist when user is logged in but not an admin
   useEffect(() => {
-    if (user && !isAdmin && !isLoading) {
+    if (user && !isAdmin && !isLoading && roleChecked) {
       checkForExistingAdmins();
     }
-  }, [user, isAdmin, isLoading]);
+  }, [user, isAdmin, isLoading, roleChecked]);
 
   const checkForExistingAdmins = async () => {
     setCheckingAdmins(true);
@@ -73,7 +73,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     }
   };
 
-  if (isLoading) {
+  if (isLoading || (user && !roleChecked)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />

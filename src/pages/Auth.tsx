@@ -17,7 +17,7 @@ const authSchema = z.object({
 
 export default function Auth() {
   const navigate = useNavigate();
-  const { user, isLoading, isAdmin, signIn } = useAuth();
+  const { user, isLoading, isAdmin, roleChecked, signIn } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -28,10 +28,15 @@ export default function Auth() {
   const [isResetting, setIsResetting] = useState(false);
 
   useEffect(() => {
-    if (!isLoading && user && isAdmin) {
-      navigate('/admin');
+    if (!isLoading && user && roleChecked) {
+      if (isAdmin) {
+        navigate('/admin');
+      } else {
+        setError('Your account does not have admin access. Please contact a global admin.');
+        supabase.auth.signOut();
+      }
     }
-  }, [user, isLoading, isAdmin, navigate]);
+  }, [user, isLoading, isAdmin, roleChecked, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -8,6 +8,7 @@ export interface AuthState {
   isLoading: boolean;
   isAdmin: boolean;
   isGlobalAdmin: boolean;
+  roleChecked: boolean;
 }
 
 export function useAuth() {
@@ -16,10 +17,12 @@ export function useAuth() {
   const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isGlobalAdmin, setIsGlobalAdmin] = useState(false);
+  const [roleChecked, setRoleChecked] = useState(false);
 
   // Check if user has admin role
   const checkAdminRole = useCallback(async (userId: string) => {
     try {
+      setRoleChecked(false);
       const { data, error } = await supabase
         .from('user_roles')
         .select('role')
@@ -39,6 +42,8 @@ export function useAuth() {
       console.error('Error checking admin role:', err);
       setIsAdmin(false);
       setIsGlobalAdmin(false);
+    } finally {
+      setRoleChecked(true);
     }
   }, []);
 
@@ -116,6 +121,7 @@ export function useAuth() {
     isLoading,
     isAdmin,
     isGlobalAdmin,
+    roleChecked,
     signIn,
     signUp,
     signOut,
