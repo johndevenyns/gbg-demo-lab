@@ -46,17 +46,26 @@ export function FormBuilderSection({ demo, onUpdate }: FormBuilderSectionProps) 
     onUpdate({ formSteps: steps });
   }, [onUpdate]);
 
-  const handleApplyTemplate = useCallback((steps: FormStep[], templateName: string, formStyle?: FormStyleConfig) => {
+  const handleApplyTemplate = useCallback((steps: FormStep[], templateName: string, formStyle?: FormStyleConfig, fillDefaults?: { showFillPass: boolean; showFillFail: boolean }) => {
     const updates: Partial<DemoEnvironment> = { formSteps: steps };
     if (formStyle) {
       updates.formStyle = formStyle;
+    }
+    if (fillDefaults) {
+      updates.storedTestData = {
+        ...demo.storedTestData,
+        passData: demo.storedTestData?.passData || {},
+        failData: demo.storedTestData?.failData || {},
+        showFillPassButton: fillDefaults.showFillPass,
+        showFillFailButton: fillDefaults.showFillFail,
+      };
     }
     onUpdate(updates);
     toast({
       title: 'Template Applied',
       description: `Applied "${templateName}" template with ${steps.length} step(s)`,
     });
-  }, [onUpdate, toast]);
+  }, [onUpdate, toast, demo.storedTestData]);
 
   const handleTemplateSaved = useCallback(() => {
     setTemplateRefreshTrigger(prev => prev + 1);

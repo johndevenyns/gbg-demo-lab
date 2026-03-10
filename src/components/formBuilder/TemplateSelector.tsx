@@ -96,7 +96,8 @@ export function TemplateSelector({ currentTemplate, onApplyTemplate, refreshTrig
     onApplyTemplate(
       template.form_steps,
       template.name,
-      template.form_style || undefined
+      template.form_style || undefined,
+      { showFillPass: template.show_fill_pass, showFillFail: template.show_fill_fail }
     );
   };
 
