@@ -22,7 +22,7 @@ interface DemoCreationWizardProps {
   onCreated: (id: string) => void;
 }
 
-type WizardStep = 'template' | 'details' | 'verification' | 'providers' | 'processing';
+type WizardStep = 'template' | 'details' | 'use-cases' | 'verification' | 'providers' | 'processing';
 
 interface ProcessingTask {
   id: string;
