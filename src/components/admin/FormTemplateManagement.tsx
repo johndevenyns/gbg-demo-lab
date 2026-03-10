@@ -227,7 +227,7 @@ function TemplateEditorDialog({
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSaving}>Cancel</Button>
           <Button
-            onClick={() => onSave({ id: template?.id, name, description, category, steps, formStyle })}
+            onClick={() => onSave({ id: template?.id, name, description, category, steps, formStyle, showFillPass, showFillFail })}
             disabled={isSaving || !name.trim()}
           >
             {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
