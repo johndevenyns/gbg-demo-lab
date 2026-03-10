@@ -249,8 +249,13 @@ interface SiteMirrorCardProps {
                   headerHtml={headerHtml}
                   cssContent={cssContent || undefined}
                   currentSelector={demo.headerCtaSelector}
-                  onSelectorChange={(selector) => {
-                    onApplyBranding({ headerCtaSelector: selector || '' }, true);
+                  currentUseCaseId={demo.headerCtaUseCaseId}
+                  useCaseLinks={useCaseLinks}
+                  onSelectorChange={(selector, useCaseId) => {
+                    onApplyBranding({ 
+                      headerCtaSelector: selector || '', 
+                      headerCtaUseCaseId: useCaseId || '' 
+                    }, true);
                   }}
                 />
               </div>
