@@ -579,6 +579,10 @@ export default function VerificationSettings() {
           <TabsContent value="field-config" className="space-y-6">
             <GlobalFieldConfigManagement />
           </TabsContent>
+
+          <TabsContent value="use-cases" className="space-y-6">
+            <GlobalUseCaseManagement />
+          </TabsContent>
         </Tabs>
       </main>
 
