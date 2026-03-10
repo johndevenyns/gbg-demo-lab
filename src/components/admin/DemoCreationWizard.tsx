@@ -8,8 +8,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { useCreateDemo, useUpdateDemo } from "@/hooks/useDemos";
 import { useVerificationTypes, useMdlProviders } from "@/hooks/useVerificationAdmin";
+import { useGlobalUseCases, useAddDemoUseCaseLink } from "@/hooks/useUseCases";
 import { IndustryTemplate } from "@/types/demo";
 import { VerificationTypeConfig, MdlProvider } from "@/types/verification";
+import { GlobalUseCase } from "@/types/useCase";
 import { scrapingApi } from "@/lib/api/scraping";
 import { cn } from "@/lib/utils";
 import * as LucideIcons from "lucide-react";
@@ -20,7 +22,7 @@ interface DemoCreationWizardProps {
   onCreated: (id: string) => void;
 }
 
-type WizardStep = 'template' | 'details' | 'verification' | 'providers' | 'processing';
+type WizardStep = 'template' | 'details' | 'use-cases' | 'verification' | 'providers' | 'processing';
 
 interface ProcessingTask {
   id: string;
@@ -91,10 +93,12 @@ function getIconByName(iconName: string | null): React.ReactNode {
 export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreationWizardProps) {
   const createDemo = useCreateDemo();
   const updateDemo = useUpdateDemo();
+  const addUseCaseLink = useAddDemoUseCaseLink();
   
-  // Fetch available verification types and providers from database
+  // Fetch available data from database
   const { data: verificationTypes = [], isLoading: loadingTypes } = useVerificationTypes(true);
   const { data: mdlProviders = [], isLoading: loadingProviders } = useMdlProviders(true);
+  const { data: globalUseCases = [], isLoading: loadingUseCases } = useGlobalUseCases();
   
   // Wizard state
   const [step, setStep] = useState<WizardStep>('template');
@@ -102,6 +106,7 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
   const [customerName, setCustomerName] = useState("");
   const [siteUrl, setSiteUrl] = useState("");
   const [enableMirroring, setEnableMirroring] = useState(false);
+  const [selectedUseCases, setSelectedUseCases] = useState<string[]>([]);
   const [selectedVerificationTypes, setSelectedVerificationTypes] = useState<string[]>([]);
   const [selectedMdlProviders, setSelectedMdlProviders] = useState<string[]>([]);
   
@@ -127,12 +132,21 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
     setCustomerName("");
     setSiteUrl("");
     setEnableMirroring(false);
+    setSelectedUseCases([]);
     setSelectedVerificationTypes([]);
     setSelectedMdlProviders([]);
     setProcessingTasks([]);
     setCurrentTaskIndex(0);
     setCreatedDemoId(null);
     setProcessingError(null);
+  };
+
+  const toggleUseCase = (useCaseId: string) => {
+    setSelectedUseCases(prev =>
+      prev.includes(useCaseId)
+        ? prev.filter(id => id !== useCaseId)
+        : [...prev, useCaseId]
+    );
   };
 
   const toggleVerificationType = (typeKey: string) => {
@@ -170,6 +184,10 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
     if (enableMirroring && siteUrl) {
       tasks.push({ id: 'scrape', label: 'Fetching site branding & styles', status: 'pending' });
       tasks.push({ id: 'apply', label: 'Applying branding to demo', status: 'pending' });
+    }
+    
+    if (selectedUseCases.length > 0) {
+      tasks.push({ id: 'use-cases', label: 'Linking use cases', status: 'pending' });
     }
     
     if (selectedVerificationTypes.length > 0) {
@@ -228,11 +246,23 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
         }
       }
 
-      // Task 4: Configure verification types
+      // Link use cases
+      if (selectedUseCases.length > 0) {
+        updateTaskStatus('use-cases', 'in_progress');
+        for (let i = 0; i < selectedUseCases.length; i++) {
+          await addUseCaseLink.mutateAsync({
+            demoId: demo.id,
+            useCaseId: selectedUseCases[i],
+            displayOrder: i,
+          });
+        }
+        updateTaskStatus('use-cases', 'complete');
+      }
+
+      // Configure verification types
       if (selectedVerificationTypes.length > 0) {
         updateTaskStatus('verification', 'in_progress');
         
-        // Determine primary verification type
         const primaryType = selectedVerificationTypes[0];
         const verificationType = primaryType === 'docbio' ? 'docBio' 
           : primaryType === 'databio' ? 'dataBio' 
@@ -240,10 +270,7 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
 
         await updateDemo.mutateAsync({
           id: demo.id,
-          updates: {
-            verificationType,
-            // Store selected types and providers in formSteps or a config field
-          }
+          updates: { verificationType }
         });
         updateTaskStatus('verification', 'complete');
       }
@@ -271,6 +298,8 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
         return !!selectedTemplate;
       case 'details':
         return !!customerName.trim() && (!enableMirroring || !!siteUrl.trim());
+      case 'use-cases':
+        return selectedUseCases.length > 0;
       case 'verification':
         return selectedVerificationTypes.length > 0;
       case 'providers':
@@ -286,6 +315,9 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
         setStep('details');
         break;
       case 'details':
+        setStep('use-cases');
+        break;
+      case 'use-cases':
         setStep('verification');
         break;
       case 'verification':
@@ -306,8 +338,11 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
       case 'details':
         setStep('template');
         break;
-      case 'verification':
+      case 'use-cases':
         setStep('details');
+        break;
+      case 'verification':
+        setStep('use-cases');
         break;
       case 'providers':
         setStep('verification');
@@ -316,13 +351,13 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
   };
 
   const getStepNumber = () => {
-    const steps = ['template', 'details', 'verification'];
+    const steps = ['template', 'details', 'use-cases', 'verification'];
     if (hasMdlSelected) steps.push('providers');
     return steps.indexOf(step) + 1;
   };
 
   const getTotalSteps = () => {
-    return hasMdlSelected ? 4 : 3;
+    return hasMdlSelected ? 5 : 4;
   };
 
   const completedTasks = processingTasks.filter(t => t.status === 'complete').length;
@@ -347,6 +382,7 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
           <DialogDescription>
             {step === 'template' && "Choose an industry template to get started"}
             {step === 'details' && "Enter customer details and optionally mirror their site"}
+            {step === 'use-cases' && "Select which use cases to include in this demo"}
             {step === 'verification' && "Select which verification methods to enable"}
             {step === 'providers' && "Select mobile ID providers to include"}
             {step === 'processing' && "Please wait while we configure your demo environment"}
@@ -448,7 +484,59 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
           </div>
         )}
 
-        {/* Step 3: Verification Types */}
+        {/* Step 3: Use Cases */}
+        {step === 'use-cases' && (
+          <div className="py-4 space-y-4">
+            {loadingUseCases ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : globalUseCases.filter(uc => uc.isEnabled).length === 0 ? (
+              <p className="text-center text-muted-foreground py-8">
+                No use cases configured. Please add them in Global Settings → Use Cases.
+              </p>
+            ) : (
+              <div className="grid gap-3">
+                {globalUseCases.filter(uc => uc.isEnabled).map((uc) => {
+                  const icons = LucideIcons as unknown as Record<string, React.ComponentType<{ className?: string }>>;
+                  const IconComp = icons[uc.iconName] || icons['Package'];
+                  return (
+                    <button
+                      key={uc.id}
+                      onClick={() => toggleUseCase(uc.id)}
+                      className={cn(
+                        "flex items-center gap-4 p-4 rounded-lg border text-left transition-all",
+                        selectedUseCases.includes(uc.id)
+                          ? "border-primary bg-primary/5"
+                          : "border-border hover:border-muted-foreground/50"
+                      )}
+                    >
+                      <div className={cn(
+                        "w-10 h-10 rounded-lg flex items-center justify-center",
+                        selectedUseCases.includes(uc.id)
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted text-muted-foreground"
+                      )}>
+                        {IconComp && <IconComp className="w-5 h-5" />}
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-medium">{uc.title}</h4>
+                        {uc.description && (
+                          <p className="text-sm text-muted-foreground">{uc.description}</p>
+                        )}
+                      </div>
+                      {selectedUseCases.includes(uc.id) && (
+                        <Check className="w-5 h-5 text-primary" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Step 4: Verification Types */}
         {step === 'verification' && (
           <div className="py-4 space-y-4">
             {loadingTypes ? (
