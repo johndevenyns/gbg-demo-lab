@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Loader2, Save } from 'lucide-react';
 import { FormStep } from '@/types/demo';
@@ -23,6 +24,8 @@ interface SaveTemplateDialogProps {
   onOpenChange: (open: boolean) => void;
   formSteps: FormStep[];
   formStyle?: FormStyleConfig;
+  showFillPass?: boolean;
+  showFillFail?: boolean;
   onSaved?: () => void;
 }
 
