@@ -79,6 +79,7 @@ const rowToDemo = (row: any): DemoEnvironment => {
     mirrorScreenshotFooterHtml: row.mirror_screenshot_footer_html || '',
     mirrorScreenshotCss: row.mirror_screenshot_css || '',
     headerCtaSelector: row.header_cta_selector || '',
+    headerCtaUseCaseId: row.header_cta_use_case_id || undefined,
     formStyle: formStyle ? { ...DEFAULT_FORM_STYLE, ...formStyle } : DEFAULT_FORM_STYLE,
     successPageConfig: formStyle?.successPageConfig,
     failurePageConfig: formStyle?.failurePageConfig,
