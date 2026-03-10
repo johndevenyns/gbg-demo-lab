@@ -72,6 +72,8 @@ export function SaveTemplateDialog({
           category,
           form_steps: JSON.parse(JSON.stringify(formSteps)),
           form_style: formStyle ? JSON.parse(JSON.stringify(formStyle)) : null,
+          show_fill_pass: fillPass,
+          show_fill_fail: fillFail,
         }]);
 
       if (error) throw error;
