@@ -471,6 +471,12 @@ export default function VerificationSettings() {
                 Field Configuration
               </TabsTrigger>
             )}
+            {isGlobalAdmin && (
+              <TabsTrigger value="use-cases" className="flex items-center gap-2">
+                <Briefcase className="w-4 h-4" />
+                Use Cases
+              </TabsTrigger>
+            )}
           </TabsList>
 
           <TabsContent value="types" className="space-y-6">
