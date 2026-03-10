@@ -15,6 +15,7 @@ import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/comp
 import { SiteMirrorCard } from "@/components/admin/SiteMirrorCard";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { UseCaseSection } from "@/components/admin/UseCaseSection";
+import { useDemoUseCaseLinks } from "@/hooks/useUseCases";
 
  // Lazy import FormStyleCard to pass into SiteMirrorCard
  import { FormStyleCard } from "@/components/admin/FormStyleCard";
