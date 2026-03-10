@@ -19,10 +19,10 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
 
   // Check if any admins exist when user is logged in but not an admin
   useEffect(() => {
-    if (user && !isAdmin && !isLoading) {
+    if (user && !isAdmin && !isLoading && roleChecked) {
       checkForExistingAdmins();
     }
-  }, [user, isAdmin, isLoading]);
+  }, [user, isAdmin, isLoading, roleChecked]);
 
   const checkForExistingAdmins = async () => {
     setCheckingAdmins(true);
