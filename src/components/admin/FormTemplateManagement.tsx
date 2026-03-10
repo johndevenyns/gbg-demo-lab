@@ -108,6 +108,8 @@ function TemplateEditorDialog({
     category: string;
     steps: FormStep[];
     formStyle?: FormStyleConfig;
+    showFillPass?: boolean;
+    showFillFail?: boolean;
     isIndustry?: boolean;
     industryKey?: IndustryTemplate;
   } | null;
@@ -118,6 +120,8 @@ function TemplateEditorDialog({
     category: string;
     steps: FormStep[];
     formStyle?: FormStyleConfig;
+    showFillPass: boolean;
+    showFillFail: boolean;
   }) => void;
   isSaving: boolean;
 }) {
