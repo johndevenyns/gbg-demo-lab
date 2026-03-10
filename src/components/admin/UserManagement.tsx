@@ -356,15 +356,10 @@ export function UserManagement() {
                         variant="ghost"
                         size="icon"
                         className="text-muted-foreground hover:text-primary hover:bg-primary/10"
-                        onClick={() => resetPasswordMutation.mutate(user.user_id)}
-                        disabled={resetPasswordMutation.isPending}
-                        title="Send password reset email"
+                        onClick={() => openSetPasswordDialog(user.user_id, user.email || 'Unknown')}
+                        title="Set password"
                       >
-                        {resetPasswordMutation.isPending ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                          <KeyRound className="w-4 h-4" />
-                        )}
+                        <KeyRound className="w-4 h-4" />
                       </Button>
                       <Button
                         variant="ghost"
