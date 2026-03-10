@@ -28,6 +28,7 @@ export type { CaptureMode } from "./SiteMirrorTabs";
  
 interface SiteMirrorCardProps {
   demo: DemoEnvironment;
+  useCaseLinks: DemoUseCaseLink[];
   onApplyBranding: (updates: Partial<DemoEnvironment>, autoSave?: boolean) => void;
   formStyleContent?: React.ReactNode;
 }
