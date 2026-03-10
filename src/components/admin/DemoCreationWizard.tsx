@@ -298,6 +298,8 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
         return !!selectedTemplate;
       case 'details':
         return !!customerName.trim() && (!enableMirroring || !!siteUrl.trim());
+      case 'use-cases':
+        return selectedUseCases.length > 0;
       case 'verification':
         return selectedVerificationTypes.length > 0;
       case 'providers':
@@ -313,6 +315,9 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
         setStep('details');
         break;
       case 'details':
+        setStep('use-cases');
+        break;
+      case 'use-cases':
         setStep('verification');
         break;
       case 'verification':
@@ -333,8 +338,11 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
       case 'details':
         setStep('template');
         break;
-      case 'verification':
+      case 'use-cases':
         setStep('details');
+        break;
+      case 'verification':
+        setStep('use-cases');
         break;
       case 'providers':
         setStep('verification');
@@ -343,13 +351,13 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
   };
 
   const getStepNumber = () => {
-    const steps = ['template', 'details', 'verification'];
+    const steps = ['template', 'details', 'use-cases', 'verification'];
     if (hasMdlSelected) steps.push('providers');
     return steps.indexOf(step) + 1;
   };
 
   const getTotalSteps = () => {
-    return hasMdlSelected ? 4 : 3;
+    return hasMdlSelected ? 5 : 4;
   };
 
   const completedTasks = processingTasks.filter(t => t.status === 'complete').length;
