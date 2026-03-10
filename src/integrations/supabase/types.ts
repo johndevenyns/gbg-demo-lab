@@ -173,64 +173,56 @@ export type Database = {
         }
         Relationships: []
       }
-      demo_use_cases: {
+      demo_use_case_links: {
         Row: {
-          access_code: string | null
           created_at: string
           demo_id: string
-          description: string | null
           display_order: number
-          entry_method: string
-          form_step_overrides: Json | null
-          icon_name: string | null
+          form_steps_override: Json | null
           id: string
-          industry_template: string | null
-          is_default: boolean
           is_enabled: boolean
-          page_content: Json | null
-          title: string
+          page_content_override: Json | null
           updated_at: string
+          use_case_id: string
+          verification_type_override: string | null
         }
         Insert: {
-          access_code?: string | null
           created_at?: string
           demo_id: string
-          description?: string | null
           display_order?: number
-          entry_method?: string
-          form_step_overrides?: Json | null
-          icon_name?: string | null
+          form_steps_override?: Json | null
           id?: string
-          industry_template?: string | null
-          is_default?: boolean
           is_enabled?: boolean
-          page_content?: Json | null
-          title: string
+          page_content_override?: Json | null
           updated_at?: string
+          use_case_id: string
+          verification_type_override?: string | null
         }
         Update: {
-          access_code?: string | null
           created_at?: string
           demo_id?: string
-          description?: string | null
           display_order?: number
-          entry_method?: string
-          form_step_overrides?: Json | null
-          icon_name?: string | null
+          form_steps_override?: Json | null
           id?: string
-          industry_template?: string | null
-          is_default?: boolean
           is_enabled?: boolean
-          page_content?: Json | null
-          title?: string
+          page_content_override?: Json | null
           updated_at?: string
+          use_case_id?: string
+          verification_type_override?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "demo_use_cases_demo_id_fkey"
+            foreignKeyName: "demo_use_case_links_demo_id_fkey"
             columns: ["demo_id"]
             isOneToOne: false
             referencedRelation: "demo_environments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "demo_use_case_links_use_case_id_fkey"
+            columns: ["use_case_id"]
+            isOneToOne: false
+            referencedRelation: "global_use_cases"
             referencedColumns: ["id"]
           },
         ]
@@ -306,6 +298,48 @@ export type Database = {
           is_api_field?: boolean
           placeholder?: string | null
           required_by_default?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      global_use_cases: {
+        Row: {
+          created_at: string
+          default_form_steps: Json | null
+          default_page_content: Json | null
+          default_verification_type: string | null
+          description: string | null
+          display_order: number
+          icon_name: string | null
+          id: string
+          is_enabled: boolean
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          default_form_steps?: Json | null
+          default_page_content?: Json | null
+          default_verification_type?: string | null
+          description?: string | null
+          display_order?: number
+          icon_name?: string | null
+          id?: string
+          is_enabled?: boolean
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          default_form_steps?: Json | null
+          default_page_content?: Json | null
+          default_verification_type?: string | null
+          description?: string | null
+          display_order?: number
+          icon_name?: string | null
+          id?: string
+          is_enabled?: boolean
+          title?: string
           updated_at?: string
         }
         Relationships: []
