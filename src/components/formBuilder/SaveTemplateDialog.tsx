@@ -149,7 +149,19 @@ export function SaveTemplateDialog({
             <ul className="mt-1 text-muted-foreground list-disc list-inside space-y-0.5">
               <li>{formSteps.length} step(s) with all fields and configurations</li>
               {formStyle && <li>Form styling settings</li>}
+              <li>Fill Pass: {fillPass ? 'On' : 'Off'} / Fill Fail: {fillFail ? 'On' : 'Off'}</li>
             </ul>
+          </div>
+
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2">
+              <Switch id="save-fill-pass" checked={fillPass} onCheckedChange={setFillPass} className="scale-90" />
+              <label htmlFor="save-fill-pass" className="text-sm cursor-pointer">Fill Pass button</label>
+            </div>
+            <div className="flex items-center gap-2">
+              <Switch id="save-fill-fail" checked={fillFail} onCheckedChange={setFillFail} className="scale-90" />
+              <label htmlFor="save-fill-fail" className="text-sm cursor-pointer">Fill Fail button</label>
+            </div>
           </div>
         </div>
 
