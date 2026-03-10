@@ -341,6 +341,8 @@ export function FormTemplateManagement() {
     category: string;
     steps: FormStep[];
     formStyle?: FormStyleConfig;
+    showFillPass: boolean;
+    showFillFail: boolean;
   }) => {
     setIsSaving(true);
     try {
@@ -350,6 +352,8 @@ export function FormTemplateManagement() {
         category: data.category,
         form_steps: JSON.parse(JSON.stringify(data.steps)),
         form_style: data.formStyle ? JSON.parse(JSON.stringify(data.formStyle)) : null,
+        show_fill_pass: data.showFillPass,
+        show_fill_fail: data.showFillFail,
       };
 
       if (data.id) {
