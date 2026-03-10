@@ -446,12 +446,13 @@ export function FormTemplateManagement() {
         {/* Industry Templates */}
         <TabsContent value="industry" className="space-y-3">
           <p className="text-sm text-muted-foreground mb-3">
-            Edit industry templates to customize defaults. Changes are saved as new templates.
+            Edit industry templates to customize defaults. Changes are saved and persist.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {industryKeys.filter(k => k !== 'custom').map((key) => {
               const t = INDUSTRY_TEMPLATES[key];
-              const stepCount = t.formSteps?.length || 0;
+              const override = findIndustryOverride(key);
+              const stepCount = override ? (override.form_steps?.length || 0) : (t.formSteps?.length || 0);
               return (
                 <Card key={key} className="glass-card">
                   <CardContent className="p-4">
@@ -464,10 +465,13 @@ export function FormTemplateManagement() {
                         <div className="flex items-center gap-2 mt-1">
                           <Badge variant="outline" className="text-xs">{stepCount} step{stepCount !== 1 ? 's' : ''}</Badge>
                           <Badge variant="secondary" className="text-xs capitalize">{t.verificationType}</Badge>
+                          {override && (
+                            <Badge variant="default" className="text-xs">Customized</Badge>
+                          )}
                         </div>
                       </div>
                       <div className="flex items-center gap-1">
-                        <Button variant="ghost" size="icon" onClick={() => handleEditIndustry(key)} title="Edit & Save as Template">
+                        <Button variant="ghost" size="icon" onClick={() => handleEditIndustry(key)} title="Edit Template">
                           <Pencil className="w-4 h-4" />
                         </Button>
                       </div>
