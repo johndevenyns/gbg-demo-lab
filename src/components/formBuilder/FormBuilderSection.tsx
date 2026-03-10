@@ -319,6 +319,8 @@ export function FormBuilderSection({ demo, onUpdate }: FormBuilderSectionProps) 
         onOpenChange={setSaveTemplateOpen}
         formSteps={demo.formSteps}
         formStyle={demo.formStyle}
+        showFillPass={showFillPass}
+        showFillFail={showFillFail}
         onSaved={handleTemplateSaved}
       />
       <CardContent>
