@@ -69,6 +69,17 @@ export default function DemoPreview() {
 
   const hasUseCases = resolvedUseCases.length > 0;
 
+  // Auto-select when there's only one use case (or all lack landing pages)
+  useEffect(() => {
+    if (!hasUseCases || selectedUseCase) return;
+    // If only one use case, auto-select it (skip landing)
+    if (resolvedUseCases.length === 1 && !resolvedUseCases[0].pageContent?.showLandingPage) {
+      setSelectedUseCase(resolvedUseCases[0]);
+      return;
+    }
+    // If multiple but none have showLandingPage, still show the selection grid
+  }, [hasUseCases, resolvedUseCases, selectedUseCase]);
+
   // Listen for CTA messages from the header iframe
   useEffect(() => {
     const handler = (e: MessageEvent) => {
