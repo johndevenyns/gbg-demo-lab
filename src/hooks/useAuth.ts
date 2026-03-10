@@ -8,6 +8,7 @@ export interface AuthState {
   isLoading: boolean;
   isAdmin: boolean;
   isGlobalAdmin: boolean;
+  roleChecked: boolean;
 }
 
 export function useAuth() {
