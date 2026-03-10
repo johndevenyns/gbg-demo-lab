@@ -260,7 +260,8 @@ export default function DemoConfig() {
       case 'mirror':
         return (
          <SiteMirrorCard 
-           demo={localDemo} 
+            demo={localDemo}
+            useCaseLinks={useCaseLinks}
            onApplyBranding={handleUpdate}
            formStyleContent={
               <FormStyleCard
