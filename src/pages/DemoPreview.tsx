@@ -185,7 +185,10 @@ export default function DemoPreview() {
                     if (target) {
                       e.preventDefault();
                       e.stopPropagation();
-                      window.parent.postMessage({ type: 'scroll-to-form' }, '*');
+                      ${previewDocument.headerCtaUseCaseId 
+                        ? `window.parent.postMessage({ type: 'cta-use-case', useCaseId: '${previewDocument.headerCtaUseCaseId}' }, '*');`
+                        : `window.parent.postMessage({ type: 'scroll-to-form' }, '*');`
+                      }
                     }
                   }, true);
                 </script>
