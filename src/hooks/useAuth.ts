@@ -19,25 +19,24 @@ export function useAuth() {
   const [isGlobalAdmin, setIsGlobalAdmin] = useState(false);
   const [roleChecked, setRoleChecked] = useState(false);
 
-  // Check if user has admin role
+  // Check if user has admin role using security definer functions (bypasses RLS)
   const checkAdminRole = useCallback(async (userId: string) => {
     try {
       setRoleChecked(false);
-      const { data, error } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', userId);
+      const [adminResult, globalAdminResult] = await Promise.all([
+        supabase.rpc('is_admin', { _user_id: userId }),
+        supabase.rpc('is_global_admin', { _user_id: userId }),
+      ]);
       
-      if (error) {
-        console.error('Error checking admin role:', error);
+      if (adminResult.error) {
+        console.error('Error checking admin role:', adminResult.error);
         setIsAdmin(false);
         setIsGlobalAdmin(false);
         return;
       }
       
-      const roles = (data || []).map((r: any) => r.role);
-      setIsAdmin(roles.includes('admin') || roles.includes('global_admin'));
-      setIsGlobalAdmin(roles.includes('global_admin'));
+      setIsAdmin(!!adminResult.data);
+      setIsGlobalAdmin(!!globalAdminResult.data);
     } catch (err) {
       console.error('Error checking admin role:', err);
       setIsAdmin(false);
