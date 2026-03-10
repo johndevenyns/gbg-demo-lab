@@ -43,7 +43,7 @@ interface SavedTemplate {
 
 interface TemplateSelectorProps {
   currentTemplate?: IndustryTemplate;
-  onApplyTemplate: (steps: FormStep[], templateName: string, formStyle?: FormStyleConfig) => void;
+  onApplyTemplate: (steps: FormStep[], templateName: string, formStyle?: FormStyleConfig, fillDefaults?: { showFillPass: boolean; showFillFail: boolean }) => void;
   refreshTrigger?: number;
 }
 
