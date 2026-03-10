@@ -30,6 +30,12 @@ export function UserManagement() {
   const [newUserRole, setNewUserRole] = useState<'admin' | 'global_admin'>('admin');
   const [isAddingUser, setIsAddingUser] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
+  const [setPasswordDialogOpen, setSetPasswordDialogOpen] = useState(false);
+  const [setPasswordUserId, setSetPasswordUserId] = useState<string | null>(null);
+  const [setPasswordEmail, setSetPasswordEmail] = useState('');
+  const [setPasswordValue, setSetPasswordValue] = useState('');
+  const [setPasswordError, setSetPasswordError] = useState<string | null>(null);
+  const [isSettingPassword, setIsSettingPassword] = useState(false);
 
   // Fetch admin users with emails via edge function
   const { data: adminUsers = [], isLoading } = useQuery({
