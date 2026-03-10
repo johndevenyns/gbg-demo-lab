@@ -124,7 +124,8 @@ export default function DemoPreview() {
       `;
     }
 
-    return { headerHtml, footerHtml, cssContent, formStyle, headerCtaSelector: demo.headerCtaSelector || '' };
+    const headerCtaUseCaseId = demo.headerCtaUseCaseId || '';
+    return { headerHtml, footerHtml, cssContent, formStyle, headerCtaSelector: demo.headerCtaSelector || '', headerCtaUseCaseId };
   }, [demo]);
 
   if (isLoading) {
