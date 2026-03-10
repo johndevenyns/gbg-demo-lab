@@ -11,6 +11,7 @@ import { EmbedFormSection } from "./EmbedFormSection";
 import { HeaderElementPicker } from "./HeaderElementPicker";
 import { useToast } from "@/hooks/use-toast";
 import { DemoEnvironment } from "@/types/demo";
+import { DemoUseCaseLink } from "@/types/useCase";
 import { DEFAULT_FORM_STYLE } from "@/types/formStyle";
 import { generatePreviewDocument } from "@/lib/formStyleUtils";
 import { cn } from "@/lib/utils";
