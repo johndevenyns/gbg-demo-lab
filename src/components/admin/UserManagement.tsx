@@ -380,5 +380,41 @@ export function UserManagement() {
         )}
       </CardContent>
     </Card>
+
+      {/* Set Password Dialog */}
+      <Dialog open={setPasswordDialogOpen} onOpenChange={(v) => { setSetPasswordDialogOpen(v); if (!v) { setSetPasswordError(null); setSetPasswordValue(''); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Set Password</DialogTitle>
+            <DialogDescription>Set a new password for {setPasswordEmail}.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            {setPasswordError && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{setPasswordError}</AlertDescription>
+              </Alert>
+            )}
+            <div className="space-y-2">
+              <Label>New Password</Label>
+              <Input
+                type="password"
+                value={setPasswordValue}
+                onChange={(e) => setSetPasswordValue(e.target.value)}
+                placeholder="••••••••"
+                minLength={6}
+              />
+              <p className="text-xs text-muted-foreground">Must be at least 6 characters.</p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSetPasswordDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleSetPassword} disabled={isSettingPassword}>
+              {isSettingPassword ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Setting...</> : 'Set Password'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
