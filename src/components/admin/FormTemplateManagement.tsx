@@ -190,6 +190,29 @@ function TemplateEditorDialog({
             </div>
           </div>
 
+          {/* Fill Pass/Fail defaults */}
+          <div className="flex items-center gap-6 p-4 border rounded-lg bg-muted/20">
+            <h3 className="text-sm font-semibold text-muted-foreground">Test Buttons</h3>
+            <div className="flex items-center gap-2">
+              <Switch
+                id="tpl-fill-pass"
+                checked={showFillPass}
+                onCheckedChange={setShowFillPass}
+                className="scale-90"
+              />
+              <label htmlFor="tpl-fill-pass" className="text-sm cursor-pointer">Fill Pass</label>
+            </div>
+            <div className="flex items-center gap-2">
+              <Switch
+                id="tpl-fill-fail"
+                checked={showFillFail}
+                onCheckedChange={setShowFillFail}
+                className="scale-90"
+              />
+              <label htmlFor="tpl-fill-fail" className="text-sm cursor-pointer">Fill Fail</label>
+            </div>
+          </div>
+
           {/* Form builder canvas */}
           <div className="border rounded-lg p-4 bg-muted/20">
             <h3 className="text-sm font-semibold mb-3 text-muted-foreground">Form Steps</h3>
