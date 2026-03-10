@@ -45,7 +45,7 @@ export function useCreateGlobalUseCase() {
           title: uc.title,
           description: uc.description ?? null,
           icon_name: uc.iconName,
-          default_form_steps: JSON.parse(JSON.stringify(uc.defaultFormSteps)),
+          default_form_steps: JSON.parse(JSON.stringify(uc.defaultFormSteps)) as unknown as null,
           default_verification_type: uc.defaultVerificationType,
           default_page_content: uc.defaultPageContent as Record<string, unknown>,
           display_order: uc.displayOrder,
