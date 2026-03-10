@@ -274,9 +274,7 @@ export default function DemoConfig() {
       case 'branding':
         return <BrandingSection demo={localDemo} onUpdate={handleUpdate} />;
       case 'use-cases':
-        return <UseCaseSection demoId={localDemo.id} />;
-      case 'form-builder':
-        return <FormBuilderSection demo={localDemo} onUpdate={handleUpdate} />;
+        return <UseCaseSection demoId={localDemo.id} demo={localDemo} onUpdateDemo={handleUpdate} />;
       case 'preview':
         return <FormPreviewPanel demo={localDemo} />;
       default:
