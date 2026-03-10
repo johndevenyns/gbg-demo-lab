@@ -119,6 +119,40 @@ export function UserManagement() {
     },
   });
 
+  // Set password for a user (admin sets it directly)
+  const handleSetPassword = async () => {
+    setSetPasswordError(null);
+    if (!setPasswordValue.trim() || setPasswordValue.length < 6) {
+      setSetPasswordError('Password must be at least 6 characters.');
+      return;
+    }
+    setIsSettingPassword(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('manage-admin-users', {
+        body: { action: 'resetPassword', userId: setPasswordUserId, newPassword: setPasswordValue },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast({ title: 'Password updated', description: `Password has been set for ${setPasswordEmail}.` });
+      setSetPasswordDialogOpen(false);
+      setSetPasswordValue('');
+      setSetPasswordUserId(null);
+      setSetPasswordEmail('');
+    } catch (err: any) {
+      setSetPasswordError(err.message || 'Failed to set password');
+    } finally {
+      setIsSettingPassword(false);
+    }
+  };
+
+  const openSetPasswordDialog = (userId: string, email: string) => {
+    setSetPasswordUserId(userId);
+    setSetPasswordEmail(email);
+    setSetPasswordValue('');
+    setSetPasswordError(null);
+    setSetPasswordDialogOpen(true);
+  };
+
   // Add new admin by email, optionally with initial password
   const handleAddAdmin = async () => {
     if (!newUserEmail.trim()) {
