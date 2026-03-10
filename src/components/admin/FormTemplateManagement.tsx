@@ -283,6 +283,8 @@ export function FormTemplateManagement() {
       category: t.category,
       steps: t.form_steps,
       formStyle: t.form_style || undefined,
+      showFillPass: t.show_fill_pass,
+      showFillFail: t.show_fill_fail,
     });
     setEditorOpen(true);
   };
