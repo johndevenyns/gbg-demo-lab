@@ -178,6 +178,7 @@ export default function DemoConfig() {
   const { user } = useAuth();
   const { data: demo, isLoading, error } = useDemo(id || "");
   const updateDemoMutation = useUpdateDemo();
+  const { data: useCaseLinks = [] } = useDemoUseCaseLinks(id);
   
   // Per-user localStorage key for sidebar state
   const sidebarKey = user?.id ? `demoConfigSidebarCollapsed_${user.id}` : 'demoConfigSidebarCollapsed';
