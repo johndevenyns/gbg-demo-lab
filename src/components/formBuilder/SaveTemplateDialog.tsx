@@ -53,7 +53,8 @@ export function SaveTemplateDialog({
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('custom');
   const [isSaving, setIsSaving] = useState(false);
-
+  const [fillPass, setFillPass] = useState(initialShowFillPass);
+  const [fillFail, setFillFail] = useState(initialShowFillFail);
   const handleSave = async () => {
     if (!name.trim()) {
       toast.error('Please enter a template name');
