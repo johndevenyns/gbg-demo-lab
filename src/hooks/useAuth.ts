@@ -120,6 +120,7 @@ export function useAuth() {
     isLoading,
     isAdmin,
     isGlobalAdmin,
+    roleChecked,
     signIn,
     signUp,
     signOut,
