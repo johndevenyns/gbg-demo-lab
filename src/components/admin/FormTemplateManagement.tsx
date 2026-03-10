@@ -457,6 +457,11 @@ export function FormTemplateManagement() {
                         {t.category !== 'custom' && (
                           <Badge variant="secondary" className="text-xs capitalize">{t.category}</Badge>
                         )}
+                        {(t.show_fill_pass || t.show_fill_fail) && (
+                          <Badge variant="outline" className="text-xs text-muted-foreground">
+                            {[t.show_fill_pass && 'Pass', t.show_fill_fail && 'Fail'].filter(Boolean).join(' / ')}
+                          </Badge>
+                        )}
                       </div>
                       {t.description && (
                         <p className="text-sm text-muted-foreground line-clamp-1 mt-1">{t.description}</p>
