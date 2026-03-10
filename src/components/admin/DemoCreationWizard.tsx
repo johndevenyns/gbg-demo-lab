@@ -484,7 +484,59 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
           </div>
         )}
 
-        {/* Step 3: Verification Types */}
+        {/* Step 3: Use Cases */}
+        {step === 'use-cases' && (
+          <div className="py-4 space-y-4">
+            {loadingUseCases ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : globalUseCases.filter(uc => uc.isEnabled).length === 0 ? (
+              <p className="text-center text-muted-foreground py-8">
+                No use cases configured. Please add them in Global Settings → Use Cases.
+              </p>
+            ) : (
+              <div className="grid gap-3">
+                {globalUseCases.filter(uc => uc.isEnabled).map((uc) => {
+                  const icons = LucideIcons as unknown as Record<string, React.ComponentType<{ className?: string }>>;
+                  const IconComp = icons[uc.iconName] || icons['Package'];
+                  return (
+                    <button
+                      key={uc.id}
+                      onClick={() => toggleUseCase(uc.id)}
+                      className={cn(
+                        "flex items-center gap-4 p-4 rounded-lg border text-left transition-all",
+                        selectedUseCases.includes(uc.id)
+                          ? "border-primary bg-primary/5"
+                          : "border-border hover:border-muted-foreground/50"
+                      )}
+                    >
+                      <div className={cn(
+                        "w-10 h-10 rounded-lg flex items-center justify-center",
+                        selectedUseCases.includes(uc.id)
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted text-muted-foreground"
+                      )}>
+                        {IconComp && <IconComp className="w-5 h-5" />}
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-medium">{uc.title}</h4>
+                        {uc.description && (
+                          <p className="text-sm text-muted-foreground">{uc.description}</p>
+                        )}
+                      </div>
+                      {selectedUseCases.includes(uc.id) && (
+                        <Check className="w-5 h-5 text-primary" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Step 4: Verification Types */}
         {step === 'verification' && (
           <div className="py-4 space-y-4">
             {loadingTypes ? (
