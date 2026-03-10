@@ -33,7 +33,7 @@ interface SiteMirrorCardProps {
   formStyleContent?: React.ReactNode;
 }
  
- export function SiteMirrorCard({ demo, onApplyBranding, formStyleContent }: SiteMirrorCardProps) {
+ export function SiteMirrorCard({ demo, useCaseLinks, onApplyBranding, formStyleContent }: SiteMirrorCardProps) {
    const { toast } = useToast();
     const [url, setUrl] = useState(demo.customerSiteUrl || "");
     const [previewViewport, setPreviewViewport] = useState<PreviewViewport>('desktop');
