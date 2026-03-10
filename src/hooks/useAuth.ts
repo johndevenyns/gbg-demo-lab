@@ -16,6 +16,7 @@ export function useAuth() {
   const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isGlobalAdmin, setIsGlobalAdmin] = useState(false);
+  const [roleChecked, setRoleChecked] = useState(false);
 
   // Check if user has admin role
   const checkAdminRole = useCallback(async (userId: string) => {
