@@ -254,16 +254,37 @@ export function FormTemplateManagement() {
     setEditorOpen(true);
   };
 
+  // Find a saved override for an industry key by matching the name
+  const findIndustryOverride = (key: IndustryTemplate): SavedTemplate | undefined => {
+    return savedTemplates.find(t => t.name === INDUSTRY_NAMES[key]);
+  };
+
   const handleEditIndustry = (key: IndustryTemplate) => {
+    const override = findIndustryOverride(key);
     const t = INDUSTRY_TEMPLATES[key];
-    setEditingTemplate({
-      name: INDUSTRY_NAMES[key],
-      description: `Industry template for ${INDUSTRY_NAMES[key]}`,
-      category: key,
-      steps: JSON.parse(JSON.stringify(t.formSteps || [])),
-      isIndustry: true,
-      industryKey: key,
-    });
+    if (override) {
+      // Edit the existing saved override
+      setEditingTemplate({
+        id: override.id,
+        name: override.name,
+        description: override.description || `Industry template for ${INDUSTRY_NAMES[key]}`,
+        category: override.category,
+        steps: JSON.parse(JSON.stringify(override.form_steps || [])),
+        formStyle: override.form_style || undefined,
+        isIndustry: true,
+        industryKey: key,
+      });
+    } else {
+      // Create from hardcoded defaults
+      setEditingTemplate({
+        name: INDUSTRY_NAMES[key],
+        description: `Industry template for ${INDUSTRY_NAMES[key]}`,
+        category: key,
+        steps: JSON.parse(JSON.stringify(t.formSteps || [])),
+        isIndustry: true,
+        industryKey: key,
+      });
+    }
     setEditorOpen(true);
   };
 
