@@ -164,6 +164,23 @@ export function UseCaseSection({ demoId, demo, onUpdateDemo }: UseCaseSectionPro
 
                       <CollapsibleContent>
                         <div className="border-t p-4 space-y-4">
+                          {/* Landing Page Toggle */}
+                          <div className="flex items-center gap-3">
+                            <Switch
+                              checked={link.pageContentOverride?.showLandingPage ?? uc.defaultPageContent?.showLandingPage ?? false}
+                              onCheckedChange={(v) => {
+                                const existing = link.pageContentOverride || {};
+                                handleUpdate(link.id, {
+                                  pageContentOverride: { ...existing, showLandingPage: v },
+                                });
+                              }}
+                            />
+                            <div>
+                              <Label className="text-sm">Show Landing Page</Label>
+                              <p className="text-xs text-muted-foreground">When off, users go directly to the first form step</p>
+                            </div>
+                          </div>
+
                           {/* Page Content Override */}
                           <div>
                             <h4 className="text-sm font-medium mb-3">Page Content Override</h4>

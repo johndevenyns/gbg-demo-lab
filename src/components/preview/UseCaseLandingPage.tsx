@@ -18,7 +18,8 @@ export function UseCaseLandingPage({ useCases, buttonColor, onSelectUseCase }: U
   const accent = buttonColor || '#6366f1';
 
   if (useCases.length === 1) {
-    // Single use case - show its landing page directly
+    // Single use case with landing page enabled - show its landing page
+    // (If showLandingPage is false, DemoPreview auto-selects it, so we won't reach here)
     const uc = useCases[0];
     const content = uc.pageContent;
 

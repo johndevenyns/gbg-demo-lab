@@ -7,6 +7,7 @@ export interface UseCasePageContent {
   ctaLabel?: string;
   ctaDescription?: string;
   accentColor?: string;
+  showLandingPage?: boolean;
 }
 
 // Global use case definition (managed by global admins)
