@@ -69,16 +69,22 @@ export default function DemoPreview() {
 
   const hasUseCases = resolvedUseCases.length > 0;
 
-  // Listen for scroll-to-form messages from the header iframe CTA
+  // Listen for CTA messages from the header iframe
   useEffect(() => {
     const handler = (e: MessageEvent) => {
-      if (e.data?.type === 'scroll-to-form' && formRef.current) {
+      if (e.data?.type === 'cta-use-case' && e.data?.useCaseId) {
+        // Find the resolved use case matching the linked ID
+        const target = resolvedUseCases.find(uc => uc.useCaseId === e.data.useCaseId);
+        if (target) {
+          handleSelectUseCase(target);
+        }
+      } else if (e.data?.type === 'scroll-to-form' && formRef.current) {
         formRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
     };
     window.addEventListener('message', handler);
     return () => window.removeEventListener('message', handler);
-  }, []);
+  }, [resolvedUseCases]);
 
   const handleFlowComplete = useCallback((success: boolean, referenceId?: string) => {
     console.log('Flow complete:', { success, referenceId });
