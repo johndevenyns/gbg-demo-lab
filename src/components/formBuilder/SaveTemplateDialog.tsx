@@ -45,6 +45,8 @@ export function SaveTemplateDialog({
   onOpenChange,
   formSteps,
   formStyle,
+  showFillPass: initialShowFillPass = false,
+  showFillFail: initialShowFillFail = false,
   onSaved,
 }: SaveTemplateDialogProps) {
   const [name, setName] = useState('');
