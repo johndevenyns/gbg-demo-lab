@@ -36,12 +36,14 @@ interface SavedTemplate {
   category: string;
   form_steps: FormStep[];
   form_style: FormStyleConfig | null;
+  show_fill_pass: boolean;
+  show_fill_fail: boolean;
   created_at: string;
 }
 
 interface TemplateSelectorProps {
   currentTemplate?: IndustryTemplate;
-  onApplyTemplate: (steps: FormStep[], templateName: string, formStyle?: FormStyleConfig) => void;
+  onApplyTemplate: (steps: FormStep[], templateName: string, formStyle?: FormStyleConfig, fillDefaults?: { showFillPass: boolean; showFillFail: boolean }) => void;
   refreshTrigger?: number;
 }
 
@@ -94,7 +96,8 @@ export function TemplateSelector({ currentTemplate, onApplyTemplate, refreshTrig
     onApplyTemplate(
       template.form_steps,
       template.name,
-      template.form_style || undefined
+      template.form_style || undefined,
+      { showFillPass: template.show_fill_pass, showFillFail: template.show_fill_fail }
     );
   };
 

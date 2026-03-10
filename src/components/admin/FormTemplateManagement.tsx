@@ -15,6 +15,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { FormStep, INDUSTRY_TEMPLATES, IndustryTemplate, DemoEnvironment } from '@/types/demo';
+import { Switch } from '@/components/ui/switch';
 import { FormStyleConfig, DEFAULT_FORM_STYLE } from '@/types/formStyle';
 import { FormBuilderCanvas } from '@/components/formBuilder/FormBuilderCanvas';
 import { supabase } from '@/integrations/supabase/client';
@@ -62,6 +63,8 @@ interface SavedTemplate {
   category: string;
   form_steps: FormStep[];
   form_style: FormStyleConfig | null;
+  show_fill_pass: boolean;
+  show_fill_fail: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -106,6 +109,8 @@ function TemplateEditorDialog({
     category: string;
     steps: FormStep[];
     formStyle?: FormStyleConfig;
+    showFillPass?: boolean;
+    showFillFail?: boolean;
     isIndustry?: boolean;
     industryKey?: IndustryTemplate;
   } | null;
@@ -116,6 +121,8 @@ function TemplateEditorDialog({
     category: string;
     steps: FormStep[];
     formStyle?: FormStyleConfig;
+    showFillPass: boolean;
+    showFillFail: boolean;
   }) => void;
   isSaving: boolean;
 }) {
@@ -124,6 +131,8 @@ function TemplateEditorDialog({
   const [category, setCategory] = useState('custom');
   const [steps, setSteps] = useState<FormStep[]>([]);
   const [formStyle, setFormStyle] = useState<FormStyleConfig | undefined>();
+  const [showFillPass, setShowFillPass] = useState(false);
+  const [showFillFail, setShowFillFail] = useState(false);
 
   useEffect(() => {
     if (template && open) {
@@ -132,6 +141,8 @@ function TemplateEditorDialog({
       setCategory(template.category);
       setSteps(JSON.parse(JSON.stringify(template.steps)));
       setFormStyle(template.formStyle);
+      setShowFillPass(template.showFillPass ?? false);
+      setShowFillFail(template.showFillFail ?? false);
     }
   }, [template, open]);
 
@@ -180,6 +191,29 @@ function TemplateEditorDialog({
             </div>
           </div>
 
+          {/* Fill Pass/Fail defaults */}
+          <div className="flex items-center gap-6 p-4 border rounded-lg bg-muted/20">
+            <h3 className="text-sm font-semibold text-muted-foreground">Test Buttons</h3>
+            <div className="flex items-center gap-2">
+              <Switch
+                id="tpl-fill-pass"
+                checked={showFillPass}
+                onCheckedChange={setShowFillPass}
+                className="scale-90"
+              />
+              <label htmlFor="tpl-fill-pass" className="text-sm cursor-pointer">Fill Pass</label>
+            </div>
+            <div className="flex items-center gap-2">
+              <Switch
+                id="tpl-fill-fail"
+                checked={showFillFail}
+                onCheckedChange={setShowFillFail}
+                className="scale-90"
+              />
+              <label htmlFor="tpl-fill-fail" className="text-sm cursor-pointer">Fill Fail</label>
+            </div>
+          </div>
+
           {/* Form builder canvas */}
           <div className="border rounded-lg p-4 bg-muted/20">
             <h3 className="text-sm font-semibold mb-3 text-muted-foreground">Form Steps</h3>
@@ -194,7 +228,7 @@ function TemplateEditorDialog({
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSaving}>Cancel</Button>
           <Button
-            onClick={() => onSave({ id: template?.id, name, description, category, steps, formStyle })}
+            onClick={() => onSave({ id: template?.id, name, description, category, steps, formStyle, showFillPass, showFillFail })}
             disabled={isSaving || !name.trim()}
           >
             {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
@@ -250,6 +284,8 @@ export function FormTemplateManagement() {
       category: t.category,
       steps: t.form_steps,
       formStyle: t.form_style || undefined,
+      showFillPass: t.show_fill_pass,
+      showFillFail: t.show_fill_fail,
     });
     setEditorOpen(true);
   };
@@ -306,6 +342,8 @@ export function FormTemplateManagement() {
     category: string;
     steps: FormStep[];
     formStyle?: FormStyleConfig;
+    showFillPass: boolean;
+    showFillFail: boolean;
   }) => {
     setIsSaving(true);
     try {
@@ -315,6 +353,8 @@ export function FormTemplateManagement() {
         category: data.category,
         form_steps: JSON.parse(JSON.stringify(data.steps)),
         form_style: data.formStyle ? JSON.parse(JSON.stringify(data.formStyle)) : null,
+        show_fill_pass: data.showFillPass,
+        show_fill_fail: data.showFillFail,
       };
 
       if (data.id) {
@@ -416,6 +456,11 @@ export function FormTemplateManagement() {
                         </Badge>
                         {t.category !== 'custom' && (
                           <Badge variant="secondary" className="text-xs capitalize">{t.category}</Badge>
+                        )}
+                        {(t.show_fill_pass || t.show_fill_fail) && (
+                          <Badge variant="outline" className="text-xs text-muted-foreground">
+                            {[t.show_fill_pass && 'Pass', t.show_fill_fail && 'Fail'].filter(Boolean).join(' / ')}
+                          </Badge>
                         )}
                       </div>
                       {t.description && (

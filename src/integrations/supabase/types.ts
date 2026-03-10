@@ -247,6 +247,8 @@ export type Database = {
           form_style: Json | null
           id: string
           name: string
+          show_fill_fail: boolean
+          show_fill_pass: boolean
           updated_at: string
         }
         Insert: {
@@ -257,6 +259,8 @@ export type Database = {
           form_style?: Json | null
           id?: string
           name: string
+          show_fill_fail?: boolean
+          show_fill_pass?: boolean
           updated_at?: string
         }
         Update: {
@@ -267,6 +271,8 @@ export type Database = {
           form_style?: Json | null
           id?: string
           name?: string
+          show_fill_fail?: boolean
+          show_fill_pass?: boolean
           updated_at?: string
         }
         Relationships: []

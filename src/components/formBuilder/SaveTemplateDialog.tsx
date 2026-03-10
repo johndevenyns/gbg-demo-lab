@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Loader2, Save } from 'lucide-react';
 import { FormStep } from '@/types/demo';
@@ -23,6 +24,8 @@ interface SaveTemplateDialogProps {
   onOpenChange: (open: boolean) => void;
   formSteps: FormStep[];
   formStyle?: FormStyleConfig;
+  showFillPass?: boolean;
+  showFillFail?: boolean;
   onSaved?: () => void;
 }
 
@@ -42,13 +45,16 @@ export function SaveTemplateDialog({
   onOpenChange,
   formSteps,
   formStyle,
+  showFillPass: initialShowFillPass = false,
+  showFillFail: initialShowFillFail = false,
   onSaved,
 }: SaveTemplateDialogProps) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('custom');
   const [isSaving, setIsSaving] = useState(false);
-
+  const [fillPass, setFillPass] = useState(initialShowFillPass);
+  const [fillFail, setFillFail] = useState(initialShowFillFail);
   const handleSave = async () => {
     if (!name.trim()) {
       toast.error('Please enter a template name');
@@ -66,6 +72,8 @@ export function SaveTemplateDialog({
           category,
           form_steps: JSON.parse(JSON.stringify(formSteps)),
           form_style: formStyle ? JSON.parse(JSON.stringify(formStyle)) : null,
+          show_fill_pass: fillPass,
+          show_fill_fail: fillFail,
         }]);
 
       if (error) throw error;
@@ -141,7 +149,19 @@ export function SaveTemplateDialog({
             <ul className="mt-1 text-muted-foreground list-disc list-inside space-y-0.5">
               <li>{formSteps.length} step(s) with all fields and configurations</li>
               {formStyle && <li>Form styling settings</li>}
+              <li>Fill Pass: {fillPass ? 'On' : 'Off'} / Fill Fail: {fillFail ? 'On' : 'Off'}</li>
             </ul>
+          </div>
+
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2">
+              <Switch id="save-fill-pass" checked={fillPass} onCheckedChange={setFillPass} className="scale-90" />
+              <label htmlFor="save-fill-pass" className="text-sm cursor-pointer">Fill Pass button</label>
+            </div>
+            <div className="flex items-center gap-2">
+              <Switch id="save-fill-fail" checked={fillFail} onCheckedChange={setFillFail} className="scale-90" />
+              <label htmlFor="save-fill-fail" className="text-sm cursor-pointer">Fill Fail button</label>
+            </div>
           </div>
         </div>
 
