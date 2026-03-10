@@ -382,6 +382,7 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
           <DialogDescription>
             {step === 'template' && "Choose an industry template to get started"}
             {step === 'details' && "Enter customer details and optionally mirror their site"}
+            {step === 'use-cases' && "Select which use cases to include in this demo"}
             {step === 'verification' && "Select which verification methods to enable"}
             {step === 'providers' && "Select mobile ID providers to include"}
             {step === 'processing' && "Please wait while we configure your demo environment"}
