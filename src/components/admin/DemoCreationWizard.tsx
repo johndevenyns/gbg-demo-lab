@@ -93,10 +93,12 @@ function getIconByName(iconName: string | null): React.ReactNode {
 export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreationWizardProps) {
   const createDemo = useCreateDemo();
   const updateDemo = useUpdateDemo();
+  const addUseCaseLink = useAddDemoUseCaseLink();
   
-  // Fetch available verification types and providers from database
+  // Fetch available data from database
   const { data: verificationTypes = [], isLoading: loadingTypes } = useVerificationTypes(true);
   const { data: mdlProviders = [], isLoading: loadingProviders } = useMdlProviders(true);
+  const { data: globalUseCases = [], isLoading: loadingUseCases } = useGlobalUseCases();
   
   // Wizard state
   const [step, setStep] = useState<WizardStep>('template');
