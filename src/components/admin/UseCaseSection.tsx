@@ -62,7 +62,7 @@ export function UseCaseSection({ demoId, demo, onUpdateDemo }: UseCaseSectionPro
     const steps = link.formStepsOverride ?? globalSteps;
     return {
       ...demo,
-      formSteps: steps as FormStep[],
+      formSteps: steps as unknown as FormStep[],
     };
   }, [demo]);
 
