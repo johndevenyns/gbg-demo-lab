@@ -130,6 +130,8 @@ function TemplateEditorDialog({
   const [category, setCategory] = useState('custom');
   const [steps, setSteps] = useState<FormStep[]>([]);
   const [formStyle, setFormStyle] = useState<FormStyleConfig | undefined>();
+  const [showFillPass, setShowFillPass] = useState(false);
+  const [showFillFail, setShowFillFail] = useState(false);
 
   useEffect(() => {
     if (template && open) {
@@ -138,6 +140,8 @@ function TemplateEditorDialog({
       setCategory(template.category);
       setSteps(JSON.parse(JSON.stringify(template.steps)));
       setFormStyle(template.formStyle);
+      setShowFillPass(template.showFillPass ?? false);
+      setShowFillFail(template.showFillFail ?? false);
     }
   }, [template, open]);
 
