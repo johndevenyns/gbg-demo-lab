@@ -106,8 +106,10 @@ export function UnifiedVerificationRenderer({
     handleChoiceSelect(choice, provider.providerKey);
   }, [handleChoiceSelect]);
 
-  // Auto-trigger for admin_preselect or auto_detect modes
-  const isAutoMode = config.methodSelection === 'admin_preselect' || config.methodSelection === 'auto_detect';
+  // Auto-trigger for admin_preselect or auto_detect modes, or when methodSelection is not set
+  const effectiveMethodSelection = config.methodSelection || 
+    (config.enabledTypes.length <= 1 ? 'admin_preselect' : 'user_choice');
+  const isAutoMode = effectiveMethodSelection === 'admin_preselect' || effectiveMethodSelection === 'auto_detect';
   const firstEnabledType = config.enabledTypes[0] || 'docbio';
   const verificationType = TYPE_KEY_MAP[firstEnabledType] || 'docBio';
 
