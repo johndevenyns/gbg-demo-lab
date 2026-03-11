@@ -1185,7 +1185,7 @@ export function DemoFlowRenderer({
       returnUrl: returnUrl || window.location.href,
       includeQr: includeQr ?? true,
       referenceIdPrefix: referenceIdPrefix,
-      resourceId: getResourceIdForType(verificationType),
+      resourceId: resourceIdOverride || getResourceIdForType(verificationType),
       logoUrl: logoUrl,
       branding: {
         buttonColor: buttonColor,
