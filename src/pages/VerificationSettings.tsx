@@ -64,14 +64,12 @@ function VerificationTypeCard({
   const [editValues, setEditValues] = useState({
     displayName: type.displayName,
     description: type.description || '',
-    defaultResourceId: type.defaultResourceId || '',
   });
 
   const handleSave = () => {
     onUpdate({
       displayName: editValues.displayName,
       description: editValues.description,
-      defaultResourceId: editValues.defaultResourceId,
     });
     setIsEditing(false);
   };
@@ -121,25 +119,15 @@ function VerificationTypeCard({
       </CardHeader>
       <CardContent className="space-y-4">
         {isEditing ? (
-          <>
-            <div className="space-y-2">
-              <Label className="text-sm">Description</Label>
-              <Textarea
-                value={editValues.description}
-                onChange={(e) => setEditValues(prev => ({ ...prev, description: e.target.value }))}
-                className="resize-none"
-                rows={2}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-sm">Default Resource ID</Label>
-              <Input
-                value={editValues.defaultResourceId}
-                onChange={(e) => setEditValues(prev => ({ ...prev, defaultResourceId: e.target.value }))}
-                placeholder="Global default resource ID"
-              />
-            </div>
-          </>
+          <div className="space-y-2">
+            <Label className="text-sm">Description</Label>
+            <Textarea
+              value={editValues.description}
+              onChange={(e) => setEditValues(prev => ({ ...prev, description: e.target.value }))}
+              className="resize-none"
+              rows={2}
+            />
+          </div>
         ) : (
           <>
             <p className="text-sm text-muted-foreground">{type.description}</p>
@@ -154,11 +142,6 @@ function VerificationTypeCard({
                 <Badge variant="outline" className="text-xs">QR Code</Badge>
               )}
             </div>
-            {type.defaultResourceId && (
-              <div className="text-xs text-muted-foreground font-mono bg-muted/50 p-2 rounded">
-                Resource ID: {type.defaultResourceId}
-              </div>
-            )}
           </>
         )}
       </CardContent>
