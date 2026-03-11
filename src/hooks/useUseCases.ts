@@ -200,7 +200,6 @@ export function useUpdateDemoUseCaseLink() {
     },
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ['demo-use-case-links', data.demoId] });
-      toast.success('Use case link updated');
     },
     onError: (e) => toast.error(`Failed to update: ${e.message}`),
   });
