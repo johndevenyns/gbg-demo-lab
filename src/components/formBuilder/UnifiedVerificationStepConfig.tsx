@@ -95,6 +95,7 @@ interface UnifiedVerificationStepConfigProps {
 export function UnifiedVerificationStepConfig({ step, onUpdateStep, demo }: UnifiedVerificationStepConfigProps) {
   const { data: verificationTypes = [], isLoading: typesLoading } = useVerificationTypes(true);
   const { data: mdlProviders = [], isLoading: providersLoading } = useMdlProviders(true);
+  const { data: adminResourceIds = [] } = useAdminResourceIdsForUser(demo?.createdBy);
   
   // Get config from step or use defaults
   const config: UnifiedVerificationConfig = step.unifiedVerificationConfig || DEFAULT_CONFIG;
