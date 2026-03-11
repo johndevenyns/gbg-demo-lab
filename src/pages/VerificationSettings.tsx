@@ -368,7 +368,6 @@ export default function VerificationSettings() {
     updateType.mutate({ id, updates: {
       displayName: updates.displayName,
       description: updates.description || undefined,
-      defaultResourceId: updates.defaultResourceId || undefined,
       isEnabled: updates.isEnabled,
     }});
   };
