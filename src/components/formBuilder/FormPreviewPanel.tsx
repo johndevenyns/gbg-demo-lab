@@ -1,12 +1,13 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { DemoEnvironment } from '@/types/demo';
+import { DemoEnvironment, FormStep } from '@/types/demo';
 import { DemoFlowRenderer } from '@/components/preview/DemoFlowRenderer';
 import { DEFAULT_SUCCESS_CONFIG, DEFAULT_FAILURE_CONFIG } from '@/components/preview/ResultPage';
 import { SubmissionLogPanel, SubmissionLogEntry } from './SubmissionLogPanel';
+import { useDemoUseCaseLinks } from '@/hooks/useUseCases';
 import { 
   Eye, EyeOff, ChevronDown, ChevronUp, RotateCcw, CheckCircle2, XCircle
 } from 'lucide-react';
@@ -19,6 +20,7 @@ export function FormPreviewPanel({ demo }: FormPreviewPanelProps) {
   const [isOpen, setIsOpen] = useState(true);
   const [previewKey, setPreviewKey] = useState(0);
   const [submissionLogs, setSubmissionLogs] = useState<SubmissionLogEntry[]>([]);
+  const { data: useCaseLinks = [] } = useDemoUseCaseLinks(demo.id);
 
   const resetPreview = () => {
     setPreviewKey(prev => prev + 1);
@@ -41,6 +43,27 @@ export function FormPreviewPanel({ demo }: FormPreviewPanelProps) {
     Object.keys(demo.storedTestData.passData || {}).length > 0 ||
     Object.keys(demo.storedTestData.failData || {}).length > 0
   );
+
+  const activePreviewUseCase = useMemo(
+    () => useCaseLinks.find((link) => link.isEnabled) ?? null,
+    [useCaseLinks]
+  );
+
+  const previewSteps = useMemo<FormStep[]>(() => {
+    if (!activePreviewUseCase) return demo.formSteps;
+
+    const linkSteps = activePreviewUseCase.formStepsOverride;
+    if (Array.isArray(linkSteps) && linkSteps.length > 0) {
+      return linkSteps as unknown as FormStep[];
+    }
+
+    const globalSteps = activePreviewUseCase.globalUseCase?.defaultFormSteps;
+    if (Array.isArray(globalSteps) && globalSteps.length > 0) {
+      return globalSteps as unknown as FormStep[];
+    }
+
+    return demo.formSteps;
+  }, [activePreviewUseCase, demo.formSteps]);
 
   return (
     <div className="space-y-6">
@@ -102,10 +125,10 @@ export function FormPreviewPanel({ demo }: FormPreviewPanelProps) {
                   color: demo.formStyle?.labelColor || '#374151',
                 }}
               >
-                {demo.formSteps.length > 0 ? (
+                {previewSteps.length > 0 ? (
                   <DemoFlowRenderer
-                    key={previewKey}
-                    steps={demo.formSteps}
+                    key={`${previewKey}-${activePreviewUseCase?.id ?? 'demo'}`}
+                    steps={previewSteps}
                     buttonColor={demo.buttonColor}
                     formStyle={demo.formStyle}
                     successPageConfig={demo.successPageConfig || DEFAULT_SUCCESS_CONFIG}
@@ -148,3 +171,4 @@ export function FormPreviewPanel({ demo }: FormPreviewPanelProps) {
     </div>
   );
 }
+
