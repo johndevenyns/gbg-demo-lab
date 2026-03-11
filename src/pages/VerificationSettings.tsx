@@ -466,7 +466,7 @@ export default function VerificationSettings() {
               <div>
                 <h2 className="text-lg font-semibold">Verification Types</h2>
                 <p className="text-sm text-muted-foreground">
-                  Configure global settings for each verification method
+                  Enable or disable verification methods available in the form builder
                 </p>
               </div>
             </div>
