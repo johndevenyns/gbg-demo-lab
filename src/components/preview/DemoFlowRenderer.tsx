@@ -1153,7 +1153,7 @@ export function DemoFlowRenderer({
 
   // Create verification session with the API
   // skipAdvance: if true, don't call goToNextStep after creation (for unified_verification)
-  const createVerificationSession = useCallback(async (verificationType: VerificationType, skipAdvance = false) => {
+  const createVerificationSession = useCallback(async (verificationType: VerificationType, skipAdvance = false, resourceIdOverride?: string) => {
     // Guard against duplicate calls
     if (verificationSessionId) {
       console.log('Session already exists, skipping creation');
@@ -1185,7 +1185,7 @@ export function DemoFlowRenderer({
       returnUrl: returnUrl || window.location.href,
       includeQr: includeQr ?? true,
       referenceIdPrefix: referenceIdPrefix,
-      resourceId: getResourceIdForType(verificationType),
+      resourceId: resourceIdOverride || getResourceIdForType(verificationType),
       logoUrl: logoUrl,
       branding: {
         buttonColor: buttonColor,
@@ -1454,8 +1454,9 @@ export function DemoFlowRenderer({
       console.log('Starting mDL verification with provider:', providerId);
     }
     
-    // Create verification session - skip advance so we stay on step to show QR/polling
-    createVerificationSession(verificationType, true);
+    // Create verification session with step-level resource ID override if configured
+    const stepResourceId = typeConfig?.resourceId;
+    createVerificationSession(verificationType, true, stepResourceId || undefined);
   }, [createVerificationSession, currentStep?.unifiedVerificationConfig]);
 
   // Handle step-specific rendering and actions
