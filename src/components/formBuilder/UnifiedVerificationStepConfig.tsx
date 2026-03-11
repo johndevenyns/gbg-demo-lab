@@ -654,8 +654,16 @@ function VerificationTypePanel({
   const isMdlType = typeKey === 'mdl';
   const isDataOnly = typeKey === 'dataonly';
 
+  // Local state for resource ID to prevent overwriting while typing
+  const [localResourceId, setLocalResourceId] = useState(typeConfig.resourceId || '');
+  
+  // Sync local state when typeConfig changes from external source (not our own edits)
+  useEffect(() => {
+    setLocalResourceId(typeConfig.resourceId || '');
+  }, [typeConfig.resourceId]);
+
   // Get default resource ID from demo or global type
-  const getDefaultResourceId = () => {
+  const getDemoLevelResourceId = () => {
     if (demo) {
       switch (typeKey) {
         case 'docbio': return demo.resourceIdDocBio || demo.resourceId;
@@ -664,27 +672,73 @@ function VerificationTypePanel({
         default: return demo.resourceId;
       }
     }
-    return globalType.defaultResourceId || '';
+    return '';
   };
+
+  const globalDefault = globalType.defaultResourceId || '';
+  const demoLevel = getDemoLevelResourceId();
+  const stepOverride = typeConfig.resourceId || '';
+  
+  // Determine which resource ID is actually being used and where it comes from
+  const resolvedId = stepOverride || demoLevel || globalDefault;
+  const resolvedSource = stepOverride ? 'Step Override' : demoLevel ? 'Demo Level' : globalDefault ? 'Global Default' : 'Not Set';
+  const sourceColor = stepOverride ? 'text-primary' : demoLevel ? 'text-amber-600 dark:text-amber-400' : 'text-muted-foreground';
 
   return (
     <div className="space-y-4">
-      {/* Resource ID */}
+      {/* Resolved Resource ID Display */}
+      <div className="p-3 rounded-lg bg-muted/50 border border-border space-y-2">
+        <div className="flex items-center justify-between">
+          <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Active Resource ID</Label>
+          <Badge variant="outline" className={`text-xs ${sourceColor}`}>
+            {resolvedSource}
+          </Badge>
+        </div>
+        {resolvedId ? (
+          <code className="block text-sm font-mono bg-background px-2 py-1.5 rounded border border-border break-all">
+            {resolvedId}
+          </code>
+        ) : (
+          <p className="text-sm text-destructive italic">No resource ID configured — verification will fail</p>
+        )}
+        {/* Show hierarchy */}
+        <div className="text-xs text-muted-foreground space-y-0.5 pt-1 border-t border-border">
+          <div className="flex items-center gap-2">
+            <span className={`w-2 h-2 rounded-full ${globalDefault ? 'bg-muted-foreground' : 'bg-muted'}`} />
+            <span>Global: {globalDefault ? <code className="bg-muted px-1 rounded">{globalDefault}</code> : <span className="italic">not set</span>}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className={`w-2 h-2 rounded-full ${demoLevel ? 'bg-amber-500' : 'bg-muted'}`} />
+            <span>Demo: {demoLevel ? <code className="bg-muted px-1 rounded">{demoLevel}</code> : <span className="italic">not set</span>}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className={`w-2 h-2 rounded-full ${stepOverride ? 'bg-primary' : 'bg-muted'}`} />
+            <span>Step Override: {stepOverride ? <code className="bg-muted px-1 rounded">{stepOverride}</code> : <span className="italic">not set</span>}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Resource ID Override Input */}
       <div className="space-y-2">
-        <Label className="text-sm font-medium">Resource ID</Label>
+        <Label className="text-sm font-medium">Override Resource ID</Label>
         <Input
-          value={typeConfig.resourceId || ''}
-          onChange={(e) => onUpdate({ resourceId: e.target.value })}
-          placeholder={getDefaultResourceId() || 'Uses global default'}
+          value={localResourceId}
+          onChange={(e) => setLocalResourceId(e.target.value)}
+          onBlur={() => {
+            if (localResourceId !== (typeConfig.resourceId || '')) {
+              onUpdate({ resourceId: localResourceId || undefined });
+            }
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              (e.target as HTMLInputElement).blur();
+            }
+          }}
+          placeholder={demoLevel || globalDefault || 'Enter Resource ID to override...'}
           className="font-mono text-sm"
         />
         <p className="text-xs text-muted-foreground">
-          Override the demo's default resource ID for this verification type.
-          {getDefaultResourceId() && (
-            <span className="block mt-1">
-              Current default: <code className="bg-muted px-1 rounded">{getDefaultResourceId()}</code>
-            </span>
-          )}
+          Set a resource ID specific to this verification step. Leave empty to use the demo or global default.
         </p>
       </div>
 
