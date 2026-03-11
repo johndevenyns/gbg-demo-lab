@@ -720,53 +720,38 @@ function VerificationTypePanel({
 
   return (
     <div className="space-y-4">
-      {/* Resource ID Selector */}
-      <div className="space-y-3">
+      {/* Resource ID Selector - Compact inline layout */}
+      <div className="space-y-2">
         <Label className="text-sm font-medium">Resource ID</Label>
-        <Select value={resourceIdMode} onValueChange={handleModeChange}>
-          <SelectTrigger className="h-9">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="global">
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-muted-foreground shrink-0" />
-                <span>Global Default</span>
-                {globalDefault && <code className="text-xs bg-muted px-1 rounded ml-1 font-mono">{globalDefault.length > 20 ? globalDefault.slice(0, 20) + '…' : globalDefault}</code>}
-                {!globalDefault && <span className="text-xs text-muted-foreground italic ml-1">not set</span>}
-              </div>
-            </SelectItem>
-            <SelectItem value="admin" disabled={!adminDefault}>
-              <div className="flex items-center gap-2">
-                <span className={`w-2 h-2 rounded-full shrink-0 ${adminDefault ? 'bg-emerald-500' : 'bg-muted'}`} />
-                <span>Admin Default</span>
-                {adminDefault && <code className="text-xs bg-muted px-1 rounded ml-1 font-mono">{adminDefault.length > 20 ? adminDefault.slice(0, 20) + '…' : adminDefault}</code>}
-                {!adminDefault && <span className="text-xs text-muted-foreground italic ml-1">not set</span>}
-              </div>
-            </SelectItem>
-            <SelectItem value="custom">
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-primary shrink-0" />
-                <span>Custom</span>
-              </div>
-            </SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-2">
+          <Select value={resourceIdMode} onValueChange={handleModeChange}>
+            <SelectTrigger className="h-8 w-[140px] text-xs shrink-0">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="global">
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-muted-foreground shrink-0" />
+                  <span>Global</span>
+                </div>
+              </SelectItem>
+              <SelectItem value="admin" disabled={!adminDefault}>
+                <div className="flex items-center gap-2">
+                  <span className={`w-2 h-2 rounded-full shrink-0 ${adminDefault ? 'bg-emerald-500' : 'bg-muted'}`} />
+                  <span>Admin</span>
+                </div>
+              </SelectItem>
+              <SelectItem value="custom">
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-primary shrink-0" />
+                  <span>Custom</span>
+                </div>
+              </SelectItem>
+            </SelectContent>
+          </Select>
 
-        {/* Show the active resource ID */}
-        {resourceIdMode !== 'custom' && activeId && (
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <span>Using:</span>
-            <code className="font-mono bg-muted px-1.5 py-0.5 rounded border border-border break-all">{activeId}</code>
-          </div>
-        )}
-        {resourceIdMode !== 'custom' && !activeId && (
-          <p className="text-xs text-destructive italic">No resource ID configured at this level — verification may fail</p>
-        )}
-
-        {/* Custom input - only when custom is selected */}
-        {resourceIdMode === 'custom' && (
-          <div className="space-y-1.5">
+          {/* Show active ID or custom input */}
+          {resourceIdMode === 'custom' ? (
             <Input
               value={localResourceId}
               onChange={(e) => setLocalResourceId(e.target.value)}
@@ -780,13 +765,23 @@ function VerificationTypePanel({
                   (e.target as HTMLInputElement).blur();
                 }
               }}
-              placeholder="Enter custom Resource ID..."
-              className="font-mono text-sm"
+              placeholder="Enter Resource ID..."
+              className="font-mono text-sm h-8 flex-1"
             />
-            <p className="text-xs text-muted-foreground">
-              This resource ID will be used only for this verification step.
-            </p>
-          </div>
+          ) : (
+            <div className="flex items-center gap-2 flex-1 min-w-0">
+              {activeId ? (
+                <code className="font-mono text-xs bg-muted px-2 py-1.5 rounded border border-border truncate">{activeId}</code>
+              ) : (
+                <span className="text-xs text-destructive italic">Not configured</span>
+              )}
+            </div>
+          )}
+        </div>
+        {resourceIdMode === 'custom' && (
+          <p className="text-xs text-muted-foreground">
+            This resource ID will be used only for this verification step.
+          </p>
         )}
       </div>
 
