@@ -54,12 +54,12 @@ export function FormPreviewPanel({ demo }: FormPreviewPanelProps) {
 
     const linkSteps = activePreviewUseCase.formStepsOverride;
     if (Array.isArray(linkSteps) && linkSteps.length > 0) {
-      return linkSteps as FormStep[];
+      return linkSteps as unknown as FormStep[];
     }
 
     const globalSteps = activePreviewUseCase.globalUseCase?.defaultFormSteps;
     if (Array.isArray(globalSteps) && globalSteps.length > 0) {
-      return globalSteps as FormStep[];
+      return globalSteps as unknown as FormStep[];
     }
 
     return demo.formSteps;
