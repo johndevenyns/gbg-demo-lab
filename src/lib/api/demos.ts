@@ -20,17 +20,22 @@ const FIELD_NAME_ALIASES: Record<string, string> = {
 };
 
 // Normalize field names in form steps to canonical API-compatible names
-const normalizeFormSteps = (steps: FormStep[]): FormStep[] => {
-  return steps.map(step => ({
-    ...step,
-    fields: step.fields.map(field => {
-      const canonicalName = FIELD_NAME_ALIASES[field.name];
-      if (canonicalName) {
-        return { ...field, name: canonicalName };
-      }
-      return field;
-    }),
-  }));
+const normalizeFormSteps = (steps: FormStep[] | null | undefined): FormStep[] => {
+  return (steps || []).map((step) => {
+    const rawFields = (step as Partial<FormStep>).fields;
+    const fields = Array.isArray(rawFields) ? rawFields : [];
+
+    return {
+      ...step,
+      fields: fields.map((field) => {
+        const canonicalName = FIELD_NAME_ALIASES[field.name];
+        if (canonicalName) {
+          return { ...field, name: canonicalName };
+        }
+        return field;
+      }),
+    };
+  });
 };
 
 // Helper to convert database row to DemoEnvironment
