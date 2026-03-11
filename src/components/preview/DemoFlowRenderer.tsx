@@ -1454,8 +1454,9 @@ export function DemoFlowRenderer({
       console.log('Starting mDL verification with provider:', providerId);
     }
     
-    // Create verification session - skip advance so we stay on step to show QR/polling
-    createVerificationSession(verificationType, true);
+    // Create verification session with step-level resource ID override if configured
+    const stepResourceId = typeConfig?.resourceId;
+    createVerificationSession(verificationType, true, stepResourceId || undefined);
   }, [createVerificationSession, currentStep?.unifiedVerificationConfig]);
 
   // Handle step-specific rendering and actions
