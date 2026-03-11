@@ -662,16 +662,14 @@ function VerificationTypePanel({
   // Local state for resource ID to prevent overwriting while typing
   const [localResourceId, setLocalResourceId] = useState(typeConfig.resourceId || '');
   
-  // Sync local state when typeConfig changes from external source (not our own edits)
+  // Sync local state when typeConfig changes from external source
   useEffect(() => {
     setLocalResourceId(typeConfig.resourceId || '');
   }, [typeConfig.resourceId]);
 
-  // 3-tier hierarchy: Global → Admin → Demo (step override)
+  // 3-tier values
   const globalDefault = globalType.defaultResourceId || '';
-  
   const adminDefault = adminResourceIds.find(a => a.typeKey === typeKey)?.resourceId || '';
-  
   const getDemoLevelResourceId = () => {
     if (demo) {
       switch (typeKey) {
@@ -684,88 +682,112 @@ function VerificationTypePanel({
     return '';
   };
   const demoLevel = getDemoLevelResourceId();
-  
-  const stepOverride = typeConfig.resourceId || '';
-  
-  // Resolution order: Step Override → Demo Level → Admin Default → Global Default
-  const resolvedId = stepOverride || demoLevel || adminDefault || globalDefault;
-  const resolvedSource = stepOverride 
-    ? 'Step Override' 
-    : demoLevel 
-      ? 'Demo Level' 
-      : adminDefault 
-        ? 'Admin Default' 
-        : globalDefault 
-          ? 'Global Default' 
-          : 'Not Set';
-  const sourceColor = stepOverride 
-    ? 'text-primary' 
-    : demoLevel 
-      ? 'text-amber-600 dark:text-amber-400' 
-      : adminDefault 
-        ? 'text-emerald-600 dark:text-emerald-400' 
-        : 'text-muted-foreground';
+
+  // Determine current selection mode from typeConfig
+  // If there's a step override stored, mode is 'custom'
+  // Otherwise we infer from what's available or default to global
+  const getInitialMode = (): 'global' | 'admin' | 'custom' => {
+    if (typeConfig.resourceId) return 'custom';
+    // Check if the demo-level resource ID is set (meaning admin chose demo-level)
+    // But since we're simplifying to 3 options, if no override → pick the highest available
+    return 'global';
+  };
+
+  const [resourceIdMode, setResourceIdMode] = useState<'global' | 'admin' | 'custom'>(getInitialMode);
+
+  // Sync mode when typeConfig changes externally
+  useEffect(() => {
+    if (typeConfig.resourceId) {
+      setResourceIdMode('custom');
+    }
+  }, [typeConfig.resourceId]);
+
+  const activeId = resourceIdMode === 'custom' 
+    ? (typeConfig.resourceId || '') 
+    : resourceIdMode === 'admin' 
+      ? adminDefault 
+      : globalDefault;
+
+  const handleModeChange = (mode: string) => {
+    const newMode = mode as 'global' | 'admin' | 'custom';
+    setResourceIdMode(newMode);
+    if (newMode !== 'custom') {
+      // Clear the step override when switching away from custom
+      setLocalResourceId('');
+      onUpdate({ resourceId: undefined });
+    }
+  };
 
   return (
     <div className="space-y-4">
-      {/* Resolved Resource ID Display */}
-      <div className="p-3 rounded-lg bg-muted/50 border border-border space-y-2">
-        <div className="flex items-center justify-between">
-          <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Active Resource ID</Label>
-          <Badge variant="outline" className={`text-xs ${sourceColor}`}>
-            {resolvedSource}
-          </Badge>
-        </div>
-        {resolvedId ? (
-          <code className="block text-sm font-mono bg-background px-2 py-1.5 rounded border border-border break-all">
-            {resolvedId}
-          </code>
-        ) : (
-          <p className="text-sm text-destructive italic">No resource ID configured — verification will fail</p>
-        )}
-        {/* Show full 4-tier hierarchy */}
-        <div className="text-xs text-muted-foreground space-y-0.5 pt-1 border-t border-border">
-          <div className="flex items-center gap-2">
-            <span className={`w-2 h-2 rounded-full shrink-0 ${globalDefault ? 'bg-muted-foreground' : 'bg-muted'}`} />
-            <span>Global Default: {globalDefault ? <code className="bg-muted px-1 rounded">{globalDefault}</code> : <span className="italic">not set</span>}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className={`w-2 h-2 rounded-full shrink-0 ${adminDefault ? 'bg-emerald-500' : 'bg-muted'}`} />
-            <span>Admin Default: {adminDefault ? <code className="bg-muted px-1 rounded">{adminDefault}</code> : <span className="italic">not set</span>}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className={`w-2 h-2 rounded-full shrink-0 ${demoLevel ? 'bg-amber-500' : 'bg-muted'}`} />
-            <span>Demo Level: {demoLevel ? <code className="bg-muted px-1 rounded">{demoLevel}</code> : <span className="italic">not set</span>}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className={`w-2 h-2 rounded-full shrink-0 ${stepOverride ? 'bg-primary' : 'bg-muted'}`} />
-            <span>Step Override: {stepOverride ? <code className="bg-muted px-1 rounded">{stepOverride}</code> : <span className="italic">not set</span>}</span>
-          </div>
-        </div>
-      </div>
+      {/* Resource ID Selector */}
+      <div className="space-y-3">
+        <Label className="text-sm font-medium">Resource ID</Label>
+        <Select value={resourceIdMode} onValueChange={handleModeChange}>
+          <SelectTrigger className="h-9">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="global">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-muted-foreground shrink-0" />
+                <span>Global Default</span>
+                {globalDefault && <code className="text-xs bg-muted px-1 rounded ml-1 font-mono">{globalDefault.length > 20 ? globalDefault.slice(0, 20) + '…' : globalDefault}</code>}
+                {!globalDefault && <span className="text-xs text-muted-foreground italic ml-1">not set</span>}
+              </div>
+            </SelectItem>
+            <SelectItem value="admin" disabled={!adminDefault}>
+              <div className="flex items-center gap-2">
+                <span className={`w-2 h-2 rounded-full shrink-0 ${adminDefault ? 'bg-emerald-500' : 'bg-muted'}`} />
+                <span>Admin Default</span>
+                {adminDefault && <code className="text-xs bg-muted px-1 rounded ml-1 font-mono">{adminDefault.length > 20 ? adminDefault.slice(0, 20) + '…' : adminDefault}</code>}
+                {!adminDefault && <span className="text-xs text-muted-foreground italic ml-1">not set</span>}
+              </div>
+            </SelectItem>
+            <SelectItem value="custom">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-primary shrink-0" />
+                <span>Custom</span>
+              </div>
+            </SelectItem>
+          </SelectContent>
+        </Select>
 
-      {/* Resource ID Override Input */}
-      <div className="space-y-2">
-        <Label className="text-sm font-medium">Override Resource ID</Label>
-        <Input
-          value={localResourceId}
-          onChange={(e) => setLocalResourceId(e.target.value)}
-          onBlur={() => {
-            if (localResourceId !== (typeConfig.resourceId || '')) {
-              onUpdate({ resourceId: localResourceId || undefined });
-            }
-          }}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              (e.target as HTMLInputElement).blur();
-            }
-          }}
-          placeholder={demoLevel || adminDefault || globalDefault || 'Enter Resource ID to override...'}
-          className="font-mono text-sm"
-        />
-        <p className="text-xs text-muted-foreground">
-          Set a resource ID specific to this verification step. Leave empty to inherit from the hierarchy above.
-        </p>
+        {/* Show the active resource ID */}
+        {resourceIdMode !== 'custom' && activeId && (
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <span>Using:</span>
+            <code className="font-mono bg-muted px-1.5 py-0.5 rounded border border-border break-all">{activeId}</code>
+          </div>
+        )}
+        {resourceIdMode !== 'custom' && !activeId && (
+          <p className="text-xs text-destructive italic">No resource ID configured at this level — verification may fail</p>
+        )}
+
+        {/* Custom input - only when custom is selected */}
+        {resourceIdMode === 'custom' && (
+          <div className="space-y-1.5">
+            <Input
+              value={localResourceId}
+              onChange={(e) => setLocalResourceId(e.target.value)}
+              onBlur={() => {
+                if (localResourceId !== (typeConfig.resourceId || '')) {
+                  onUpdate({ resourceId: localResourceId || undefined });
+                }
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  (e.target as HTMLInputElement).blur();
+                }
+              }}
+              placeholder="Enter custom Resource ID..."
+              className="font-mono text-sm"
+            />
+            <p className="text-xs text-muted-foreground">
+              This resource ID will be used only for this verification step.
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Custom display settings */}
