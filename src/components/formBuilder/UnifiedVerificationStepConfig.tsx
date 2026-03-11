@@ -497,6 +497,7 @@ export function UnifiedVerificationStepConfig({ step, onUpdateStep, demo }: Unif
                       typeConfig={typeConfig}
                       mdlProviders={mdlProviders}
                       demo={demo}
+                      adminResourceIds={adminResourceIds}
                       onUpdate={(updates) => handleTypeConfigUpdate(typeKey, updates)}
                     />
                   </AccordionContent>
