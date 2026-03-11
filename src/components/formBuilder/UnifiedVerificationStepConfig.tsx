@@ -643,6 +643,7 @@ interface VerificationTypePanelProps {
   typeConfig: VerificationTypeOverride;
   mdlProviders: MdlProvider[];
   demo?: DemoEnvironment;
+  adminResourceIds: import('@/hooks/useAdminResourceIds').AdminResourceId[];
   onUpdate: (updates: Partial<VerificationTypeOverride>) => void;
 }
 
@@ -652,6 +653,7 @@ function VerificationTypePanel({
   typeConfig, 
   mdlProviders,
   demo,
+  adminResourceIds,
   onUpdate 
 }: VerificationTypePanelProps) {
   const isMdlType = typeKey === 'mdl';
@@ -665,7 +667,11 @@ function VerificationTypePanel({
     setLocalResourceId(typeConfig.resourceId || '');
   }, [typeConfig.resourceId]);
 
-  // Get default resource ID from demo or global type
+  // 3-tier hierarchy: Global → Admin → Demo (step override)
+  const globalDefault = globalType.defaultResourceId || '';
+  
+  const adminDefault = adminResourceIds.find(a => a.typeKey === typeKey)?.resourceId || '';
+  
   const getDemoLevelResourceId = () => {
     if (demo) {
       switch (typeKey) {
@@ -677,15 +683,28 @@ function VerificationTypePanel({
     }
     return '';
   };
-
-  const globalDefault = globalType.defaultResourceId || '';
   const demoLevel = getDemoLevelResourceId();
+  
   const stepOverride = typeConfig.resourceId || '';
   
-  // Determine which resource ID is actually being used and where it comes from
-  const resolvedId = stepOverride || demoLevel || globalDefault;
-  const resolvedSource = stepOverride ? 'Step Override' : demoLevel ? 'Demo Level' : globalDefault ? 'Global Default' : 'Not Set';
-  const sourceColor = stepOverride ? 'text-primary' : demoLevel ? 'text-amber-600 dark:text-amber-400' : 'text-muted-foreground';
+  // Resolution order: Step Override → Demo Level → Admin Default → Global Default
+  const resolvedId = stepOverride || demoLevel || adminDefault || globalDefault;
+  const resolvedSource = stepOverride 
+    ? 'Step Override' 
+    : demoLevel 
+      ? 'Demo Level' 
+      : adminDefault 
+        ? 'Admin Default' 
+        : globalDefault 
+          ? 'Global Default' 
+          : 'Not Set';
+  const sourceColor = stepOverride 
+    ? 'text-primary' 
+    : demoLevel 
+      ? 'text-amber-600 dark:text-amber-400' 
+      : adminDefault 
+        ? 'text-emerald-600 dark:text-emerald-400' 
+        : 'text-muted-foreground';
 
   return (
     <div className="space-y-4">
@@ -704,18 +723,22 @@ function VerificationTypePanel({
         ) : (
           <p className="text-sm text-destructive italic">No resource ID configured — verification will fail</p>
         )}
-        {/* Show hierarchy */}
+        {/* Show full 4-tier hierarchy */}
         <div className="text-xs text-muted-foreground space-y-0.5 pt-1 border-t border-border">
           <div className="flex items-center gap-2">
-            <span className={`w-2 h-2 rounded-full ${globalDefault ? 'bg-muted-foreground' : 'bg-muted'}`} />
-            <span>Global: {globalDefault ? <code className="bg-muted px-1 rounded">{globalDefault}</code> : <span className="italic">not set</span>}</span>
+            <span className={`w-2 h-2 rounded-full shrink-0 ${globalDefault ? 'bg-muted-foreground' : 'bg-muted'}`} />
+            <span>Global Default: {globalDefault ? <code className="bg-muted px-1 rounded">{globalDefault}</code> : <span className="italic">not set</span>}</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className={`w-2 h-2 rounded-full ${demoLevel ? 'bg-amber-500' : 'bg-muted'}`} />
-            <span>Demo: {demoLevel ? <code className="bg-muted px-1 rounded">{demoLevel}</code> : <span className="italic">not set</span>}</span>
+            <span className={`w-2 h-2 rounded-full shrink-0 ${adminDefault ? 'bg-emerald-500' : 'bg-muted'}`} />
+            <span>Admin Default: {adminDefault ? <code className="bg-muted px-1 rounded">{adminDefault}</code> : <span className="italic">not set</span>}</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className={`w-2 h-2 rounded-full ${stepOverride ? 'bg-primary' : 'bg-muted'}`} />
+            <span className={`w-2 h-2 rounded-full shrink-0 ${demoLevel ? 'bg-amber-500' : 'bg-muted'}`} />
+            <span>Demo Level: {demoLevel ? <code className="bg-muted px-1 rounded">{demoLevel}</code> : <span className="italic">not set</span>}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className={`w-2 h-2 rounded-full shrink-0 ${stepOverride ? 'bg-primary' : 'bg-muted'}`} />
             <span>Step Override: {stepOverride ? <code className="bg-muted px-1 rounded">{stepOverride}</code> : <span className="italic">not set</span>}</span>
           </div>
         </div>
@@ -737,11 +760,11 @@ function VerificationTypePanel({
               (e.target as HTMLInputElement).blur();
             }
           }}
-          placeholder={demoLevel || globalDefault || 'Enter Resource ID to override...'}
+          placeholder={demoLevel || adminDefault || globalDefault || 'Enter Resource ID to override...'}
           className="font-mono text-sm"
         />
         <p className="text-xs text-muted-foreground">
-          Set a resource ID specific to this verification step. Leave empty to use the demo or global default.
+          Set a resource ID specific to this verification step. Leave empty to inherit from the hierarchy above.
         </p>
       </div>
 
