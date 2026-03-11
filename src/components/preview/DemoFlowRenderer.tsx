@@ -1446,16 +1446,27 @@ export function DemoFlowRenderer({
     console.log('Unified verification selected:', verificationType, typeKey, 'provider:', providerId);
     setSelectedVerificationType(verificationType);
     
-    // Get type-specific config if available
-    const typeConfig = currentStep?.unifiedVerificationConfig?.typeConfigs?.[typeKey];
-    
+    // Resolve step-level resource ID override robustly across key formats
+    const typeConfigs = currentStep?.unifiedVerificationConfig?.typeConfigs || {};
+    const canonicalTypeKey = verificationType === 'docBio'
+      ? 'docbio'
+      : verificationType === 'dataBio'
+        ? 'databio'
+        : verificationType === 'dataOnly'
+          ? 'dataonly'
+          : typeKey;
+
+    const stepResourceId =
+      typeConfigs[typeKey]?.resourceId ||
+      typeConfigs[typeKey?.toLowerCase?.() || '']?.resourceId ||
+      typeConfigs[canonicalTypeKey]?.resourceId;
+
     // TODO: If mDL with providerId, use the provider-specific flow
     if (typeKey === 'mdl' && providerId) {
       console.log('Starting mDL verification with provider:', providerId);
     }
-    
+
     // Create verification session with step-level resource ID override if configured
-    const stepResourceId = typeConfig?.resourceId;
     createVerificationSession(verificationType, true, stepResourceId || undefined);
   }, [createVerificationSession, currentStep?.unifiedVerificationConfig]);
 
