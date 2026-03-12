@@ -97,8 +97,14 @@ export function UnifiedVerificationStepConfig({ step, onUpdateStep, demo }: Unif
   const { data: mdlProviders = [], isLoading: providersLoading } = useMdlProviders(true);
   const { data: adminResourceIds = [] } = useAdminResourceIdsForUser(demo?.createdBy);
   
-  // Get config from step or use defaults
-  const config: UnifiedVerificationConfig = step.unifiedVerificationConfig || DEFAULT_CONFIG;
+  // Get config from step or use defaults, ensuring all required arrays exist
+  const rawConfig = step.unifiedVerificationConfig || DEFAULT_CONFIG;
+  const config: UnifiedVerificationConfig = {
+    ...DEFAULT_CONFIG,
+    ...rawConfig,
+    enabledTypes: rawConfig.enabledTypes || (rawConfig as any).enabledMethods || DEFAULT_CONFIG.enabledTypes,
+    typeConfigs: rawConfig.typeConfigs || {},
+  };
   
   // Track which accordion panel is open (single open at a time for accordion style)
   const [openPanel, setOpenPanel] = useState<string | undefined>(
