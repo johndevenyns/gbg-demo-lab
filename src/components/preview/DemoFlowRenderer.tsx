@@ -141,7 +141,7 @@ interface StyledFormFieldsProps {
   onNavigateToLogin?: () => void;
 }
 
-function StyledFormFields({ fields, formData, onInputChange, style, fieldErrors = {} }: StyledFormFieldsProps) {
+function StyledFormFields({ fields, formData, onInputChange, style, fieldErrors = {}, onNavigateToLogin }: StyledFormFieldsProps) {
   const borderRadiusMap = {
     none: '0px',
     sm: '4px',
