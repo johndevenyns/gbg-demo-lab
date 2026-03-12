@@ -2135,13 +2135,159 @@ export function DemoFlowRenderer({
       default:
         // Form step - apply custom styling
         return (
-          <StyledFormFields
-            fields={currentStep.fields}
-            formData={formData}
-            onInputChange={handleInputChange}
-            style={style}
-            fieldErrors={fieldErrors}
-          />
+          <div>
+            <StyledFormFields
+              fields={currentStep.fields}
+              formData={formData}
+              onInputChange={handleInputChange}
+              style={style}
+              fieldErrors={fieldErrors}
+            />
+            {/* Login error message */}
+            {currentStep.submitAction === 'login' && loginError && (
+              <div style={{
+                marginTop: '12px',
+                padding: '10px 14px',
+                backgroundColor: `${style.errorColor}10`,
+                border: `1px solid ${style.errorColor}30`,
+                borderRadius: '8px',
+                color: style.errorColor,
+                fontSize: '14px',
+                fontFamily: style.fontFamily,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+              }}>
+                <AlertCircle style={{ width: 16, height: 16, flexShrink: 0 }} />
+                {loginError}
+              </div>
+            )}
+            {/* Forgot Password link for login steps */}
+            {currentStep.submitAction === 'login' && (
+              <div style={{ marginTop: '8px', textAlign: 'right' }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowForgotPassword(true);
+                    setForgotPasswordEmail(formData.email || '');
+                    setForgotPasswordSuccess(false);
+                  }}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontSize: '13px',
+                    color: style.inputFocusBorderColor || effectiveButtonBgColor,
+                    fontFamily: style.fontFamily,
+                    textDecoration: 'underline',
+                    padding: 0,
+                  }}
+                >
+                  Forgot Password?
+                </button>
+              </div>
+            )}
+            {/* Forgot Password inline dialog */}
+            {showForgotPassword && currentStep.submitAction === 'login' && (
+              <div style={{
+                marginTop: '16px',
+                padding: '16px',
+                border: `1px solid ${style.inputBorderColor}`,
+                borderRadius: '8px',
+                backgroundColor: style.inputBgColor,
+                fontFamily: style.fontFamily,
+              }}>
+                {forgotPasswordSuccess ? (
+                  <div style={{ textAlign: 'center' }}>
+                    <CheckCircle2 style={{ width: 32, height: 32, color: style.successColor || '#22c55e', margin: '0 auto 8px' }} />
+                    <p style={{ fontSize: '14px', color: style.labelColor, fontWeight: 500 }}>
+                      Password reset instructions sent
+                    </p>
+                    <p style={{ fontSize: '13px', color: '#6b7280', marginTop: '4px' }}>
+                      Please contact your administrator to reset your password.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setShowForgotPassword(false)}
+                      style={{
+                        marginTop: '12px',
+                        fontSize: '13px',
+                        color: style.inputFocusBorderColor || effectiveButtonBgColor,
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        textDecoration: 'underline',
+                      }}
+                    >
+                      Back to Sign In
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <p style={{ fontSize: '14px', color: style.labelColor, fontWeight: 500, marginBottom: '8px' }}>
+                      Reset Password
+                    </p>
+                    <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '12px' }}>
+                      Enter your email address and we'll help you reset your password.
+                    </p>
+                    <input
+                      type="email"
+                      value={forgotPasswordEmail}
+                      onChange={(e) => setForgotPasswordEmail(e.target.value)}
+                      placeholder="Enter your email"
+                      style={{
+                        width: '100%',
+                        padding: '10px 14px',
+                        fontSize: '14px',
+                        border: `${style.borderWidth}px solid ${style.inputBorderColor}`,
+                        borderRadius: '6px',
+                        fontFamily: style.fontFamily,
+                        backgroundColor: style.inputBgColor,
+                        color: style.inputTextColor,
+                        outline: 'none',
+                        marginBottom: '12px',
+                        boxSizing: 'border-box',
+                      }}
+                    />
+                    <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                      <button
+                        type="button"
+                        onClick={() => setShowForgotPassword(false)}
+                        style={{
+                          padding: '8px 16px',
+                          fontSize: '13px',
+                          border: `1px solid ${style.inputBorderColor}`,
+                          borderRadius: '6px',
+                          background: 'transparent',
+                          color: style.labelColor,
+                          cursor: 'pointer',
+                          fontFamily: style.fontFamily,
+                        }}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setForgotPasswordSuccess(true)}
+                        style={{
+                          padding: '8px 16px',
+                          fontSize: '13px',
+                          border: 'none',
+                          borderRadius: '6px',
+                          backgroundColor: effectiveButtonBgColor,
+                          color: effectiveButtonTextColor,
+                          cursor: 'pointer',
+                          fontFamily: style.fontFamily,
+                        }}
+                      >
+                        Send Reset Link
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
         );
     }
   };
