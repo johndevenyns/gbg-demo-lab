@@ -1,5 +1,5 @@
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Save, Eye, Loader2, Settings, Globe, Palette, PlayCircle, Calendar, User, PanelLeftClose, PanelLeft, Copy, ExternalLink, Briefcase } from "lucide-react";
+import { ArrowLeft, Save, Eye, Loader2, Settings, Globe, Palette, PlayCircle, Calendar, User, PanelLeftClose, PanelLeft, Copy, ExternalLink, Briefcase, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,15 +23,17 @@ import { FormPreviewPanel } from "@/components/formBuilder/FormPreviewPanel";
 import { LogoUploadSection } from "@/components/admin/LogoUploadSection";
 import { BrandingScrapeSection } from "@/components/admin/BrandingScrapeSection";
 import { cn } from "@/lib/utils";
+import { DemoUserManagement } from "@/components/admin/DemoUserManagement";
 
 // Navigation sections
-type ConfigSection = 'settings' | 'mirror' | 'branding' | 'use-cases' | 'preview';
+type ConfigSection = 'settings' | 'mirror' | 'branding' | 'use-cases' | 'users' | 'preview';
 
 const sections: { id: ConfigSection; label: string; icon: React.ElementType; description: string }[] = [
   { id: 'settings', label: 'Site Settings', icon: Settings, description: 'Core configuration' },
   { id: 'mirror', label: 'Appearance', icon: Globe, description: 'Site & form styling' },
   { id: 'branding', label: 'Mobile Branding', icon: Palette, description: 'Colors & logo' },
   { id: 'use-cases', label: 'Use Cases', icon: Briefcase, description: 'Journeys & form builder' },
+  { id: 'users', label: 'Demo Users', icon: Users, description: 'Manage demo user accounts' },
   { id: 'preview', label: 'Live Preview', icon: PlayCircle, description: 'Test the flow' },
 ];
 
@@ -277,6 +279,8 @@ export default function DemoConfig() {
         return <BrandingSection demo={localDemo} onUpdate={handleUpdate} />;
       case 'use-cases':
         return <UseCaseSection demoId={localDemo.id} demo={localDemo} onUpdateDemo={handleUpdate} />;
+      case 'users':
+        return <DemoUserManagement demoId={localDemo.id} demoName={localDemo.customerName} />;
       case 'preview':
         return <FormPreviewPanel demo={localDemo} />;
       default:
