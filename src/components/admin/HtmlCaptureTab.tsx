@@ -51,60 +51,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
  }
  
  // Convert FormElementStyles to FormStyleConfig
- function formElementStylesToConfig(styles: FormElementStyles): FormStyleConfig {
-   const config: FormStyleConfig = {
-     ...DEFAULT_FORM_STYLE,
-     source: 'mirrored',
-   };
- 
-   if (styles.inputBgColor) config.inputBgColor = styles.inputBgColor;
-   if (styles.inputTextColor) config.inputTextColor = styles.inputTextColor;
-   if (styles.inputBorderColor) config.inputBorderColor = styles.inputBorderColor;
-   if (styles.inputFocusBorderColor) config.inputFocusBorderColor = styles.inputFocusBorderColor;
-   if (styles.inputPlaceholderColor) config.inputPlaceholderColor = styles.inputPlaceholderColor;
-   if (styles.labelColor) config.labelColor = styles.labelColor;
-   
-   if (styles.labelFontWeight) {
-     const weight = parseInt(styles.labelFontWeight);
-     if (weight >= 600) config.labelWeight = 'semibold';
-     else if (weight >= 500) config.labelWeight = 'medium';
-     else config.labelWeight = 'normal';
-   }
- 
-   if (styles.inputFontFamily || styles.labelFontFamily) {
-     config.fontFamily = styles.inputFontFamily || styles.labelFontFamily || DEFAULT_FORM_STYLE.fontFamily;
-   }
- 
-   if (styles.inputFontSize) {
-     const size = parseInt(styles.inputFontSize);
-     if (size <= 14) config.fontSize = 'sm';
-     else if (size >= 18) config.fontSize = 'lg';
-     else config.fontSize = 'base';
-   }
- 
-   if (styles.inputBorderRadius) {
-     const radius = styles.inputBorderRadius.toLowerCase();
-     if (radius === '0' || radius === '0px') config.borderRadius = 'none';
-     else if (radius.includes('999')) config.borderRadius = 'full';
-     else {
-       const px = parseInt(radius);
-       if (px <= 4) config.borderRadius = 'sm';
-       else if (px >= 12) config.borderRadius = 'lg';
-       else config.borderRadius = 'md';
-     }
-   }
- 
-   if (styles.inputBorderWidth) {
-     const width = parseInt(styles.inputBorderWidth);
-     if (width === 0) config.borderWidth = '0';
-     else if (width >= 2) config.borderWidth = '2';
-     else config.borderWidth = '1';
-   }
- 
-   if (styles.errorColor) config.errorColor = styles.errorColor;
- 
-   return config;
- }
+ // formElementStylesToConfig is now imported from @/lib/formStyleUtils
  
 export function HtmlCaptureTab({ demo, url, onUrlChange, onApply, isConfigured }: HtmlCaptureTabProps) {
     const { toast } = useToast();

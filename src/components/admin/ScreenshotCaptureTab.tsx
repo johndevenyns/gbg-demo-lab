@@ -9,7 +9,7 @@ import { Camera, Loader2, ExternalLink, Eye, Check, Monitor, Tablet, Smartphone,
  import { useToast } from "@/hooks/use-toast";
  import { DemoEnvironment } from "@/types/demo";
  import { DEFAULT_FORM_STYLE, FormStyleConfig } from "@/types/formStyle";
- import { generateFormHtml, generatePreviewDocument } from "@/lib/formStyleUtils";
+ import { generateFormHtml, generatePreviewDocument, formElementStylesToConfig } from "@/lib/formStyleUtils";
  
  type ViewportSize = 'desktop' | 'tablet' | 'mobile';
  
