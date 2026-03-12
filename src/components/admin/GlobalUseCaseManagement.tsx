@@ -75,6 +75,8 @@ export function GlobalUseCaseManagement() {
       iconName: newUseCase.iconName,
       defaultFormSteps: [],
       defaultVerificationType: 'docBio',
+      showFillPass: false,
+      showFillFail: false,
       defaultPageContent: {
         heroTitle: newUseCase.title,
         heroSubtitle: newUseCase.description || '',
