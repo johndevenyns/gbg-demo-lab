@@ -7,7 +7,7 @@ import { useGlobalFieldConfigs, GlobalFieldConfig } from '@/hooks/useGlobalField
 import { 
   User, Mail, Phone, Calendar, Hash, MapPin, Building, DollarSign, 
   FileText, Type, CheckSquare, GripVertical, Search, Heading, AlignLeft, 
-  Minus, ShieldCheck, CircleDot, Plug, KeyRound
+  Minus, ShieldCheck, CircleDot, Plug, KeyRound, TicketCheck
 } from 'lucide-react';
 import { useState, useMemo } from 'react';
 
