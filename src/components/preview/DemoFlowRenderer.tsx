@@ -609,6 +609,7 @@ export function DemoFlowRenderer({
   resourceIdDataBio,
   resourceIdDataOnly,
   demoId,
+  onNavigateToLogin,
   onSubmissionLog,
   onComplete 
 }: DemoFlowRendererProps) {
