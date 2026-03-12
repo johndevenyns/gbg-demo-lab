@@ -148,6 +148,7 @@ export function FormPreviewPanel({ demo }: FormPreviewPanelProps) {
                     resourceIdDocBio={demo.resourceIdDocBio}
                     resourceIdDataBio={demo.resourceIdDataBio}
                     resourceIdDataOnly={demo.resourceIdDataOnly}
+                    demoId={demo.id}
                     onSubmissionLog={handleSubmissionLog}
                     onComplete={(success, refId) => {
                       console.log('Preview flow complete:', { success, refId });

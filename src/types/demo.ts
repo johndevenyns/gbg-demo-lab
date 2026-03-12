@@ -418,6 +418,8 @@ export interface MethodSelectionStepConfig {
   mobileIdProviders?: MdlProvider[];
 }
 
+export type FormStepSubmitAction = 'login' | 'register' | undefined;
+
 export interface FormStep {
   id: string;
   title: string;
@@ -426,6 +428,8 @@ export interface FormStep {
   order: number;
   // Step type - determines rendering behavior
   stepType?: FormStepType;
+  // Submit action - special behavior on step submission
+  submitAction?: FormStepSubmitAction;
   fields: FormField[];
   // Special elements
   addressValidationEnabled?: boolean;

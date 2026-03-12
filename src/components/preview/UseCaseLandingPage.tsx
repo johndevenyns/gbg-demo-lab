@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { ResolvedUseCase, UseCasePageContent } from '@/types/useCase';
 import {
-  UserPlus, FastForward, Package, Briefcase, Check,
+  UserPlus, FastForward, Package, Briefcase, Check, LogIn,
 } from 'lucide-react';
 
 const ICON_MAP: Record<string, React.ElementType> = {
-  UserPlus, FastForward, Package, Briefcase,
+  UserPlus, FastForward, Package, Briefcase, LogIn,
 };
 
 interface UseCaseLandingPageProps {

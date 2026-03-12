@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
-  Briefcase, Plus, Trash2, ChevronDown, ChevronRight, Pencil, UserPlus, FastForward, Package,
+  Briefcase, Plus, Trash2, ChevronDown, ChevronRight, Pencil, UserPlus, FastForward, Package, LogIn,
 } from 'lucide-react';
 import { GlobalUseCase, UseCasePageContent } from '@/types/useCase';
 import {
@@ -23,7 +23,7 @@ import {
 } from '@/hooks/useUseCases';
 
 const ICON_MAP: Record<string, React.ElementType> = {
-  UserPlus, FastForward, Package, Briefcase,
+  UserPlus, FastForward, Package, Briefcase, LogIn,
 };
 
 export function GlobalUseCaseManagement() {
