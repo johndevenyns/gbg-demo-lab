@@ -238,6 +238,53 @@ export type Database = {
           },
         ]
       }
+      demo_users: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          demo_id: string
+          email: string
+          id: string
+          is_active: boolean
+          password: string
+          registration_code: string | null
+          registration_code_expires_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          demo_id: string
+          email: string
+          id?: string
+          is_active?: boolean
+          password: string
+          registration_code?: string | null
+          registration_code_expires_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          demo_id?: string
+          email?: string
+          id?: string
+          is_active?: boolean
+          password?: string
+          registration_code?: string | null
+          registration_code_expires_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "demo_users_demo_id_fkey"
+            columns: ["demo_id"]
+            isOneToOne: false
+            referencedRelation: "demo_environments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       form_templates: {
         Row: {
           category: string | null

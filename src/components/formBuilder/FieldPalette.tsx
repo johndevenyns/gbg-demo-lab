@@ -7,7 +7,7 @@ import { useGlobalFieldConfigs, GlobalFieldConfig } from '@/hooks/useGlobalField
 import { 
   User, Mail, Phone, Calendar, Hash, MapPin, Building, DollarSign, 
   FileText, Type, CheckSquare, GripVertical, Search, Heading, AlignLeft, 
-  Minus, ShieldCheck, CircleDot, Plug
+  Minus, ShieldCheck, CircleDot, Plug, KeyRound, AtSign
 } from 'lucide-react';
 import { useState, useMemo } from 'react';
 
@@ -41,6 +41,8 @@ const FIELD_ICONS: Record<string, React.ReactNode> = {
   paragraph: <AlignLeft className="w-4 h-4" />,
   divider: <Minus className="w-4 h-4" />,
   consent_checkbox: <ShieldCheck className="w-4 h-4" />,
+  login_email: <AtSign className="w-4 h-4" />,
+  password: <KeyRound className="w-4 h-4" />,
 };
 
 // Address fields that can be validated by Loqate API
