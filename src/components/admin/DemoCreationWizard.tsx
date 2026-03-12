@@ -121,18 +121,25 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
 
         if (scrapedData) {
           updateTaskStatus('apply', 'in_progress');
+          const brandingUpdates: Record<string, unknown> = {
+            customerSiteUrl: siteUrl,
+            mirrorHtmlHeaderHtml: scrapedData.headerHtml,
+            mirrorHtmlFooterHtml: scrapedData.footerHtml,
+            mirrorHtmlCss: scrapedData.cssContent,
+            headerBgColor: scrapedData.colors.headerBgColor,
+            headerTextColor: scrapedData.colors.headerTextColor,
+            buttonColor: scrapedData.colors.buttonColor,
+            logoUrl: scrapedData.logoUrl || scrapedData.branding?.logo || '',
+          };
+
+          // Auto-apply form styling from scraped site
+          if (scrapedData.formStyles) {
+            brandingUpdates.formStyle = formElementStylesToConfig(scrapedData.formStyles);
+          }
+
           await updateDemo.mutateAsync({
             id: demo.id,
-            updates: {
-              customerSiteUrl: siteUrl,
-              mirrorHtmlHeaderHtml: scrapedData.headerHtml,
-              mirrorHtmlFooterHtml: scrapedData.footerHtml,
-              mirrorHtmlCss: scrapedData.cssContent,
-              headerBgColor: scrapedData.colors.headerBgColor,
-              headerTextColor: scrapedData.colors.headerTextColor,
-              buttonColor: scrapedData.colors.buttonColor,
-              logoUrl: scrapedData.logoUrl || scrapedData.branding?.logo || '',
-            }
+            updates: brandingUpdates as any,
           });
           updateTaskStatus('apply', 'complete');
         } else {
