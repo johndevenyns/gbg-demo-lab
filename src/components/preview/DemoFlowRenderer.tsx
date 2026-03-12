@@ -138,6 +138,7 @@ interface StyledFormFieldsProps {
   onInputChange: (fieldName: string, value: string) => void;
   style: FormStyleConfig;
   fieldErrors?: Record<string, string>;
+  onNavigateToLogin?: () => void;
 }
 
 function StyledFormFields({ fields, formData, onInputChange, style, fieldErrors = {} }: StyledFormFieldsProps) {
