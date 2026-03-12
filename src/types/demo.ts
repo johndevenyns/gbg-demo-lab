@@ -504,6 +504,7 @@ export type FormFieldType =
   // Account fields
   | 'password'
   | 'registration_code'
+  | 'account_login_link'
   // Content elements (non-input)
   | 'heading'
   | 'paragraph'
