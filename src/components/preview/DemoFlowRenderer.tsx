@@ -293,7 +293,29 @@ function StyledFormFields({ fields, formData, onInputChange, style, fieldErrors 
       );
     }
 
-    if (field.type === 'consent_checkbox') {
+    if (field.type === 'account_login_link') {
+      return (
+        <div key={field.id} style={{ textAlign: 'center', padding: '8px 0' }}>
+          <button
+            type="button"
+            onClick={() => onNavigateToLogin?.()}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: fontSizeMap[style.fontSize],
+              fontFamily: style.fontFamily,
+              color: style.inputFocusBorderColor || '#6366f1',
+              padding: 0,
+            }}
+          >
+            {field.content || field.placeholder || 'Already have an account? Sign in'}
+          </button>
+        </div>
+      );
+    }
+
+
       const isChecked = formData[field.name] === 'true';
       return (
         <div key={field.id}>
