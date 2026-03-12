@@ -59,7 +59,7 @@ export function GlobalUseCaseManagement() {
     const loadTemplates = async () => {
       const { data, error } = await supabase
         .from('form_templates')
-        .select('id, name, description, category, form_steps')
+        .select('id, name, description, category, form_steps, show_fill_pass, show_fill_fail')
         .order('name');
       if (!error && data) {
         setTemplates(data as FormTemplateOption[]);
