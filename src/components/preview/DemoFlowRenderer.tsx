@@ -71,6 +71,7 @@ interface DemoFlowRendererProps {
   resourceIdDataOnly?: string;
   // Demo ID for login authentication
   demoId?: string;
+  onNavigateToLogin?: () => void;
   onSubmissionLog?: (data: SubmissionLogData) => void;
   onComplete?: (success: boolean, referenceId?: string) => void;
 }
@@ -137,9 +138,10 @@ interface StyledFormFieldsProps {
   onInputChange: (fieldName: string, value: string) => void;
   style: FormStyleConfig;
   fieldErrors?: Record<string, string>;
+  onNavigateToLogin?: () => void;
 }
 
-function StyledFormFields({ fields, formData, onInputChange, style, fieldErrors = {} }: StyledFormFieldsProps) {
+function StyledFormFields({ fields, formData, onInputChange, style, fieldErrors = {}, onNavigateToLogin }: StyledFormFieldsProps) {
   const borderRadiusMap = {
     none: '0px',
     sm: '4px',
@@ -246,7 +248,7 @@ function StyledFormFields({ fields, formData, onInputChange, style, fieldErrors 
   };
 
   // Content field types that don't need input handling
-  const contentFieldTypes = ['heading', 'paragraph', 'divider', 'consent_checkbox', 'yes_no', 'checkbox'];
+  const contentFieldTypes = ['heading', 'paragraph', 'divider', 'consent_checkbox', 'yes_no', 'checkbox', 'account_login_link'];
 
   const renderField = (field: FormField) => {
     // Handle content elements (non-input fields)
@@ -288,6 +290,28 @@ function StyledFormFields({ fields, formData, onInputChange, style, fieldErrors 
             border: 'none',
             borderTop: `1px solid ${style.inputBorderColor}`,
           }} />
+        </div>
+      );
+    }
+
+    if (field.type === 'account_login_link') {
+      return (
+        <div key={field.id} style={{ textAlign: 'center', padding: '8px 0' }}>
+          <button
+            type="button"
+            onClick={() => onNavigateToLogin?.()}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: fontSizeMap[style.fontSize],
+              fontFamily: style.fontFamily,
+              color: style.inputFocusBorderColor || '#6366f1',
+              padding: 0,
+            }}
+          >
+            {field.content || field.placeholder || 'Already have an account? Sign in'}
+          </button>
         </div>
       );
     }
@@ -608,6 +632,7 @@ export function DemoFlowRenderer({
   resourceIdDataBio,
   resourceIdDataOnly,
   demoId,
+  onNavigateToLogin,
   onSubmissionLog,
   onComplete 
 }: DemoFlowRendererProps) {
@@ -2202,6 +2227,7 @@ export function DemoFlowRenderer({
               onInputChange={handleInputChange}
               style={style}
               fieldErrors={fieldErrors}
+              onNavigateToLogin={onNavigateToLogin}
             />
             {/* Login / code validation error message */}
             {(currentStep.submitAction === 'login' || currentStep.submitAction === 'validate_code') && loginError && (
