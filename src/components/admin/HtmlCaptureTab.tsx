@@ -10,7 +10,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
  import { useToast } from "@/hooks/use-toast";
  import { DemoEnvironment } from "@/types/demo";
  import { DEFAULT_FORM_STYLE, FormStyleConfig } from "@/types/formStyle";
- import { generateFormHtml, generatePreviewDocument } from "@/lib/formStyleUtils";
+ import { generateFormHtml, generatePreviewDocument, formElementStylesToConfig } from "@/lib/formStyleUtils";
  
  interface HtmlCaptureTabProps {
    demo: DemoEnvironment;
