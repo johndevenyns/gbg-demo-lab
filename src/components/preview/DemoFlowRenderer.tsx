@@ -2227,6 +2227,7 @@ export function DemoFlowRenderer({
               onInputChange={handleInputChange}
               style={style}
               fieldErrors={fieldErrors}
+              onNavigateToLogin={onNavigateToLogin}
             />
             {/* Login / code validation error message */}
             {(currentStep.submitAction === 'login' || currentStep.submitAction === 'validate_code') && loginError && (
