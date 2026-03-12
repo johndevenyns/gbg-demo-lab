@@ -316,7 +316,7 @@ function StyledFormFields({ fields, formData, onInputChange, style, fieldErrors 
       );
     }
 
-
+    if (field.type === 'consent_checkbox') {
       const isChecked = formData[field.name] === 'true';
       return (
         <div key={field.id}>
