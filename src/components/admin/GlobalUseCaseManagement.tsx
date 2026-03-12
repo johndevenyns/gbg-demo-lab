@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
-  Briefcase, Plus, Trash2, ChevronDown, ChevronRight, Pencil, UserPlus, FastForward, Package,
+  Briefcase, Plus, Trash2, ChevronDown, ChevronRight, Pencil, UserPlus, FastForward, Package, LogIn,
 } from 'lucide-react';
 import { GlobalUseCase, UseCasePageContent } from '@/types/useCase';
 import {
