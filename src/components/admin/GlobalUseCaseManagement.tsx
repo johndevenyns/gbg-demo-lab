@@ -35,6 +35,8 @@ interface FormTemplateOption {
   description: string | null;
   category: string | null;
   form_steps: unknown[];
+  show_fill_pass: boolean;
+  show_fill_fail: boolean;
 }
 
 export function GlobalUseCaseManagement() {
