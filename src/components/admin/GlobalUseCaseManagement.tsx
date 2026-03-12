@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
@@ -15,16 +16,26 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
-  Briefcase, Plus, Trash2, ChevronDown, ChevronRight, Pencil, UserPlus, FastForward, Package, LogIn,
+  Briefcase, Plus, Trash2, ChevronDown, ChevronRight, Pencil, UserPlus, FastForward, Package, LogIn, FileText,
 } from 'lucide-react';
 import { GlobalUseCase, UseCasePageContent } from '@/types/useCase';
 import {
   useGlobalUseCases, useCreateGlobalUseCase, useUpdateGlobalUseCase, useDeleteGlobalUseCase,
 } from '@/hooks/useUseCases';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 const ICON_MAP: Record<string, React.ElementType> = {
   UserPlus, FastForward, Package, Briefcase, LogIn,
 };
+
+interface FormTemplateOption {
+  id: string;
+  name: string;
+  description: string | null;
+  category: string | null;
+  form_steps: unknown[];
+}
 
 export function GlobalUseCaseManagement() {
   const { data: useCases = [], isLoading } = useGlobalUseCases();
@@ -39,6 +50,21 @@ export function GlobalUseCaseManagement() {
     description: '',
     iconName: 'Package',
   });
+  const [templates, setTemplates] = useState<FormTemplateOption[]>([]);
+
+  // Load form templates
+  useEffect(() => {
+    const loadTemplates = async () => {
+      const { data, error } = await supabase
+        .from('form_templates')
+        .select('id, name, description, category, form_steps')
+        .order('name');
+      if (!error && data) {
+        setTemplates(data as FormTemplateOption[]);
+      }
+    };
+    loadTemplates();
+  }, []);
 
   const handleCreate = () => {
     createMutation.mutate({
@@ -71,12 +97,26 @@ export function GlobalUseCaseManagement() {
     updateMutation.mutate({ id, updates: { defaultPageContent: { ...currentContent, ...contentUpdates } } });
   };
 
+  const handleApplyTemplate = (useCaseId: string, templateId: string) => {
+    const template = templates.find(t => t.id === templateId);
+    if (!template) return;
+    handleUpdate(useCaseId, {
+      defaultFormSteps: template.form_steps as Record<string, unknown>[],
+    });
+    toast.success(`Applied "${template.name}" template`);
+  };
+
   const handleDelete = () => {
     if (deleteId) {
       deleteMutation.mutate(deleteId, {
         onSuccess: () => setDeleteId(null),
       });
     }
+  };
+
+  // Count form steps for a use case
+  const getFormStepCount = (uc: GlobalUseCase) => {
+    return Array.isArray(uc.defaultFormSteps) ? uc.defaultFormSteps.length : 0;
   };
 
   return (
@@ -111,6 +151,7 @@ export function GlobalUseCaseManagement() {
           {useCases.map((uc) => {
             const IconComp = ICON_MAP[uc.iconName] ?? Package;
             const isExpanded = expandedId === uc.id;
+            const stepCount = getFormStepCount(uc);
 
             return (
               <Collapsible key={uc.id} open={isExpanded} onOpenChange={(open) => setExpandedId(open ? uc.id : null)}>
@@ -123,6 +164,10 @@ export function GlobalUseCaseManagement() {
                           <span className="font-medium">{uc.title}</span>
                           {!uc.isEnabled && <Badge variant="secondary" className="text-[10px]">Disabled</Badge>}
                           <Badge variant="outline" className="text-[10px]">{uc.defaultVerificationType}</Badge>
+                          <Badge variant="outline" className="text-[10px]">
+                            <FileText className="w-3 h-3 mr-1" />
+                            {stepCount} step{stepCount !== 1 ? 's' : ''}
+                          </Badge>
                         </div>
                         {uc.description && (
                           <p className="text-sm text-muted-foreground truncate mt-0.5">{uc.description}</p>
@@ -162,6 +207,56 @@ export function GlobalUseCaseManagement() {
                             rows={2}
                           />
                         </div>
+                      </div>
+
+                      {/* Default Form Template */}
+                      <div className="border-t pt-4">
+                        <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
+                          <FileText className="w-4 h-4" />
+                          Default Form Template
+                        </h4>
+                        <div className="flex items-center gap-3">
+                          <Select onValueChange={(val) => handleApplyTemplate(uc.id, val)}>
+                            <SelectTrigger className="flex-1">
+                              <SelectValue placeholder={
+                                stepCount > 0
+                                  ? `Current: ${stepCount} step${stepCount !== 1 ? 's' : ''} configured`
+                                  : 'Select a template...'
+                              } />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {templates.length === 0 ? (
+                                <SelectItem value="none" disabled>No templates available</SelectItem>
+                              ) : (
+                                templates.map((t) => (
+                                  <SelectItem key={t.id} value={t.id}>
+                                    <div className="flex items-center gap-2">
+                                      <span>{t.name}</span>
+                                      {t.category && (
+                                        <span className="text-xs text-muted-foreground">({t.category})</span>
+                                      )}
+                                    </div>
+                                  </SelectItem>
+                                ))
+                              )}
+                            </SelectContent>
+                          </Select>
+                          {stepCount > 0 && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                handleUpdate(uc.id, { defaultFormSteps: [] });
+                                toast.success('Form steps cleared');
+                              }}
+                            >
+                              Clear
+                            </Button>
+                          )}
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-2">
+                          This template will be used as the default form when new demos link this use case.
+                        </p>
                       </div>
 
                       {/* Page Content */}
