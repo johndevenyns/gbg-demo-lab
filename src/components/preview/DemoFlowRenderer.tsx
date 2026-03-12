@@ -516,7 +516,7 @@ function StyledFormFields({ fields, formData, onInputChange, style, fieldErrors 
           </label>
           <div style={{ flex: 1 }}>
             <input
-              type={field.type === 'email' ? 'email' : field.type === 'phone' ? 'tel' : 'text'}
+              type={field.type === 'email' || field.type === 'login_email' ? 'email' : field.type === 'phone' ? 'tel' : field.type === 'password' ? 'password' : 'text'}
               placeholder={field.placeholder}
               value={formData[field.name] || ''}
               onChange={(e) => onInputChange(field.name, e.target.value)}
