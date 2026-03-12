@@ -781,9 +781,11 @@ export const INDUSTRY_TEMPLATES: Record<IndustryTemplate, Partial<DemoEnvironmen
         stepType: 'unified_verification',
         fields: [],
         unifiedVerificationConfig: {
-          defaultMethod: 'docBio',
-          enabledMethods: ['docBio'],
-          showMethodSelector: false,
+          methodSelection: 'auto',
+          enabledTypes: ['docbio'],
+          typeConfigs: {},
+          successDestination: 'default',
+          failureDestination: 'default',
         },
         buttons: [
           { id: 'back', label: 'Back', enabled: true },
