@@ -380,6 +380,8 @@ export type Database = {
           icon_name: string | null
           id: string
           is_enabled: boolean
+          show_fill_fail: boolean
+          show_fill_pass: boolean
           title: string
           updated_at: string
         }
@@ -393,6 +395,8 @@ export type Database = {
           icon_name?: string | null
           id?: string
           is_enabled?: boolean
+          show_fill_fail?: boolean
+          show_fill_pass?: boolean
           title: string
           updated_at?: string
         }
@@ -406,6 +410,8 @@ export type Database = {
           icon_name?: string | null
           id?: string
           is_enabled?: boolean
+          show_fill_fail?: boolean
+          show_fill_pass?: boolean
           title?: string
           updated_at?: string
         }
