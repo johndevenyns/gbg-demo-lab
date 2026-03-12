@@ -781,7 +781,7 @@ export const INDUSTRY_TEMPLATES: Record<IndustryTemplate, Partial<DemoEnvironmen
         stepType: 'unified_verification',
         fields: [],
         unifiedVerificationConfig: {
-          methodSelection: 'auto',
+          methodSelection: 'admin_preselect',
           enabledTypes: ['docbio'],
           typeConfigs: {},
           successDestination: 'default',
