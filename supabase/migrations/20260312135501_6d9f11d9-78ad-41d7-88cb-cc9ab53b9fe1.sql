@@ -1,0 +1,1 @@
+DELETE FROM global_field_configs WHERE field_type = 'login_email';

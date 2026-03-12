@@ -41,7 +41,6 @@ const FIELD_ICONS: Record<string, React.ReactNode> = {
   paragraph: <AlignLeft className="w-4 h-4" />,
   divider: <Minus className="w-4 h-4" />,
   consent_checkbox: <ShieldCheck className="w-4 h-4" />,
-  login_email: <AtSign className="w-4 h-4" />,
   password: <KeyRound className="w-4 h-4" />,
 };
 
