@@ -247,7 +247,7 @@ function StyledFormFields({ fields, formData, onInputChange, style, fieldErrors 
   };
 
   // Content field types that don't need input handling
-  const contentFieldTypes = ['heading', 'paragraph', 'divider', 'consent_checkbox', 'yes_no', 'checkbox'];
+  const contentFieldTypes = ['heading', 'paragraph', 'divider', 'consent_checkbox', 'yes_no', 'checkbox', 'account_login_link'];
 
   const renderField = (field: FormField) => {
     // Handle content elements (non-input fields)
