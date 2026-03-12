@@ -16,6 +16,8 @@ function mapGlobalRow(row: Record<string, unknown>): GlobalUseCase {
     defaultPageContent: (row.default_page_content as UseCasePageContent) ?? {},
     displayOrder: row.display_order as number,
     isEnabled: row.is_enabled as boolean,
+    showFillPass: (row.show_fill_pass as boolean) ?? false,
+    showFillFail: (row.show_fill_fail as boolean) ?? false,
     createdAt: row.created_at as string,
     updatedAt: row.updated_at as string,
   };
