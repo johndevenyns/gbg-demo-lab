@@ -42,6 +42,7 @@ const FIELD_ICONS: Record<string, React.ReactNode> = {
   divider: <Minus className="w-4 h-4" />,
   consent_checkbox: <ShieldCheck className="w-4 h-4" />,
   password: <KeyRound className="w-4 h-4" />,
+  registration_code: <TicketCheck className="w-4 h-4" />,
 };
 
 // Address fields that can be validated by Loqate API

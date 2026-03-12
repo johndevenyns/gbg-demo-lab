@@ -503,6 +503,7 @@ export type FormFieldType =
   | 'yes_no'
   // Account fields
   | 'password'
+  | 'registration_code'
   // Content elements (non-input)
   | 'heading'
   | 'paragraph'
