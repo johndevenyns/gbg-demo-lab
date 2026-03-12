@@ -106,6 +106,16 @@ export default function DemoPreview() {
     setTimeout(() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
   }, []);
 
+  const handleNavigateToLogin = useCallback(() => {
+    const loginUseCase = resolvedUseCases.find(uc => 
+      uc.formSteps?.some((step: Record<string, unknown>) => step.submitAction === 'login')
+    );
+    if (loginUseCase) {
+      setSelectedUseCase(loginUseCase);
+      setTimeout(() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+    }
+  }, [resolvedUseCases]);
+
   // Build full HTML document for the preview iframe
   const previewDocument = useMemo(() => {
     if (!demo) return null;
