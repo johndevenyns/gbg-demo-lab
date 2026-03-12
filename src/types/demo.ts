@@ -497,6 +497,9 @@ export type FormFieldType =
   | 'checkbox'
   | 'textarea'
   | 'yes_no'
+  // Account fields
+  | 'login_email'
+  | 'password'
   // Content elements (non-input)
   | 'heading'
   | 'paragraph'
