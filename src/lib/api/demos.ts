@@ -193,6 +193,9 @@ export const demosApi = {
     // Generate branded default result pages
     const { successPage, failurePage } = generateIndustryResultPages(customerName, template, buttonColor);
 
+    // Generate a unique 4-char reference ID prefix from the customer name
+    const referenceIdPrefix = await generateUniquePrefix(customerName);
+
     const newDemo: TablesInsert<'demo_environments'> = {
       slug,
       customer_name: customerName,
@@ -202,6 +205,7 @@ export const demosApi = {
       approved_url: '',
       rejected_url: '',
       resource_id: '',
+      reference_id_prefix: referenceIdPrefix,
       header_bg_color: templateData.headerBgColor || '#1a1a2e',
       header_text_color: templateData.headerTextColor || '#ffffff',
       button_color: buttonColor,
