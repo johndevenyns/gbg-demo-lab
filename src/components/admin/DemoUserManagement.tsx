@@ -9,8 +9,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Label } from '@/components/ui/label';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Trash2, UserPlus, Users, AlertCircle, KeyRound, Copy, Check, Clock } from 'lucide-react';
+import { Loader2, Trash2, UserPlus, Users, AlertCircle, KeyRound, Copy, Check, Clock, ChevronDown, UserCog } from 'lucide-react';
 
 interface DemoUser {
   id: string;
@@ -20,9 +21,22 @@ interface DemoUser {
   registration_code: string | null;
   registration_code_expires_at: string | null;
   is_active: boolean;
+  profile_data: Record<string, string> | null;
   created_at: string;
   updated_at: string;
 }
+
+const PROFILE_FIELDS = [
+  { key: 'firstName', label: 'First Name', placeholder: 'John' },
+  { key: 'lastName', label: 'Last Name', placeholder: 'Doe' },
+  { key: 'phone', label: 'Phone', placeholder: '(555) 123-4567' },
+  { key: 'dateOfBirth', label: 'Date of Birth', placeholder: 'MM/DD/YYYY' },
+  { key: 'ssn4', label: 'SSN (Last 4)', placeholder: '1234' },
+  { key: 'streetAddress', label: 'Street Address', placeholder: '123 Main St' },
+  { key: 'city', label: 'City', placeholder: 'Springfield' },
+  { key: 'state', label: 'State', placeholder: 'IL' },
+  { key: 'zipCode', label: 'ZIP Code', placeholder: '62704' },
+];
 
 interface DemoUserManagementProps {
   demoId: string;
@@ -35,6 +49,8 @@ export function DemoUserManagement({ demoId, demoName }: DemoUserManagementProps
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [newEmail, setNewEmail] = useState('');
   const [newPassword, setNewPassword] = useState('');
+  const [newProfileData, setNewProfileData] = useState<Record<string, string>>({});
+  const [profileOpen, setProfileOpen] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
   const [isAdding, setIsAdding] = useState(false);
 
@@ -43,6 +59,11 @@ export function DemoUserManagement({ demoId, demoName }: DemoUserManagementProps
   const [resetEmail, setResetEmail] = useState('');
   const [resetPassword, setResetPassword] = useState('');
   const [resetError, setResetError] = useState<string | null>(null);
+
+  const [editProfileDialogOpen, setEditProfileDialogOpen] = useState(false);
+  const [editProfileUserId, setEditProfileUserId] = useState<string | null>(null);
+  const [editProfileEmail, setEditProfileEmail] = useState('');
+  const [editProfileData, setEditProfileData] = useState<Record<string, string>>({});
 
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
@@ -67,16 +88,25 @@ export function DemoUserManagement({ demoId, demoName }: DemoUserManagementProps
     if (!newPassword.trim() || newPassword.length < 6) { setAddError('Password must be at least 6 characters'); return; }
     setIsAdding(true);
     try {
+      // Clean profile data - remove empty values
+      const cleanProfile: Record<string, string> = {};
+      for (const [key, value] of Object.entries(newProfileData)) {
+        if (value && value.trim()) cleanProfile[key] = value.trim();
+      }
+
       const { error } = await supabase.from('demo_users').insert({
         demo_id: demoId,
         email: newEmail.trim(),
         password: newPassword.trim(),
+        profile_data: Object.keys(cleanProfile).length > 0 ? cleanProfile : {},
       });
       if (error) throw error;
       queryClient.invalidateQueries({ queryKey: ['demo-users', demoId] });
       toast({ title: 'User added', description: `${newEmail} has been added.` });
       setNewEmail('');
       setNewPassword('');
+      setNewProfileData({});
+      setProfileOpen(false);
       setAddDialogOpen(false);
     } catch (err: any) {
       setAddError(err.message || 'Failed to add user');
@@ -126,6 +156,26 @@ export function DemoUserManagement({ demoId, demoName }: DemoUserManagementProps
     }
   };
 
+  // Save profile data
+  const handleSaveProfile = async () => {
+    if (!editProfileUserId) return;
+    try {
+      const cleanProfile: Record<string, string> = {};
+      for (const [key, value] of Object.entries(editProfileData)) {
+        if (value && value.trim()) cleanProfile[key] = value.trim();
+      }
+      const { error } = await supabase.from('demo_users').update({
+        profile_data: cleanProfile,
+      }).eq('id', editProfileUserId);
+      if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ['demo-users', demoId] });
+      toast({ title: 'Profile updated', description: `Profile data saved for ${editProfileEmail}.` });
+      setEditProfileDialogOpen(false);
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    }
+  };
+
   // Generate registration code (6-digit, expires in 24h)
   const generateCodeMutation = useMutation({
     mutationFn: async (userId: string) => {
@@ -155,6 +205,15 @@ export function DemoUserManagement({ demoId, demoName }: DemoUserManagementProps
   const isCodeExpired = (expiresAt: string | null) => {
     if (!expiresAt) return false;
     return new Date(expiresAt) < new Date();
+  };
+
+  const getProfileSummary = (profileData: Record<string, string> | null) => {
+    if (!profileData || Object.keys(profileData).length === 0) return null;
+    const parts: string[] = [];
+    if (profileData.firstName || profileData.lastName) {
+      parts.push([profileData.firstName, profileData.lastName].filter(Boolean).join(' '));
+    }
+    return parts.length > 0 ? parts.join(', ') : `${Object.keys(profileData).length} fields`;
   };
 
   if (isLoading) {
@@ -188,7 +247,7 @@ export function DemoUserManagement({ demoId, demoName }: DemoUserManagementProps
                   Add User
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="max-h-[85vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>Add Demo User</DialogTitle>
                   <DialogDescription>Create a user account for this demo environment.</DialogDescription>
@@ -208,6 +267,33 @@ export function DemoUserManagement({ demoId, demoName }: DemoUserManagementProps
                     <Label>Password</Label>
                     <Input type="password" placeholder="Min 6 characters" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
                   </div>
+                  
+                  <Collapsible open={profileOpen} onOpenChange={setProfileOpen}>
+                    <CollapsibleTrigger asChild>
+                      <Button variant="ghost" size="sm" className="w-full justify-between text-muted-foreground">
+                        <span className="flex items-center gap-2">
+                          <UserCog className="w-4 h-4" />
+                          Profile Data (for code verification)
+                        </span>
+                        <ChevronDown className={`w-4 h-4 transition-transform ${profileOpen ? 'rotate-180' : ''}`} />
+                      </Button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="space-y-3 pt-2">
+                      <p className="text-xs text-muted-foreground">
+                        These fields will be pre-filled when the user enters their registration code.
+                      </p>
+                      {PROFILE_FIELDS.map(field => (
+                        <div key={field.key} className="space-y-1">
+                          <Label className="text-xs">{field.label}</Label>
+                          <Input
+                            placeholder={field.placeholder}
+                            value={newProfileData[field.key] || ''}
+                            onChange={(e) => setNewProfileData(prev => ({ ...prev, [field.key]: e.target.value }))}
+                          />
+                        </div>
+                      ))}
+                    </CollapsibleContent>
+                  </Collapsible>
                 </div>
                 <DialogFooter>
                   <Button variant="outline" onClick={() => setAddDialogOpen(false)}>Cancel</Button>
@@ -233,95 +319,120 @@ export function DemoUserManagement({ demoId, demoName }: DemoUserManagementProps
               <TableHeader>
                 <TableRow>
                   <TableHead>Email</TableHead>
+                  <TableHead>Profile</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Registration Code</TableHead>
                   <TableHead>Created</TableHead>
-                  <TableHead className="w-[140px]">Actions</TableHead>
+                  <TableHead className="w-[180px]">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {demoUsers.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell className="font-medium">{user.email}</TableCell>
-                    <TableCell>
-                      <button
-                        onClick={() => toggleActiveMutation.mutate({ userId: user.id, isActive: !user.is_active })}
-                        className="cursor-pointer"
-                      >
-                        <Badge variant={user.is_active ? 'default' : 'secondary'}>
-                          {user.is_active ? 'Active' : 'Inactive'}
-                        </Badge>
-                      </button>
-                    </TableCell>
-                    <TableCell>
-                      {user.registration_code ? (
-                        <div className="flex items-center gap-2">
-                          <code className="bg-muted px-2 py-1 rounded text-sm font-mono">{user.registration_code}</code>
+                {demoUsers.map((user) => {
+                  const profileSummary = getProfileSummary(user.profile_data);
+                  return (
+                    <TableRow key={user.id}>
+                      <TableCell className="font-medium">{user.email}</TableCell>
+                      <TableCell>
+                        {profileSummary ? (
+                          <Badge variant="outline" className="text-xs">{profileSummary}</Badge>
+                        ) : (
+                          <span className="text-muted-foreground text-sm">—</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <button
+                          onClick={() => toggleActiveMutation.mutate({ userId: user.id, isActive: !user.is_active })}
+                          className="cursor-pointer"
+                        >
+                          <Badge variant={user.is_active ? 'default' : 'secondary'}>
+                            {user.is_active ? 'Active' : 'Inactive'}
+                          </Badge>
+                        </button>
+                      </TableCell>
+                      <TableCell>
+                        {user.registration_code ? (
+                          <div className="flex items-center gap-2">
+                            <code className="bg-muted px-2 py-1 rounded text-sm font-mono">{user.registration_code}</code>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7"
+                              onClick={() => copyCode(user.registration_code!)}
+                            >
+                              {copiedCode === user.registration_code ? (
+                                <Check className="w-3 h-3 text-green-500" />
+                              ) : (
+                                <Copy className="w-3 h-3" />
+                              )}
+                            </Button>
+                            {isCodeExpired(user.registration_code_expires_at) && (
+                              <Badge variant="destructive" className="text-xs">
+                                <Clock className="w-3 h-3 mr-1" />Expired
+                              </Badge>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground text-sm">—</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {new Date(user.created_at).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-xs"
+                            onClick={() => generateCodeMutation.mutate(user.id)}
+                            disabled={generateCodeMutation.isPending}
+                          >
+                            Gen Code
+                          </Button>
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-7 w-7"
-                            onClick={() => copyCode(user.registration_code!)}
+                            className="text-muted-foreground hover:text-primary hover:bg-primary/10"
+                            onClick={() => {
+                              setEditProfileUserId(user.id);
+                              setEditProfileEmail(user.email);
+                              setEditProfileData(user.profile_data || {});
+                              setEditProfileDialogOpen(true);
+                            }}
+                            title="Edit profile data"
                           >
-                            {copiedCode === user.registration_code ? (
-                              <Check className="w-3 h-3 text-green-500" />
-                            ) : (
-                              <Copy className="w-3 h-3" />
-                            )}
+                            <UserCog className="w-4 h-4" />
                           </Button>
-                          {isCodeExpired(user.registration_code_expires_at) && (
-                            <Badge variant="destructive" className="text-xs">
-                              <Clock className="w-3 h-3 mr-1" />Expired
-                            </Badge>
-                          )}
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-muted-foreground hover:text-primary hover:bg-primary/10"
+                            onClick={() => {
+                              setResetUserId(user.id);
+                              setResetEmail(user.email);
+                              setResetPassword('');
+                              setResetError(null);
+                              setResetDialogOpen(true);
+                            }}
+                            title="Reset password"
+                          >
+                            <KeyRound className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                            onClick={() => deleteMutation.mutate(user.id)}
+                            disabled={deleteMutation.isPending}
+                            title="Delete user"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
                         </div>
-                      ) : (
-                        <span className="text-muted-foreground text-sm">—</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {new Date(user.created_at).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-xs"
-                          onClick={() => generateCodeMutation.mutate(user.id)}
-                          disabled={generateCodeMutation.isPending}
-                        >
-                          Gen Code
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="text-muted-foreground hover:text-primary hover:bg-primary/10"
-                          onClick={() => {
-                            setResetUserId(user.id);
-                            setResetEmail(user.email);
-                            setResetPassword('');
-                            setResetError(null);
-                            setResetDialogOpen(true);
-                          }}
-                          title="Reset password"
-                        >
-                          <KeyRound className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                          onClick={() => deleteMutation.mutate(user.id)}
-                          disabled={deleteMutation.isPending}
-                          title="Delete user"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           )}
@@ -350,6 +461,34 @@ export function DemoUserManagement({ demoId, demoName }: DemoUserManagementProps
           <DialogFooter>
             <Button variant="outline" onClick={() => setResetDialogOpen(false)}>Cancel</Button>
             <Button onClick={handleResetPassword}>Set Password</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Profile Dialog */}
+      <Dialog open={editProfileDialogOpen} onOpenChange={setEditProfileDialogOpen}>
+        <DialogContent className="max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Profile Data</DialogTitle>
+            <DialogDescription>
+              Set profile data for {editProfileEmail}. These fields are pre-filled when the user enters their registration code.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-4">
+            {PROFILE_FIELDS.map(field => (
+              <div key={field.key} className="space-y-1">
+                <Label className="text-sm">{field.label}</Label>
+                <Input
+                  placeholder={field.placeholder}
+                  value={editProfileData[field.key] || ''}
+                  onChange={(e) => setEditProfileData(prev => ({ ...prev, [field.key]: e.target.value }))}
+                />
+              </div>
+            ))}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditProfileDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleSaveProfile}>Save Profile</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

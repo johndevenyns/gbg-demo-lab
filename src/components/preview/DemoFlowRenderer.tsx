@@ -1060,7 +1060,7 @@ export function DemoFlowRenderer({
     try {
       const { data, error: queryError } = await supabase
         .from('demo_users')
-        .select('id, email, registration_code, registration_code_expires_at, is_active')
+        .select('id, email, registration_code, registration_code_expires_at, is_active, profile_data')
         .eq('demo_id', demoId)
         .eq('registration_code', code)
         .eq('is_active', true)
@@ -1082,6 +1082,25 @@ export function DemoFlowRenderer({
           setIsLoading(false);
           return false;
         }
+      }
+
+      // Populate form data with profile_data from the matched user
+      if (data.profile_data && typeof data.profile_data === 'object' && !Array.isArray(data.profile_data)) {
+        const profileData = data.profile_data as Record<string, unknown>;
+        const prefillData: Record<string, string> = {};
+        for (const [key, value] of Object.entries(profileData)) {
+          if (typeof value === 'string' && value.trim()) {
+            prefillData[key] = value;
+          }
+        }
+        // Also include the user's email from the account
+        if (data.email && !prefillData.email) {
+          prefillData.email = data.email;
+        }
+        setFormData(prev => ({ ...prev, ...prefillData }));
+      } else if (data.email) {
+        // At minimum, prefill email
+        setFormData(prev => ({ ...prev, email: data.email }));
       }
 
       setIsLoading(false);
