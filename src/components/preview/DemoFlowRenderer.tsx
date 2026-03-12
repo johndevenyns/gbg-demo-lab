@@ -1016,6 +1016,59 @@ export function DemoFlowRenderer({
     }
   }, [demoId, formData]);
 
+  // Validate registration code against demo_users table
+  const validateRegistrationCode = useCallback(async (): Promise<boolean> => {
+    if (!demoId) {
+      setLoginError('Code validation is not available for this demo.');
+      return false;
+    }
+    const code = (formData.registrationCode || '').trim();
+    
+    if (!code) {
+      setLoginError('Please enter your registration code.');
+      return false;
+    }
+
+    setLoginError(null);
+    setIsLoading(true);
+
+    try {
+      const { data, error: queryError } = await supabase
+        .from('demo_users')
+        .select('id, email, registration_code, registration_code_expires_at, is_active')
+        .eq('demo_id', demoId)
+        .eq('registration_code', code)
+        .eq('is_active', true)
+        .maybeSingle();
+
+      if (queryError) throw queryError;
+
+      if (!data) {
+        setLoginError('Invalid registration code.');
+        setIsLoading(false);
+        return false;
+      }
+
+      // Check expiration
+      if (data.registration_code_expires_at) {
+        const expiresAt = new Date(data.registration_code_expires_at);
+        if (expiresAt < new Date()) {
+          setLoginError('This registration code has expired. Please request a new one.');
+          setIsLoading(false);
+          return false;
+        }
+      }
+
+      setIsLoading(false);
+      return true;
+    } catch (err) {
+      console.error('Code validation error:', err);
+      setLoginError('An error occurred. Please try again.');
+      setIsLoading(false);
+      return false;
+    }
+  }, [demoId, formData]);
+
   const goToNextStep = useCallback(async () => {
     // First validate required fields for form steps
     if (currentStep?.stepType === 'form' && !validateRequiredFields()) {
@@ -1025,6 +1078,13 @@ export function DemoFlowRenderer({
     // Handle login submit action
     if (currentStep?.submitAction === 'login') {
       const success = await authenticateLogin();
+      if (!success) return;
+      proceedToNextStep();
+      return;
+
+    // Handle registration code validation
+    } else if (currentStep?.submitAction === 'validate_code') {
+      const success = await validateRegistrationCode();
       if (!success) return;
       proceedToNextStep();
       return;
