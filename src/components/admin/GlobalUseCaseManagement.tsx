@@ -104,6 +104,8 @@ export function GlobalUseCaseManagement() {
     if (!template) return;
     handleUpdate(useCaseId, {
       defaultFormSteps: template.form_steps as Record<string, unknown>[],
+      showFillPass: template.show_fill_pass,
+      showFillFail: template.show_fill_fail,
     });
     toast.success(`Applied "${template.name}" template`);
   };
