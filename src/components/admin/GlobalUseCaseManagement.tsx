@@ -35,6 +35,8 @@ interface FormTemplateOption {
   description: string | null;
   category: string | null;
   form_steps: unknown[];
+  show_fill_pass: boolean;
+  show_fill_fail: boolean;
 }
 
 export function GlobalUseCaseManagement() {
@@ -57,7 +59,7 @@ export function GlobalUseCaseManagement() {
     const loadTemplates = async () => {
       const { data, error } = await supabase
         .from('form_templates')
-        .select('id, name, description, category, form_steps')
+        .select('id, name, description, category, form_steps, show_fill_pass, show_fill_fail')
         .order('name');
       if (!error && data) {
         setTemplates(data as FormTemplateOption[]);
@@ -73,6 +75,8 @@ export function GlobalUseCaseManagement() {
       iconName: newUseCase.iconName,
       defaultFormSteps: [],
       defaultVerificationType: 'docBio',
+      showFillPass: false,
+      showFillFail: false,
       defaultPageContent: {
         heroTitle: newUseCase.title,
         heroSubtitle: newUseCase.description || '',
@@ -102,6 +106,8 @@ export function GlobalUseCaseManagement() {
     if (!template) return;
     handleUpdate(useCaseId, {
       defaultFormSteps: template.form_steps as Record<string, unknown>[],
+      showFillPass: template.show_fill_pass,
+      showFillFail: template.show_fill_fail,
     });
     toast.success(`Applied "${template.name}" template`);
   };

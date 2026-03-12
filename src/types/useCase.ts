@@ -22,6 +22,8 @@ export interface GlobalUseCase {
   defaultPageContent: UseCasePageContent;
   displayOrder: number;
   isEnabled: boolean;
+  showFillPass: boolean;
+  showFillFail: boolean;
   createdAt: string;
   updatedAt: string;
 }

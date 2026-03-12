@@ -139,16 +139,36 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
         }
       }
 
-      // Link selected use cases
+      // Link selected use cases and collect fill settings
+      let shouldShowFillPass = false;
+      let shouldShowFillFail = false;
       if (selectedUseCases.length > 0) {
         updateTaskStatus('use-cases', 'in_progress');
         for (let i = 0; i < selectedUseCases.length; i++) {
           await addUseCaseLink.mutateAsync({ demoId: demo.id, useCaseId: selectedUseCases[i], displayOrder: i });
+          // Check if any selected use case has fill pass/fail enabled
+          const uc = globalUseCases.find(u => u.id === selectedUseCases[i]);
+          if (uc?.showFillPass) shouldShowFillPass = true;
+          if (uc?.showFillFail) shouldShowFillFail = true;
         }
         updateTaskStatus('use-cases', 'complete');
       }
 
+      // Apply fill pass/fail settings from use case templates
       updateTaskStatus('finalize', 'in_progress');
+      if (shouldShowFillPass || shouldShowFillFail) {
+        await updateDemo.mutateAsync({
+          id: demo.id,
+          updates: {
+            storedTestData: {
+              passData: {},
+              failData: {},
+              showFillPassButton: shouldShowFillPass,
+              showFillFailButton: shouldShowFillFail,
+            },
+          },
+        });
+      }
       updateTaskStatus('finalize', 'complete');
 
       setTimeout(() => {

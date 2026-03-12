@@ -16,6 +16,8 @@ function mapGlobalRow(row: Record<string, unknown>): GlobalUseCase {
     defaultPageContent: (row.default_page_content as UseCasePageContent) ?? {},
     displayOrder: row.display_order as number,
     isEnabled: row.is_enabled as boolean,
+    showFillPass: (row.show_fill_pass as boolean) ?? false,
+    showFillFail: (row.show_fill_fail as boolean) ?? false,
     createdAt: row.created_at as string,
     updatedAt: row.updated_at as string,
   };
@@ -77,6 +79,8 @@ export function useUpdateGlobalUseCase() {
       if (updates.defaultPageContent !== undefined) dbUpdates.default_page_content = updates.defaultPageContent;
       if (updates.displayOrder !== undefined) dbUpdates.display_order = updates.displayOrder;
       if (updates.isEnabled !== undefined) dbUpdates.is_enabled = updates.isEnabled;
+      if (updates.showFillPass !== undefined) dbUpdates.show_fill_pass = updates.showFillPass;
+      if (updates.showFillFail !== undefined) dbUpdates.show_fill_fail = updates.showFillFail;
 
       const { data, error } = await supabase
         .from('global_use_cases')
