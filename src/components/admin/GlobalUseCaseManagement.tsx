@@ -23,7 +23,7 @@ import {
 } from '@/hooks/useUseCases';
 
 const ICON_MAP: Record<string, React.ElementType> = {
-  UserPlus, FastForward, Package, Briefcase,
+  UserPlus, FastForward, Package, Briefcase, LogIn,
 };
 
 export function GlobalUseCaseManagement() {

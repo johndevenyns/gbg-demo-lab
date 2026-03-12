@@ -273,6 +273,7 @@ export default function DemoPreview() {
                   resourceIdDocBio={demo.resourceIdDocBio}
                   resourceIdDataBio={demo.resourceIdDataBio}
                   resourceIdDataOnly={demo.resourceIdDataOnly}
+                  demoId={demo.id}
                   onComplete={handleFlowComplete}
                 />
               ) : (
