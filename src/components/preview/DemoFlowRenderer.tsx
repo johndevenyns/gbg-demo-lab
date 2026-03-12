@@ -69,6 +69,8 @@ interface DemoFlowRendererProps {
   resourceIdDocBio?: string;
   resourceIdDataBio?: string;
   resourceIdDataOnly?: string;
+  // Demo ID for login authentication
+  demoId?: string;
   onSubmissionLog?: (data: SubmissionLogData) => void;
   onComplete?: (success: boolean, referenceId?: string) => void;
 }
