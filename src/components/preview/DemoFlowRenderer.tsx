@@ -966,9 +966,67 @@ export function DemoFlowRenderer({
     return step.fields.some(f => addressFieldTypes.includes(f.type));
   }, []);
 
+  // Authenticate against demo_users table
+  const authenticateLogin = useCallback(async (): Promise<boolean> => {
+    if (!demoId) {
+      setLoginError('Login is not available for this demo.');
+      return false;
+    }
+    const email = (formData.email || '').trim().toLowerCase();
+    const password = formData.password || '';
+    
+    if (!email || !password) {
+      setLoginError('Please enter both email and password.');
+      return false;
+    }
+
+    setLoginError(null);
+    setIsLoading(true);
+
+    try {
+      const { data, error: queryError } = await supabase
+        .from('demo_users')
+        .select('id, email, password, is_active')
+        .eq('demo_id', demoId)
+        .eq('email', email)
+        .eq('is_active', true)
+        .maybeSingle();
+
+      if (queryError) throw queryError;
+
+      if (!data) {
+        setLoginError('Invalid email or password.');
+        setIsLoading(false);
+        return false;
+      }
+
+      if (data.password !== password) {
+        setLoginError('Invalid email or password.');
+        setIsLoading(false);
+        return false;
+      }
+
+      setIsLoading(false);
+      return true;
+    } catch (err) {
+      console.error('Login error:', err);
+      setLoginError('An error occurred. Please try again.');
+      setIsLoading(false);
+      return false;
+    }
+  }, [demoId, formData]);
+
   const goToNextStep = useCallback(async () => {
     // First validate required fields for form steps
     if (currentStep?.stepType === 'form' && !validateRequiredFields()) {
+      return;
+    }
+
+    // Handle login submit action
+    if (currentStep?.submitAction === 'login') {
+      const success = await authenticateLogin();
+      if (!success) return;
+      proceedToNextStep();
       return;
     }
 
@@ -1000,7 +1058,7 @@ export function DemoFlowRenderer({
     
     // No validation needed or validation passed
     proceedToNextStep();
-  }, [currentStep, hasAddressFields, validateAddress, formData, proceedToNextStep, validateRequiredFields]);
+  }, [currentStep, hasAddressFields, validateAddress, formData, proceedToNextStep, validateRequiredFields, authenticateLogin]);
 
   const goToPrevStep = () => {
     if (!isFirstStep) {
