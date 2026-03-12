@@ -284,6 +284,7 @@ export default function DemoPreview() {
                   resourceIdDataBio={demo.resourceIdDataBio}
                   resourceIdDataOnly={demo.resourceIdDataOnly}
                   demoId={demo.id}
+                  onNavigateToLogin={handleNavigateToLogin}
                   onComplete={handleFlowComplete}
                 />
               ) : (
