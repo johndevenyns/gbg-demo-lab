@@ -2203,8 +2203,8 @@ export function DemoFlowRenderer({
               style={style}
               fieldErrors={fieldErrors}
             />
-            {/* Login error message */}
-            {currentStep.submitAction === 'login' && loginError && (
+            {/* Login / code validation error message */}
+            {(currentStep.submitAction === 'login' || currentStep.submitAction === 'validate_code') && loginError && (
               <div style={{
                 marginTop: '12px',
                 padding: '10px 14px',
