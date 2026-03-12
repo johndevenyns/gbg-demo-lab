@@ -740,14 +740,56 @@ export const INDUSTRY_TEMPLATES: Record<IndustryTemplate, Partial<DemoEnvironmen
     verificationType: 'docBio',
     headerBgColor: '#1a1a2e',
     headerTextColor: '#ffffff',
-    buttonColor: '#6366f1',
+    buttonColor: '#00d4aa',
     includeAddressVerification: false,
     formSteps: [
       {
-        id: 'step-1',
-        title: 'Step 1',
+        id: 'code-entry',
+        title: 'Enter Your Code',
         order: 1,
-        fields: []
+        stepType: 'form',
+        submitAction: 'validate_code',
+        fields: [
+          { id: 'f-code', type: 'registration_code', label: 'Registration Code', name: 'registrationCode', required: true, order: 1, placeholder: 'Enter your 6-digit code' },
+        ],
+        buttons: [
+          { id: 'next', label: 'Verify Code', enabled: true },
+          { id: 'back', label: 'Back', enabled: false },
+        ]
+      },
+      {
+        id: 'verify-details',
+        title: 'Verify Your Details',
+        order: 2,
+        stepType: 'form',
+        fields: [
+          { id: 'f-fn', type: 'first_name', label: 'First Name', name: 'firstName', required: true, order: 1 },
+          { id: 'f-ln', type: 'last_name', label: 'Last Name', name: 'lastName', required: true, order: 2 },
+          { id: 'f-em', type: 'email', label: 'Email', name: 'email', required: true, order: 3 },
+          { id: 'f-ph', type: 'phone', label: 'Phone', name: 'phone', required: false, order: 4 },
+          { id: 'f-dob', type: 'date_of_birth', label: 'Date of Birth', name: 'dateOfBirth', required: false, order: 5 },
+        ],
+        buttons: [
+          { id: 'next', label: 'Continue', enabled: true },
+          { id: 'back', label: 'Back', enabled: true },
+        ]
+      },
+      {
+        id: 'verification',
+        title: 'Identity Verification',
+        order: 3,
+        stepType: 'unified_verification',
+        fields: [],
+        unifiedVerificationConfig: {
+          methodSelection: 'admin_preselect',
+          enabledTypes: ['docbio'],
+          typeConfigs: {},
+          successDestination: 'default',
+          failureDestination: 'default',
+        },
+        buttons: [
+          { id: 'back', label: 'Back', enabled: true },
+        ]
       }
     ]
   }
