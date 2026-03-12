@@ -151,6 +151,49 @@ const demoToRow = (demo: Partial<DemoEnvironment>) => {
 const generateSlug = (name: string) => 
   name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 
+// Generate a unique 4-character prefix from the customer name
+const generateUniquePrefix = async (customerName: string): Promise<string> => {
+  // Fetch existing prefixes
+  const { data: existing } = await supabase
+    .from('demo_environments')
+    .select('reference_id_prefix');
+  const usedPrefixes = new Set(
+    (existing || []).map(r => (r.reference_id_prefix || '').toLowerCase())
+  );
+
+  // Clean name to alpha chars only
+  const clean = customerName.replace(/[^a-zA-Z]/g, '').toLowerCase();
+
+  // Try: first 4 chars
+  if (clean.length >= 4) {
+    const candidate = clean.substring(0, 4);
+    if (!usedPrefixes.has(candidate)) return candidate;
+  }
+
+  // Try: first char + consonants from the rest
+  const consonants = clean.slice(1).replace(/[aeiou]/g, '');
+  if (clean.length >= 1 && consonants.length >= 3) {
+    const candidate = (clean[0] + consonants.substring(0, 3)).substring(0, 4);
+    if (!usedPrefixes.has(candidate)) return candidate;
+  }
+
+  // Try: first 2 + last 2
+  if (clean.length >= 4) {
+    const candidate = clean.substring(0, 2) + clean.substring(clean.length - 2);
+    if (!usedPrefixes.has(candidate)) return candidate;
+  }
+
+  // Append digits until unique
+  const base = clean.substring(0, 3) || 'demo';
+  for (let i = 1; i <= 99; i++) {
+    const candidate = (base + i).substring(0, 4);
+    if (!usedPrefixes.has(candidate)) return candidate;
+  }
+
+  // Final fallback
+  return clean.substring(0, 2) + Date.now().toString(36).slice(-2);
+};
+
 export const demosApi = {
   async getAll(): Promise<DemoEnvironment[]> {
     const { data, error } = await supabase
