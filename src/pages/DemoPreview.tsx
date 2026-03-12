@@ -171,9 +171,34 @@ export default function DemoPreview() {
     ? (selectedUseCase.formSteps as unknown as FormStep[])
     : demo.formSteps;
 
-  // Show landing only if there are multiple use cases and none is selected yet,
-  // OR if a single use case explicitly has showLandingPage enabled
-  const showLanding = hasUseCases && !selectedUseCase;
+  const renderFlowRenderer = (steps: typeof activeFormSteps, key: string) => (
+    <DemoFlowRenderer
+      key={key}
+      steps={steps}
+      buttonColor={demo.buttonColor}
+      formStyle={demo.formStyle}
+      successPageConfig={demo.successPageConfig || DEFAULT_SUCCESS_CONFIG}
+      failurePageConfig={demo.failurePageConfig || DEFAULT_FAILURE_CONFIG}
+      approvedUrl={demo.approvedUrl}
+      rejectedUrl={demo.rejectedUrl}
+      customerName={demo.customerName}
+      returnUrl={demo.returnUrl}
+      includeQr={demo.includeQr}
+      referenceIdPrefix={demo.referenceIdPrefix}
+      storedTestData={demo.storedTestData}
+      showTestButtons={true}
+      logoUrl={demo.logoUrl}
+      headerBgColor={demo.headerBgColor}
+      headerTextColor={demo.headerTextColor}
+      resourceId={demo.resourceId}
+      resourceIdDocBio={demo.resourceIdDocBio}
+      resourceIdDataBio={demo.resourceIdDataBio}
+      resourceIdDataOnly={demo.resourceIdDataOnly}
+      demoId={demo.id}
+      onNavigateToLogin={handleNavigateToLogin}
+      onComplete={handleFlowComplete}
+    />
+  );
 
   return (
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: previewDocument?.formStyle?.contentAreaBgColor || '#f5f5f5', color: '#1a1a2e' }}>
@@ -237,80 +262,41 @@ export default function DemoPreview() {
         className="flex-1 py-4"
         style={{ backgroundColor: previewDocument?.formStyle?.contentAreaBgColor || 'transparent' }}
       >
-        {showLanding ? (
-          <UseCaseLandingPage
-            useCases={resolvedUseCases}
-            buttonColor={demo.buttonColor}
-            onSelectUseCase={handleSelectUseCase}
-          />
-        ) : (
-          <div className="max-w-xl mx-auto px-4">
-            <div
-              ref={formRef}
-              className="p-8"
-              style={{
-                backgroundColor: previewDocument?.formStyle?.formBgColor || 'white',
-                borderRadius: getFormBorderRadius(previewDocument?.formStyle?.formBorderRadius),
-                boxShadow: getFormShadow(previewDocument?.formStyle?.formShadow),
-                border: `${previewDocument?.formStyle?.formBorderWidth || '1'}px solid ${previewDocument?.formStyle?.formBorderColor || '#e5e7eb'}`,
-              }}
-            >
-              {activeFormSteps.length > 0 ? (
-                <DemoFlowRenderer
-                  key={selectedUseCase ? selectedUseCase.linkId : demo.id}
-                  steps={activeFormSteps}
-                  buttonColor={demo.buttonColor}
-                  formStyle={demo.formStyle}
-                  successPageConfig={demo.successPageConfig || DEFAULT_SUCCESS_CONFIG}
-                  failurePageConfig={demo.failurePageConfig || DEFAULT_FAILURE_CONFIG}
-                  approvedUrl={demo.approvedUrl}
-                  rejectedUrl={demo.rejectedUrl}
-                  customerName={demo.customerName}
-                  returnUrl={demo.returnUrl}
-                  includeQr={demo.includeQr}
-                  referenceIdPrefix={demo.referenceIdPrefix}
-                  storedTestData={demo.storedTestData}
-                  showTestButtons={true}
-                  logoUrl={demo.logoUrl}
-                  headerBgColor={demo.headerBgColor}
-                  headerTextColor={demo.headerTextColor}
-                  resourceId={demo.resourceId}
-                  resourceIdDocBio={demo.resourceIdDocBio}
-                  resourceIdDataBio={demo.resourceIdDataBio}
-                  resourceIdDataOnly={demo.resourceIdDataOnly}
-                  demoId={demo.id}
-                  onNavigateToLogin={handleNavigateToLogin}
-                  onComplete={handleFlowComplete}
-                />
-              ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  <p>No form steps configured for this use case</p>
-                  {selectedUseCase && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="mt-4"
-                      onClick={() => setSelectedUseCase(null)}
-                    >
-                      ← Back to Use Cases
-                    </Button>
-                  )}
-                </div>
-              )}
-            </div>
-            {selectedUseCase && hasUseCases && (
-              <div className="text-center mt-4">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setSelectedUseCase(null)}
-                >
-                  ← Back to Use Cases
-                </Button>
+        <div className="max-w-xl mx-auto px-4">
+          <div
+            ref={formRef}
+            className="p-8"
+            style={{
+              backgroundColor: previewDocument?.formStyle?.formBgColor || 'white',
+              borderRadius: getFormBorderRadius(previewDocument?.formStyle?.formBorderRadius),
+              boxShadow: getFormShadow(previewDocument?.formStyle?.formShadow),
+              border: `${previewDocument?.formStyle?.formBorderWidth || '1'}px solid ${previewDocument?.formStyle?.formBorderColor || '#e5e7eb'}`,
+            }}
+          >
+            {hasUseCases && selectedUseCase ? (
+              <UseCaseLandingPage
+                useCases={resolvedUseCases}
+                selectedUseCase={selectedUseCase}
+                buttonColor={demo.buttonColor}
+                onSelectUseCase={setSelectedUseCase}
+              >
+                {activeFormSteps.length > 0 ? (
+                  renderFlowRenderer(activeFormSteps, selectedUseCase.linkId)
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <p>No form steps configured for this use case</p>
+                  </div>
+                )}
+              </UseCaseLandingPage>
+            ) : activeFormSteps.length > 0 ? (
+              renderFlowRenderer(activeFormSteps, demo.id)
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <p>No form steps configured</p>
               </div>
             )}
           </div>
-        )}
+        </div>
       </main>
 
       {/* Mirrored Footer */}
