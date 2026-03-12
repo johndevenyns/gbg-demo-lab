@@ -9,7 +9,7 @@ import { Camera, Loader2, ExternalLink, Eye, Check, Monitor, Tablet, Smartphone,
  import { useToast } from "@/hooks/use-toast";
  import { DemoEnvironment } from "@/types/demo";
  import { DEFAULT_FORM_STYLE, FormStyleConfig } from "@/types/formStyle";
- import { generateFormHtml, generatePreviewDocument } from "@/lib/formStyleUtils";
+ import { generateFormHtml, generatePreviewDocument, formElementStylesToConfig } from "@/lib/formStyleUtils";
  
  type ViewportSize = 'desktop' | 'tablet' | 'mobile';
  
@@ -86,30 +86,7 @@ function mapBorderWidth(width: string | undefined): '0' | '1' | '2' {
   return '1';
 }
 
-// Convert FormElementStyles to FormStyleConfig with complete property mapping
-function formElementStylesToConfig(styles: FormElementStyles): FormStyleConfig {
-  const config: FormStyleConfig = { ...DEFAULT_FORM_STYLE, source: 'mirrored' };
-  
-  // Colors
-  if (styles.inputBgColor) config.inputBgColor = styles.inputBgColor;
-  if (styles.inputTextColor) config.inputTextColor = styles.inputTextColor;
-  if (styles.inputBorderColor) config.inputBorderColor = styles.inputBorderColor;
-  if (styles.inputFocusBorderColor) config.inputFocusBorderColor = styles.inputFocusBorderColor;
-  if (styles.inputPlaceholderColor) config.inputPlaceholderColor = styles.inputPlaceholderColor;
-  if (styles.labelColor) config.labelColor = styles.labelColor;
-  if (styles.errorColor) config.errorColor = styles.errorColor;
-  
-  // Typography
-  if (styles.inputFontFamily) config.fontFamily = styles.inputFontFamily;
-  config.fontSize = mapFontSize(styles.inputFontSize);
-  config.labelWeight = mapLabelWeight(styles.labelFontWeight);
-  
-  // Borders
-  config.borderRadius = mapBorderRadius(styles.inputBorderRadius);
-  config.borderWidth = mapBorderWidth(styles.inputBorderWidth);
-  
-  return config;
-}
+ // formElementStylesToConfig is now imported from @/lib/formStyleUtils
  
  // Generate preview HTML with screenshot crops
  function generateScreenshotPreviewHtml(
