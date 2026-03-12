@@ -616,6 +616,10 @@ export function DemoFlowRenderer({
   const [apiResponses, setApiResponses] = useState<StepApiResponse[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [loginError, setLoginError] = useState<string | null>(null);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotPasswordEmail, setForgotPasswordEmail] = useState('');
+  const [forgotPasswordSuccess, setForgotPasswordSuccess] = useState(false);
   const [flowComplete, setFlowComplete] = useState<'success' | 'failure' | null>(null);
   const [referenceId, setReferenceId] = useState<string | null>(null);
   const [selectedVerificationType, setSelectedVerificationType] = useState<VerificationType | null>(null);
