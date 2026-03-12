@@ -23,6 +23,7 @@ import { FormPreviewPanel } from "@/components/formBuilder/FormPreviewPanel";
 import { LogoUploadSection } from "@/components/admin/LogoUploadSection";
 import { BrandingScrapeSection } from "@/components/admin/BrandingScrapeSection";
 import { cn } from "@/lib/utils";
+import { DemoUserManagement } from "@/components/admin/DemoUserManagement";
 
 // Navigation sections
 type ConfigSection = 'settings' | 'mirror' | 'branding' | 'use-cases' | 'users' | 'preview';
