@@ -9,6 +9,7 @@ import { DEFAULT_SUCCESS_CONFIG, DEFAULT_FAILURE_CONFIG } from "@/components/pre
 import { DEFAULT_FORM_STYLE } from "@/types/formStyle";
 import { useDemoUseCaseLinks } from "@/hooks/useUseCases";
 import { UseCaseLandingPage } from "@/components/preview/UseCaseLandingPage";
+import { BankingPortalShell } from "@/components/preview/mockPortal/BankingPortalShell";
 import { ResolvedUseCase } from "@/types/useCase";
 import { FormStep } from "@/types/demo";
 
