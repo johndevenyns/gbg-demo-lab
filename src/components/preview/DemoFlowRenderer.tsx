@@ -1013,7 +1013,7 @@ export function DemoFlowRenderer({
     try {
       const { data, error: queryError } = await supabase
         .from('demo_users')
-        .select('id, email, password, is_active')
+        .select('id, email, password, is_active, profile_data')
         .eq('demo_id', demoId)
         .eq('email', email)
         .eq('is_active', true)
