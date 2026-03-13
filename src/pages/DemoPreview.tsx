@@ -214,8 +214,162 @@ export default function DemoPreview() {
       demoId={demo.id}
       onNavigateToLogin={handleNavigateToLogin}
       onComplete={handleFlowComplete}
+      onLoginSuccess={handleLoginSuccess}
     />
   );
+
+  // Handle portal verification trigger — show a verification flow overlay
+  const handlePortalVerification = useCallback((action: string) => {
+    setPortalVerificationAction(action);
+  }, []);
+
+  const handlePortalLogout = useCallback(() => {
+    setShowPortal(false);
+    setPortalUser(null);
+    setSelectedUseCase(null);
+    // Re-select first use case to reset the form
+    if (resolvedUseCases.length > 0) {
+      setTimeout(() => setSelectedUseCase(resolvedUseCases[0]), 50);
+    }
+  }, [resolvedUseCases]);
+
+  // Build verification steps for portal IDV trigger
+  const portalVerificationSteps: FormStep[] = useMemo(() => {
+    if (!portalVerificationAction) return [];
+    return [{
+      id: 'portal-verify',
+      title: 'Identity Verification',
+      description: `Verify your identity to ${portalVerificationAction}`,
+      order: 1,
+      stepType: 'unified_verification' as const,
+      fields: [],
+      unifiedVerificationConfig: {
+        methodSelection: 'admin_preselect' as const,
+        enabledTypes: ['docbio'],
+        typeConfigs: {},
+        successDestination: 'default' as const,
+        failureDestination: 'default' as const,
+      },
+    }];
+  }, [portalVerificationAction]);
+
+  // Determine portal user name from profile data
+  const portalUserName = useMemo(() => {
+    if (!portalUser) return 'User';
+    const pd = portalUser.profileData;
+    if (pd) {
+      const first = (pd.firstName || pd.first_name || '') as string;
+      const last = (pd.lastName || pd.last_name || '') as string;
+      if (first || last) return `${first} ${last}`.trim();
+    }
+    return portalUser.email.split('@')[0];
+  }, [portalUser]);
+
+  // Show portal when login completes for a bank demo
+  if (showPortal && portalUser && demo) {
+    // If a verification action is in progress, show the verification overlay
+    if (portalVerificationAction && portalVerificationSteps.length > 0) {
+      return (
+        <div style={{ position: 'relative', minHeight: '100vh' }}>
+          <BankingPortalShell
+            userName={portalUserName}
+            userEmail={portalUser.email}
+            accentColor={demo.buttonColor || '#0D9488'}
+            logoUrl={demo.useUploadedLogo ? demo.uploadedLogoUrl : demo.logoUrl}
+            bankName={demo.customerName}
+            onTriggerVerification={handlePortalVerification}
+            onLogout={handlePortalLogout}
+          />
+          {/* Verification Overlay */}
+          <div style={{
+            position: 'fixed', inset: 0, zIndex: 200,
+            background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <div style={{
+              background: 'white', borderRadius: '16px', padding: '32px',
+              maxWidth: '500px', width: '90%', maxHeight: '80vh', overflowY: 'auto',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
+            }}>
+              <DemoFlowRenderer
+                steps={portalVerificationSteps}
+                buttonColor={demo.buttonColor}
+                formStyle={demo.formStyle}
+                customerName={demo.customerName}
+                logoUrl={demo.useUploadedLogo ? demo.uploadedLogoUrl : demo.logoUrl}
+                headerBgColor={demo.headerBgColor}
+                headerTextColor={demo.headerTextColor}
+                resourceId={demo.resourceId}
+                resourceIdDocBio={demo.resourceIdDocBio}
+                resourceIdDataBio={demo.resourceIdDataBio}
+                resourceIdDataOnly={demo.resourceIdDataOnly}
+                demoId={demo.id}
+                includeQr={demo.includeQr}
+                onComplete={(success) => {
+                  setPortalVerificationAction(null);
+                }}
+              />
+              <button
+                onClick={() => setPortalVerificationAction(null)}
+                style={{
+                  marginTop: '16px', width: '100%', padding: '10px',
+                  background: 'transparent', border: '1px solid #E2E8F0',
+                  borderRadius: '8px', color: '#64748B', cursor: 'pointer',
+                  fontSize: '14px',
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div style={{ position: 'relative' }}>
+        <BankingPortalShell
+          userName={portalUserName}
+          userEmail={portalUser.email}
+          accentColor={demo.buttonColor || '#0D9488'}
+          logoUrl={demo.useUploadedLogo ? demo.uploadedLogoUrl : demo.logoUrl}
+          bankName={demo.customerName}
+          onTriggerVerification={handlePortalVerification}
+          onLogout={handlePortalLogout}
+        />
+        {/* Admin Exit Bar */}
+        {!authLoading && isAdmin && (
+          <>
+            <div className="fixed bottom-0 left-0 right-0 bg-muted/95 backdrop-blur-sm border-t border-border py-2 px-4 z-50">
+              <div className="max-w-4xl mx-auto flex items-center justify-between">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <span>Portal Preview</span>
+                  <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">
+                    {demo.customerName}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button variant="ghost" size="sm" asChild>
+                    <Link to="/admin">
+                      <ArrowLeft className="w-4 h-4 mr-1" />
+                      Dashboard
+                    </Link>
+                  </Button>
+                  <Button variant="outline" size="sm" asChild>
+                    <Link to={`/admin/demo/${demo.id}`}>
+                      <Settings className="w-4 h-4 mr-1" />
+                      Configure
+                    </Link>
+                  </Button>
+                </div>
+              </div>
+            </div>
+            <div className="h-12" />
+          </>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: previewDocument?.formStyle?.contentAreaBgColor || '#f5f5f5', color: '#1a1a2e' }}>
