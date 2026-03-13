@@ -74,6 +74,7 @@ interface DemoFlowRendererProps {
   onNavigateToLogin?: () => void;
   onSubmissionLog?: (data: SubmissionLogData) => void;
   onComplete?: (success: boolean, referenceId?: string) => void;
+  onLoginSuccess?: (userData: { email: string; profileData?: Record<string, unknown> }) => void;
 }
 
 // QR Code component:
@@ -634,7 +635,8 @@ export function DemoFlowRenderer({
   demoId,
   onNavigateToLogin,
   onSubmissionLog,
-  onComplete 
+  onComplete,
+  onLoginSuccess
 }: DemoFlowRendererProps) {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [formData, setFormData] = useState<Record<string, string>>({});
@@ -1011,7 +1013,7 @@ export function DemoFlowRenderer({
     try {
       const { data, error: queryError } = await supabase
         .from('demo_users')
-        .select('id, email, password, is_active')
+        .select('id, email, password, is_active, profile_data')
         .eq('demo_id', demoId)
         .eq('email', email)
         .eq('is_active', true)
@@ -1031,6 +1033,12 @@ export function DemoFlowRenderer({
         return false;
       }
 
+      // Notify parent of successful login with user data
+      const profileData = (data.profile_data && typeof data.profile_data === 'object' && !Array.isArray(data.profile_data))
+        ? data.profile_data as Record<string, unknown>
+        : undefined;
+      onLoginSuccess?.({ email: data.email, profileData });
+
       setIsLoading(false);
       return true;
     } catch (err) {
@@ -1039,7 +1047,7 @@ export function DemoFlowRenderer({
       setIsLoading(false);
       return false;
     }
-  }, [demoId, formData]);
+  }, [demoId, formData, onLoginSuccess]);
 
   // Validate registration code against demo_users table
   const validateRegistrationCode = useCallback(async (): Promise<boolean> => {
