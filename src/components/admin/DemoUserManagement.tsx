@@ -142,6 +142,19 @@ export function DemoUserManagement({ demoId, demoName }: DemoUserManagementProps
     onError: (e: Error) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
   });
 
+  // Toggle super user
+  const toggleSuperMutation = useMutation({
+    mutationFn: async ({ userId, isSuper }: { userId: string; isSuper: boolean }) => {
+      const { error } = await supabase.from('demo_users').update({ is_super: isSuper } as any).eq('id', userId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['demo-users', demoId] });
+      toast({ title: 'Updated', description: 'Super user status changed.' });
+    },
+    onError: (e: Error) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
+  });
+
   // Reset password
   const handleResetPassword = async () => {
     setResetError(null);
