@@ -98,6 +98,19 @@ export default function DemoPreview() {
 
   const handleFlowComplete = useCallback((success: boolean, referenceId?: string) => {
     console.log('Flow complete:', { success, referenceId });
+    // If a portal verification was in progress, return to portal on completion
+    if (portalVerificationAction) {
+      setPortalVerificationAction(null);
+      return;
+    }
+    // If login just succeeded and we have portal user data, show the portal
+    if (success && portalUser && !showPortal) {
+      setShowPortal(true);
+    }
+  }, [portalUser, showPortal, portalVerificationAction]);
+
+  const handleLoginSuccess = useCallback((userData: { email: string; profileData?: Record<string, unknown> }) => {
+    setPortalUser(userData);
   }, []);
 
   const handleSelectUseCase = useCallback((uc: ResolvedUseCase) => {
