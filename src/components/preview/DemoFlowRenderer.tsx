@@ -1047,7 +1047,7 @@ export function DemoFlowRenderer({
       setIsLoading(false);
       return false;
     }
-  }, [demoId, formData]);
+  }, [demoId, formData, onLoginSuccess]);
 
   // Validate registration code against demo_users table
   const validateRegistrationCode = useCallback(async (): Promise<boolean> => {
