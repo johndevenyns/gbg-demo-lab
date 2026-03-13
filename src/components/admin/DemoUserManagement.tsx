@@ -322,6 +322,7 @@ export function DemoUserManagement({ demoId, demoName }: DemoUserManagementProps
                 <TableRow>
                   <TableHead>Email</TableHead>
                   <TableHead>Profile</TableHead>
+                  <TableHead>Super</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Registration Code</TableHead>
                   <TableHead>Created</TableHead>
