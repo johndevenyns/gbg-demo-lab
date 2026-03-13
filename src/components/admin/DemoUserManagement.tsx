@@ -11,7 +11,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Label } from '@/components/ui/label';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Trash2, UserPlus, Users, AlertCircle, KeyRound, Copy, Check, Clock, ChevronDown, UserCog } from 'lucide-react';
+import { Loader2, Trash2, UserPlus, Users, AlertCircle, KeyRound, Copy, Check, Clock, ChevronDown, UserCog, ShieldCheck } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
 
 interface DemoUser {
   id: string;
