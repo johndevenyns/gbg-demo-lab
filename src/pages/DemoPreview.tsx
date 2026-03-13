@@ -128,6 +128,52 @@ export default function DemoPreview() {
     }
   }, [resolvedUseCases]);
 
+  // Handle portal verification trigger
+  const handlePortalVerification = useCallback((action: string) => {
+    setPortalVerificationAction(action);
+  }, []);
+
+  const handlePortalLogout = useCallback(() => {
+    setShowPortal(false);
+    setPortalUser(null);
+    setSelectedUseCase(null);
+    if (resolvedUseCases.length > 0) {
+      setTimeout(() => setSelectedUseCase(resolvedUseCases[0]), 50);
+    }
+  }, [resolvedUseCases]);
+
+  // Build verification steps for portal IDV trigger
+  const portalVerificationSteps: FormStep[] = useMemo(() => {
+    if (!portalVerificationAction) return [];
+    return [{
+      id: 'portal-verify',
+      title: 'Identity Verification',
+      description: `Verify your identity to ${portalVerificationAction}`,
+      order: 1,
+      stepType: 'unified_verification' as const,
+      fields: [],
+      unifiedVerificationConfig: {
+        methodSelection: 'admin_preselect' as const,
+        enabledTypes: ['docbio'],
+        typeConfigs: {},
+        successDestination: 'default' as const,
+        failureDestination: 'default' as const,
+      },
+    }];
+  }, [portalVerificationAction]);
+
+  // Determine portal user name from profile data
+  const portalUserName = useMemo(() => {
+    if (!portalUser) return 'User';
+    const pd = portalUser.profileData;
+    if (pd) {
+      const first = (pd.firstName || pd.first_name || '') as string;
+      const last = (pd.lastName || pd.last_name || '') as string;
+      if (first || last) return `${first} ${last}`.trim();
+    }
+    return portalUser.email.split('@')[0];
+  }, [portalUser]);
+
   // Build full HTML document for the preview iframe
   const previewDocument = useMemo(() => {
     if (!demo) return null;
@@ -217,53 +263,6 @@ export default function DemoPreview() {
       onLoginSuccess={handleLoginSuccess}
     />
   );
-
-  // Handle portal verification trigger — show a verification flow overlay
-  const handlePortalVerification = useCallback((action: string) => {
-    setPortalVerificationAction(action);
-  }, []);
-
-  const handlePortalLogout = useCallback(() => {
-    setShowPortal(false);
-    setPortalUser(null);
-    setSelectedUseCase(null);
-    // Re-select first use case to reset the form
-    if (resolvedUseCases.length > 0) {
-      setTimeout(() => setSelectedUseCase(resolvedUseCases[0]), 50);
-    }
-  }, [resolvedUseCases]);
-
-  // Build verification steps for portal IDV trigger
-  const portalVerificationSteps: FormStep[] = useMemo(() => {
-    if (!portalVerificationAction) return [];
-    return [{
-      id: 'portal-verify',
-      title: 'Identity Verification',
-      description: `Verify your identity to ${portalVerificationAction}`,
-      order: 1,
-      stepType: 'unified_verification' as const,
-      fields: [],
-      unifiedVerificationConfig: {
-        methodSelection: 'admin_preselect' as const,
-        enabledTypes: ['docbio'],
-        typeConfigs: {},
-        successDestination: 'default' as const,
-        failureDestination: 'default' as const,
-      },
-    }];
-  }, [portalVerificationAction]);
-
-  // Determine portal user name from profile data
-  const portalUserName = useMemo(() => {
-    if (!portalUser) return 'User';
-    const pd = portalUser.profileData;
-    if (pd) {
-      const first = (pd.firstName || pd.first_name || '') as string;
-      const last = (pd.lastName || pd.last_name || '') as string;
-      if (first || last) return `${first} ${last}`.trim();
-    }
-    return portalUser.email.split('@')[0];
-  }, [portalUser]);
 
   // Show portal when login completes for a bank demo
   if (showPortal && portalUser && demo) {
