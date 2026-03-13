@@ -74,6 +74,7 @@ interface DemoFlowRendererProps {
   onNavigateToLogin?: () => void;
   onSubmissionLog?: (data: SubmissionLogData) => void;
   onComplete?: (success: boolean, referenceId?: string) => void;
+  onLoginSuccess?: (userData: { email: string; profileData?: Record<string, unknown> }) => void;
 }
 
 // QR Code component:
