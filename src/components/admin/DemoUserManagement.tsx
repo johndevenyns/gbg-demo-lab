@@ -363,6 +363,7 @@ export function DemoUserManagement({ demoId, demoName }: DemoUserManagementProps
                           />
                           {user.is_super && <ShieldCheck className="w-4 h-4 text-primary" />}
                         </div>
+                      </TableCell>
                       <TableCell>
                         <button
                           onClick={() => toggleActiveMutation.mutate({ userId: user.id, isActive: !user.is_active })}
