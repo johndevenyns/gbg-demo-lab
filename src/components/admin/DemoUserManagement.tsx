@@ -356,6 +356,14 @@ export function DemoUserManagement({ demoId, demoName }: DemoUserManagementProps
                         )}
                       </TableCell>
                       <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Switch
+                            checked={user.is_super}
+                            onCheckedChange={(checked) => toggleSuperMutation.mutate({ userId: user.id, isSuper: checked })}
+                          />
+                          {user.is_super && <ShieldCheck className="w-4 h-4 text-primary" />}
+                        </div>
+                      <TableCell>
                         <button
                           onClick={() => toggleActiveMutation.mutate({ userId: user.id, isActive: !user.is_active })}
                           className="cursor-pointer"
