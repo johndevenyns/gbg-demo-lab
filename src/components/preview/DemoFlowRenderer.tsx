@@ -635,7 +635,8 @@ export function DemoFlowRenderer({
   demoId,
   onNavigateToLogin,
   onSubmissionLog,
-  onComplete 
+  onComplete,
+  onLoginSuccess
 }: DemoFlowRendererProps) {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [formData, setFormData] = useState<Record<string, string>>({});
