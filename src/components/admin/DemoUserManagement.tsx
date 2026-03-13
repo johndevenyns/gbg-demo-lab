@@ -21,6 +21,7 @@ interface DemoUser {
   registration_code: string | null;
   registration_code_expires_at: string | null;
   is_active: boolean;
+  is_super: boolean;
   profile_data: Record<string, string> | null;
   created_at: string;
   updated_at: string;
