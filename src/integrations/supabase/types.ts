@@ -246,6 +246,7 @@ export type Database = {
           email: string
           id: string
           is_active: boolean
+          is_super: boolean
           password: string
           profile_data: Json | null
           registration_code: string | null
@@ -259,6 +260,7 @@ export type Database = {
           email: string
           id?: string
           is_active?: boolean
+          is_super?: boolean
           password: string
           profile_data?: Json | null
           registration_code?: string | null
@@ -272,6 +274,7 @@ export type Database = {
           email?: string
           id?: string
           is_active?: boolean
+          is_super?: boolean
           password?: string
           profile_data?: Json | null
           registration_code?: string | null

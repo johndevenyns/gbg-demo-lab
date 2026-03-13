@@ -1011,15 +1011,33 @@ export function DemoFlowRenderer({
     setIsLoading(true);
 
     try {
-      const { data, error: queryError } = await supabase
+      // Check demo-scoped users first, then super demo users
+      const { data: scopedUser, error: scopedError } = await supabase
         .from('demo_users')
         .select('id, email, password, is_active, profile_data')
         .eq('demo_id', demoId)
         .eq('email', email)
         .eq('is_active', true)
+        .eq('is_super', false)
         .maybeSingle();
 
-      if (queryError) throw queryError;
+      if (scopedError) throw scopedError;
+
+      let data = scopedUser;
+
+      // If no scoped user found, check for super demo users (can log into any demo)
+      if (!data) {
+        const { data: superUser, error: superError } = await supabase
+          .from('demo_users')
+          .select('id, email, password, is_active, profile_data')
+          .eq('email', email)
+          .eq('is_active', true)
+          .eq('is_super', true)
+          .maybeSingle();
+
+        if (superError) throw superError;
+        data = superUser;
+      }
 
       if (!data) {
         setLoginError('Invalid email or password.');

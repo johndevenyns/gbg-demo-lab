@@ -11,7 +11,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Label } from '@/components/ui/label';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Trash2, UserPlus, Users, AlertCircle, KeyRound, Copy, Check, Clock, ChevronDown, UserCog } from 'lucide-react';
+import { Loader2, Trash2, UserPlus, Users, AlertCircle, KeyRound, Copy, Check, Clock, ChevronDown, UserCog, ShieldCheck } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
 
 interface DemoUser {
   id: string;
@@ -21,6 +22,7 @@ interface DemoUser {
   registration_code: string | null;
   registration_code_expires_at: string | null;
   is_active: boolean;
+  is_super: boolean;
   profile_data: Record<string, string> | null;
   created_at: string;
   updated_at: string;
@@ -136,6 +138,19 @@ export function DemoUserManagement({ demoId, demoName }: DemoUserManagementProps
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['demo-users', demoId] });
+    },
+    onError: (e: Error) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
+  });
+
+  // Toggle super user
+  const toggleSuperMutation = useMutation({
+    mutationFn: async ({ userId, isSuper }: { userId: string; isSuper: boolean }) => {
+      const { error } = await supabase.from('demo_users').update({ is_super: isSuper } as any).eq('id', userId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['demo-users', demoId] });
+      toast({ title: 'Updated', description: 'Super user status changed.' });
     },
     onError: (e: Error) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
   });
@@ -320,6 +335,7 @@ export function DemoUserManagement({ demoId, demoName }: DemoUserManagementProps
                 <TableRow>
                   <TableHead>Email</TableHead>
                   <TableHead>Profile</TableHead>
+                  <TableHead>Super</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Registration Code</TableHead>
                   <TableHead>Created</TableHead>
@@ -338,6 +354,15 @@ export function DemoUserManagement({ demoId, demoName }: DemoUserManagementProps
                         ) : (
                           <span className="text-muted-foreground text-sm">—</span>
                         )}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Switch
+                            checked={user.is_super}
+                            onCheckedChange={(checked) => toggleSuperMutation.mutate({ userId: user.id, isSuper: checked })}
+                          />
+                          {user.is_super && <ShieldCheck className="w-4 h-4 text-primary" />}
+                        </div>
                       </TableCell>
                       <TableCell>
                         <button

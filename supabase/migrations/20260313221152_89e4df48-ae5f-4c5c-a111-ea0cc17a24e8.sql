@@ -1,0 +1,1 @@
+ALTER TABLE public.demo_users ADD COLUMN is_super boolean NOT NULL DEFAULT false;
