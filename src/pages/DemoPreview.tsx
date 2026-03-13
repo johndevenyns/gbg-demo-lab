@@ -44,6 +44,9 @@ export default function DemoPreview() {
   const { data: links = [] } = useDemoUseCaseLinks(demo?.id);
   const formRef = useRef<HTMLDivElement>(null);
   const [selectedUseCase, setSelectedUseCase] = useState<ResolvedUseCase | null>(null);
+  const [portalUser, setPortalUser] = useState<{ email: string; profileData?: Record<string, unknown> } | null>(null);
+  const [showPortal, setShowPortal] = useState(false);
+  const [portalVerificationAction, setPortalVerificationAction] = useState<string | null>(null);
 
   // Resolve use cases: merge global defaults with demo overrides
   const resolvedUseCases = useMemo((): ResolvedUseCase[] => {
