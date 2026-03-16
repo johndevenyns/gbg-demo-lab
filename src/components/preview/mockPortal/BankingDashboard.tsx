@@ -114,7 +114,7 @@ export function BankingDashboard({ userName, accentColor, portalConfig }: Bankin
           </button>
         </div>
 
-        {MOCK_TRANSACTIONS.map((tx, i) => (
+        {transactions.map((tx, i) => (
           <div
             key={tx.id}
             style={{
