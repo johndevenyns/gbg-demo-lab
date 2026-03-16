@@ -67,6 +67,7 @@ export default function DemoPreview() {
             : uc.defaultPageContent,
           isEnabled: link.isEnabled,
           displayOrder: link.displayOrder,
+          portalType: link.portalTypeOverride ?? uc.portalType ?? null,
         };
       });
   }, [links]);
