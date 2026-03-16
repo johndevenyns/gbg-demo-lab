@@ -50,6 +50,7 @@ export interface DemoUseCaseLink {
   formStepsOverride?: Record<string, unknown>[] | null;
   verificationTypeOverride?: string | null;
   pageContentOverride?: UseCasePageContent | null;
+  portalTypeOverride?: PortalType | null;
   createdAt: string;
   updatedAt: string;
   // Joined data from global_use_cases (populated via query)
