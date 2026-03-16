@@ -132,9 +132,7 @@ export function UseCaseSection({ demoId, demo, onUpdateDemo }: UseCaseSectionPro
                 if (!uc) return null;
                 const IconComp = ICON_MAP[uc.iconName] ?? Package;
                 const isExpanded = expandedId === link.id;
-                const hasOverride = !!link.formStepsOverride || !!link.pageContentOverride || !!link.verificationTypeOverride || !!link.portalTypeOverride;
-                const showFormBuilder = formBuilderLinkId === link.id;
-                const effectivePortalType = link.portalTypeOverride ?? uc.portalType ?? 'none';
+                const hasOverride = !!link.formStepsOverride || !!link.pageContentOverride || !!link.verificationTypeOverride;
 
                 return (
                   <Collapsible key={link.id} open={isExpanded} onOpenChange={(open) => {
