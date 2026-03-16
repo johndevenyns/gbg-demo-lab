@@ -59,6 +59,7 @@ export type Database = {
           id: string
           include_address_verification: boolean | null
           include_qr: boolean | null
+          industry_id: string | null
           industry_template: Database["public"]["Enums"]["industry_template"]
           is_active: boolean | null
           logo_url: string | null
@@ -103,6 +104,7 @@ export type Database = {
           id?: string
           include_address_verification?: boolean | null
           include_qr?: boolean | null
+          industry_id?: string | null
           industry_template?: Database["public"]["Enums"]["industry_template"]
           is_active?: boolean | null
           logo_url?: string | null
@@ -147,6 +149,7 @@ export type Database = {
           id?: string
           include_address_verification?: boolean | null
           include_qr?: boolean | null
+          industry_id?: string | null
           industry_template?: Database["public"]["Enums"]["industry_template"]
           is_active?: boolean | null
           logo_url?: string | null
@@ -180,6 +183,13 @@ export type Database = {
             columns: ["header_cta_use_case_id"]
             isOneToOne: false
             referencedRelation: "global_use_cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "demo_environments_industry_id_fkey"
+            columns: ["industry_id"]
+            isOneToOne: false
+            referencedRelation: "industries"
             referencedColumns: ["id"]
           },
         ]
@@ -385,6 +395,7 @@ export type Database = {
           display_order: number
           icon_name: string | null
           id: string
+          industry_id: string | null
           is_enabled: boolean
           portal_type: string | null
           show_fill_fail: boolean
@@ -401,6 +412,7 @@ export type Database = {
           display_order?: number
           icon_name?: string | null
           id?: string
+          industry_id?: string | null
           is_enabled?: boolean
           portal_type?: string | null
           show_fill_fail?: boolean
@@ -417,10 +429,55 @@ export type Database = {
           display_order?: number
           icon_name?: string | null
           id?: string
+          industry_id?: string | null
           is_enabled?: boolean
           portal_type?: string | null
           show_fill_fail?: boolean
           show_fill_pass?: boolean
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "global_use_cases_industry_id_fkey"
+            columns: ["industry_id"]
+            isOneToOne: false
+            referencedRelation: "industries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      industries: {
+        Row: {
+          created_at: string
+          description: string | null
+          display_order: number
+          icon_name: string | null
+          id: string
+          is_enabled: boolean
+          portal_type: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          icon_name?: string | null
+          id?: string
+          is_enabled?: boolean
+          portal_type?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          icon_name?: string | null
+          id?: string
+          is_enabled?: boolean
+          portal_type?: string | null
           title?: string
           updated_at?: string
         }

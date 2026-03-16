@@ -25,6 +25,7 @@ export interface DemoEnvironment {
   slug: string;
   customerName: string;
   industryTemplate: IndustryTemplate;
+  industryId?: string;
   logoUrl?: string;
   uploadedLogoUrl?: string;
   useUploadedLogo?: boolean;

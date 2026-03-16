@@ -1,4 +1,4 @@
-// Global Use Case types for the new architecture
+// Global Use Case types - use cases belong to an Industry
 
 export interface UseCasePageContent {
   heroTitle?: string;
@@ -11,23 +11,14 @@ export interface UseCasePageContent {
   tabLabel?: string;
 }
 
-// Global use case definition (managed by global admins)
-export const PORTAL_TYPE_OPTIONS = [
-  { value: 'none', label: 'No Portal', description: 'Standard form flow without a portal' },
-  { value: 'banking', label: 'Banking', description: 'Online banking dashboard with accounts & transactions' },
-  { value: 'rental_car', label: 'Rental Car', description: 'Car rental management portal (coming soon)' },
-  { value: 'retail', label: 'Retail', description: 'Retail account / loyalty portal (coming soon)' },
-  { value: 'insurance', label: 'Insurance', description: 'Insurance policy management portal (coming soon)' },
-  { value: 'healthcare', label: 'Healthcare', description: 'Patient portal (coming soon)' },
-] as const;
-
-export type PortalType = typeof PORTAL_TYPE_OPTIONS[number]['value'];
+export { PORTAL_TYPE_OPTIONS, type PortalType } from '@/types/industry';
 
 export interface GlobalUseCase {
   id: string;
   title: string;
   description?: string;
   iconName: string;
+  industryId?: string | null;
   defaultFormSteps: Record<string, unknown>[];
   defaultVerificationType: string;
   defaultPageContent: UseCasePageContent;
@@ -35,7 +26,7 @@ export interface GlobalUseCase {
   isEnabled: boolean;
   showFillPass: boolean;
   showFillFail: boolean;
-  portalType?: PortalType | null;
+  portalType?: string | null; // deprecated - now inherited from industry
   createdAt: string;
   updatedAt: string;
 }
@@ -50,7 +41,7 @@ export interface DemoUseCaseLink {
   formStepsOverride?: Record<string, unknown>[] | null;
   verificationTypeOverride?: string | null;
   pageContentOverride?: UseCasePageContent | null;
-  portalTypeOverride?: PortalType | null;
+  portalTypeOverride?: string | null;
   createdAt: string;
   updatedAt: string;
   // Joined data from global_use_cases (populated via query)
@@ -69,5 +60,5 @@ export interface ResolvedUseCase {
   pageContent: UseCasePageContent;
   isEnabled: boolean;
   displayOrder: number;
-  portalType?: PortalType | null;
+  portalType?: string | null;
 }

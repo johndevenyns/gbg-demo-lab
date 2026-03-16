@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { GlobalUseCase, DemoUseCaseLink, UseCasePageContent, PortalType } from '@/types/useCase';
+import { GlobalUseCase, DemoUseCaseLink, UseCasePageContent } from '@/types/useCase';
 import { toast } from 'sonner';
 
 // ── Global Use Cases (managed by global admins) ──
@@ -11,6 +11,7 @@ function mapGlobalRow(row: Record<string, unknown>): GlobalUseCase {
     title: row.title as string,
     description: (row.description as string) ?? undefined,
     iconName: (row.icon_name as string) ?? 'Package',
+    industryId: (row.industry_id as string) ?? null,
     defaultFormSteps: (row.default_form_steps as Record<string, unknown>[]) ?? [],
     defaultVerificationType: (row.default_verification_type as string) ?? 'docBio',
     defaultPageContent: (row.default_page_content as UseCasePageContent) ?? {},
@@ -18,7 +19,7 @@ function mapGlobalRow(row: Record<string, unknown>): GlobalUseCase {
     isEnabled: row.is_enabled as boolean,
     showFillPass: (row.show_fill_pass as boolean) ?? false,
     showFillFail: (row.show_fill_fail as boolean) ?? false,
-    portalType: (row.portal_type as PortalType) ?? null,
+    portalType: (row.portal_type as string) ?? null,
     createdAt: row.created_at as string,
     updatedAt: row.updated_at as string,
   };
@@ -48,6 +49,7 @@ export function useCreateGlobalUseCase() {
           title: uc.title,
           description: uc.description ?? null,
           icon_name: uc.iconName,
+          industry_id: uc.industryId ?? null,
           default_form_steps: JSON.parse(JSON.stringify(uc.defaultFormSteps)) as unknown as null,
           default_verification_type: uc.defaultVerificationType,
           default_page_content: uc.defaultPageContent as unknown as null,
@@ -83,6 +85,7 @@ export function useUpdateGlobalUseCase() {
       if (updates.showFillPass !== undefined) dbUpdates.show_fill_pass = updates.showFillPass;
       if (updates.showFillFail !== undefined) dbUpdates.show_fill_fail = updates.showFillFail;
       if (updates.portalType !== undefined) dbUpdates.portal_type = updates.portalType;
+      if (updates.industryId !== undefined) dbUpdates.industry_id = updates.industryId;
 
       const { data, error } = await supabase
         .from('global_use_cases')
@@ -128,7 +131,7 @@ function mapLinkRow(row: Record<string, unknown>): DemoUseCaseLink {
     formStepsOverride: (row.form_steps_override as Record<string, unknown>[]) ?? null,
     verificationTypeOverride: (row.verification_type_override as string) ?? null,
     pageContentOverride: (row.page_content_override as UseCasePageContent) ?? null,
-    portalTypeOverride: (row.portal_type_override as PortalType) ?? null,
+    portalTypeOverride: (row.portal_type_override as string) ?? null,
     createdAt: row.created_at as string,
     updatedAt: row.updated_at as string,
   };

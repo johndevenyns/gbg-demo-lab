@@ -8,6 +8,7 @@ import { DemoFlowRenderer } from "@/components/preview/DemoFlowRenderer";
 import { DEFAULT_SUCCESS_CONFIG, DEFAULT_FAILURE_CONFIG } from "@/components/preview/ResultPage";
 import { DEFAULT_FORM_STYLE } from "@/types/formStyle";
 import { useDemoUseCaseLinks } from "@/hooks/useUseCases";
+import { useIndustries } from "@/hooks/useIndustries";
 import { UseCaseLandingPage } from "@/components/preview/UseCaseLandingPage";
 import { BankingPortalShell } from "@/components/preview/mockPortal/BankingPortalShell";
 import { ResolvedUseCase } from "@/types/useCase";
@@ -42,11 +43,20 @@ export default function DemoPreview() {
   const { isAdmin, isLoading: authLoading } = useAuth();
   const { data: demo, isLoading, error } = useDemoBySlug(slug || "");
   const { data: links = [] } = useDemoUseCaseLinks(demo?.id);
+  const { data: allIndustries = [] } = useIndustries();
   const formRef = useRef<HTMLDivElement>(null);
   const [selectedUseCase, setSelectedUseCase] = useState<ResolvedUseCase | null>(null);
   const [portalUser, setPortalUser] = useState<{ email: string; profileData?: Record<string, unknown> } | null>(null);
   const [showPortal, setShowPortal] = useState(false);
   const [portalVerificationAction, setPortalVerificationAction] = useState<string | null>(null);
+
+  // Resolve the industry for this demo to get portal type
+  const demoIndustry = useMemo(() => {
+    if (!demo?.industryId) return null;
+    return allIndustries.find(i => i.id === demo.industryId) ?? null;
+  }, [demo?.industryId, allIndustries]);
+
+  const industryPortalType = demoIndustry?.portalType ?? 'none';
 
   // Resolve use cases: merge global defaults with demo overrides
   const resolvedUseCases = useMemo((): ResolvedUseCase[] => {
@@ -67,10 +77,11 @@ export default function DemoPreview() {
             : uc.defaultPageContent,
           isEnabled: link.isEnabled,
           displayOrder: link.displayOrder,
-          portalType: link.portalTypeOverride ?? uc.portalType ?? null,
+          // Portal type comes from the industry, not the use case
+          portalType: industryPortalType,
         };
       });
-  }, [links]);
+  }, [links, industryPortalType]);
 
   const hasUseCases = resolvedUseCases.length > 0;
 

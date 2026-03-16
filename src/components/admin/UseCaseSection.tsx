@@ -12,7 +12,7 @@ import {
 import {
   Briefcase, Plus, Trash2, ChevronDown, ChevronRight, UserPlus, FastForward, Package, Layout,
 } from 'lucide-react';
-import { DemoUseCaseLink, UseCasePageContent, PORTAL_TYPE_OPTIONS, PortalType } from '@/types/useCase';
+import { DemoUseCaseLink, UseCasePageContent } from '@/types/useCase';
 import { DemoEnvironment, FormStep } from '@/types/demo';
 import {
   useGlobalUseCases, useDemoUseCaseLinks,
@@ -132,9 +132,8 @@ export function UseCaseSection({ demoId, demo, onUpdateDemo }: UseCaseSectionPro
                 if (!uc) return null;
                 const IconComp = ICON_MAP[uc.iconName] ?? Package;
                 const isExpanded = expandedId === link.id;
-                const hasOverride = !!link.formStepsOverride || !!link.pageContentOverride || !!link.verificationTypeOverride || !!link.portalTypeOverride;
+                const hasOverride = !!link.formStepsOverride || !!link.pageContentOverride || !!link.verificationTypeOverride;
                 const showFormBuilder = formBuilderLinkId === link.id;
-                const effectivePortalType = link.portalTypeOverride ?? uc.portalType ?? 'none';
 
                 return (
                   <Collapsible key={link.id} open={isExpanded} onOpenChange={(open) => {
@@ -218,30 +217,6 @@ export function UseCaseSection({ demoId, demo, onUpdateDemo }: UseCaseSectionPro
                             </div>
                           </div>
 
-                          {/* Portal Type Override */}
-                          {(uc.portalType && uc.portalType !== 'none') && (
-                            <div className="border-t pt-4">
-                              <h4 className="text-sm font-medium mb-3">Post-Login Portal</h4>
-                              <Select
-                                value={effectivePortalType}
-                                onValueChange={(val) => handleUpdate(link.id, { portalTypeOverride: val as PortalType })}
-                              >
-                                <SelectTrigger className="w-[240px]">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {PORTAL_TYPE_OPTIONS.filter(p => p.value !== 'none').map(opt => (
-                                    <SelectItem key={opt.value} value={opt.value}>
-                                      {opt.label}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                              <p className="text-xs text-muted-foreground mt-2">
-                                Override the portal experience for this demo (default: {PORTAL_TYPE_OPTIONS.find(p => p.value === uc.portalType)?.label})
-                              </p>
-                            </div>
-                          )}
 
 
                           {/* Form Builder Toggle */}

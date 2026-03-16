@@ -42,7 +42,7 @@ import { TestProfileManagement } from "@/components/admin/TestProfileManagement"
 import { AdminResourceIdSettings } from "@/components/admin/AdminResourceIdSettings";
 import { FormTemplateManagement } from "@/components/admin/FormTemplateManagement";
 import { GlobalFieldConfigManagement } from "@/components/admin/GlobalFieldConfigManagement";
-import { GlobalUseCaseManagement } from "@/components/admin/GlobalUseCaseManagement";
+import { IndustryManagement } from "@/components/admin/IndustryManagement";
 import { Key } from "lucide-react";
 
 // Icon mapping for verification types
@@ -454,9 +454,9 @@ export default function VerificationSettings() {
               </TabsTrigger>
             )}
             {isGlobalAdmin && (
-              <TabsTrigger value="use-cases" className="flex items-center gap-2">
+              <TabsTrigger value="industries" className="flex items-center gap-2">
                 <Briefcase className="w-4 h-4" />
-                Use Cases
+                Industries
               </TabsTrigger>
             )}
           </TabsList>
@@ -562,8 +562,8 @@ export default function VerificationSettings() {
             <GlobalFieldConfigManagement />
           </TabsContent>
 
-          <TabsContent value="use-cases" className="space-y-6">
-            <GlobalUseCaseManagement />
+          <TabsContent value="industries" className="space-y-6">
+            <IndustryManagement />
           </TabsContent>
         </Tabs>
       </main>
