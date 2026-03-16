@@ -10,6 +10,7 @@ function mapRow(row: Record<string, unknown>): Industry {
     description: (row.description as string) ?? undefined,
     iconName: (row.icon_name as string) ?? 'Building2',
     portalType: (row.portal_type as string) ?? 'none',
+    portalConfig: (row.portal_config as Industry['portalConfig']) ?? undefined,
     displayOrder: row.display_order as number,
     isEnabled: row.is_enabled as boolean,
     createdAt: row.created_at as string,
