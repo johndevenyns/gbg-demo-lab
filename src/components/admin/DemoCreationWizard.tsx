@@ -6,10 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
 import { useCreateDemo, useUpdateDemo } from "@/hooks/useDemos";
 import { useGlobalUseCases, useAddDemoUseCaseLink } from "@/hooks/useUseCases";
+import { useIndustries } from "@/hooks/useIndustries";
 import { IndustryTemplate } from "@/types/demo";
-import { GlobalUseCase, PORTAL_TYPE_OPTIONS, PortalType } from "@/types/useCase";
+import { PORTAL_TYPE_OPTIONS } from "@/types/industry";
 import { scrapingApi } from "@/lib/api/scraping";
 import { formElementStylesToConfig } from "@/lib/formStyleUtils";
 import { cn } from "@/lib/utils";
@@ -21,7 +23,7 @@ interface DemoCreationWizardProps {
   onCreated: (id: string) => void;
 }
 
-type WizardStep = 'details' | 'use-cases' | 'processing';
+type WizardStep = 'details' | 'industry' | 'use-cases' | 'processing';
 
 interface ProcessingTask {
   id: string;
@@ -34,17 +36,17 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
   const updateDemo = useUpdateDemo();
   const addUseCaseLink = useAddDemoUseCaseLink();
   
+  const { data: industries = [], isLoading: loadingIndustries } = useIndustries();
   const { data: globalUseCases = [], isLoading: loadingUseCases } = useGlobalUseCases();
   
-  // Wizard state
   const [step, setStep] = useState<WizardStep>('details');
   const [customerName, setCustomerName] = useState("");
   const [siteUrl, setSiteUrl] = useState("");
   const [enableMirroring, setEnableMirroring] = useState(false);
+  const [selectedIndustryId, setSelectedIndustryId] = useState<string | null>(null);
   const [selectedUseCases, setSelectedUseCases] = useState<string[]>([]);
   const [useCasesInitialized, setUseCasesInitialized] = useState(false);
   
-  // Processing state
   const [processingTasks, setProcessingTasks] = useState<ProcessingTask[]>([]);
   const [createdDemoId, setCreatedDemoId] = useState<string | null>(null);
   const [processingError, setProcessingError] = useState<string | null>(null);
@@ -53,20 +55,23 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
     if (!open) resetForm();
   }, [open]);
 
-  // Auto-select all enabled use cases when data loads
+  // When industry is selected, auto-select all its use cases
   useEffect(() => {
-    if (!useCasesInitialized && globalUseCases.length > 0) {
-      const enabledIds = globalUseCases.filter(uc => uc.isEnabled).map(uc => uc.id);
-      setSelectedUseCases(enabledIds);
+    if (selectedIndustryId && !useCasesInitialized) {
+      const industryUseCases = globalUseCases
+        .filter(uc => uc.industryId === selectedIndustryId && uc.isEnabled)
+        .map(uc => uc.id);
+      setSelectedUseCases(industryUseCases);
       setUseCasesInitialized(true);
     }
-  }, [globalUseCases, useCasesInitialized]);
+  }, [selectedIndustryId, globalUseCases, useCasesInitialized]);
 
   const resetForm = () => {
     setStep('details');
     setCustomerName("");
     setSiteUrl("");
     setEnableMirroring(false);
+    setSelectedIndustryId(null);
     setSelectedUseCases([]);
     setUseCasesInitialized(false);
     setProcessingTasks([]);
@@ -80,8 +85,11 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
     setProcessingTasks(prev => prev.map(t => t.id === taskId ? { ...t, status } : t));
   };
 
+  const selectedIndustry = industries.find(i => i.id === selectedIndustryId);
+  const industryUseCases = globalUseCases.filter(uc => uc.industryId === selectedIndustryId && uc.isEnabled);
+
   const startProcessing = async () => {
-    if (!customerName.trim()) return;
+    if (!customerName.trim() || !selectedIndustryId) return;
 
     const tasks: ProcessingTask[] = [
       { id: 'create', label: 'Creating demo environment', status: 'pending' },
@@ -100,11 +108,16 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
     setProcessingError(null);
 
     try {
-      // Create demo with 'custom' template (uses system defaults)
       updateTaskStatus('create', 'in_progress');
       const template: IndustryTemplate = 'custom';
       const demo = await createDemo.mutateAsync({ customerName: customerName.trim(), template });
       setCreatedDemoId(demo.id);
+
+      // Set industry_id on the demo
+      await updateDemo.mutateAsync({
+        id: demo.id,
+        updates: { industryId: selectedIndustryId } as any,
+      });
       updateTaskStatus('create', 'complete');
 
       // Site mirroring
@@ -131,12 +144,9 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
             buttonColor: scrapedData.colors.buttonColor,
             logoUrl: scrapedData.logoUrl || scrapedData.branding?.logo || '',
           };
-
-          // Auto-apply form styling from scraped site
           if (scrapedData.formStyles) {
             brandingUpdates.formStyle = formElementStylesToConfig(scrapedData.formStyles);
           }
-
           await updateDemo.mutateAsync({
             id: demo.id,
             updates: brandingUpdates as any,
@@ -147,14 +157,13 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
         }
       }
 
-      // Link selected use cases and collect fill settings
+      // Link selected use cases
       let shouldShowFillPass = false;
       let shouldShowFillFail = false;
       if (selectedUseCases.length > 0) {
         updateTaskStatus('use-cases', 'in_progress');
         for (let i = 0; i < selectedUseCases.length; i++) {
           await addUseCaseLink.mutateAsync({ demoId: demo.id, useCaseId: selectedUseCases[i], displayOrder: i });
-          // Check if any selected use case has fill pass/fail enabled
           const uc = globalUseCases.find(u => u.id === selectedUseCases[i]);
           if (uc?.showFillPass) shouldShowFillPass = true;
           if (uc?.showFillFail) shouldShowFillFail = true;
@@ -162,7 +171,6 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
         updateTaskStatus('use-cases', 'complete');
       }
 
-      // Apply fill pass/fail settings from use case templates
       updateTaskStatus('finalize', 'in_progress');
       if (shouldShowFillPass || shouldShowFillFail) {
         await updateDemo.mutateAsync({
@@ -189,12 +197,14 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
     }
   };
 
-  const stepOrder: WizardStep[] = ['details', 'use-cases'];
+  const stepOrder: WizardStep[] = ['details', 'industry', 'use-cases'];
 
   const canProceed = () => {
     switch (step) {
       case 'details':
         return !!customerName.trim() && (!enableMirroring || !!siteUrl.trim());
+      case 'industry':
+        return !!selectedIndustryId;
       case 'use-cases':
         return selectedUseCases.length > 0;
       default:
@@ -205,7 +215,12 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
   const handleNext = () => {
     const idx = stepOrder.indexOf(step);
     if (idx < stepOrder.length - 1) {
-      setStep(stepOrder[idx + 1]);
+      const nextStep = stepOrder[idx + 1];
+      if (nextStep === 'use-cases') {
+        // Reset use case selection when moving to this step
+        setUseCasesInitialized(false);
+      }
+      setStep(nextStep);
     } else {
       startProcessing();
     }
@@ -225,6 +240,7 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
 
   const stepDescriptions: Record<WizardStep, string> = {
     'details': 'Name the customer and optionally provide their website URL for branding',
+    'industry': 'Select the industry vertical for this demo',
     'use-cases': 'All use cases are pre-selected. Deselect any you don\'t need.',
     'processing': 'Please wait while we configure your demo environment',
   };
@@ -251,7 +267,7 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
           </div>
         )}
 
-        {/* Step 1: Customer Details + URL */}
+        {/* Step 1: Customer Details */}
         {step === 'details' && (
           <div className="py-4 space-y-6">
             <div className="space-y-2">
@@ -282,7 +298,6 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
                   </Label>
                 </div>
               </div>
-
               {enableMirroring && (
                 <div className="space-y-2 pl-7">
                   <Label htmlFor="siteUrl">Website URL</Label>
@@ -302,54 +317,114 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
           </div>
         )}
 
-        {/* Step 2: Use Cases (all pre-selected) */}
+        {/* Step 2: Industry Selection */}
+        {step === 'industry' && (
+          <div className="py-4 space-y-4">
+            {loadingIndustries ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : industries.filter(i => i.isEnabled).length === 0 ? (
+              <p className="text-center text-muted-foreground py-8">
+                No industries configured. Add them in Global Settings → Industries.
+              </p>
+            ) : (
+              <div className="grid gap-3">
+                {industries.filter(i => i.isEnabled).map((ind) => {
+                  const icons = LucideIcons as unknown as Record<string, React.ComponentType<{ className?: string }>>;
+                  const IconComp = icons[ind.iconName] || icons['Building2'];
+                  const isSelected = selectedIndustryId === ind.id;
+                  const portalLabel = PORTAL_TYPE_OPTIONS.find(p => p.value === ind.portalType)?.label;
+                  const ucCount = globalUseCases.filter(uc => uc.industryId === ind.id && uc.isEnabled).length;
+
+                  return (
+                    <button
+                      key={ind.id}
+                      onClick={() => {
+                        setSelectedIndustryId(ind.id);
+                        setUseCasesInitialized(false);
+                      }}
+                      className={cn(
+                        "flex items-center gap-4 p-4 rounded-lg border text-left transition-all w-full",
+                        isSelected
+                          ? "border-primary bg-primary/5"
+                          : "border-border hover:border-muted-foreground/50"
+                      )}
+                    >
+                      <div className={cn(
+                        "w-10 h-10 rounded-lg flex items-center justify-center",
+                        isSelected
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted text-muted-foreground"
+                      )}>
+                        {IconComp && <IconComp className="w-5 h-5" />}
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-medium">{ind.title}</h4>
+                        {ind.description && <p className="text-sm text-muted-foreground">{ind.description}</p>}
+                        <div className="flex items-center gap-2 mt-1">
+                          {portalLabel && portalLabel !== 'No Portal' && (
+                            <Badge variant="outline" className="text-[10px]">{portalLabel} Portal</Badge>
+                          )}
+                          <Badge variant="outline" className="text-[10px]">{ucCount} use case{ucCount !== 1 ? 's' : ''}</Badge>
+                        </div>
+                      </div>
+                      {isSelected && <Check className="w-5 h-5 text-primary" />}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Step 3: Use Cases within selected industry */}
         {step === 'use-cases' && (
           <div className="py-4 space-y-4">
+            {selectedIndustry && (
+              <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50 mb-2">
+                <span className="text-sm font-medium">{selectedIndustry.title}</span>
+                <span className="text-xs text-muted-foreground">— select use cases</span>
+              </div>
+            )}
             {loadingUseCases ? (
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
               </div>
-            ) : globalUseCases.filter(uc => uc.isEnabled).length === 0 ? (
+            ) : industryUseCases.length === 0 ? (
               <p className="text-center text-muted-foreground py-8">
-                No use cases configured. Please add them in Global Settings → Use Cases.
+                No use cases configured for this industry. Add them in Global Settings → Industries.
               </p>
             ) : (
               <div className="grid gap-3">
-                {globalUseCases.filter(uc => uc.isEnabled).map((uc) => {
+                {industryUseCases.map((uc) => {
                   const icons = LucideIcons as unknown as Record<string, React.ComponentType<{ className?: string }>>;
                   const IconComp = icons[uc.iconName] || icons['Package'];
                   return (
-                    <div key={uc.id}>
-                      <button
-                        onClick={() => toggleUseCase(uc.id)}
-                        className={cn(
-                          "flex items-center gap-4 p-4 rounded-lg border text-left transition-all w-full",
-                          selectedUseCases.includes(uc.id)
-                            ? "border-primary bg-primary/5"
-                            : "border-border hover:border-muted-foreground/50"
-                        )}
-                      >
-                        <div className={cn(
-                          "w-10 h-10 rounded-lg flex items-center justify-center",
-                          selectedUseCases.includes(uc.id)
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-muted text-muted-foreground"
-                        )}>
-                          {IconComp && <IconComp className="w-5 h-5" />}
-                        </div>
-                        <div className="flex-1">
-                          <h4 className="font-medium">{uc.title}</h4>
-                          {uc.description && <p className="text-sm text-muted-foreground">{uc.description}</p>}
-                        </div>
-                        {selectedUseCases.includes(uc.id) && <Check className="w-5 h-5 text-primary" />}
-                      </button>
-                      {selectedUseCases.includes(uc.id) && uc.portalType && uc.portalType !== 'none' && (
-                        <div className="ml-14 mt-1 mb-1 text-xs text-muted-foreground flex items-center gap-1.5">
-                          <span className="inline-block w-2 h-2 rounded-full bg-primary/60" />
-                          Post-login portal: <span className="font-medium">{PORTAL_TYPE_OPTIONS.find(p => p.value === uc.portalType)?.label}</span>
-                        </div>
+                    <button
+                      key={uc.id}
+                      onClick={() => toggleUseCase(uc.id)}
+                      className={cn(
+                        "flex items-center gap-4 p-4 rounded-lg border text-left transition-all w-full",
+                        selectedUseCases.includes(uc.id)
+                          ? "border-primary bg-primary/5"
+                          : "border-border hover:border-muted-foreground/50"
                       )}
-                    </div>
+                    >
+                      <div className={cn(
+                        "w-10 h-10 rounded-lg flex items-center justify-center",
+                        selectedUseCases.includes(uc.id)
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted text-muted-foreground"
+                      )}>
+                        {IconComp && <IconComp className="w-5 h-5" />}
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-medium">{uc.title}</h4>
+                        {uc.description && <p className="text-sm text-muted-foreground">{uc.description}</p>}
+                      </div>
+                      {selectedUseCases.includes(uc.id) && <Check className="w-5 h-5 text-primary" />}
+                    </button>
                   );
                 })}
               </div>
