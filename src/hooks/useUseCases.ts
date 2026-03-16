@@ -18,6 +18,7 @@ function mapGlobalRow(row: Record<string, unknown>): GlobalUseCase {
     isEnabled: row.is_enabled as boolean,
     showFillPass: (row.show_fill_pass as boolean) ?? false,
     showFillFail: (row.show_fill_fail as boolean) ?? false,
+    portalType: (row.portal_type as PortalType) ?? null,
     createdAt: row.created_at as string,
     updatedAt: row.updated_at as string,
   };
