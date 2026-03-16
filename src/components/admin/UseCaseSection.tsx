@@ -10,7 +10,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import {
-  Briefcase, Plus, Trash2, ChevronDown, ChevronRight, UserPlus, FastForward, Package, Layout,
+  Briefcase, Plus, Trash2, ChevronDown, ChevronRight, UserPlus, FastForward, Package, Layout, Eye,
 } from 'lucide-react';
 import { DemoUseCaseLink, UseCasePageContent } from '@/types/useCase';
 import { DemoEnvironment, FormStep } from '@/types/demo';
@@ -18,7 +18,9 @@ import {
   useGlobalUseCases, useDemoUseCaseLinks,
   useAddDemoUseCaseLink, useUpdateDemoUseCaseLink, useRemoveDemoUseCaseLink,
 } from '@/hooks/useUseCases';
+import { useIndustries } from '@/hooks/useIndustries';
 import { FormBuilderSection } from '@/components/formBuilder';
+import { PortalPreviewDialog } from './PortalPreviewDialog';
 
 const ICON_MAP: Record<string, React.ElementType> = {
   UserPlus, FastForward, Package, Briefcase,
