@@ -218,6 +218,32 @@ export function UseCaseSection({ demoId, demo, onUpdateDemo }: UseCaseSectionPro
                             </div>
                           </div>
 
+                          {/* Portal Type Override */}
+                          {(uc.portalType && uc.portalType !== 'none') && (
+                            <div className="border-t pt-4">
+                              <h4 className="text-sm font-medium mb-3">Post-Login Portal</h4>
+                              <Select
+                                value={effectivePortalType}
+                                onValueChange={(val) => handleUpdate(link.id, { portalTypeOverride: val as PortalType })}
+                              >
+                                <SelectTrigger className="w-[240px]">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {PORTAL_TYPE_OPTIONS.filter(p => p.value !== 'none').map(opt => (
+                                    <SelectItem key={opt.value} value={opt.value}>
+                                      {opt.label}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <p className="text-xs text-muted-foreground mt-2">
+                                Override the portal experience for this demo (default: {PORTAL_TYPE_OPTIONS.find(p => p.value === uc.portalType)?.label})
+                              </p>
+                            </div>
+                          )}
+
+
                           {/* Form Builder Toggle */}
                           <div className="border-t pt-4">
                             <Button
