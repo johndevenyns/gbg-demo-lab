@@ -35,57 +35,32 @@ export function BankingDashboard({ userName, accentColor, portalConfig }: Bankin
 
       {/* Account Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px', marginBottom: '28px' }}>
-        {/* Checking Account */}
-        <div style={{
-          background: `linear-gradient(135deg, ${accentColor}, ${accentColor}dd)`,
-          borderRadius: '16px',
-          padding: '24px',
-          color: 'white',
-          position: 'relative',
-          overflow: 'hidden',
-        }}>
-          <div style={{
-            position: 'absolute', top: '-20px', right: '-20px', width: '100px', height: '100px',
-            borderRadius: '50%', background: 'rgba(255,255,255,0.1)',
-          }} />
-          <div style={{
-            position: 'absolute', bottom: '-30px', right: '30px', width: '60px', height: '60px',
-            borderRadius: '50%', background: 'rgba(255,255,255,0.07)',
-          }} />
-          <p style={{ fontSize: '13px', opacity: 0.85, margin: 0, letterSpacing: '0.5px', textTransform: 'uppercase' }}>
-            Checking Account
-          </p>
-          <p style={{ fontSize: '32px', fontWeight: 700, margin: '8px 0 4px', fontFamily: 'SF Mono, monospace' }}>
-            $12,458.32
-          </p>
-          <p style={{ fontSize: '12px', opacity: 0.7, margin: 0 }}>
-            •••• •••• •••• 4829
-          </p>
-        </div>
-
-        {/* Savings Account */}
-        <div style={{
-          background: 'linear-gradient(135deg, #1E293B, #334155)',
-          borderRadius: '16px',
-          padding: '24px',
-          color: 'white',
-          position: 'relative',
-          overflow: 'hidden',
-        }}>
-          <div style={{
-            position: 'absolute', top: '-20px', right: '-20px', width: '100px', height: '100px',
-            borderRadius: '50%', background: 'rgba(255,255,255,0.05)',
-          }} />
-          <p style={{ fontSize: '13px', opacity: 0.85, margin: 0, letterSpacing: '0.5px', textTransform: 'uppercase' }}>
-            Savings Account
-          </p>
-          <p style={{ fontSize: '32px', fontWeight: 700, margin: '8px 0 4px', fontFamily: 'SF Mono, monospace' }}>
-            $45,891.00
-          </p>
-          <p style={{ fontSize: '12px', opacity: 0.7, margin: 0 }}>
-            •••• •••• •••• 7163 · 4.25% APY
-          </p>
-        </div>
+        {accounts.map((acct, i) => (
+          <div key={i} style={{
+            background: acct.variant === 'primary'
+              ? `linear-gradient(135deg, ${accentColor}, ${accentColor}dd)`
+              : 'linear-gradient(135deg, #1E293B, #334155)',
+            borderRadius: '16px',
+            padding: '24px',
+            color: 'white',
+            position: 'relative',
+            overflow: 'hidden',
+          }}>
+            <div style={{
+              position: 'absolute', top: '-20px', right: '-20px', width: '100px', height: '100px',
+              borderRadius: '50%', background: `rgba(255,255,255,${acct.variant === 'primary' ? '0.1' : '0.05'})`,
+            }} />
+            <p style={{ fontSize: '13px', opacity: 0.85, margin: 0, letterSpacing: '0.5px', textTransform: 'uppercase' }}>
+              {acct.name}
+            </p>
+            <p style={{ fontSize: '32px', fontWeight: 700, margin: '8px 0 4px', fontFamily: 'SF Mono, monospace' }}>
+              {acct.balance.toLocaleString('en-US', { style: 'currency', currency: 'USD' })}
+            </p>
+            <p style={{ fontSize: '12px', opacity: 0.7, margin: 0 }}>
+              •••• •••• •••• {acct.lastFour}{acct.apy ? ` · ${acct.apy} APY` : ''}
+            </p>
+          </div>
+        ))}
       </div>
 
       {/* Quick Actions */}
