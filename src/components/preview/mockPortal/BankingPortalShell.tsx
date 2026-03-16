@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { BankingDashboard } from './BankingDashboard';
 import { BankingSettings } from './BankingSettings';
+import { PortalConfig, DEFAULT_BANKING_CONFIG } from '@/types/portalConfig';
 
 type PortalPage = 'dashboard' | 'settings';
 
@@ -15,12 +16,13 @@ const NAV_ITEMS: NavItem[] = [
   { key: 'settings', label: 'Settings', icon: '⚙️' },
 ];
 
-interface BankingPortalShellProps {
+export interface BankingPortalShellProps {
   userName: string;
   userEmail: string;
   accentColor: string;
   logoUrl?: string;
   bankName: string;
+  portalConfig?: PortalConfig;
   onTriggerVerification: (action: string) => void;
   onLogout: () => void;
 }
