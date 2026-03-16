@@ -343,6 +343,13 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
                       </div>
                       {selectedUseCases.includes(uc.id) && <Check className="w-5 h-5 text-primary" />}
                     </button>
+                    {/* Show portal type info for selected use cases with portals */}
+                    {selectedUseCases.includes(uc.id) && uc.portalType && uc.portalType !== 'none' && (
+                      <div className="ml-14 -mt-1 mb-2 text-xs text-muted-foreground flex items-center gap-1.5">
+                        <span className="inline-block w-2 h-2 rounded-full bg-primary/60" />
+                        Post-login portal: <span className="font-medium">{PORTAL_TYPE_OPTIONS.find(p => p.value === uc.portalType)?.label}</span>
+                      </div>
+                    )}
                   );
                 })}
               </div>
