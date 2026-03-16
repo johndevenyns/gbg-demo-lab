@@ -454,9 +454,9 @@ export default function VerificationSettings() {
               </TabsTrigger>
             )}
             {isGlobalAdmin && (
-              <TabsTrigger value="use-cases" className="flex items-center gap-2">
+              <TabsTrigger value="industries" className="flex items-center gap-2">
                 <Briefcase className="w-4 h-4" />
-                Use Cases
+                Industries
               </TabsTrigger>
             )}
           </TabsList>
