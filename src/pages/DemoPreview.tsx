@@ -50,6 +50,14 @@ export default function DemoPreview() {
   const [showPortal, setShowPortal] = useState(false);
   const [portalVerificationAction, setPortalVerificationAction] = useState<string | null>(null);
 
+  // Resolve the industry for this demo to get portal type
+  const demoIndustry = useMemo(() => {
+    if (!demo?.industryId) return null;
+    return allIndustries.find(i => i.id === demo.industryId) ?? null;
+  }, [demo?.industryId, allIndustries]);
+
+  const industryPortalType = demoIndustry?.portalType ?? 'none';
+
   // Resolve use cases: merge global defaults with demo overrides
   const resolvedUseCases = useMemo((): ResolvedUseCase[] => {
     return links
@@ -69,10 +77,11 @@ export default function DemoPreview() {
             : uc.defaultPageContent,
           isEnabled: link.isEnabled,
           displayOrder: link.displayOrder,
-          portalType: link.portalTypeOverride ?? uc.portalType ?? null,
+          // Portal type comes from the industry, not the use case
+          portalType: industryPortalType,
         };
       });
-  }, [links]);
+  }, [links, industryPortalType]);
 
   const hasUseCases = resolvedUseCases.length > 0;
 
