@@ -9,7 +9,7 @@ import { Progress } from "@/components/ui/progress";
 import { useCreateDemo, useUpdateDemo } from "@/hooks/useDemos";
 import { useGlobalUseCases, useAddDemoUseCaseLink } from "@/hooks/useUseCases";
 import { IndustryTemplate } from "@/types/demo";
-import { GlobalUseCase } from "@/types/useCase";
+import { GlobalUseCase, PORTAL_TYPE_OPTIONS, PortalType } from "@/types/useCase";
 import { scrapingApi } from "@/lib/api/scraping";
 import { formElementStylesToConfig } from "@/lib/formStyleUtils";
 import { cn } from "@/lib/utils";
