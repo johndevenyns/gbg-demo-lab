@@ -111,23 +111,24 @@ export function UseCaseSection({ demoId, demo, onUpdateDemo }: UseCaseSectionPro
                   <Eye className="w-4 h-4" /> Preview Portal
                 </Button>
               )}
-            {availableToAdd.length > 0 && (
-              <Select onValueChange={handleAdd}>
-                <SelectTrigger className="w-[220px]">
-                  <div className="flex items-center gap-2">
-                    <Plus className="w-4 h-4" />
-                    <span>Add Use Case</span>
-                  </div>
-                </SelectTrigger>
-                <SelectContent>
-                  {availableToAdd.map(uc => (
-                    <SelectItem key={uc.id} value={uc.id}>
-                      {uc.title}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
+              {availableToAdd.length > 0 && (
+                <Select onValueChange={handleAdd}>
+                  <SelectTrigger className="w-[220px]">
+                    <div className="flex items-center gap-2">
+                      <Plus className="w-4 h-4" />
+                      <span>Add Use Case</span>
+                    </div>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableToAdd.map(uc => (
+                      <SelectItem key={uc.id} value={uc.id}>
+                        {uc.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
           </div>
         </CardHeader>
 
