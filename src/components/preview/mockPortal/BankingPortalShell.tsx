@@ -33,9 +33,11 @@ export function BankingPortalShell({
   accentColor,
   logoUrl,
   bankName,
+  portalConfig,
   onTriggerVerification,
   onLogout,
 }: BankingPortalShellProps) {
+  const config = { ...DEFAULT_BANKING_CONFIG, ...portalConfig };
   const [activePage, setActivePage] = useState<PortalPage>('dashboard');
 
   const handleTriggerVerification = useCallback((action: string) => {
