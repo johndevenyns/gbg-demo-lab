@@ -1,40 +1,17 @@
 import { useMemo } from 'react';
-
-interface Transaction {
-  id: string;
-  merchant: string;
-  amount: number;
-  date: string;
-  category: 'groceries' | 'income' | 'entertainment' | 'transport' | 'dining' | 'utilities' | 'shopping' | 'health';
-  icon: string;
-}
-
-const MOCK_TRANSACTIONS: Transaction[] = [
-  { id: '1', merchant: 'Whole Foods Market', amount: -82.47, date: 'Today', category: 'groceries', icon: '🛒' },
-  { id: '2', merchant: 'Direct Deposit — Payroll', amount: 4250.00, date: 'Yesterday', category: 'income', icon: '💰' },
-  { id: '3', merchant: 'Netflix', amount: -15.99, date: 'Mar 11', category: 'entertainment', icon: '🎬' },
-  { id: '4', merchant: 'Uber', amount: -24.30, date: 'Mar 10', category: 'transport', icon: '🚗' },
-  { id: '5', merchant: 'Starbucks', amount: -6.45, date: 'Mar 10', category: 'dining', icon: '☕' },
-  { id: '6', merchant: 'Electric Company', amount: -142.80, date: 'Mar 9', category: 'utilities', icon: '⚡' },
-  { id: '7', merchant: 'Amazon', amount: -67.23, date: 'Mar 8', category: 'shopping', icon: '📦' },
-  { id: '8', merchant: 'CVS Pharmacy', amount: -32.10, date: 'Mar 7', category: 'health', icon: '💊' },
-  { id: '9', merchant: 'Venmo Transfer', amount: 150.00, date: 'Mar 6', category: 'income', icon: '💸' },
-  { id: '10', merchant: 'Spotify', amount: -10.99, date: 'Mar 5', category: 'entertainment', icon: '🎵' },
-];
-
-const QUICK_ACTIONS = [
-  { label: 'Transfer', icon: '↗️', color: '#0D9488' },
-  { label: 'Pay Bills', icon: '📄', color: '#6366F1' },
-  { label: 'Deposit', icon: '📥', color: '#059669' },
-  { label: 'More', icon: '⋯', color: '#64748B' },
-];
+import { PortalConfig, DEFAULT_BANKING_CONFIG } from '@/types/portalConfig';
 
 interface BankingDashboardProps {
   userName: string;
   accentColor: string;
+  portalConfig?: PortalConfig;
 }
 
-export function BankingDashboard({ userName, accentColor }: BankingDashboardProps) {
+export function BankingDashboard({ userName, accentColor, portalConfig }: BankingDashboardProps) {
+  const config = { ...DEFAULT_BANKING_CONFIG, ...portalConfig };
+  const accounts = config.accounts || DEFAULT_BANKING_CONFIG.accounts!;
+  const transactions = config.transactions || DEFAULT_BANKING_CONFIG.transactions!;
+  const quickActions = config.quickActions || DEFAULT_BANKING_CONFIG.quickActions!;
   const greeting = useMemo(() => {
     const hour = new Date().getHours();
     if (hour < 12) return 'Good morning';
@@ -58,62 +35,37 @@ export function BankingDashboard({ userName, accentColor }: BankingDashboardProp
 
       {/* Account Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px', marginBottom: '28px' }}>
-        {/* Checking Account */}
-        <div style={{
-          background: `linear-gradient(135deg, ${accentColor}, ${accentColor}dd)`,
-          borderRadius: '16px',
-          padding: '24px',
-          color: 'white',
-          position: 'relative',
-          overflow: 'hidden',
-        }}>
-          <div style={{
-            position: 'absolute', top: '-20px', right: '-20px', width: '100px', height: '100px',
-            borderRadius: '50%', background: 'rgba(255,255,255,0.1)',
-          }} />
-          <div style={{
-            position: 'absolute', bottom: '-30px', right: '30px', width: '60px', height: '60px',
-            borderRadius: '50%', background: 'rgba(255,255,255,0.07)',
-          }} />
-          <p style={{ fontSize: '13px', opacity: 0.85, margin: 0, letterSpacing: '0.5px', textTransform: 'uppercase' }}>
-            Checking Account
-          </p>
-          <p style={{ fontSize: '32px', fontWeight: 700, margin: '8px 0 4px', fontFamily: 'SF Mono, monospace' }}>
-            $12,458.32
-          </p>
-          <p style={{ fontSize: '12px', opacity: 0.7, margin: 0 }}>
-            •••• •••• •••• 4829
-          </p>
-        </div>
-
-        {/* Savings Account */}
-        <div style={{
-          background: 'linear-gradient(135deg, #1E293B, #334155)',
-          borderRadius: '16px',
-          padding: '24px',
-          color: 'white',
-          position: 'relative',
-          overflow: 'hidden',
-        }}>
-          <div style={{
-            position: 'absolute', top: '-20px', right: '-20px', width: '100px', height: '100px',
-            borderRadius: '50%', background: 'rgba(255,255,255,0.05)',
-          }} />
-          <p style={{ fontSize: '13px', opacity: 0.85, margin: 0, letterSpacing: '0.5px', textTransform: 'uppercase' }}>
-            Savings Account
-          </p>
-          <p style={{ fontSize: '32px', fontWeight: 700, margin: '8px 0 4px', fontFamily: 'SF Mono, monospace' }}>
-            $45,891.00
-          </p>
-          <p style={{ fontSize: '12px', opacity: 0.7, margin: 0 }}>
-            •••• •••• •••• 7163 · 4.25% APY
-          </p>
-        </div>
+        {accounts.map((acct, i) => (
+          <div key={i} style={{
+            background: acct.variant === 'primary'
+              ? `linear-gradient(135deg, ${accentColor}, ${accentColor}dd)`
+              : 'linear-gradient(135deg, #1E293B, #334155)',
+            borderRadius: '16px',
+            padding: '24px',
+            color: 'white',
+            position: 'relative',
+            overflow: 'hidden',
+          }}>
+            <div style={{
+              position: 'absolute', top: '-20px', right: '-20px', width: '100px', height: '100px',
+              borderRadius: '50%', background: `rgba(255,255,255,${acct.variant === 'primary' ? '0.1' : '0.05'})`,
+            }} />
+            <p style={{ fontSize: '13px', opacity: 0.85, margin: 0, letterSpacing: '0.5px', textTransform: 'uppercase' }}>
+              {acct.name}
+            </p>
+            <p style={{ fontSize: '32px', fontWeight: 700, margin: '8px 0 4px', fontFamily: 'SF Mono, monospace' }}>
+              {acct.balance.toLocaleString('en-US', { style: 'currency', currency: 'USD' })}
+            </p>
+            <p style={{ fontSize: '12px', opacity: 0.7, margin: 0 }}>
+              •••• •••• •••• {acct.lastFour}{acct.apy ? ` · ${acct.apy} APY` : ''}
+            </p>
+          </div>
+        ))}
       </div>
 
       {/* Quick Actions */}
       <div style={{ display: 'flex', gap: '12px', marginBottom: '28px', justifyContent: 'center' }}>
-        {QUICK_ACTIONS.map((action) => (
+        {quickActions.map((action) => (
           <button
             key={action.label}
             style={{
@@ -162,15 +114,15 @@ export function BankingDashboard({ userName, accentColor }: BankingDashboardProp
           </button>
         </div>
 
-        {MOCK_TRANSACTIONS.map((tx, i) => (
+        {transactions.map((tx, i) => (
           <div
-            key={tx.id}
+            key={tx.merchant + i}
             style={{
               padding: '14px 20px',
               display: 'flex',
               alignItems: 'center',
               gap: '14px',
-              borderBottom: i < MOCK_TRANSACTIONS.length - 1 ? '1px solid #F8FAFC' : 'none',
+              borderBottom: i < transactions.length - 1 ? '1px solid #F8FAFC' : 'none',
               transition: 'background-color 0.15s',
               cursor: 'pointer',
             }}

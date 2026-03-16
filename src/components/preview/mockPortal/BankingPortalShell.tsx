@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { BankingDashboard } from './BankingDashboard';
 import { BankingSettings } from './BankingSettings';
+import { PortalConfig, DEFAULT_BANKING_CONFIG } from '@/types/portalConfig';
 
 type PortalPage = 'dashboard' | 'settings';
 
@@ -15,12 +16,13 @@ const NAV_ITEMS: NavItem[] = [
   { key: 'settings', label: 'Settings', icon: '⚙️' },
 ];
 
-interface BankingPortalShellProps {
+export interface BankingPortalShellProps {
   userName: string;
   userEmail: string;
   accentColor: string;
   logoUrl?: string;
   bankName: string;
+  portalConfig?: PortalConfig;
   onTriggerVerification: (action: string) => void;
   onLogout: () => void;
 }
@@ -31,9 +33,11 @@ export function BankingPortalShell({
   accentColor,
   logoUrl,
   bankName,
+  portalConfig,
   onTriggerVerification,
   onLogout,
 }: BankingPortalShellProps) {
+  const config = { ...DEFAULT_BANKING_CONFIG, ...portalConfig };
   const [activePage, setActivePage] = useState<PortalPage>('dashboard');
 
   const handleTriggerVerification = useCallback((action: string) => {
@@ -213,14 +217,15 @@ export function BankingPortalShell({
 
         {/* Page Content */}
         {activePage === 'dashboard' && (
-          <BankingDashboard userName={userName} accentColor={accentColor} />
+          <BankingDashboard userName={userName} accentColor={accentColor} portalConfig={config} />
         )}
         {activePage === 'settings' && (
           <BankingSettings
             userName={userName}
             userEmail={userEmail}
-            userPhone="(555) 867-5309"
+            userPhone={config.userPhone || '(555) 867-5309'}
             accentColor={accentColor}
+            portalConfig={config}
             onTriggerVerification={handleTriggerVerification}
           />
         )}

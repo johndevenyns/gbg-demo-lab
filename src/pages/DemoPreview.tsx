@@ -292,6 +292,7 @@ export default function DemoPreview() {
             accentColor={demo.buttonColor || '#0D9488'}
             logoUrl={demo.useUploadedLogo ? demo.uploadedLogoUrl : demo.logoUrl}
             bankName={demo.customerName}
+            portalConfig={demoIndustry?.portalConfig}
             onTriggerVerification={handlePortalVerification}
             onLogout={handlePortalLogout}
           />
@@ -349,6 +350,7 @@ export default function DemoPreview() {
           accentColor={demo.buttonColor || '#0D9488'}
           logoUrl={demo.useUploadedLogo ? demo.uploadedLogoUrl : demo.logoUrl}
           bankName={demo.customerName}
+          portalConfig={demoIndustry?.portalConfig}
           onTriggerVerification={handlePortalVerification}
           onLogout={handlePortalLogout}
         />

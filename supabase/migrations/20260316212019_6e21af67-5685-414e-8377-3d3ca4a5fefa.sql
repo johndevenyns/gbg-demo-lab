@@ -1,0 +1,1 @@
+ALTER TABLE public.industries ADD COLUMN portal_config jsonb DEFAULT '{}'::jsonb;

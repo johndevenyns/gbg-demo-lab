@@ -10,7 +10,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import {
-  Briefcase, Plus, Trash2, ChevronDown, ChevronRight, UserPlus, FastForward, Package, Layout,
+  Briefcase, Plus, Trash2, ChevronDown, ChevronRight, UserPlus, FastForward, Package, Layout, Eye,
 } from 'lucide-react';
 import { DemoUseCaseLink, UseCasePageContent } from '@/types/useCase';
 import { DemoEnvironment, FormStep } from '@/types/demo';
@@ -18,7 +18,9 @@ import {
   useGlobalUseCases, useDemoUseCaseLinks,
   useAddDemoUseCaseLink, useUpdateDemoUseCaseLink, useRemoveDemoUseCaseLink,
 } from '@/hooks/useUseCases';
+import { useIndustries } from '@/hooks/useIndustries';
 import { FormBuilderSection } from '@/components/formBuilder';
+import { PortalPreviewDialog } from './PortalPreviewDialog';
 
 const ICON_MAP: Record<string, React.ElementType> = {
   UserPlus, FastForward, Package, Briefcase,
@@ -38,6 +40,13 @@ export function UseCaseSection({ demoId, demo, onUpdateDemo }: UseCaseSectionPro
   const removeLink = useRemoveDemoUseCaseLink();
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [formBuilderLinkId, setFormBuilderLinkId] = useState<string | null>(null);
+  const [showPortalPreview, setShowPortalPreview] = useState(false);
+  const { data: allIndustries = [] } = useIndustries();
+
+  const demoIndustry = useMemo(() => {
+    if (!demo.industryId) return null;
+    return allIndustries.find(i => i.id === demo.industryId) ?? null;
+  }, [demo.industryId, allIndustries]);
 
   const linkedUseCaseIds = new Set(links.map(l => l.useCaseId));
   const availableToAdd = globalUseCases.filter(uc => !linkedUseCaseIds.has(uc.id) && uc.isEnabled);
@@ -96,23 +105,30 @@ export function UseCaseSection({ demoId, demo, onUpdateDemo }: UseCaseSectionPro
                 Select which use cases are available in this demo. Each use case has its own form steps and verification settings.
               </CardDescription>
             </div>
-            {availableToAdd.length > 0 && (
-              <Select onValueChange={handleAdd}>
-                <SelectTrigger className="w-[220px]">
-                  <div className="flex items-center gap-2">
-                    <Plus className="w-4 h-4" />
-                    <span>Add Use Case</span>
-                  </div>
-                </SelectTrigger>
-                <SelectContent>
-                  {availableToAdd.map(uc => (
-                    <SelectItem key={uc.id} value={uc.id}>
-                      {uc.title}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
+            <div className="flex items-center gap-2">
+              {demoIndustry && demoIndustry.portalType !== 'none' && (
+                <Button variant="outline" size="sm" className="gap-1" onClick={() => setShowPortalPreview(true)}>
+                  <Eye className="w-4 h-4" /> Preview Portal
+                </Button>
+              )}
+              {availableToAdd.length > 0 && (
+                <Select onValueChange={handleAdd}>
+                  <SelectTrigger className="w-[220px]">
+                    <div className="flex items-center gap-2">
+                      <Plus className="w-4 h-4" />
+                      <span>Add Use Case</span>
+                    </div>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableToAdd.map(uc => (
+                      <SelectItem key={uc.id} value={uc.id}>
+                        {uc.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
           </div>
         </CardHeader>
 
@@ -295,6 +311,21 @@ export function UseCaseSection({ demoId, demo, onUpdateDemo }: UseCaseSectionPro
           </Card>
         );
       })()}
+
+      {/* Portal Preview */}
+      {showPortalPreview && demoIndustry && (
+        <PortalPreviewDialog
+          open={true}
+          onOpenChange={() => setShowPortalPreview(false)}
+          portalType={demoIndustry.portalType}
+          portalConfig={demoIndustry.portalConfig}
+          brandingOverrides={{
+            bankName: demo.customerName,
+            accentColor: demo.buttonColor || undefined,
+            logoUrl: demo.useUploadedLogo ? demo.uploadedLogoUrl || undefined : demo.logoUrl || undefined,
+          }}
+        />
+      )}
     </div>
   );
 }

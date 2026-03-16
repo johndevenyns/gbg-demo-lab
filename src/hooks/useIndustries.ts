@@ -10,6 +10,7 @@ function mapRow(row: Record<string, unknown>): Industry {
     description: (row.description as string) ?? undefined,
     iconName: (row.icon_name as string) ?? 'Building2',
     portalType: (row.portal_type as string) ?? 'none',
+    portalConfig: (row.portal_config as Industry['portalConfig']) ?? undefined,
     displayOrder: row.display_order as number,
     isEnabled: row.is_enabled as boolean,
     createdAt: row.created_at as string,
@@ -67,6 +68,7 @@ export function useUpdateIndustry() {
       if (updates.description !== undefined) dbUpdates.description = updates.description;
       if (updates.iconName !== undefined) dbUpdates.icon_name = updates.iconName;
       if (updates.portalType !== undefined) dbUpdates.portal_type = updates.portalType;
+      if (updates.portalConfig !== undefined) dbUpdates.portal_config = updates.portalConfig;
       if (updates.displayOrder !== undefined) dbUpdates.display_order = updates.displayOrder;
       if (updates.isEnabled !== undefined) dbUpdates.is_enabled = updates.isEnabled;
 

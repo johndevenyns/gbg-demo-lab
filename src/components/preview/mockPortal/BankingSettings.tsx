@@ -1,10 +1,12 @@
 import { useState } from 'react';
+import { PortalConfig, DEFAULT_BANKING_CONFIG } from '@/types/portalConfig';
 
 interface BankingSettingsProps {
   userName: string;
   userEmail: string;
   userPhone: string;
   accentColor: string;
+  portalConfig?: PortalConfig;
   onTriggerVerification: (action: string) => void;
 }
 
@@ -158,7 +160,10 @@ function VerifyDialog({
   );
 }
 
-export function BankingSettings({ userName, userEmail, userPhone, accentColor, onTriggerVerification }: BankingSettingsProps) {
+export function BankingSettings({ userName, userEmail, userPhone, accentColor, portalConfig, onTriggerVerification }: BankingSettingsProps) {
+  const config = { ...DEFAULT_BANKING_CONFIG, ...portalConfig };
+  const triggers = config.verificationTriggers || DEFAULT_BANKING_CONFIG.verificationTriggers!;
+  const isTriggerEnabled = (action: string) => triggers.find(t => t.action === action)?.enabled ?? true;
   const [smsNotifications, setSmsNotifications] = useState(true);
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [pushNotifications, setPushNotifications] = useState(false);
@@ -209,15 +214,12 @@ export function BankingSettings({ userName, userEmail, userPhone, accentColor, o
           <span>👤</span> Profile Information
         </h3>
         <p style={sectionDescStyle}>Your personal details</p>
-        <SettingItem label="Full Name" value={userName} accentColor={accentColor} onEdit={() => handleSensitiveAction('change your name')} />
-        <SettingItem label="Email Address" value={userEmail} accentColor={accentColor} sensitive onEdit={() => handleSensitiveAction('change your email address')} />
-        <SettingItem
-          label="Phone Number"
-          value={userPhone}
-          accentColor={accentColor}
-          sensitive
-          onEdit={() => handleSensitiveAction('change your phone number')}
-        />
+        <SettingItem label="Full Name" value={userName} accentColor={accentColor}
+          onEdit={isTriggerEnabled('change your name') ? () => handleSensitiveAction('change your name') : undefined} />
+        <SettingItem label="Email Address" value={userEmail} accentColor={accentColor} sensitive
+          onEdit={isTriggerEnabled('change your email address') ? () => handleSensitiveAction('change your email address') : undefined} />
+        <SettingItem label="Phone Number" value={userPhone} accentColor={accentColor} sensitive
+          onEdit={isTriggerEnabled('change your phone number') ? () => handleSensitiveAction('change your phone number') : undefined} />
         <div style={{ padding: '14px 0' }}>
           <p style={{ fontSize: '13px', color: '#64748B', margin: 0 }}>Member Since</p>
           <p style={{ fontSize: '15px', color: '#0F172A', fontWeight: 500, margin: '2px 0 0' }}>January 2023</p>
@@ -230,8 +232,10 @@ export function BankingSettings({ userName, userEmail, userPhone, accentColor, o
           <span>🔒</span> Security
         </h3>
         <p style={sectionDescStyle}>Protect your account</p>
-        <SettingItem label="Password" value="••••••••••" accentColor={accentColor} sensitive onEdit={() => handleSensitiveAction('change your password')} />
-        <SettingItem label="Two-Factor Authentication" value="Enabled via SMS" accentColor={accentColor} sensitive onEdit={() => handleSensitiveAction('update two-factor authentication')} />
+        <SettingItem label="Password" value="••••••••••" accentColor={accentColor} sensitive
+          onEdit={isTriggerEnabled('change your password') ? () => handleSensitiveAction('change your password') : undefined} />
+        <SettingItem label="Two-Factor Authentication" value="Enabled via SMS" accentColor={accentColor} sensitive
+          onEdit={isTriggerEnabled('update two-factor authentication') ? () => handleSensitiveAction('update two-factor authentication') : undefined} />
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           padding: '14px 0',
