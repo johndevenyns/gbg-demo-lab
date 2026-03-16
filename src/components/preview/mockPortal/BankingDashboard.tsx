@@ -65,7 +65,7 @@ export function BankingDashboard({ userName, accentColor, portalConfig }: Bankin
 
       {/* Quick Actions */}
       <div style={{ display: 'flex', gap: '12px', marginBottom: '28px', justifyContent: 'center' }}>
-        {QUICK_ACTIONS.map((action) => (
+        {quickActions.map((action) => (
           <button
             key={action.label}
             style={{
