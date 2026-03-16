@@ -232,8 +232,10 @@ export function BankingSettings({ userName, userEmail, userPhone, accentColor, p
           <span>🔒</span> Security
         </h3>
         <p style={sectionDescStyle}>Protect your account</p>
-        <SettingItem label="Password" value="••••••••••" accentColor={accentColor} sensitive onEdit={() => handleSensitiveAction('change your password')} />
-        <SettingItem label="Two-Factor Authentication" value="Enabled via SMS" accentColor={accentColor} sensitive onEdit={() => handleSensitiveAction('update two-factor authentication')} />
+        <SettingItem label="Password" value="••••••••••" accentColor={accentColor} sensitive
+          onEdit={isTriggerEnabled('change your password') ? () => handleSensitiveAction('change your password') : undefined} />
+        <SettingItem label="Two-Factor Authentication" value="Enabled via SMS" accentColor={accentColor} sensitive
+          onEdit={isTriggerEnabled('update two-factor authentication') ? () => handleSensitiveAction('update two-factor authentication') : undefined} />
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           padding: '14px 0',
