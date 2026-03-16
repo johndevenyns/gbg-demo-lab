@@ -68,6 +68,7 @@ export function useUpdateIndustry() {
       if (updates.description !== undefined) dbUpdates.description = updates.description;
       if (updates.iconName !== undefined) dbUpdates.icon_name = updates.iconName;
       if (updates.portalType !== undefined) dbUpdates.portal_type = updates.portalType;
+      if (updates.portalConfig !== undefined) dbUpdates.portal_config = updates.portalConfig;
       if (updates.displayOrder !== undefined) dbUpdates.display_order = updates.displayOrder;
       if (updates.isEnabled !== undefined) dbUpdates.is_enabled = updates.isEnabled;
 

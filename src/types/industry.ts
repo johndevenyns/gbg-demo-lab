@@ -1,9 +1,12 @@
+import { PortalConfig } from './portalConfig';
+
 export interface Industry {
   id: string;
   title: string;
   description?: string;
   iconName: string;
   portalType: string;
+  portalConfig?: PortalConfig;
   displayOrder: number;
   isEnabled: boolean;
   createdAt: string;
