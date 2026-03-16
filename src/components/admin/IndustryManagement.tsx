@@ -100,12 +100,13 @@ export function IndustryManagement() {
 
   const handleCreateUseCase = () => {
     if (!createUseCaseIndustryId) return;
-    const industryUseCases = useCasesForIndustry(createUseCaseIndustryId);
+    const isGeneric = createUseCaseIndustryId === '__generic__';
+    const industryUseCases = isGeneric ? unassignedUseCases : useCasesForIndustry(createUseCaseIndustryId);
     createUseCase.mutate({
       title: newUseCase.title,
       description: newUseCase.description || undefined,
       iconName: 'Package',
-      industryId: createUseCaseIndustryId,
+      industryId: isGeneric ? null : createUseCaseIndustryId,
       defaultFormSteps: [],
       defaultVerificationType: 'docBio',
       showFillPass: false,
@@ -462,22 +463,57 @@ export function IndustryManagement() {
         </div>
       )}
 
-      {/* Unassigned Use Cases */}
-      {unassignedUseCases.length > 0 && (
-        <Card className="glass-card border-dashed">
-          <CardContent className="p-4">
-            <h4 className="text-sm font-medium mb-3 text-muted-foreground">Unassigned Use Cases</h4>
-            <p className="text-xs text-muted-foreground mb-3">
-              These use cases are not linked to any industry. Assign them by editing the use case.
+      {/* Generic Use Case Templates */}
+      <Card className="glass-card border-dashed">
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <h4 className="text-sm font-medium text-muted-foreground">Generic Use Case Templates</h4>
+              <p className="text-xs text-muted-foreground mt-1">
+                Reusable templates that can be cloned into any industry. The original stays here for future use.
+              </p>
+            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => { setCreateUseCaseIndustryId('__generic__'); setNewUseCase({ title: '', description: '' }); }}
+            >
+              <Plus className="w-3 h-3 mr-1" />
+              New Generic
+            </Button>
+          </div>
+          {unassignedUseCases.length === 0 ? (
+            <p className="text-xs text-muted-foreground py-4 text-center">
+              No generic use case templates yet. Create one to reuse across industries.
             </p>
+          ) : (
             <div className="space-y-2">
               {unassignedUseCases.map(uc => (
-                <div key={uc.id} className="flex items-center gap-3 p-2 border rounded-lg">
-                  <Package className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-sm flex-1">{uc.title}</span>
-                  <Select onValueChange={(industryId) => updateUseCase.mutate({ id: uc.id, updates: { industryId } })}>
-                    <SelectTrigger className="w-40 h-8 text-xs">
-                      <SelectValue placeholder="Assign to..." />
+                <div key={uc.id} className="flex items-center gap-3 p-3 border rounded-lg bg-muted/30">
+                  <Package className="w-4 h-4 text-muted-foreground shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <span className="text-sm font-medium">{uc.title}</span>
+                    {uc.description && <p className="text-xs text-muted-foreground truncate">{uc.description}</p>}
+                  </div>
+                  <Select onValueChange={(industryId) => {
+                    const industryUseCases = useCasesForIndustry(industryId);
+                    createUseCase.mutate({
+                      title: uc.title,
+                      description: uc.description,
+                      iconName: uc.iconName,
+                      industryId,
+                      defaultFormSteps: uc.defaultFormSteps,
+                      defaultVerificationType: uc.defaultVerificationType,
+                      defaultPageContent: { ...uc.defaultPageContent },
+                      displayOrder: industryUseCases.length,
+                      isEnabled: true,
+                      showFillPass: uc.showFillPass,
+                      showFillFail: uc.showFillFail,
+                    });
+                    toast.success(`Cloned "${uc.title}" into industry`);
+                  }}>
+                    <SelectTrigger className="w-44 h-8 text-xs shrink-0">
+                      <SelectValue placeholder="Clone to industry..." />
                     </SelectTrigger>
                     <SelectContent>
                       {industries.map(ind => (
@@ -485,12 +521,20 @@ export function IndustryManagement() {
                       ))}
                     </SelectContent>
                   </Select>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-destructive hover:text-destructive h-7 px-2 shrink-0"
+                    onClick={() => { setDeleteId(uc.id); setDeleteType('usecase'); }}
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </Button>
                 </div>
               ))}
             </div>
-          </CardContent>
-        </Card>
-      )}
+          )}
+        </CardContent>
+      </Card>
 
       {/* Create Industry Dialog */}
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
@@ -545,9 +589,11 @@ export function IndustryManagement() {
       <Dialog open={!!createUseCaseIndustryId} onOpenChange={(open) => !open && setCreateUseCaseIndustryId(null)}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Add Use Case</DialogTitle>
+            <DialogTitle>{createUseCaseIndustryId === '__generic__' ? 'Create Generic Use Case' : 'Add Use Case'}</DialogTitle>
             <DialogDescription>
-              Add a use case to {industries.find(i => i.id === createUseCaseIndustryId)?.title}
+              {createUseCaseIndustryId === '__generic__'
+                ? 'Create a reusable use case template that can be cloned into any industry.'
+                : `Add a use case to ${industries.find(i => i.id === createUseCaseIndustryId)?.title}`}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
