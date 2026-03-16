@@ -1,10 +1,12 @@
 import { useState } from 'react';
+import { PortalConfig, DEFAULT_BANKING_CONFIG } from '@/types/portalConfig';
 
 interface BankingSettingsProps {
   userName: string;
   userEmail: string;
   userPhone: string;
   accentColor: string;
+  portalConfig?: PortalConfig;
   onTriggerVerification: (action: string) => void;
 }
 

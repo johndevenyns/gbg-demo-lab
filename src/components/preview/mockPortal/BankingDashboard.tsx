@@ -122,7 +122,7 @@ export function BankingDashboard({ userName, accentColor, portalConfig }: Bankin
               display: 'flex',
               alignItems: 'center',
               gap: '14px',
-              borderBottom: i < MOCK_TRANSACTIONS.length - 1 ? '1px solid #F8FAFC' : 'none',
+              borderBottom: i < transactions.length - 1 ? '1px solid #F8FAFC' : 'none',
               transition: 'background-color 0.15s',
               cursor: 'pointer',
             }}
