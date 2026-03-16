@@ -18,7 +18,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import {
   Briefcase, Plus, Trash2, ChevronDown, ChevronRight, Pencil, UserPlus, FastForward, Package, LogIn, FileText,
 } from 'lucide-react';
-import { GlobalUseCase, UseCasePageContent } from '@/types/useCase';
+import { GlobalUseCase, UseCasePageContent, PORTAL_TYPE_OPTIONS, PortalType } from '@/types/useCase';
 import {
   useGlobalUseCases, useCreateGlobalUseCase, useUpdateGlobalUseCase, useDeleteGlobalUseCase,
 } from '@/hooks/useUseCases';
@@ -166,10 +166,15 @@ export function GlobalUseCaseManagement() {
                     <button className="w-full flex items-center gap-3 p-4 hover:bg-muted/50 transition-colors text-left">
                       <IconComp className="w-5 h-5 text-primary shrink-0" />
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
+                         <div className="flex items-center gap-2">
                           <span className="font-medium">{uc.title}</span>
                           {!uc.isEnabled && <Badge variant="secondary" className="text-[10px]">Disabled</Badge>}
                           <Badge variant="outline" className="text-[10px]">{uc.defaultVerificationType}</Badge>
+                          {uc.portalType && uc.portalType !== 'none' && (
+                            <Badge variant="outline" className="text-[10px] bg-primary/10">
+                              {PORTAL_TYPE_OPTIONS.find(p => p.value === uc.portalType)?.label || uc.portalType} Portal
+                            </Badge>
+                          )}
                           <Badge variant="outline" className="text-[10px]">
                             <FileText className="w-3 h-3 mr-1" />
                             {stepCount} step{stepCount !== 1 ? 's' : ''}
@@ -204,6 +209,29 @@ export function GlobalUseCaseManagement() {
                               if (e.target.value !== uc.defaultVerificationType) handleUpdate(uc.id, { defaultVerificationType: e.target.value });
                             }}
                           />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Post-Login Portal Type</Label>
+                          <Select
+                            value={uc.portalType || 'none'}
+                            onValueChange={(val) => handleUpdate(uc.id, { portalType: val as PortalType })}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {PORTAL_TYPE_OPTIONS.map(opt => (
+                                <SelectItem key={opt.value} value={opt.value}>
+                                  <div className="flex flex-col">
+                                    <span>{opt.label}</span>
+                                  </div>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <p className="text-xs text-muted-foreground">
+                            If this use case includes a login step, which portal experience should appear after login?
+                          </p>
                         </div>
                         <div className="md:col-span-2 space-y-2">
                           <Label>Description</Label>

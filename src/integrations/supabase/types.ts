@@ -193,6 +193,7 @@ export type Database = {
           id: string
           is_enabled: boolean
           page_content_override: Json | null
+          portal_type_override: string | null
           updated_at: string
           use_case_id: string
           verification_type_override: string | null
@@ -205,6 +206,7 @@ export type Database = {
           id?: string
           is_enabled?: boolean
           page_content_override?: Json | null
+          portal_type_override?: string | null
           updated_at?: string
           use_case_id: string
           verification_type_override?: string | null
@@ -217,6 +219,7 @@ export type Database = {
           id?: string
           is_enabled?: boolean
           page_content_override?: Json | null
+          portal_type_override?: string | null
           updated_at?: string
           use_case_id?: string
           verification_type_override?: string | null
@@ -383,6 +386,7 @@ export type Database = {
           icon_name: string | null
           id: string
           is_enabled: boolean
+          portal_type: string | null
           show_fill_fail: boolean
           show_fill_pass: boolean
           title: string
@@ -398,6 +402,7 @@ export type Database = {
           icon_name?: string | null
           id?: string
           is_enabled?: boolean
+          portal_type?: string | null
           show_fill_fail?: boolean
           show_fill_pass?: boolean
           title: string
@@ -413,6 +418,7 @@ export type Database = {
           icon_name?: string | null
           id?: string
           is_enabled?: boolean
+          portal_type?: string | null
           show_fill_fail?: boolean
           show_fill_pass?: boolean
           title?: string

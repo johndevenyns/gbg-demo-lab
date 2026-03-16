@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { GlobalUseCase, DemoUseCaseLink, UseCasePageContent } from '@/types/useCase';
+import { GlobalUseCase, DemoUseCaseLink, UseCasePageContent, PortalType } from '@/types/useCase';
 import { toast } from 'sonner';
 
 // ── Global Use Cases (managed by global admins) ──
@@ -18,6 +18,7 @@ function mapGlobalRow(row: Record<string, unknown>): GlobalUseCase {
     isEnabled: row.is_enabled as boolean,
     showFillPass: (row.show_fill_pass as boolean) ?? false,
     showFillFail: (row.show_fill_fail as boolean) ?? false,
+    portalType: (row.portal_type as PortalType) ?? null,
     createdAt: row.created_at as string,
     updatedAt: row.updated_at as string,
   };
@@ -81,6 +82,7 @@ export function useUpdateGlobalUseCase() {
       if (updates.isEnabled !== undefined) dbUpdates.is_enabled = updates.isEnabled;
       if (updates.showFillPass !== undefined) dbUpdates.show_fill_pass = updates.showFillPass;
       if (updates.showFillFail !== undefined) dbUpdates.show_fill_fail = updates.showFillFail;
+      if (updates.portalType !== undefined) dbUpdates.portal_type = updates.portalType;
 
       const { data, error } = await supabase
         .from('global_use_cases')
@@ -126,6 +128,7 @@ function mapLinkRow(row: Record<string, unknown>): DemoUseCaseLink {
     formStepsOverride: (row.form_steps_override as Record<string, unknown>[]) ?? null,
     verificationTypeOverride: (row.verification_type_override as string) ?? null,
     pageContentOverride: (row.page_content_override as UseCasePageContent) ?? null,
+    portalTypeOverride: (row.portal_type_override as PortalType) ?? null,
     createdAt: row.created_at as string,
     updatedAt: row.updated_at as string,
   };
@@ -194,6 +197,7 @@ export function useUpdateDemoUseCaseLink() {
       if (updates.formStepsOverride !== undefined) dbUpdates.form_steps_override = updates.formStepsOverride ? JSON.parse(JSON.stringify(updates.formStepsOverride)) : null;
       if (updates.verificationTypeOverride !== undefined) dbUpdates.verification_type_override = updates.verificationTypeOverride;
       if (updates.pageContentOverride !== undefined) dbUpdates.page_content_override = updates.pageContentOverride;
+      if (updates.portalTypeOverride !== undefined) dbUpdates.portal_type_override = updates.portalTypeOverride;
 
       const { error } = await supabase
         .from('demo_use_case_links')

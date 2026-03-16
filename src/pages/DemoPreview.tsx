@@ -67,6 +67,7 @@ export default function DemoPreview() {
             : uc.defaultPageContent,
           isEnabled: link.isEnabled,
           displayOrder: link.displayOrder,
+          portalType: link.portalTypeOverride ?? uc.portalType ?? null,
         };
       });
   }, [links]);
@@ -105,7 +106,11 @@ export default function DemoPreview() {
     }
     // If login just succeeded and we have portal user data, show the portal
     if (success && portalUser && !showPortal) {
-      setShowPortal(true);
+      // Check if the selected use case has a portal type
+      const activePortalType = selectedUseCase?.portalType;
+      if (activePortalType && activePortalType !== 'none') {
+        setShowPortal(true);
+      }
     }
   }, [portalUser, showPortal, portalVerificationAction]);
 

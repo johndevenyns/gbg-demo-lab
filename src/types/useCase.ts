@@ -12,6 +12,17 @@ export interface UseCasePageContent {
 }
 
 // Global use case definition (managed by global admins)
+export const PORTAL_TYPE_OPTIONS = [
+  { value: 'none', label: 'No Portal', description: 'Standard form flow without a portal' },
+  { value: 'banking', label: 'Banking', description: 'Online banking dashboard with accounts & transactions' },
+  { value: 'rental_car', label: 'Rental Car', description: 'Car rental management portal (coming soon)' },
+  { value: 'retail', label: 'Retail', description: 'Retail account / loyalty portal (coming soon)' },
+  { value: 'insurance', label: 'Insurance', description: 'Insurance policy management portal (coming soon)' },
+  { value: 'healthcare', label: 'Healthcare', description: 'Patient portal (coming soon)' },
+] as const;
+
+export type PortalType = typeof PORTAL_TYPE_OPTIONS[number]['value'];
+
 export interface GlobalUseCase {
   id: string;
   title: string;
@@ -24,6 +35,7 @@ export interface GlobalUseCase {
   isEnabled: boolean;
   showFillPass: boolean;
   showFillFail: boolean;
+  portalType?: PortalType | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -38,6 +50,7 @@ export interface DemoUseCaseLink {
   formStepsOverride?: Record<string, unknown>[] | null;
   verificationTypeOverride?: string | null;
   pageContentOverride?: UseCasePageContent | null;
+  portalTypeOverride?: PortalType | null;
   createdAt: string;
   updatedAt: string;
   // Joined data from global_use_cases (populated via query)
@@ -56,4 +69,5 @@ export interface ResolvedUseCase {
   pageContent: UseCasePageContent;
   isEnabled: boolean;
   displayOrder: number;
+  portalType?: PortalType | null;
 }
