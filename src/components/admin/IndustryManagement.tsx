@@ -597,6 +597,191 @@ export function IndustryManagement() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Portal Preview Dialog */}
+      {previewIndustryId && (() => {
+        const ind = industries.find(i => i.id === previewIndustryId);
+        if (!ind) return null;
+        return (
+          <PortalPreviewDialog
+            open={true}
+            onOpenChange={() => setPreviewIndustryId(null)}
+            portalType={ind.portalType}
+            portalConfig={ind.portalConfig}
+            brandingOverrides={{ bankName: ind.title }}
+          />
+        );
+      })()}
+
+      {/* Portal Config Editor Dialog */}
+      <Dialog open={!!portalConfigIndustryId} onOpenChange={(open) => !open && setPortalConfigIndustryId(null)}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Configure Portal Content</DialogTitle>
+            <DialogDescription>
+              Customize the mock portal's content, accounts, transactions, and verification triggers.
+            </DialogDescription>
+          </DialogHeader>
+          {portalConfigIndustryId && (() => {
+            const ind = industries.find(i => i.id === portalConfigIndustryId);
+            if (!ind) return null;
+            const cfg: PortalConfig = { ...DEFAULT_BANKING_CONFIG, ...ind.portalConfig };
+
+            const saveConfig = (updates: Partial<PortalConfig>) => {
+              const merged = { ...cfg, ...updates };
+              updateIndustry.mutate({ id: ind.id, updates: { portalConfig: merged } });
+            };
+
+            return (
+              <div className="space-y-6 py-2">
+                {/* User Info */}
+                <div>
+                  <h4 className="text-sm font-medium mb-3">Portal User (Mock)</h4>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">User Name</Label>
+                      <Input defaultValue={cfg.userName} className="h-8 text-sm"
+                        onBlur={(e) => saveConfig({ userName: e.target.value })} />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">User Email</Label>
+                      <Input defaultValue={cfg.userEmail} className="h-8 text-sm"
+                        onBlur={(e) => saveConfig({ userEmail: e.target.value })} />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Phone Number</Label>
+                      <Input defaultValue={cfg.userPhone} className="h-8 text-sm"
+                        onBlur={(e) => saveConfig({ userPhone: e.target.value })} />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Accounts */}
+                <div>
+                  <h4 className="text-sm font-medium mb-3">Dashboard Accounts</h4>
+                  <div className="space-y-3">
+                    {(cfg.accounts || []).map((acct, idx) => (
+                      <div key={idx} className="grid grid-cols-4 gap-2 items-end border rounded-lg p-3">
+                        <div className="space-y-1">
+                          <Label className="text-xs">Name</Label>
+                          <Input defaultValue={acct.name} className="h-8 text-sm"
+                            onBlur={(e) => {
+                              const updated = [...(cfg.accounts || [])];
+                              updated[idx] = { ...updated[idx], name: e.target.value };
+                              saveConfig({ accounts: updated });
+                            }} />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Balance</Label>
+                          <Input type="number" defaultValue={acct.balance} className="h-8 text-sm"
+                            onBlur={(e) => {
+                              const updated = [...(cfg.accounts || [])];
+                              updated[idx] = { ...updated[idx], balance: parseFloat(e.target.value) || 0 };
+                              saveConfig({ accounts: updated });
+                            }} />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Last 4</Label>
+                          <Input defaultValue={acct.lastFour} className="h-8 text-sm" maxLength={4}
+                            onBlur={(e) => {
+                              const updated = [...(cfg.accounts || [])];
+                              updated[idx] = { ...updated[idx], lastFour: e.target.value };
+                              saveConfig({ accounts: updated });
+                            }} />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">APY</Label>
+                          <Input defaultValue={acct.apy || ''} className="h-8 text-sm" placeholder="e.g. 4.25%"
+                            onBlur={(e) => {
+                              const updated = [...(cfg.accounts || [])];
+                              updated[idx] = { ...updated[idx], apy: e.target.value || undefined };
+                              saveConfig({ accounts: updated });
+                            }} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Verification Triggers */}
+                <div>
+                  <h4 className="text-sm font-medium mb-3">Verification Triggers</h4>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    Choose which settings actions require identity verification
+                  </p>
+                  <div className="space-y-2">
+                    {(cfg.verificationTriggers || []).map((trigger, idx) => (
+                      <div key={idx} className="flex items-center justify-between border rounded-lg p-3">
+                        <div>
+                          <p className="text-sm font-medium">{trigger.label}</p>
+                          <p className="text-xs text-muted-foreground">Action: "{trigger.action}"</p>
+                        </div>
+                        <Switch
+                          checked={trigger.enabled}
+                          onCheckedChange={(v) => {
+                            const updated = [...(cfg.verificationTriggers || [])];
+                            updated[idx] = { ...updated[idx], enabled: v };
+                            saveConfig({ verificationTriggers: updated });
+                          }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Transactions */}
+                <div>
+                  <h4 className="text-sm font-medium mb-3">
+                    Recent Transactions ({(cfg.transactions || []).length})
+                  </h4>
+                  <div className="space-y-2 max-h-60 overflow-y-auto">
+                    {(cfg.transactions || []).map((tx, idx) => (
+                      <div key={idx} className="grid grid-cols-4 gap-2 items-end border rounded-lg p-2">
+                        <div className="space-y-1">
+                          <Label className="text-xs">Icon</Label>
+                          <Input defaultValue={tx.icon} className="h-7 text-sm w-14"
+                            onBlur={(e) => {
+                              const updated = [...(cfg.transactions || [])];
+                              updated[idx] = { ...updated[idx], icon: e.target.value };
+                              saveConfig({ transactions: updated });
+                            }} />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Merchant</Label>
+                          <Input defaultValue={tx.merchant} className="h-7 text-sm"
+                            onBlur={(e) => {
+                              const updated = [...(cfg.transactions || [])];
+                              updated[idx] = { ...updated[idx], merchant: e.target.value };
+                              saveConfig({ transactions: updated });
+                            }} />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Amount</Label>
+                          <Input type="number" defaultValue={tx.amount} className="h-7 text-sm"
+                            onBlur={(e) => {
+                              const updated = [...(cfg.transactions || [])];
+                              updated[idx] = { ...updated[idx], amount: parseFloat(e.target.value) || 0 };
+                              saveConfig({ transactions: updated });
+                            }} />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Date</Label>
+                          <Input defaultValue={tx.date} className="h-7 text-sm"
+                            onBlur={(e) => {
+                              const updated = [...(cfg.transactions || [])];
+                              updated[idx] = { ...updated[idx], date: e.target.value };
+                              saveConfig({ transactions: updated });
+                            }} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
