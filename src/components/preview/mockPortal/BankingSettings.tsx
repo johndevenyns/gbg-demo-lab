@@ -214,15 +214,12 @@ export function BankingSettings({ userName, userEmail, userPhone, accentColor, p
           <span>👤</span> Profile Information
         </h3>
         <p style={sectionDescStyle}>Your personal details</p>
-        <SettingItem label="Full Name" value={userName} accentColor={accentColor} onEdit={() => handleSensitiveAction('change your name')} />
-        <SettingItem label="Email Address" value={userEmail} accentColor={accentColor} sensitive onEdit={() => handleSensitiveAction('change your email address')} />
-        <SettingItem
-          label="Phone Number"
-          value={userPhone}
-          accentColor={accentColor}
-          sensitive
-          onEdit={() => handleSensitiveAction('change your phone number')}
-        />
+        <SettingItem label="Full Name" value={userName} accentColor={accentColor}
+          onEdit={isTriggerEnabled('change your name') ? () => handleSensitiveAction('change your name') : undefined} />
+        <SettingItem label="Email Address" value={userEmail} accentColor={accentColor} sensitive
+          onEdit={isTriggerEnabled('change your email address') ? () => handleSensitiveAction('change your email address') : undefined} />
+        <SettingItem label="Phone Number" value={userPhone} accentColor={accentColor} sensitive
+          onEdit={isTriggerEnabled('change your phone number') ? () => handleSensitiveAction('change your phone number') : undefined} />
         <div style={{ padding: '14px 0' }}>
           <p style={{ fontSize: '13px', color: '#64748B', margin: 0 }}>Member Since</p>
           <p style={{ fontSize: '15px', color: '#0F172A', fontWeight: 500, margin: '2px 0 0' }}>January 2023</p>
