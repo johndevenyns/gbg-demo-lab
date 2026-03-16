@@ -311,6 +311,21 @@ export function UseCaseSection({ demoId, demo, onUpdateDemo }: UseCaseSectionPro
           </Card>
         );
       })()}
+
+      {/* Portal Preview */}
+      {showPortalPreview && demoIndustry && (
+        <PortalPreviewDialog
+          open={true}
+          onOpenChange={() => setShowPortalPreview(false)}
+          portalType={demoIndustry.portalType}
+          portalConfig={demoIndustry.portalConfig}
+          brandingOverrides={{
+            bankName: demo.customerName,
+            accentColor: demo.buttonColor || undefined,
+            logoUrl: demo.useUploadedLogo ? demo.uploadedLogoUrl || undefined : demo.logoUrl || undefined,
+          }}
+        />
+      )}
     </div>
   );
 }
