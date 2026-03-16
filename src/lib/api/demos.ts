@@ -54,6 +54,7 @@ const rowToDemo = (row: any): DemoEnvironment => {
     slug: row.slug,
     customerName: row.customer_name,
     industryTemplate: row.industry_template as IndustryTemplate,
+    industryId: (row as any).industry_id || undefined,
     verificationType: row.verification_type,
     returnUrl: row.return_url || '',
     approvedUrl: row.approved_url || '',
