@@ -166,10 +166,15 @@ export function GlobalUseCaseManagement() {
                     <button className="w-full flex items-center gap-3 p-4 hover:bg-muted/50 transition-colors text-left">
                       <IconComp className="w-5 h-5 text-primary shrink-0" />
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
+                         <div className="flex items-center gap-2">
                           <span className="font-medium">{uc.title}</span>
                           {!uc.isEnabled && <Badge variant="secondary" className="text-[10px]">Disabled</Badge>}
                           <Badge variant="outline" className="text-[10px]">{uc.defaultVerificationType}</Badge>
+                          {uc.portalType && uc.portalType !== 'none' && (
+                            <Badge variant="outline" className="text-[10px] bg-primary/10">
+                              {PORTAL_TYPE_OPTIONS.find(p => p.value === uc.portalType)?.label || uc.portalType} Portal
+                            </Badge>
+                          )}
                           <Badge variant="outline" className="text-[10px]">
                             <FileText className="w-3 h-3 mr-1" />
                             {stepCount} step{stepCount !== 1 ? 's' : ''}
