@@ -319,37 +319,37 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
                   const icons = LucideIcons as unknown as Record<string, React.ComponentType<{ className?: string }>>;
                   const IconComp = icons[uc.iconName] || icons['Package'];
                   return (
-                    <button
-                      key={uc.id}
-                      onClick={() => toggleUseCase(uc.id)}
-                      className={cn(
-                        "flex items-center gap-4 p-4 rounded-lg border text-left transition-all",
-                        selectedUseCases.includes(uc.id)
-                          ? "border-primary bg-primary/5"
-                          : "border-border hover:border-muted-foreground/50"
+                    <div key={uc.id}>
+                      <button
+                        onClick={() => toggleUseCase(uc.id)}
+                        className={cn(
+                          "flex items-center gap-4 p-4 rounded-lg border text-left transition-all w-full",
+                          selectedUseCases.includes(uc.id)
+                            ? "border-primary bg-primary/5"
+                            : "border-border hover:border-muted-foreground/50"
+                        )}
+                      >
+                        <div className={cn(
+                          "w-10 h-10 rounded-lg flex items-center justify-center",
+                          selectedUseCases.includes(uc.id)
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted text-muted-foreground"
+                        )}>
+                          {IconComp && <IconComp className="w-5 h-5" />}
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-medium">{uc.title}</h4>
+                          {uc.description && <p className="text-sm text-muted-foreground">{uc.description}</p>}
+                        </div>
+                        {selectedUseCases.includes(uc.id) && <Check className="w-5 h-5 text-primary" />}
+                      </button>
+                      {selectedUseCases.includes(uc.id) && uc.portalType && uc.portalType !== 'none' && (
+                        <div className="ml-14 mt-1 mb-1 text-xs text-muted-foreground flex items-center gap-1.5">
+                          <span className="inline-block w-2 h-2 rounded-full bg-primary/60" />
+                          Post-login portal: <span className="font-medium">{PORTAL_TYPE_OPTIONS.find(p => p.value === uc.portalType)?.label}</span>
+                        </div>
                       )}
-                    >
-                      <div className={cn(
-                        "w-10 h-10 rounded-lg flex items-center justify-center",
-                        selectedUseCases.includes(uc.id)
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-muted text-muted-foreground"
-                      )}>
-                        {IconComp && <IconComp className="w-5 h-5" />}
-                      </div>
-                      <div className="flex-1">
-                        <h4 className="font-medium">{uc.title}</h4>
-                        {uc.description && <p className="text-sm text-muted-foreground">{uc.description}</p>}
-                      </div>
-                      {selectedUseCases.includes(uc.id) && <Check className="w-5 h-5 text-primary" />}
-                    </button>
-                    {/* Show portal type info for selected use cases with portals */}
-                    {selectedUseCases.includes(uc.id) && uc.portalType && uc.portalType !== 'none' && (
-                      <div className="ml-14 -mt-1 mb-2 text-xs text-muted-foreground flex items-center gap-1.5">
-                        <span className="inline-block w-2 h-2 rounded-full bg-primary/60" />
-                        Post-login portal: <span className="font-medium">{PORTAL_TYPE_OPTIONS.find(p => p.value === uc.portalType)?.label}</span>
-                      </div>
-                    )}
+                    </div>
                   );
                 })}
               </div>
