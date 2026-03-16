@@ -286,15 +286,16 @@ export default function DemoPreview() {
     if (portalVerificationAction && portalVerificationSteps.length > 0) {
       return (
         <div style={{ position: 'relative', minHeight: '100vh' }}>
-          <BankingPortalShell
-            userName={portalUserName}
-            userEmail={portalUser.email}
-            accentColor={demo.buttonColor || '#0D9488'}
-            logoUrl={demo.useUploadedLogo ? demo.uploadedLogoUrl : demo.logoUrl}
-            bankName={demo.customerName}
-            onTriggerVerification={handlePortalVerification}
-            onLogout={handlePortalLogout}
-          />
+           <BankingPortalShell
+290:             userName={portalUserName}
+291:             userEmail={portalUser.email}
+292:             accentColor={demo.buttonColor || '#0D9488'}
+293:             logoUrl={demo.useUploadedLogo ? demo.uploadedLogoUrl : demo.logoUrl}
+294:             bankName={demo.customerName}
+295:             portalConfig={demoIndustry?.portalConfig}
+296:             onTriggerVerification={handlePortalVerification}
+297:             onLogout={handlePortalLogout}
+298:           />
           {/* Verification Overlay */}
           <div style={{
             position: 'fixed', inset: 0, zIndex: 200,
