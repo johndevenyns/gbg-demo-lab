@@ -589,9 +589,11 @@ export function IndustryManagement() {
       <Dialog open={!!createUseCaseIndustryId} onOpenChange={(open) => !open && setCreateUseCaseIndustryId(null)}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Add Use Case</DialogTitle>
+            <DialogTitle>{createUseCaseIndustryId === '__generic__' ? 'Create Generic Use Case' : 'Add Use Case'}</DialogTitle>
             <DialogDescription>
-              Add a use case to {industries.find(i => i.id === createUseCaseIndustryId)?.title}
+              {createUseCaseIndustryId === '__generic__'
+                ? 'Create a reusable use case template that can be cloned into any industry.'
+                : `Add a use case to ${industries.find(i => i.id === createUseCaseIndustryId)?.title}`}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
