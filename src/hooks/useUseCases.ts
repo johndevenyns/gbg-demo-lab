@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { GlobalUseCase, DemoUseCaseLink, UseCasePageContent, PortalType } from '@/types/useCase';
+import { GlobalUseCase, DemoUseCaseLink, UseCasePageContent } from '@/types/useCase';
 import { toast } from 'sonner';
 
 // ── Global Use Cases (managed by global admins) ──
