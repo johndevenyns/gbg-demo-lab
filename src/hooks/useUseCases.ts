@@ -11,6 +11,7 @@ function mapGlobalRow(row: Record<string, unknown>): GlobalUseCase {
     title: row.title as string,
     description: (row.description as string) ?? undefined,
     iconName: (row.icon_name as string) ?? 'Package',
+    industryId: (row.industry_id as string) ?? null,
     defaultFormSteps: (row.default_form_steps as Record<string, unknown>[]) ?? [],
     defaultVerificationType: (row.default_verification_type as string) ?? 'docBio',
     defaultPageContent: (row.default_page_content as UseCasePageContent) ?? {},
@@ -18,7 +19,7 @@ function mapGlobalRow(row: Record<string, unknown>): GlobalUseCase {
     isEnabled: row.is_enabled as boolean,
     showFillPass: (row.show_fill_pass as boolean) ?? false,
     showFillFail: (row.show_fill_fail as boolean) ?? false,
-    portalType: (row.portal_type as PortalType) ?? null,
+    portalType: (row.portal_type as string) ?? null,
     createdAt: row.created_at as string,
     updatedAt: row.updated_at as string,
   };
