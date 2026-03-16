@@ -100,12 +100,13 @@ export function IndustryManagement() {
 
   const handleCreateUseCase = () => {
     if (!createUseCaseIndustryId) return;
-    const industryUseCases = useCasesForIndustry(createUseCaseIndustryId);
+    const isGeneric = createUseCaseIndustryId === '__generic__';
+    const industryUseCases = isGeneric ? unassignedUseCases : useCasesForIndustry(createUseCaseIndustryId);
     createUseCase.mutate({
       title: newUseCase.title,
       description: newUseCase.description || undefined,
       iconName: 'Package',
-      industryId: createUseCaseIndustryId,
+      industryId: isGeneric ? null : createUseCaseIndustryId,
       defaultFormSteps: [],
       defaultVerificationType: 'docBio',
       showFillPass: false,
