@@ -17,7 +17,7 @@ import {
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
   Building2, Plus, Trash2, ChevronDown, ChevronRight, Package, FileText,
-  Landmark, Car, ShoppingBag, Shield, Heart,
+  Landmark, Car, ShoppingBag, Shield, Heart, Eye, Settings,
 } from 'lucide-react';
 import { Industry, PORTAL_TYPE_OPTIONS } from '@/types/industry';
 import { GlobalUseCase, UseCasePageContent } from '@/types/useCase';
@@ -27,6 +27,8 @@ import {
 } from '@/hooks/useUseCases';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { PortalPreviewDialog } from './PortalPreviewDialog';
+import { PortalConfig, DEFAULT_BANKING_CONFIG } from '@/types/portalConfig';
 
 const ICON_MAP: Record<string, React.ElementType> = {
   Building2, Landmark, Car, ShoppingBag, Shield, Heart, Package,
