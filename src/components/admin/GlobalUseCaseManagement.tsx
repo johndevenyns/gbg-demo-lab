@@ -18,7 +18,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import {
   Briefcase, Plus, Trash2, ChevronDown, ChevronRight, Pencil, UserPlus, FastForward, Package, LogIn, FileText,
 } from 'lucide-react';
-import { GlobalUseCase, UseCasePageContent } from '@/types/useCase';
+import { GlobalUseCase, UseCasePageContent, PORTAL_TYPE_OPTIONS, PortalType } from '@/types/useCase';
 import {
   useGlobalUseCases, useCreateGlobalUseCase, useUpdateGlobalUseCase, useDeleteGlobalUseCase,
 } from '@/hooks/useUseCases';
