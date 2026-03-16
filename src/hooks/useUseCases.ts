@@ -82,6 +82,7 @@ export function useUpdateGlobalUseCase() {
       if (updates.isEnabled !== undefined) dbUpdates.is_enabled = updates.isEnabled;
       if (updates.showFillPass !== undefined) dbUpdates.show_fill_pass = updates.showFillPass;
       if (updates.showFillFail !== undefined) dbUpdates.show_fill_fail = updates.showFillFail;
+      if (updates.portalType !== undefined) dbUpdates.portal_type = updates.portalType;
 
       const { data, error } = await supabase
         .from('global_use_cases')
