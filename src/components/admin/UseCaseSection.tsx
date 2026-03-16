@@ -105,6 +105,12 @@ export function UseCaseSection({ demoId, demo, onUpdateDemo }: UseCaseSectionPro
                 Select which use cases are available in this demo. Each use case has its own form steps and verification settings.
               </CardDescription>
             </div>
+            <div className="flex items-center gap-2">
+              {demoIndustry && demoIndustry.portalType !== 'none' && (
+                <Button variant="outline" size="sm" className="gap-1" onClick={() => setShowPortalPreview(true)}>
+                  <Eye className="w-4 h-4" /> Preview Portal
+                </Button>
+              )}
             {availableToAdd.length > 0 && (
               <Select onValueChange={handleAdd}>
                 <SelectTrigger className="w-[220px]">
