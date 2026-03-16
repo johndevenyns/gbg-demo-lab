@@ -455,6 +455,7 @@ export type Database = {
           icon_name: string | null
           id: string
           is_enabled: boolean
+          portal_config: Json | null
           portal_type: string | null
           title: string
           updated_at: string
@@ -466,6 +467,7 @@ export type Database = {
           icon_name?: string | null
           id?: string
           is_enabled?: boolean
+          portal_config?: Json | null
           portal_type?: string | null
           title: string
           updated_at?: string
@@ -477,6 +479,7 @@ export type Database = {
           icon_name?: string | null
           id?: string
           is_enabled?: boolean
+          portal_config?: Json | null
           portal_type?: string | null
           title?: string
           updated_at?: string
