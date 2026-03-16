@@ -12,7 +12,7 @@ import {
 import {
   Briefcase, Plus, Trash2, ChevronDown, ChevronRight, UserPlus, FastForward, Package, Layout,
 } from 'lucide-react';
-import { DemoUseCaseLink, UseCasePageContent, PORTAL_TYPE_OPTIONS, PortalType } from '@/types/useCase';
+import { DemoUseCaseLink, UseCasePageContent } from '@/types/useCase';
 import { DemoEnvironment, FormStep } from '@/types/demo';
 import {
   useGlobalUseCases, useDemoUseCaseLinks,
