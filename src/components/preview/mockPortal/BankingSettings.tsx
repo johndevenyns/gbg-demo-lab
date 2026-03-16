@@ -160,7 +160,10 @@ function VerifyDialog({
   );
 }
 
-export function BankingSettings({ userName, userEmail, userPhone, accentColor, onTriggerVerification }: BankingSettingsProps) {
+export function BankingSettings({ userName, userEmail, userPhone, accentColor, portalConfig, onTriggerVerification }: BankingSettingsProps) {
+  const config = { ...DEFAULT_BANKING_CONFIG, ...portalConfig };
+  const triggers = config.verificationTriggers || DEFAULT_BANKING_CONFIG.verificationTriggers!;
+  const isTriggerEnabled = (action: string) => triggers.find(t => t.action === action)?.enabled ?? true;
   const [smsNotifications, setSmsNotifications] = useState(true);
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [pushNotifications, setPushNotifications] = useState(false);
