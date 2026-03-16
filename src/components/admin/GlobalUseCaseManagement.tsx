@@ -210,6 +210,29 @@ export function GlobalUseCaseManagement() {
                             }}
                           />
                         </div>
+                        <div className="space-y-2">
+                          <Label>Post-Login Portal Type</Label>
+                          <Select
+                            value={uc.portalType || 'none'}
+                            onValueChange={(val) => handleUpdate(uc.id, { portalType: val as PortalType })}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {PORTAL_TYPE_OPTIONS.map(opt => (
+                                <SelectItem key={opt.value} value={opt.value}>
+                                  <div className="flex flex-col">
+                                    <span>{opt.label}</span>
+                                  </div>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <p className="text-xs text-muted-foreground">
+                            If this use case includes a login step, which portal experience should appear after login?
+                          </p>
+                        </div>
                         <div className="md:col-span-2 space-y-2">
                           <Label>Description</Label>
                           <Textarea
