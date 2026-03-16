@@ -1,40 +1,17 @@
 import { useMemo } from 'react';
-
-interface Transaction {
-  id: string;
-  merchant: string;
-  amount: number;
-  date: string;
-  category: 'groceries' | 'income' | 'entertainment' | 'transport' | 'dining' | 'utilities' | 'shopping' | 'health';
-  icon: string;
-}
-
-const MOCK_TRANSACTIONS: Transaction[] = [
-  { id: '1', merchant: 'Whole Foods Market', amount: -82.47, date: 'Today', category: 'groceries', icon: '🛒' },
-  { id: '2', merchant: 'Direct Deposit — Payroll', amount: 4250.00, date: 'Yesterday', category: 'income', icon: '💰' },
-  { id: '3', merchant: 'Netflix', amount: -15.99, date: 'Mar 11', category: 'entertainment', icon: '🎬' },
-  { id: '4', merchant: 'Uber', amount: -24.30, date: 'Mar 10', category: 'transport', icon: '🚗' },
-  { id: '5', merchant: 'Starbucks', amount: -6.45, date: 'Mar 10', category: 'dining', icon: '☕' },
-  { id: '6', merchant: 'Electric Company', amount: -142.80, date: 'Mar 9', category: 'utilities', icon: '⚡' },
-  { id: '7', merchant: 'Amazon', amount: -67.23, date: 'Mar 8', category: 'shopping', icon: '📦' },
-  { id: '8', merchant: 'CVS Pharmacy', amount: -32.10, date: 'Mar 7', category: 'health', icon: '💊' },
-  { id: '9', merchant: 'Venmo Transfer', amount: 150.00, date: 'Mar 6', category: 'income', icon: '💸' },
-  { id: '10', merchant: 'Spotify', amount: -10.99, date: 'Mar 5', category: 'entertainment', icon: '🎵' },
-];
-
-const QUICK_ACTIONS = [
-  { label: 'Transfer', icon: '↗️', color: '#0D9488' },
-  { label: 'Pay Bills', icon: '📄', color: '#6366F1' },
-  { label: 'Deposit', icon: '📥', color: '#059669' },
-  { label: 'More', icon: '⋯', color: '#64748B' },
-];
+import { PortalConfig, DEFAULT_BANKING_CONFIG } from '@/types/portalConfig';
 
 interface BankingDashboardProps {
   userName: string;
   accentColor: string;
+  portalConfig?: PortalConfig;
 }
 
-export function BankingDashboard({ userName, accentColor }: BankingDashboardProps) {
+export function BankingDashboard({ userName, accentColor, portalConfig }: BankingDashboardProps) {
+  const config = { ...DEFAULT_BANKING_CONFIG, ...portalConfig };
+  const accounts = config.accounts || DEFAULT_BANKING_CONFIG.accounts!;
+  const transactions = config.transactions || DEFAULT_BANKING_CONFIG.transactions!;
+  const quickActions = config.quickActions || DEFAULT_BANKING_CONFIG.quickActions!;
   const greeting = useMemo(() => {
     const hour = new Date().getHours();
     if (hour < 12) return 'Good morning';
