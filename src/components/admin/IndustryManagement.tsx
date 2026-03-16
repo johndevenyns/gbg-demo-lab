@@ -377,6 +377,26 @@ export function IndustryManagement() {
                           <p className="text-xs text-muted-foreground">
                             The mock portal shown after login for this industry
                           </p>
+                          {ind.portalType !== 'none' && (
+                            <div className="flex gap-2 mt-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-7 text-xs gap-1"
+                                onClick={() => setPreviewIndustryId(ind.id)}
+                              >
+                                <Eye className="w-3 h-3" /> Preview Portal
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-7 text-xs gap-1"
+                                onClick={() => setPortalConfigIndustryId(ind.id)}
+                              >
+                                <Settings className="w-3 h-3" /> Configure Content
+                              </Button>
+                            </div>
+                          )}
                         </div>
                         <div className="md:col-span-2 space-y-2">
                           <Label>Description</Label>
