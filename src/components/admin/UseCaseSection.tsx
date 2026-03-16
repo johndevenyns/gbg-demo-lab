@@ -40,6 +40,13 @@ export function UseCaseSection({ demoId, demo, onUpdateDemo }: UseCaseSectionPro
   const removeLink = useRemoveDemoUseCaseLink();
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [formBuilderLinkId, setFormBuilderLinkId] = useState<string | null>(null);
+  const [showPortalPreview, setShowPortalPreview] = useState(false);
+  const { data: allIndustries = [] } = useIndustries();
+
+  const demoIndustry = useMemo(() => {
+    if (!demo.industryId) return null;
+    return allIndustries.find(i => i.id === demo.industryId) ?? null;
+  }, [demo.industryId, allIndustries]);
 
   const linkedUseCaseIds = new Set(links.map(l => l.useCaseId));
   const availableToAdd = globalUseCases.filter(uc => !linkedUseCaseIds.has(uc.id) && uc.isEnabled);
