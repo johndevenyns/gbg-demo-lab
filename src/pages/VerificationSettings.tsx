@@ -42,7 +42,7 @@ import { TestProfileManagement } from "@/components/admin/TestProfileManagement"
 import { AdminResourceIdSettings } from "@/components/admin/AdminResourceIdSettings";
 import { FormTemplateManagement } from "@/components/admin/FormTemplateManagement";
 import { GlobalFieldConfigManagement } from "@/components/admin/GlobalFieldConfigManagement";
-import { GlobalUseCaseManagement } from "@/components/admin/GlobalUseCaseManagement";
+import { IndustryManagement } from "@/components/admin/IndustryManagement";
 import { Key } from "lucide-react";
 
 // Icon mapping for verification types
