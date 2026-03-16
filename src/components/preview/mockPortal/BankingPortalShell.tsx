@@ -217,14 +217,15 @@ export function BankingPortalShell({
 
         {/* Page Content */}
         {activePage === 'dashboard' && (
-          <BankingDashboard userName={userName} accentColor={accentColor} />
+          <BankingDashboard userName={userName} accentColor={accentColor} portalConfig={config} />
         )}
         {activePage === 'settings' && (
           <BankingSettings
             userName={userName}
             userEmail={userEmail}
-            userPhone="(555) 867-5309"
+            userPhone={config.userPhone || '(555) 867-5309'}
             accentColor={accentColor}
+            portalConfig={config}
             onTriggerVerification={handleTriggerVerification}
           />
         )}
