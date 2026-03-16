@@ -116,7 +116,7 @@ export function BankingDashboard({ userName, accentColor, portalConfig }: Bankin
 
         {transactions.map((tx, i) => (
           <div
-            key={tx.id}
+            key={tx.merchant + i}
             style={{
               padding: '14px 20px',
               display: 'flex',
