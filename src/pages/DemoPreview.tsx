@@ -43,6 +43,7 @@ export default function DemoPreview() {
   const { isAdmin, isLoading: authLoading } = useAuth();
   const { data: demo, isLoading, error } = useDemoBySlug(slug || "");
   const { data: links = [] } = useDemoUseCaseLinks(demo?.id);
+  const { data: allIndustries = [] } = useIndustries();
   const formRef = useRef<HTMLDivElement>(null);
   const [selectedUseCase, setSelectedUseCase] = useState<ResolvedUseCase | null>(null);
   const [portalUser, setPortalUser] = useState<{ email: string; profileData?: Record<string, unknown> } | null>(null);
