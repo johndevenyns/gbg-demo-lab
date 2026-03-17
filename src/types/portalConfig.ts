@@ -27,18 +27,49 @@ export interface PortalVerificationTrigger {
   enabled: boolean;
 }
 
+// ── Pharmacy-specific types ──
+
+export interface PharmacyPrescription {
+  name: string;
+  dosage: string;
+  prescriber: string;
+  refillsLeft: number;
+  nextRefillDate: string;
+  status: 'active' | 'expired' | 'pending';
+  rxNumber: string;
+  icon: string;
+}
+
+export interface PharmacyOrder {
+  orderId: string;
+  items: string[];
+  status: 'processing' | 'ready' | 'picked_up' | 'shipped';
+  date: string;
+  pickupLocation?: string;
+  estimatedReady?: string;
+}
+
 export interface PortalConfig {
-  // Branding
-  bankName?: string;
+  // Branding (shared)
+  bankName?: string;       // also used as generic "portal name"
+  pharmacyName?: string;
   accentColor?: string;
   userName?: string;
   userEmail?: string;
   userPhone?: string;
 
-  // Dashboard content
+  // Banking dashboard content
   accounts?: PortalAccount[];
   transactions?: PortalTransaction[];
   quickActions?: PortalQuickAction[];
+
+  // Pharmacy dashboard content
+  prescriptions?: PharmacyPrescription[];
+  orders?: PharmacyOrder[];
+  pharmacyQuickActions?: PortalQuickAction[];
+  insuranceProvider?: string;
+  insuranceMemberId?: string;
+  preferredStore?: string;
 
   // Settings — which actions trigger IDV
   verificationTriggers?: PortalVerificationTrigger[];
@@ -82,5 +113,48 @@ export const DEFAULT_BANKING_CONFIG: PortalConfig = {
     { action: 'change your phone number', label: 'Change Phone', enabled: true },
     { action: 'change your password', label: 'Change Password', enabled: true },
     { action: 'update two-factor authentication', label: 'Update 2FA', enabled: true },
+  ],
+};
+
+export const DEFAULT_PHARMACY_CONFIG: PortalConfig = {
+  pharmacyName: 'Demo Pharmacy',
+  accentColor: '#DC2626',
+  userName: 'Jane Cooper',
+  userEmail: 'jane.cooper@email.com',
+  userPhone: '(555) 867-5309',
+  insuranceProvider: 'BlueCross BlueShield',
+  insuranceMemberId: 'BCB-9284751',
+  preferredStore: '1234 Main St, Anytown, USA',
+
+  prescriptions: [
+    { name: 'Lisinopril', dosage: '10mg · 1 tablet daily', prescriber: 'Dr. Sarah Chen', refillsLeft: 3, nextRefillDate: 'Mar 28', status: 'active', rxNumber: 'RX-7849231', icon: '💊' },
+    { name: 'Metformin', dosage: '500mg · 2 tablets daily', prescriber: 'Dr. Sarah Chen', refillsLeft: 5, nextRefillDate: 'Apr 2', status: 'active', rxNumber: 'RX-7849232', icon: '💊' },
+    { name: 'Atorvastatin', dosage: '20mg · 1 tablet at bedtime', prescriber: 'Dr. James Park', refillsLeft: 1, nextRefillDate: 'Mar 22', status: 'active', rxNumber: 'RX-6512098', icon: '💊' },
+    { name: 'Amoxicillin', dosage: '500mg · 3x daily for 10 days', prescriber: 'Dr. Sarah Chen', refillsLeft: 0, nextRefillDate: '—', status: 'expired', rxNumber: 'RX-5928374', icon: '🧪' },
+    { name: 'Omeprazole', dosage: '20mg · 1 capsule daily', prescriber: 'Dr. James Park', refillsLeft: 2, nextRefillDate: 'Pending approval', status: 'pending', rxNumber: 'RX-8103947', icon: '💊' },
+  ],
+
+  orders: [
+    { orderId: 'ORD-48291', items: ['Lisinopril 10mg', 'Metformin 500mg'], status: 'ready', date: 'Today', pickupLocation: '1234 Main St', estimatedReady: 'Ready now' },
+    { orderId: 'ORD-48285', items: ['Atorvastatin 20mg'], status: 'processing', date: 'Today', pickupLocation: '1234 Main St', estimatedReady: '~2:30 PM' },
+    { orderId: 'ORD-48102', items: ['Amoxicillin 500mg', 'Ibuprofen 200mg'], status: 'picked_up', date: 'Mar 10' },
+    { orderId: 'ORD-47998', items: ['Omeprazole 20mg'], status: 'shipped', date: 'Mar 8' },
+  ],
+
+  pharmacyQuickActions: [
+    { label: 'Refill Rx', icon: '💊', color: '#DC2626' },
+    { label: 'Transfer Rx', icon: '↗️', color: '#7C3AED' },
+    { label: 'Find Store', icon: '📍', color: '#059669' },
+    { label: 'Chat', icon: '💬', color: '#2563EB' },
+  ],
+
+  verificationTriggers: [
+    { action: 'change your name', label: 'Change Name', enabled: true },
+    { action: 'change your email address', label: 'Change Email', enabled: true },
+    { action: 'change your phone number', label: 'Change Phone', enabled: true },
+    { action: 'change your password', label: 'Change Password', enabled: true },
+    { action: 'update two-factor authentication', label: 'Update 2FA', enabled: true },
+    { action: 'update your insurance information', label: 'Update Insurance', enabled: true },
+    { action: 'add a new authorized pickup person', label: 'Add Pickup Person', enabled: true },
   ],
 };
