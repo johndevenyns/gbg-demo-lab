@@ -693,6 +693,33 @@ export function FormStepCard({
                 </SortableContext>
               )}
               
+              {/* Login Destination Config */}
+              {step.submitAction === 'login' && (
+                <div className="mt-4 pt-4 border-t border-border">
+                  <div className="flex items-center gap-3">
+                    <LogIn className="w-4 h-4 text-muted-foreground shrink-0" />
+                    <Label className="text-sm font-medium shrink-0">After successful login:</Label>
+                    <Select
+                      value={step.loginDestination || 'next_step'}
+                      onValueChange={(value) => onUpdateStep({ loginDestination: value as 'next_step' | 'portal' })}
+                    >
+                      <SelectTrigger className="h-8 w-[200px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="next_step">Go to next step</SelectItem>
+                        <SelectItem value="portal">Go to account portal</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {step.loginDestination === 'portal' && (
+                    <p className="text-xs text-muted-foreground mt-2 ml-7">
+                      User will be taken directly to the industry portal dashboard after logging in.
+                    </p>
+                  )}
+                </div>
+              )}
+
               {/* Step Actions Configuration */}
               <div className="mt-4 pt-4 border-t border-border">
                 <StepActionsConfig
