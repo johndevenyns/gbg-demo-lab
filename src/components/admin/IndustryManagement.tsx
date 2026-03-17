@@ -29,6 +29,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { PortalPreviewDialog } from './PortalPreviewDialog';
 import { PortalConfig, DEFAULT_BANKING_CONFIG } from '@/types/portalConfig';
+import { CreateIndustryWizard } from './CreateIndustryWizard';
 
 const ICON_MAP: Record<string, React.ElementType> = {
   Building2, Landmark, Car, ShoppingBag, Shield, Heart, Package,
