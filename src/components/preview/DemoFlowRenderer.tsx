@@ -1058,6 +1058,7 @@ export function DemoFlowRenderer({
       const profileData = (data.profile_data && typeof data.profile_data === 'object' && !Array.isArray(data.profile_data))
         ? data.profile_data as Record<string, unknown>
         : undefined;
+      lastLoginUserData.current = profileData;
       onLoginSuccess?.({ email: data.email, profileData });
 
       setIsLoading(false);
