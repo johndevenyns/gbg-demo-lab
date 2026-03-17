@@ -16,6 +16,10 @@ interface PortalPreviewDialogProps {
     accentColor?: string;
     logoUrl?: string;
   };
+  /** Override the user name displayed in the portal */
+  userNameOverride?: string;
+  /** Override the user email displayed in the portal */
+  userEmailOverride?: string;
 }
 
 export function PortalPreviewDialog({
