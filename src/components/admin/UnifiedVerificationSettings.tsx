@@ -173,6 +173,8 @@ function VerificationTypeCard({ type, onUpdate, isMdl, mdlProviders, onUpdatePro
   const [isOpen, setIsOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editValues, setEditValues] = useState({ displayName: type.displayName, description: type.description || '' });
+  const [globalResourceId, setGlobalResourceId] = useState(type.defaultResourceId || '');
+  const globalResourceIdChanged = globalResourceId !== (type.defaultResourceId || '');
 
   const handleSave = () => {
     onUpdate({ displayName: editValues.displayName, description: editValues.description });
