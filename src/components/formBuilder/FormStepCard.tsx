@@ -693,6 +693,32 @@ export function FormStepCard({
                 </SortableContext>
               )}
               
+              {/* Submit Action Config */}
+              <div className="mt-4 pt-4 border-t border-border">
+                <div className="flex items-center gap-3">
+                  <Send className="w-4 h-4 text-muted-foreground shrink-0" />
+                  <Label className="text-sm font-medium shrink-0">Step action:</Label>
+                  <Select
+                    value={step.submitAction || 'none'}
+                    onValueChange={(value) => onUpdateStep({ 
+                      submitAction: value === 'none' ? undefined : value as FormStep['submitAction'],
+                      // Reset loginDestination when changing away from login
+                      ...(value !== 'login' ? { loginDestination: undefined } : {})
+                    })}
+                  >
+                    <SelectTrigger className="h-8 w-[200px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">None (standard)</SelectItem>
+                      <SelectItem value="login">Log in to account</SelectItem>
+                      <SelectItem value="register">Register account</SelectItem>
+                      <SelectItem value="validate_code">Validate code</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
               {/* Login Destination Config */}
               {step.submitAction === 'login' && (
                 <div className="mt-4 pt-4 border-t border-border">
