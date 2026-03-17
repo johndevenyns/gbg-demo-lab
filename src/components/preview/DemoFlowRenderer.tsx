@@ -2462,7 +2462,15 @@ export function DemoFlowRenderer({
 
   // Handle result page button clicks
   const handleResultButtonClick = (isSuccess: boolean) => {
-    const url = isSuccess ? (approvedUrl || successPageConfig?.buttonUrl) : (rejectedUrl || failurePageConfig?.buttonUrl);
+    const config = isSuccess ? successPageConfig : failurePageConfig;
+    
+    // Check if this button should navigate to portal
+    if (config?.buttonAction === 'portal') {
+      onNavigateToPortal?.();
+      return;
+    }
+    
+    const url = isSuccess ? (approvedUrl || config?.buttonUrl) : (rejectedUrl || config?.buttonUrl);
     if (url) {
       window.location.href = url;
     }

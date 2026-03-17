@@ -10,6 +10,8 @@ import {
   getBorderRadius
 } from '@/lib/formStyleUtils';
 
+export type ResultButtonAction = 'url' | 'portal';
+
 export interface ResultPageConfig {
   type: 'success' | 'failure';
   title: string;
@@ -17,6 +19,7 @@ export interface ResultPageConfig {
   message?: string;
   showIcon?: boolean;
   buttonText?: string;
+  buttonAction?: ResultButtonAction;
   buttonUrl?: string;
   showReferenceId?: boolean;
   referenceId?: string;
