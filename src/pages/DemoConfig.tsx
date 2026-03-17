@@ -312,7 +312,7 @@ export default function DemoConfig() {
       case 'preview':
         return <FormPreviewPanel demo={localDemo} />;
       default:
-        return <SiteSettingsSection demo={localDemo} onUpdate={handleUpdate} />;
+        return <SiteSettingsSection demo={localDemo} onUpdate={handleUpdate} portalTypes={portalTypes} />;
     }
   };
 
