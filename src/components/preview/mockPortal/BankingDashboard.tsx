@@ -12,6 +12,21 @@ export function BankingDashboard({ userName, accentColor, portalConfig }: Bankin
   const accounts = config.accounts || DEFAULT_BANKING_CONFIG.accounts!;
   const transactions = config.transactions || DEFAULT_BANKING_CONFIG.transactions!;
   const quickActions = config.quickActions || DEFAULT_BANKING_CONFIG.quickActions!;
+
+  // Determine if accent color is light → use dark text
+  const isLightAccent = useMemo(() => {
+    const hex = accentColor.replace('#', '');
+    if (hex.length < 6) return false;
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    return luminance > 0.55;
+  }, [accentColor]);
+
+  const primaryCardTextColor = isLightAccent ? '#0F172A' : '#FFFFFF';
+  const primaryCardSubTextOpacity = isLightAccent ? 0.7 : 0.85;
+
   const greeting = useMemo(() => {
     const hour = new Date().getHours();
     if (hour < 12) return 'Good morning';
