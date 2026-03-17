@@ -1,10 +1,11 @@
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Save, Eye, Loader2, Settings, Globe, Palette, PlayCircle, Calendar, User, PanelLeftClose, PanelLeft, Copy, ExternalLink, Briefcase, Users } from "lucide-react";
+import { ArrowLeft, Save, Eye, Loader2, Settings, Globe, Palette, PlayCircle, Calendar, User, PanelLeftClose, PanelLeft, Copy, ExternalLink, Briefcase, Users, Monitor } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useDemo, useUpdateDemo } from "@/hooks/useDemos";
 import { DemoEnvironment } from "@/types/demo";
 import { FormStyleConfig, DEFAULT_FORM_STYLE } from "@/types/formStyle";
@@ -16,6 +17,7 @@ import { SiteMirrorCard } from "@/components/admin/SiteMirrorCard";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { UseCaseSection } from "@/components/admin/UseCaseSection";
 import { useDemoUseCaseLinks } from "@/hooks/useUseCases";
+import { useEnabledPortalTypes } from "@/hooks/usePortalTypes";
 
  // Lazy import FormStyleCard to pass into SiteMirrorCard
  import { FormStyleCard } from "@/components/admin/FormStyleCard";
