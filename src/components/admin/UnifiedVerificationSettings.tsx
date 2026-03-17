@@ -173,6 +173,8 @@ function VerificationTypeCard({ type, onUpdate, isMdl, mdlProviders, onUpdatePro
   const [isOpen, setIsOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editValues, setEditValues] = useState({ displayName: type.displayName, description: type.description || '' });
+  const [globalResourceId, setGlobalResourceId] = useState(type.defaultResourceId || '');
+  const globalResourceIdChanged = globalResourceId !== (type.defaultResourceId || '');
 
   const handleSave = () => {
     onUpdate({ displayName: editValues.displayName, description: editValues.description });
@@ -247,6 +249,34 @@ function VerificationTypeCard({ type, onUpdate, isMdl, mdlProviders, onUpdatePro
         </CardContent>
 
         <CollapsibleContent>
+          {/* Global Resource ID (global admin only) */}
+          {isGlobalAdmin && (
+            <div className="px-6 pb-4">
+              <Separator className="mb-4" />
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Global Default Resource ID</Label>
+                <p className="text-xs text-muted-foreground">
+                  This Resource ID will be used for all demos unless overridden at the admin or customer level.
+                </p>
+                <div className="flex items-end gap-2">
+                  <Input
+                    value={globalResourceId}
+                    onChange={(e) => setGlobalResourceId(e.target.value)}
+                    placeholder="Enter global resource ID..."
+                    className="font-mono text-sm flex-1"
+                  />
+                  <Button
+                    size="sm"
+                    onClick={() => onUpdate({ defaultResourceId: globalResourceId.trim() || null })}
+                    disabled={!globalResourceIdChanged}
+                  >
+                    <Save className="w-4 h-4 mr-1" />Save
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* mDL Providers subsection */}
           {isMdl && isGlobalAdmin && (
             <div className="px-6 pb-6">
@@ -322,6 +352,7 @@ export function UnifiedVerificationSettings({ isGlobalAdmin }: { isGlobalAdmin: 
       displayName: updates.displayName,
       description: updates.description || undefined,
       isEnabled: updates.isEnabled,
+      defaultResourceId: updates.defaultResourceId !== undefined ? updates.defaultResourceId : undefined,
     }});
   };
 
