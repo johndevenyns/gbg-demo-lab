@@ -16,6 +16,8 @@ import {
 import {
   usePortalTypes, useCreatePortalType, useUpdatePortalType, useDeletePortalType, PortalType,
 } from "@/hooks/usePortalTypes";
+import { useAuth } from "@/hooks/useAuth";
+import { PortalPreviewDialog } from "./PortalPreviewDialog";
 import * as LucideIcons from "lucide-react";
 
 function PortalTypeCard({ pt, onUpdate, onDelete }: {
