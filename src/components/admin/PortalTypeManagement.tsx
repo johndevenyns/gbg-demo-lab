@@ -106,8 +106,16 @@ export function PortalTypeManagement() {
   const createMutation = useCreatePortalType();
   const updateMutation = useUpdatePortalType();
   const deleteMutation = useDeletePortalType();
+  const { user } = useAuth();
   const [addOpen, setAddOpen] = useState(false);
   const [newType, setNewType] = useState({ typeKey: '', displayName: '', description: '' });
+  const [previewType, setPreviewType] = useState<string | null>(null);
+
+  // Derive admin user's display name from email
+  const adminName = user?.email
+    ? user.email.split('@')[0].replace(/[._-]/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+    : 'Admin User';
+  const adminEmail = user?.email || 'admin@demo.com';
 
   const handleAdd = () => {
     if (!newType.typeKey || !newType.displayName) return;
@@ -136,10 +144,23 @@ export function PortalTypeManagement() {
               pt={pt}
               onUpdate={updates => updateMutation.mutate({ id: pt.id, updates })}
               onDelete={() => deleteMutation.mutate(pt.id)}
+              onPreview={() => setPreviewType(pt.typeKey)}
             />
           ))}
         </div>
       )}
+
+      {/* Portal Preview Dialog */}
+      <PortalPreviewDialog
+        open={!!previewType}
+        onOpenChange={(open) => { if (!open) setPreviewType(null); }}
+        portalType={previewType || 'none'}
+        brandingOverrides={{
+          bankName: 'Demo Bank',
+        }}
+        userNameOverride={adminName}
+        userEmailOverride={adminEmail}
+      />
 
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
         <DialogContent className="max-w-md">
