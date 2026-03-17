@@ -388,14 +388,6 @@ export function IndustryManagement() {
                               >
                                 <Eye className="w-3 h-3" /> Preview Portal
                               </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="h-7 text-xs gap-1"
-                                onClick={() => setPortalConfigIndustryId(ind.id)}
-                              >
-                                <Settings className="w-3 h-3" /> Configure Content
-                              </Button>
                             </div>
                           )}
                         </div>
