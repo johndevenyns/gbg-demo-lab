@@ -76,7 +76,7 @@ export default function DemoPreview() {
           portalType: demoPortalType,
         };
       });
-  }, [links, industryPortalType]);
+  }, [links, demoPortalType]);
 
   const hasUseCases = resolvedUseCases.length > 0;
 
