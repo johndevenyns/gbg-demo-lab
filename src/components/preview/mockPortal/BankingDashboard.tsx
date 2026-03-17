@@ -38,7 +38,7 @@ export function BankingDashboard({ userName, accentColor, portalConfig }: Bankin
         {accounts.map((acct, i) => (
           <div key={i} style={{
             background: acct.variant === 'primary'
-              ? `linear-gradient(135deg, ${accentColor}, ${accentColor}dd)`
+              ? `linear-gradient(135deg, ${accentColor}, ${accentColor})`
               : 'linear-gradient(135deg, #1E293B, #334155)',
             borderRadius: '16px',
             padding: '24px',
