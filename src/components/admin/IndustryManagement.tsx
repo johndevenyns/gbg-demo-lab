@@ -64,7 +64,7 @@ export function IndustryManagement() {
   const [newUseCase, setNewUseCase] = useState({ title: '', description: '' });
   const [templates, setTemplates] = useState<FormTemplateOption[]>([]);
   const [previewIndustryId, setPreviewIndustryId] = useState<string | null>(null);
-  const [portalConfigIndustryId, setPortalConfigIndustryId] = useState<string | null>(null);
+  
 
   useEffect(() => {
     const load = async () => {
