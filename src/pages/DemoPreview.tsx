@@ -53,6 +53,12 @@ export default function DemoPreview() {
   // Get portal type directly from the demo
   const demoPortalType = demo?.portalType || 'none';
 
+  // Resolve the industry for portal config (content/settings)
+  const demoIndustry = useMemo(() => {
+    if (!demo?.industryId) return null;
+    return allIndustries.find(i => i.id === demo.industryId) ?? null;
+  }, [demo?.industryId, allIndustries]);
+
   // Resolve use cases: merge global defaults with demo overrides
   const resolvedUseCases = useMemo((): ResolvedUseCase[] => {
     return links
