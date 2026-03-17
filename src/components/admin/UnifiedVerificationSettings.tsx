@@ -244,6 +244,11 @@ function VerificationTypeCard({ type, onUpdate, isMdl, mdlProviders, onUpdatePro
                 {type.supportsQrCode && <Badge variant="outline" className="text-xs">QR Code</Badge>}
                 {isMdl && <Badge variant="outline" className="text-xs">{mdlProviders.length} provider{mdlProviders.length !== 1 ? 's' : ''}</Badge>}
               </div>
+              {type.defaultResourceId && (
+                <p className="text-xs text-muted-foreground font-mono mt-2">
+                  Global ID: {type.defaultResourceId}
+                </p>
+              )}
             </>
           )}
         </CardContent>
