@@ -29,6 +29,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { PortalPreviewDialog } from './PortalPreviewDialog';
 import { PortalConfig, DEFAULT_BANKING_CONFIG } from '@/types/portalConfig';
+import { CreateIndustryWizard } from './CreateIndustryWizard';
 
 const ICON_MAP: Record<string, React.ElementType> = {
   Building2, Landmark, Car, ShoppingBag, Shield, Heart, Package,
@@ -60,7 +61,6 @@ export function IndustryManagement() {
   const [createUseCaseIndustryId, setCreateUseCaseIndustryId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleteType, setDeleteType] = useState<'industry' | 'usecase'>('industry');
-  const [newIndustry, setNewIndustry] = useState({ title: '', description: '', portalType: 'none' });
   const [newUseCase, setNewUseCase] = useState({ title: '', description: '' });
   const [templates, setTemplates] = useState<FormTemplateOption[]>([]);
   const [previewIndustryId, setPreviewIndustryId] = useState<string | null>(null);
@@ -82,18 +82,39 @@ export function IndustryManagement() {
 
   const unassignedUseCases = allUseCases.filter(uc => !uc.industryId);
 
-  const handleCreateIndustry = () => {
+  const handleCreateIndustry = (data: {
+    title: string;
+    description: string;
+    iconName: string;
+    portalType: string;
+    useCases: Array<{ title: string; description: string; defaultFormSteps: Record<string, unknown>[]; defaultVerificationType: string; pageContent: any; showFillPass: boolean; showFillFail: boolean; isEnabled: boolean }>;
+  }) => {
     createIndustry.mutate({
-      title: newIndustry.title,
-      description: newIndustry.description || undefined,
-      iconName: 'Building2',
-      portalType: newIndustry.portalType,
+      title: data.title,
+      description: data.description || undefined,
+      iconName: data.iconName,
+      portalType: data.portalType,
       displayOrder: industries.length,
       isEnabled: true,
     }, {
-      onSuccess: () => {
+      onSuccess: (newIndustry) => {
+        // Create use cases for this industry
+        data.useCases.forEach((uc, idx) => {
+          createUseCase.mutate({
+            title: uc.title,
+            description: uc.description || undefined,
+            iconName: 'Package',
+            industryId: newIndustry.id,
+            defaultFormSteps: uc.defaultFormSteps,
+            defaultVerificationType: uc.defaultVerificationType,
+            defaultPageContent: uc.pageContent as any,
+            showFillPass: uc.showFillPass,
+            showFillFail: uc.showFillFail,
+            displayOrder: idx,
+            isEnabled: uc.isEnabled,
+          });
+        });
         setCreateOpen(false);
-        setNewIndustry({ title: '', description: '', portalType: 'none' });
       },
     });
   };
@@ -528,54 +549,13 @@ export function IndustryManagement() {
         </CardContent>
       </Card>
 
-      {/* Create Industry Dialog */}
-      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Create Industry</DialogTitle>
-            <DialogDescription>Define a new industry vertical.</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label>Title</Label>
-              <Input
-                value={newIndustry.title}
-                onChange={(e) => setNewIndustry(prev => ({ ...prev, title: e.target.value }))}
-                placeholder="e.g., Telecommunications"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Description</Label>
-              <Textarea
-                value={newIndustry.description}
-                onChange={(e) => setNewIndustry(prev => ({ ...prev, description: e.target.value }))}
-                placeholder="Brief description"
-                rows={2}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Portal Type</Label>
-              <Select
-                value={newIndustry.portalType}
-                onValueChange={(val) => setNewIndustry(prev => ({ ...prev, portalType: val }))}
-              >
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {PORTAL_TYPE_OPTIONS.map(opt => (
-                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setCreateOpen(false)}>Cancel</Button>
-            <Button onClick={handleCreateIndustry} disabled={!newIndustry.title || createIndustry.isPending}>
-              Create
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Create Industry Wizard */}
+      <CreateIndustryWizard
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        onComplete={handleCreateIndustry}
+        existingIndustryCount={industries.length}
+      />
 
       {/* Create Use Case Dialog */}
       <Dialog open={!!createUseCaseIndustryId} onOpenChange={(open) => !open && setCreateUseCaseIndustryId(null)}>
