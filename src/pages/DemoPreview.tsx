@@ -322,6 +322,7 @@ export default function DemoPreview() {
             logoUrl={demo.useUploadedLogo ? demo.uploadedLogoUrl : demo.logoUrl}
             bankName={demo.customerName}
             portalConfig={demoIndustry?.portalConfig}
+            branding={portalBranding}
             onTriggerVerification={handlePortalVerification}
             onLogout={handlePortalLogout}
           />
