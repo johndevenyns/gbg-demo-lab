@@ -1,4 +1,4 @@
-import { CheckCircle2, XCircle, ExternalLink, ArrowRight } from 'lucide-react';
+import { CheckCircle2, XCircle, ExternalLink, ArrowRight, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { FormStyleConfig, DEFAULT_FORM_STYLE } from '@/types/formStyle';
 import { 
