@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { PortalConfig } from "@/types/portalConfig";
 
 export interface PortalType {
   id: string;
@@ -10,6 +11,7 @@ export interface PortalType {
   iconName: string;
   isEnabled: boolean;
   displayOrder: number;
+  defaultConfig?: PortalConfig;
   createdAt: string;
   updatedAt: string;
 }
@@ -22,6 +24,7 @@ const rowToPortalType = (row: any): PortalType => ({
   iconName: row.icon_name || 'Monitor',
   isEnabled: row.is_enabled,
   displayOrder: row.display_order,
+  defaultConfig: row.default_config || undefined,
   createdAt: row.created_at,
   updatedAt: row.updated_at,
 });
@@ -83,13 +86,14 @@ export function useCreatePortalType() {
 export function useUpdatePortalType() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, updates }: { id: string; updates: Partial<{ displayName: string; description: string; iconName: string; isEnabled: boolean; displayOrder: number }> }) => {
+    mutationFn: async ({ id, updates }: { id: string; updates: Partial<{ displayName: string; description: string; iconName: string; isEnabled: boolean; displayOrder: number; defaultConfig: PortalConfig }> }) => {
       const row: Record<string, any> = {};
       if (updates.displayName !== undefined) row.display_name = updates.displayName;
       if (updates.description !== undefined) row.description = updates.description;
       if (updates.iconName !== undefined) row.icon_name = updates.iconName;
       if (updates.isEnabled !== undefined) row.is_enabled = updates.isEnabled;
       if (updates.displayOrder !== undefined) row.display_order = updates.displayOrder;
+      if (updates.defaultConfig !== undefined) row.default_config = updates.defaultConfig;
       const { error } = await supabase.from('portal_types' as any).update(row).eq('id', id);
       if (error) throw error;
     },

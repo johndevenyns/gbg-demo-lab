@@ -1,0 +1,1 @@
+ALTER TABLE public.portal_types ADD COLUMN IF NOT EXISTS default_config JSONB DEFAULT NULL;
