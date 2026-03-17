@@ -1822,6 +1822,8 @@ export function DemoFlowRenderer({
             const valueToCopy = getApiValue(element.copyField || '');
             navigator.clipboard.writeText(valueToCopy);
             toast.success('Copied to clipboard!');
+          } else if (element.buttonAction === 'portal') {
+            onNavigateToPortal?.();
           }
         };
 
