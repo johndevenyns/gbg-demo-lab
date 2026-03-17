@@ -72,6 +72,7 @@ interface DemoFlowRendererProps {
   // Demo ID for login authentication
   demoId?: string;
   onNavigateToLogin?: () => void;
+  onNavigateToPortal?: () => void;
   onSubmissionLog?: (data: SubmissionLogData) => void;
   onComplete?: (success: boolean, referenceId?: string) => void;
   onLoginSuccess?: (userData: { email: string; profileData?: Record<string, unknown> }) => void;
@@ -634,6 +635,7 @@ export function DemoFlowRenderer({
   resourceIdDataOnly,
   demoId,
   onNavigateToLogin,
+  onNavigateToPortal,
   onSubmissionLog,
   onComplete,
   onLoginSuccess
@@ -1821,6 +1823,8 @@ export function DemoFlowRenderer({
             const valueToCopy = getApiValue(element.copyField || '');
             navigator.clipboard.writeText(valueToCopy);
             toast.success('Copied to clipboard!');
+          } else if (element.buttonAction === 'portal') {
+            onNavigateToPortal?.();
           }
         };
 

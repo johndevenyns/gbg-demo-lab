@@ -320,7 +320,7 @@ export function PageStepConfig({ step, onUpdateStep }: PageStepConfigProps) {
                   <Label className="text-sm">Button Action</Label>
                   <Select
                     value={selectedEl.buttonAction || 'next'}
-                    onValueChange={(v) => updateElement(selectedEl.id, { buttonAction: v as 'next' | 'redirect' | 'copy' })}
+                    onValueChange={(v) => updateElement(selectedEl.id, { buttonAction: v as 'next' | 'redirect' | 'copy' | 'portal' })}
                   >
                     <SelectTrigger className="bg-background">
                       <SelectValue />
@@ -329,6 +329,7 @@ export function PageStepConfig({ step, onUpdateStep }: PageStepConfigProps) {
                       <SelectItem value="next">Go to Next Step</SelectItem>
                       <SelectItem value="redirect">Redirect to URL</SelectItem>
                       <SelectItem value="copy">Copy to Clipboard</SelectItem>
+                      <SelectItem value="portal">Go to Portal</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -353,6 +354,11 @@ export function PageStepConfig({ step, onUpdateStep }: PageStepConfigProps) {
                       className="bg-background"
                     />
                   </div>
+                )}
+                {selectedEl.buttonAction === 'portal' && (
+                  <p className="text-xs text-muted-foreground">
+                    Navigates the user to the industry portal (e.g., Banking Dashboard). The portal type is determined by the demo's industry setting.
+                  </p>
                 )}
               </>
             )}
