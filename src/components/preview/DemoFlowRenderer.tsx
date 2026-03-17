@@ -663,6 +663,7 @@ export function DemoFlowRenderer({
   } | null>(null);
   // State to trigger re-render when session data is set
   const [, forceUpdate] = useState({});
+  const lastLoginUserData = useRef<Record<string, unknown> | undefined>(undefined);
   const pollingRef = useRef<NodeJS.Timeout | null>(null);
 
   // Fetch mDL providers for unified verification step
