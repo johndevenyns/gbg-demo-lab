@@ -1153,7 +1153,10 @@ export function DemoFlowRenderer({
       if (!success) return;
       // If destination is portal, navigate directly to portal instead of next step
       if (currentStep.loginDestination === 'portal') {
-        onNavigateToPortal?.();
+        // Pass the login user data so the portal can use it immediately
+        const email = (formData.email || '').trim().toLowerCase();
+        const profileData = lastLoginUserData.current;
+        onNavigateToPortal?.({ email, profileData });
         return;
       }
       proceedToNextStep();
