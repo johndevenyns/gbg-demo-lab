@@ -352,6 +352,7 @@ export function UnifiedVerificationSettings({ isGlobalAdmin }: { isGlobalAdmin: 
       displayName: updates.displayName,
       description: updates.description || undefined,
       isEnabled: updates.isEnabled,
+      defaultResourceId: updates.defaultResourceId !== undefined ? updates.defaultResourceId : undefined,
     }});
   };
 
