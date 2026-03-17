@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import { PortalConfig, DEFAULT_BANKING_CONFIG } from '@/types/portalConfig';
 
 interface BankingDashboardProps {
@@ -12,6 +12,21 @@ export function BankingDashboard({ userName, accentColor, portalConfig }: Bankin
   const accounts = config.accounts || DEFAULT_BANKING_CONFIG.accounts!;
   const transactions = config.transactions || DEFAULT_BANKING_CONFIG.transactions!;
   const quickActions = config.quickActions || DEFAULT_BANKING_CONFIG.quickActions!;
+
+  // Determine if accent color is light → use dark text
+  const isLightAccent = useMemo(() => {
+    const hex = accentColor.replace('#', '');
+    if (hex.length < 6) return false;
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    return luminance > 0.55;
+  }, [accentColor]);
+
+  const primaryCardTextColor = isLightAccent ? '#0F172A' : '#FFFFFF';
+  const primaryCardSubTextOpacity = isLightAccent ? 0.7 : 0.85;
+
   const greeting = useMemo(() => {
     const hour = new Date().getHours();
     if (hour < 12) return 'Good morning';
@@ -42,7 +57,7 @@ export function BankingDashboard({ userName, accentColor, portalConfig }: Bankin
               : 'linear-gradient(135deg, #1E293B, #334155)',
             borderRadius: '16px',
             padding: '24px',
-            color: 'white',
+            color: acct.variant === 'primary' ? primaryCardTextColor : 'white',
             position: 'relative',
             overflow: 'hidden',
           }}>
@@ -50,7 +65,7 @@ export function BankingDashboard({ userName, accentColor, portalConfig }: Bankin
               position: 'absolute', top: '-20px', right: '-20px', width: '100px', height: '100px',
               borderRadius: '50%', background: `rgba(255,255,255,${acct.variant === 'primary' ? '0.1' : '0.05'})`,
             }} />
-            <p style={{ fontSize: '13px', opacity: 0.85, margin: 0, letterSpacing: '0.5px', textTransform: 'uppercase' }}>
+            <p style={{ fontSize: '13px', opacity: acct.variant === 'primary' ? primaryCardSubTextOpacity : 0.85, margin: 0, letterSpacing: '0.5px', textTransform: 'uppercase' }}>
               {acct.name}
             </p>
             <p style={{ fontSize: '32px', fontWeight: 700, margin: '8px 0 4px', fontFamily: 'SF Mono, monospace' }}>
