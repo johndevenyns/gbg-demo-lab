@@ -70,6 +70,7 @@ export type Database = {
           mirror_screenshot_css: string | null
           mirror_screenshot_footer_html: string | null
           mirror_screenshot_header_html: string | null
+          portal_type: string | null
           reference_id_prefix: string | null
           rejected_url: string | null
           resource_id: string | null
@@ -115,6 +116,7 @@ export type Database = {
           mirror_screenshot_css?: string | null
           mirror_screenshot_footer_html?: string | null
           mirror_screenshot_header_html?: string | null
+          portal_type?: string | null
           reference_id_prefix?: string | null
           rejected_url?: string | null
           resource_id?: string | null
@@ -160,6 +162,7 @@ export type Database = {
           mirror_screenshot_css?: string | null
           mirror_screenshot_footer_html?: string | null
           mirror_screenshot_header_html?: string | null
+          portal_type?: string | null
           reference_id_prefix?: string | null
           rejected_url?: string | null
           resource_id?: string | null
@@ -530,6 +533,42 @@ export type Database = {
           logo_url?: string | null
           provider_key?: string
           scope?: string[] | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      portal_types: {
+        Row: {
+          created_at: string
+          description: string | null
+          display_name: string
+          display_order: number
+          icon_name: string | null
+          id: string
+          is_enabled: boolean
+          type_key: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          display_name: string
+          display_order?: number
+          icon_name?: string | null
+          id?: string
+          is_enabled?: boolean
+          type_key: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          display_name?: string
+          display_order?: number
+          icon_name?: string | null
+          id?: string
+          is_enabled?: boolean
+          type_key?: string
           updated_at?: string
         }
         Relationships: []

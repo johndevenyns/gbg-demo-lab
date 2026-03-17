@@ -1,10 +1,11 @@
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Save, Eye, Loader2, Settings, Globe, Palette, PlayCircle, Calendar, User, PanelLeftClose, PanelLeft, Copy, ExternalLink, Briefcase, Users } from "lucide-react";
+import { ArrowLeft, Save, Eye, Loader2, Settings, Globe, Palette, PlayCircle, Calendar, User, PanelLeftClose, PanelLeft, Copy, ExternalLink, Briefcase, Users, Monitor } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useDemo, useUpdateDemo } from "@/hooks/useDemos";
 import { DemoEnvironment } from "@/types/demo";
 import { FormStyleConfig, DEFAULT_FORM_STYLE } from "@/types/formStyle";
@@ -16,6 +17,7 @@ import { SiteMirrorCard } from "@/components/admin/SiteMirrorCard";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { UseCaseSection } from "@/components/admin/UseCaseSection";
 import { useDemoUseCaseLinks } from "@/hooks/useUseCases";
+import { useEnabledPortalTypes } from "@/hooks/usePortalTypes";
 
  // Lazy import FormStyleCard to pass into SiteMirrorCard
  import { FormStyleCard } from "@/components/admin/FormStyleCard";
@@ -38,7 +40,7 @@ const sections: { id: ConfigSection; label: string; icon: React.ElementType; des
 ];
 
 // Site Settings Section
-function SiteSettingsSection({ demo, onUpdate }: { demo: DemoEnvironment; onUpdate: (updates: Partial<DemoEnvironment>) => void }) {
+function SiteSettingsSection({ demo, onUpdate, portalTypes }: { demo: DemoEnvironment; onUpdate: (updates: Partial<DemoEnvironment>) => void; portalTypes: { typeKey: string; displayName: string; description?: string }[] }) {
   const { toast } = useToast();
   const formatDate = (dateStr?: string) => {
     if (!dateStr) return 'Unknown';
@@ -90,6 +92,31 @@ function SiteSettingsSection({ demo, onUpdate }: { demo: DemoEnvironment; onUpda
                 <ExternalLink className="w-4 h-4" />
               </Button>
             </div>
+          </div>
+          <div className="md:col-span-2 space-y-2">
+            <Label>Portal Type</Label>
+            <p className="text-xs text-muted-foreground">Choose whether this demo includes a simulated portal for logged-in users</p>
+            <Select value={demo.portalType || 'none'} onValueChange={(v) => onUpdate({ portalType: v })}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">
+                  <div className="flex items-center gap-2">
+                    <span>No Portal</span>
+                    <span className="text-muted-foreground text-xs">— Verification landing pages only</span>
+                  </div>
+                </SelectItem>
+                {portalTypes.map(pt => (
+                  <SelectItem key={pt.typeKey} value={pt.typeKey}>
+                    <div className="flex items-center gap-2">
+                      <span>{pt.displayName}</span>
+                      {pt.description && <span className="text-muted-foreground text-xs">— {pt.description}</span>}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </CardContent>
       </Card>
@@ -181,6 +208,7 @@ export default function DemoConfig() {
   const { data: demo, isLoading, error } = useDemo(id || "");
   const updateDemoMutation = useUpdateDemo();
   const { data: useCaseLinks = [] } = useDemoUseCaseLinks(id);
+  const { data: portalTypes = [] } = useEnabledPortalTypes();
   
   // Per-user localStorage key for sidebar state
   const sidebarKey = user?.id ? `demoConfigSidebarCollapsed_${user.id}` : 'demoConfigSidebarCollapsed';
@@ -258,7 +286,7 @@ export default function DemoConfig() {
   const renderSection = () => {
     switch (activeSection) {
       case 'settings':
-        return <SiteSettingsSection demo={localDemo} onUpdate={handleUpdate} />;
+        return <SiteSettingsSection demo={localDemo} onUpdate={handleUpdate} portalTypes={portalTypes} />;
       case 'mirror':
         return (
          <SiteMirrorCard 
@@ -284,7 +312,7 @@ export default function DemoConfig() {
       case 'preview':
         return <FormPreviewPanel demo={localDemo} />;
       default:
-        return <SiteSettingsSection demo={localDemo} onUpdate={handleUpdate} />;
+        return <SiteSettingsSection demo={localDemo} onUpdate={handleUpdate} portalTypes={portalTypes} />;
     }
   };
 

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Check, Globe, ArrowRight, ArrowLeft, Loader2 } from "lucide-react";
+import { Check, Globe, ArrowRight, ArrowLeft, Loader2, Monitor } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,11 +7,13 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { useCreateDemo, useUpdateDemo } from "@/hooks/useDemos";
 import { useGlobalUseCases, useAddDemoUseCaseLink } from "@/hooks/useUseCases";
 import { useIndustries } from "@/hooks/useIndustries";
+import { useEnabledPortalTypes } from "@/hooks/usePortalTypes";
 import { IndustryTemplate } from "@/types/demo";
-import { PORTAL_TYPE_OPTIONS } from "@/types/industry";
 import { scrapingApi } from "@/lib/api/scraping";
 import { formElementStylesToConfig } from "@/lib/formStyleUtils";
 import { cn } from "@/lib/utils";
@@ -23,7 +25,7 @@ interface DemoCreationWizardProps {
   onCreated: (id: string) => void;
 }
 
-type WizardStep = 'details' | 'industry' | 'use-cases' | 'processing';
+type WizardStep = 'details' | 'industry' | 'portal' | 'use-cases' | 'processing';
 
 interface ProcessingTask {
   id: string;
@@ -38,6 +40,7 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
   
   const { data: industries = [], isLoading: loadingIndustries } = useIndustries();
   const { data: globalUseCases = [], isLoading: loadingUseCases } = useGlobalUseCases();
+  const { data: portalTypes = [] } = useEnabledPortalTypes();
   
   const [step, setStep] = useState<WizardStep>('details');
   const [customerName, setCustomerName] = useState("");
@@ -46,6 +49,10 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
   const [selectedIndustryId, setSelectedIndustryId] = useState<string | null>(null);
   const [selectedUseCases, setSelectedUseCases] = useState<string[]>([]);
   const [useCasesInitialized, setUseCasesInitialized] = useState(false);
+  
+  // Portal step state
+  const [hasPortal, setHasPortal] = useState(false);
+  const [selectedPortalType, setSelectedPortalType] = useState<string>('');
   
   const [processingTasks, setProcessingTasks] = useState<ProcessingTask[]>([]);
   const [createdDemoId, setCreatedDemoId] = useState<string | null>(null);
@@ -66,6 +73,20 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
     }
   }, [selectedIndustryId, globalUseCases, useCasesInitialized]);
 
+  // When portal is enabled, ensure login use case is selected
+  useEffect(() => {
+    if (hasPortal && selectedIndustryId && useCasesInitialized) {
+      const loginUseCase = globalUseCases.find(uc => 
+        uc.industryId === selectedIndustryId && 
+        uc.isEnabled &&
+        uc.title.toLowerCase().includes('login')
+      );
+      if (loginUseCase && !selectedUseCases.includes(loginUseCase.id)) {
+        setSelectedUseCases(prev => [loginUseCase.id, ...prev]);
+      }
+    }
+  }, [hasPortal, selectedIndustryId, useCasesInitialized, globalUseCases]);
+
   const resetForm = () => {
     setStep('details');
     setCustomerName("");
@@ -74,6 +95,8 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
     setSelectedIndustryId(null);
     setSelectedUseCases([]);
     setUseCasesInitialized(false);
+    setHasPortal(false);
+    setSelectedPortalType('');
     setProcessingTasks([]);
     setCreatedDemoId(null);
     setProcessingError(null);
@@ -113,10 +136,13 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
       const demo = await createDemo.mutateAsync({ customerName: customerName.trim(), template });
       setCreatedDemoId(demo.id);
 
-      // Set industry_id on the demo
+      // Set industry_id and portal_type on the demo
       await updateDemo.mutateAsync({
         id: demo.id,
-        updates: { industryId: selectedIndustryId } as any,
+        updates: { 
+          industryId: selectedIndustryId,
+          portalType: hasPortal ? selectedPortalType : 'none',
+        } as any,
       });
       updateTaskStatus('create', 'complete');
 
@@ -197,7 +223,7 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
     }
   };
 
-  const stepOrder: WizardStep[] = ['details', 'industry', 'use-cases'];
+  const stepOrder: WizardStep[] = ['details', 'industry', 'portal', 'use-cases'];
 
   const canProceed = () => {
     switch (step) {
@@ -205,6 +231,8 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
         return !!customerName.trim() && (!enableMirroring || !!siteUrl.trim());
       case 'industry':
         return !!selectedIndustryId;
+      case 'portal':
+        return !hasPortal || !!selectedPortalType;
       case 'use-cases':
         return selectedUseCases.length > 0;
       default:
@@ -217,7 +245,6 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
     if (idx < stepOrder.length - 1) {
       const nextStep = stepOrder[idx + 1];
       if (nextStep === 'use-cases') {
-        // Reset use case selection when moving to this step
         setUseCasesInitialized(false);
       }
       setStep(nextStep);
@@ -241,9 +268,15 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
   const stepDescriptions: Record<WizardStep, string> = {
     'details': 'Name the customer and optionally provide their website URL for branding',
     'industry': 'Select the industry vertical for this demo',
+    'portal': 'Choose whether this demo includes a portal experience for logged-in users',
     'use-cases': 'All use cases are pre-selected. Deselect any you don\'t need.',
     'processing': 'Please wait while we configure your demo environment',
   };
+
+  // Find the login use case for the selected industry
+  const loginUseCase = globalUseCases.find(uc => 
+    uc.industryId === selectedIndustryId && uc.isEnabled && uc.title.toLowerCase().includes('login')
+  );
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => {
@@ -334,7 +367,6 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
                   const icons = LucideIcons as unknown as Record<string, React.ComponentType<{ className?: string }>>;
                   const IconComp = icons[ind.iconName] || icons['Building2'];
                   const isSelected = selectedIndustryId === ind.id;
-                  const portalLabel = PORTAL_TYPE_OPTIONS.find(p => p.value === ind.portalType)?.label;
                   const ucCount = globalUseCases.filter(uc => uc.industryId === ind.id && uc.isEnabled).length;
 
                   return (
@@ -362,12 +394,7 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
                       <div className="flex-1">
                         <h4 className="font-medium">{ind.title}</h4>
                         {ind.description && <p className="text-sm text-muted-foreground">{ind.description}</p>}
-                        <div className="flex items-center gap-2 mt-1">
-                          {portalLabel && portalLabel !== 'No Portal' && (
-                            <Badge variant="outline" className="text-[10px]">{portalLabel} Portal</Badge>
-                          )}
-                          <Badge variant="outline" className="text-[10px]">{ucCount} use case{ucCount !== 1 ? 's' : ''}</Badge>
-                        </div>
+                        <Badge variant="outline" className="text-[10px] mt-1">{ucCount} use case{ucCount !== 1 ? 's' : ''}</Badge>
                       </div>
                       {isSelected && <Check className="w-5 h-5 text-primary" />}
                     </button>
@@ -378,12 +405,89 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
           </div>
         )}
 
-        {/* Step 3: Use Cases within selected industry */}
+        {/* Step 3: Portal Selection */}
+        {step === 'portal' && (
+          <div className="py-4 space-y-6">
+            <div className="flex items-center justify-between p-4 border rounded-lg bg-muted/30">
+              <div className="flex items-center gap-3">
+                <Monitor className="w-5 h-5 text-muted-foreground" />
+                <div>
+                  <p className="font-medium">Will this demo have a portal for users to log in?</p>
+                  <p className="text-sm text-muted-foreground">
+                    A portal simulates a logged-in account experience (e.g., banking dashboard)
+                  </p>
+                </div>
+              </div>
+              <Switch
+                checked={hasPortal}
+                onCheckedChange={(checked) => {
+                  setHasPortal(checked);
+                  if (!checked) setSelectedPortalType('');
+                }}
+              />
+            </div>
+
+            {hasPortal && (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Portal Type</Label>
+                  {portalTypes.length === 0 ? (
+                    <p className="text-sm text-muted-foreground py-4">
+                      No portal types configured. Add them in Global Settings → Portal Types.
+                    </p>
+                  ) : (
+                    <Select value={selectedPortalType} onValueChange={setSelectedPortalType}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Choose a portal type..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {portalTypes.map(pt => (
+                          <SelectItem key={pt.id} value={pt.typeKey}>
+                            <div className="flex items-center gap-2">
+                              <span>{pt.displayName}</span>
+                              {pt.description && (
+                                <span className="text-muted-foreground text-xs">— {pt.description}</span>
+                              )}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
+
+                {selectedPortalType && (
+                  <div className="p-3 rounded-lg bg-primary/5 border border-primary/20 text-sm">
+                    <p className="font-medium text-primary">Portal defaults:</p>
+                    <ul className="mt-1 space-y-1 text-muted-foreground">
+                      <li>• A "Login to Account" use case will be auto-added</li>
+                      <li>• Use cases will default to navigating to the portal after login</li>
+                      <li>• You can also configure verification landing pages per use case</li>
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {!hasPortal && (
+              <div className="p-3 rounded-lg bg-muted/50 text-sm text-muted-foreground">
+                <p>Without a portal, use cases will use verification landing pages and result pages as their endpoint.</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Step 4: Use Cases within selected industry */}
         {step === 'use-cases' && (
           <div className="py-4 space-y-4">
             {selectedIndustry && (
               <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50 mb-2">
                 <span className="text-sm font-medium">{selectedIndustry.title}</span>
+                {hasPortal && selectedPortalType && (
+                  <Badge variant="secondary" className="text-xs">
+                    {portalTypes.find(pt => pt.typeKey === selectedPortalType)?.displayName} Portal
+                  </Badge>
+                )}
                 <span className="text-xs text-muted-foreground">— select use cases</span>
               </div>
             )}
@@ -400,15 +504,18 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
                 {industryUseCases.map((uc) => {
                   const icons = LucideIcons as unknown as Record<string, React.ComponentType<{ className?: string }>>;
                   const IconComp = icons[uc.iconName] || icons['Package'];
+                  const isLoginUc = uc.title.toLowerCase().includes('login');
+                  const isAutoAdded = hasPortal && isLoginUc;
                   return (
                     <button
                       key={uc.id}
-                      onClick={() => toggleUseCase(uc.id)}
+                      onClick={() => !isAutoAdded && toggleUseCase(uc.id)}
                       className={cn(
                         "flex items-center gap-4 p-4 rounded-lg border text-left transition-all w-full",
                         selectedUseCases.includes(uc.id)
                           ? "border-primary bg-primary/5"
-                          : "border-border hover:border-muted-foreground/50"
+                          : "border-border hover:border-muted-foreground/50",
+                        isAutoAdded && "cursor-default"
                       )}
                     >
                       <div className={cn(
@@ -420,7 +527,12 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
                         {IconComp && <IconComp className="w-5 h-5" />}
                       </div>
                       <div className="flex-1">
-                        <h4 className="font-medium">{uc.title}</h4>
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-medium">{uc.title}</h4>
+                          {isAutoAdded && (
+                            <Badge variant="secondary" className="text-[10px]">Auto-added with portal</Badge>
+                          )}
+                        </div>
                         {uc.description && <p className="text-sm text-muted-foreground">{uc.description}</p>}
                       </div>
                       {selectedUseCases.includes(uc.id) && <Check className="w-5 h-5 text-primary" />}

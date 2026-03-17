@@ -50,13 +50,14 @@ export default function DemoPreview() {
   const [showPortal, setShowPortal] = useState(false);
   const [portalVerificationAction, setPortalVerificationAction] = useState<string | null>(null);
 
-  // Resolve the industry for this demo to get portal type
+  // Get portal type directly from the demo
+  const demoPortalType = demo?.portalType || 'none';
+
+  // Resolve the industry for portal config (content/settings)
   const demoIndustry = useMemo(() => {
     if (!demo?.industryId) return null;
     return allIndustries.find(i => i.id === demo.industryId) ?? null;
   }, [demo?.industryId, allIndustries]);
-
-  const industryPortalType = demoIndustry?.portalType ?? 'none';
 
   // Resolve use cases: merge global defaults with demo overrides
   const resolvedUseCases = useMemo((): ResolvedUseCase[] => {
@@ -77,11 +78,11 @@ export default function DemoPreview() {
             : uc.defaultPageContent,
           isEnabled: link.isEnabled,
           displayOrder: link.displayOrder,
-          // Portal type comes from the industry, not the use case
-          portalType: industryPortalType,
+          // Portal type comes from the demo level
+          portalType: demoPortalType,
         };
       });
-  }, [links, industryPortalType]);
+  }, [links, demoPortalType]);
 
   const hasUseCases = resolvedUseCases.length > 0;
 
@@ -146,7 +147,7 @@ export default function DemoPreview() {
 
   const handleNavigateToPortal = useCallback((loginUserData?: { email: string; profileData?: Record<string, unknown> }) => {
     // Navigate directly to the portal
-    const activePortalType = selectedUseCase?.portalType || industryPortalType;
+    const activePortalType = selectedUseCase?.portalType || demoPortalType;
     if (activePortalType && activePortalType !== 'none') {
       // Use login user data if provided, existing portal user, or create guest
       if (loginUserData) {
@@ -156,7 +157,7 @@ export default function DemoPreview() {
       }
       setShowPortal(true);
     }
-  }, [selectedUseCase, industryPortalType, portalUser]);
+  }, [selectedUseCase, demoPortalType, portalUser]);
 
   // Handle portal verification trigger
   const handlePortalVerification = useCallback((action: string) => {

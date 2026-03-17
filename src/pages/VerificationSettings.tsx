@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Shield, Smartphone, Plus, Pencil, Trash2, GripVertical, Check, X, LogOut, Settings, Users, UserCheck, LayoutTemplate, ListChecks, Briefcase } from "lucide-react";
+import { ArrowLeft, Shield, Smartphone, Plus, Pencil, Trash2, GripVertical, Check, X, LogOut, Settings, Users, UserCheck, LayoutTemplate, ListChecks, Briefcase, Monitor } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -43,6 +43,7 @@ import { AdminResourceIdSettings } from "@/components/admin/AdminResourceIdSetti
 import { FormTemplateManagement } from "@/components/admin/FormTemplateManagement";
 import { GlobalFieldConfigManagement } from "@/components/admin/GlobalFieldConfigManagement";
 import { IndustryManagement } from "@/components/admin/IndustryManagement";
+import { PortalTypeManagement } from "@/components/admin/PortalTypeManagement";
 import { Key } from "lucide-react";
 
 // Icon mapping for verification types
@@ -459,6 +460,12 @@ export default function VerificationSettings() {
                 Industries
               </TabsTrigger>
             )}
+            {isGlobalAdmin && (
+              <TabsTrigger value="portal-types" className="flex items-center gap-2">
+                <Monitor className="w-4 h-4" />
+                Portal Types
+              </TabsTrigger>
+            )}
           </TabsList>
 
           <TabsContent value="types" className="space-y-6">
@@ -564,6 +571,10 @@ export default function VerificationSettings() {
 
           <TabsContent value="industries" className="space-y-6">
             <IndustryManagement />
+          </TabsContent>
+
+          <TabsContent value="portal-types" className="space-y-6">
+            <PortalTypeManagement />
           </TabsContent>
         </Tabs>
       </main>
