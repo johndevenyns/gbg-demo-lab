@@ -151,7 +151,7 @@ export default function DemoPreview() {
       }
       setShowPortal(true);
     }
-  }, [selectedUseCase, industryPortalType, portalUser]);
+  }, [selectedUseCase, demoPortalType, portalUser]);
 
   // Handle portal verification trigger
   const handlePortalVerification = useCallback((action: string) => {
