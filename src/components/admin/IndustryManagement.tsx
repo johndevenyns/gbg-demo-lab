@@ -61,8 +61,7 @@ export function IndustryManagement() {
   const [createUseCaseIndustryId, setCreateUseCaseIndustryId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleteType, setDeleteType] = useState<'industry' | 'usecase'>('industry');
-  const [newIndustry, setNewIndustry] = useState({ title: '', description: '', portalType: 'none' });
-  const [newUseCase, setNewUseCase] = useState({ title: '', description: '' });
+  const [newIndustry] = useState({ title: '', description: '', portalType: 'none' });
   const [templates, setTemplates] = useState<FormTemplateOption[]>([]);
   const [previewIndustryId, setPreviewIndustryId] = useState<string | null>(null);
   
