@@ -382,9 +382,10 @@ export interface PageElement {
   openInNewTab?: boolean;
   
   // For button elements
-  buttonAction?: 'next' | 'redirect' | 'copy';
+  buttonAction?: 'next' | 'redirect' | 'copy' | 'portal';
   buttonUrl?: string;
   copyField?: string; // Field to copy to clipboard
+  portalUseCaseId?: string; // Use case to navigate to portal for
 }
 
 // Page Step configuration (customizable display page)
