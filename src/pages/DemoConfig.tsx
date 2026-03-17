@@ -286,7 +286,7 @@ export default function DemoConfig() {
   const renderSection = () => {
     switch (activeSection) {
       case 'settings':
-        return <SiteSettingsSection demo={localDemo} onUpdate={handleUpdate} />;
+        return <SiteSettingsSection demo={localDemo} onUpdate={handleUpdate} portalTypes={portalTypes} />;
       case 'mirror':
         return (
          <SiteMirrorCard 
