@@ -3,22 +3,22 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from '@/components/ui/dialog';
 import { BankingPortalShell } from '@/components/preview/mockPortal/BankingPortalShell';
-import { PortalConfig, DEFAULT_BANKING_CONFIG } from '@/types/portalConfig';
+import { PharmacyPortalShell } from '@/components/preview/mockPortal/PharmacyPortalShell';
+import { PortalConfig, DEFAULT_BANKING_CONFIG, DEFAULT_PHARMACY_CONFIG } from '@/types/portalConfig';
+
+const SUPPORTED_PORTALS = ['banking', 'pharmacy'];
 
 interface PortalPreviewDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   portalType: string;
   portalConfig?: PortalConfig;
-  /** Override branding for demo-level preview */
   brandingOverrides?: {
     bankName?: string;
     accentColor?: string;
     logoUrl?: string;
   };
-  /** Override the user name displayed in the portal */
   userNameOverride?: string;
-  /** Override the user email displayed in the portal */
   userEmailOverride?: string;
 }
 
@@ -33,14 +33,14 @@ export function PortalPreviewDialog({
 }: PortalPreviewDialogProps) {
   const [verifyAction, setVerifyAction] = useState<string | null>(null);
 
-  if (portalType !== 'banking') {
+  if (!SUPPORTED_PORTALS.includes(portalType)) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Portal Preview</DialogTitle>
             <DialogDescription>
-              The "{portalType}" portal is not yet available. Only the Banking portal is implemented.
+              The "{portalType}" portal is not yet available. Supported portals: {SUPPORTED_PORTALS.join(', ')}.
             </DialogDescription>
           </DialogHeader>
         </DialogContent>
@@ -48,25 +48,42 @@ export function PortalPreviewDialog({
     );
   }
 
-  const config = { ...DEFAULT_BANKING_CONFIG, ...portalConfig };
-  const bankName = brandingOverrides?.bankName || config.bankName || 'Demo Bank';
-  const accentColor = brandingOverrides?.accentColor || config.accentColor || '#2563EB';
+  const isPharmacy = portalType === 'pharmacy';
+  const defaultConfig = isPharmacy ? DEFAULT_PHARMACY_CONFIG : DEFAULT_BANKING_CONFIG;
+  const config = { ...defaultConfig, ...portalConfig };
+  const portalName = isPharmacy
+    ? (brandingOverrides?.bankName || config.pharmacyName || 'Demo Pharmacy')
+    : (brandingOverrides?.bankName || config.bankName || 'Demo Bank');
+  const accentColor = brandingOverrides?.accentColor || config.accentColor || (isPharmacy ? '#DC2626' : '#2563EB');
   const logoUrl = brandingOverrides?.logoUrl;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-6xl h-[85vh] p-0 overflow-hidden">
         <div className="h-full overflow-auto">
-          <BankingPortalShell
-            userName={userNameOverride || config.userName || 'Jane Cooper'}
-            userEmail={userEmailOverride || config.userEmail || 'jane.cooper@email.com'}
-            accentColor={accentColor}
-            logoUrl={logoUrl}
-            bankName={bankName}
-            portalConfig={config}
-            onTriggerVerification={(action) => setVerifyAction(action)}
-            onLogout={() => onOpenChange(false)}
-          />
+          {isPharmacy ? (
+            <PharmacyPortalShell
+              userName={userNameOverride || config.userName || 'Jane Cooper'}
+              userEmail={userEmailOverride || config.userEmail || 'jane.cooper@email.com'}
+              accentColor={accentColor}
+              logoUrl={logoUrl}
+              pharmacyName={portalName}
+              portalConfig={config}
+              onTriggerVerification={(action) => setVerifyAction(action)}
+              onLogout={() => onOpenChange(false)}
+            />
+          ) : (
+            <BankingPortalShell
+              userName={userNameOverride || config.userName || 'Jane Cooper'}
+              userEmail={userEmailOverride || config.userEmail || 'jane.cooper@email.com'}
+              accentColor={accentColor}
+              logoUrl={logoUrl}
+              bankName={portalName}
+              portalConfig={config}
+              onTriggerVerification={(action) => setVerifyAction(action)}
+              onLogout={() => onOpenChange(false)}
+            />
+          )}
         </div>
         {verifyAction && (
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground px-4 py-2 rounded-lg shadow-lg text-sm">
