@@ -93,6 +93,31 @@ function SiteSettingsSection({ demo, onUpdate, portalTypes }: { demo: DemoEnviro
               </Button>
             </div>
           </div>
+          <div className="md:col-span-2 space-y-2">
+            <Label>Portal Type</Label>
+            <p className="text-xs text-muted-foreground">Choose whether this demo includes a simulated portal for logged-in users</p>
+            <Select value={demo.portalType || 'none'} onValueChange={(v) => onUpdate({ portalType: v })}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">
+                  <div className="flex items-center gap-2">
+                    <span>No Portal</span>
+                    <span className="text-muted-foreground text-xs">— Verification landing pages only</span>
+                  </div>
+                </SelectItem>
+                {portalTypes.map(pt => (
+                  <SelectItem key={pt.typeKey} value={pt.typeKey}>
+                    <div className="flex items-center gap-2">
+                      <span>{pt.displayName}</span>
+                      {pt.description && <span className="text-muted-foreground text-xs">— {pt.description}</span>}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </CardContent>
       </Card>
 
