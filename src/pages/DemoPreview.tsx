@@ -144,6 +144,18 @@ export default function DemoPreview() {
     }
   }, [resolvedUseCases]);
 
+  const handleNavigateToPortal = useCallback(() => {
+    // Navigate directly to the portal by simulating a logged-in portal user
+    const activePortalType = selectedUseCase?.portalType || industryPortalType;
+    if (activePortalType && activePortalType !== 'none') {
+      // Use existing portal user or create a guest portal user
+      if (!portalUser) {
+        setPortalUser({ email: 'guest@portal.demo', profileData: {} });
+      }
+      setShowPortal(true);
+    }
+  }, [selectedUseCase, industryPortalType, portalUser]);
+
   // Handle portal verification trigger
   const handlePortalVerification = useCallback((action: string) => {
     setPortalVerificationAction(action);
