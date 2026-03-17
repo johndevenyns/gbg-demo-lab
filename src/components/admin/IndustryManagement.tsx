@@ -83,18 +83,39 @@ export function IndustryManagement() {
 
   const unassignedUseCases = allUseCases.filter(uc => !uc.industryId);
 
-  const handleCreateIndustry = () => {
+  const handleCreateIndustry = (data: {
+    title: string;
+    description: string;
+    iconName: string;
+    portalType: string;
+    useCases: { title: string; description: string; defaultFormSteps: Record<string, unknown>[]; defaultVerificationType: string; pageContent: Record<string, unknown>; showFillPass: boolean; showFillFail: boolean; isEnabled: boolean }[];
+  }) => {
     createIndustry.mutate({
-      title: newIndustry.title,
-      description: newIndustry.description || undefined,
-      iconName: 'Building2',
-      portalType: newIndustry.portalType,
+      title: data.title,
+      description: data.description || undefined,
+      iconName: data.iconName,
+      portalType: data.portalType,
       displayOrder: industries.length,
       isEnabled: true,
     }, {
-      onSuccess: () => {
+      onSuccess: (newIndustry) => {
+        // Create use cases for this industry
+        data.useCases.forEach((uc, idx) => {
+          createUseCase.mutate({
+            title: uc.title,
+            description: uc.description || undefined,
+            iconName: 'Package',
+            industryId: newIndustry.id,
+            defaultFormSteps: uc.defaultFormSteps,
+            defaultVerificationType: uc.defaultVerificationType,
+            defaultPageContent: uc.pageContent as any,
+            showFillPass: uc.showFillPass,
+            showFillFail: uc.showFillFail,
+            displayOrder: idx,
+            isEnabled: uc.isEnabled,
+          });
+        });
         setCreateOpen(false);
-        setNewIndustry({ title: '', description: '', portalType: 'none' });
       },
     });
   };
