@@ -26,6 +26,7 @@ export interface DemoEnvironment {
   customerName: string;
   industryTemplate: IndustryTemplate;
   industryId?: string;
+  portalType?: string;
   logoUrl?: string;
   uploadedLogoUrl?: string;
   useUploadedLogo?: boolean;

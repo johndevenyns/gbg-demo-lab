@@ -106,6 +106,7 @@ const demoToRow = (demo: Partial<DemoEnvironment>) => {
   if (demo.customerName !== undefined) row.customer_name = demo.customerName;
   if (demo.industryTemplate !== undefined) row.industry_template = demo.industryTemplate;
   if ((demo as any).industryId !== undefined) row.industry_id = (demo as any).industryId;
+  if (demo.portalType !== undefined) row.portal_type = demo.portalType;
   if (demo.verificationType !== undefined) row.verification_type = demo.verificationType;
   if (demo.returnUrl !== undefined) row.return_url = demo.returnUrl;
   if (demo.approvedUrl !== undefined) row.approved_url = demo.approvedUrl;
