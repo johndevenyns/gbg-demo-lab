@@ -1,4 +1,4 @@
-import { CheckCircle2, XCircle, ExternalLink, ArrowRight } from 'lucide-react';
+import { CheckCircle2, XCircle, ExternalLink, ArrowRight, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { FormStyleConfig, DEFAULT_FORM_STYLE } from '@/types/formStyle';
 import { 
@@ -10,6 +10,8 @@ import {
   getBorderRadius
 } from '@/lib/formStyleUtils';
 
+export type ResultButtonAction = 'url' | 'portal';
+
 export interface ResultPageConfig {
   type: 'success' | 'failure';
   title: string;
@@ -17,6 +19,7 @@ export interface ResultPageConfig {
   message?: string;
   showIcon?: boolean;
   buttonText?: string;
+  buttonAction?: ResultButtonAction;
   buttonUrl?: string;
   showReferenceId?: boolean;
   referenceId?: string;
@@ -180,7 +183,9 @@ export function ResultPage({ config, formStyle, buttonColor, onButtonClick }: Re
             }}
           >
             {config.buttonText}
-            {config.buttonUrl ? (
+            {config.buttonAction === 'portal' ? (
+              <LogIn className="w-4 h-4 ml-2" />
+            ) : config.buttonUrl ? (
               <ExternalLink className="w-4 h-4 ml-2" />
             ) : (
               <ArrowRight className="w-4 h-4 ml-2" />

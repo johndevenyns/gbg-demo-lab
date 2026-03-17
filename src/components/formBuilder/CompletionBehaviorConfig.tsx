@@ -7,8 +7,9 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CheckCircle2, XCircle, ChevronDown, Settings2 } from 'lucide-react';
-import { ResultPageConfig, DEFAULT_SUCCESS_CONFIG, DEFAULT_FAILURE_CONFIG } from '@/components/preview/ResultPage';
+import { ResultPageConfig, ResultButtonAction, DEFAULT_SUCCESS_CONFIG, DEFAULT_FAILURE_CONFIG } from '@/components/preview/ResultPage';
 
 export type ResultPageMode = 'default' | 'custom';
 
@@ -140,15 +141,40 @@ export function CompletionBehaviorConfig({
             />
           </div>
 
-          <div className="space-y-2">
-            <Label>Button URL (optional)</Label>
-            <Input
-              type="url"
-              value={config.buttonUrl || ''}
-              onChange={(e) => onUpdate({ ...config, buttonUrl: e.target.value })}
-              placeholder="https://yoursite.com/next-step"
-            />
-          </div>
+          {type === 'success' && (
+            <div className="space-y-2">
+              <Label>Button Action</Label>
+              <Select
+                value={config.buttonAction || 'url'}
+                onValueChange={(v) => onUpdate({ ...config, buttonAction: v as ResultButtonAction })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="url">Redirect to URL</SelectItem>
+                  <SelectItem value="portal">Go to account portal</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                {config.buttonAction === 'portal'
+                  ? 'User will be logged into the industry portal'
+                  : 'User will be redirected to the URL below'}
+              </p>
+            </div>
+          )}
+
+          {(config.buttonAction !== 'portal' || type === 'failure') && (
+            <div className="space-y-2">
+              <Label>Button URL (optional)</Label>
+              <Input
+                type="url"
+                value={config.buttonUrl || ''}
+                onChange={(e) => onUpdate({ ...config, buttonUrl: e.target.value })}
+                placeholder="https://yoursite.com/next-step"
+              />
+            </div>
+          )}
         </div>
       </div>
 
