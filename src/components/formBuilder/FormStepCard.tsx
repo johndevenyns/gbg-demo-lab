@@ -492,6 +492,12 @@ export function FormStepCard({
               Submit
             </Badge>
           )}
+          {step.submitAction === 'login' && (
+            <Badge variant="outline" className="text-xs bg-emerald-500/10 text-emerald-600 border-emerald-500/30">
+              <LogIn className="w-3 h-3 mr-1" />
+              Login
+            </Badge>
+          )}
           {step.apiConfig?.enabled && (
             <Badge variant="outline" className="text-xs bg-green-500/10 text-green-600 border-green-500/30">
               <Plug className="w-3 h-3 mr-1" />
