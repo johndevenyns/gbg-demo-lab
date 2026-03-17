@@ -14,6 +14,7 @@ import { Separator } from '@/components/ui/separator';
 import {
   Building2, ChevronLeft, ChevronRight, Check, Plus, Trash2, Package, FileText, Monitor,
 } from 'lucide-react';
+import * as LucideIcons from 'lucide-react';
 import { usePortalTypes, PortalType } from '@/hooks/usePortalTypes';
 import { useGlobalUseCases } from '@/hooks/useUseCases';
 import { GlobalUseCase, UseCasePageContent } from '@/types/useCase';
