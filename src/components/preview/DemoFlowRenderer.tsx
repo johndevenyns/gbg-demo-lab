@@ -635,6 +635,7 @@ export function DemoFlowRenderer({
   resourceIdDataOnly,
   demoId,
   onNavigateToLogin,
+  onNavigateToPortal,
   onSubmissionLog,
   onComplete,
   onLoginSuccess

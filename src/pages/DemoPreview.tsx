@@ -275,6 +275,7 @@ export default function DemoPreview() {
       resourceIdDataOnly={demo.resourceIdDataOnly}
       demoId={demo.id}
       onNavigateToLogin={handleNavigateToLogin}
+      onNavigateToPortal={handleNavigateToPortal}
       onComplete={handleFlowComplete}
       onLoginSuccess={handleLoginSuccess}
     />
