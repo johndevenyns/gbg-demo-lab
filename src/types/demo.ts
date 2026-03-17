@@ -434,6 +434,8 @@ export interface FormStep {
   stepType?: FormStepType;
   // Submit action - special behavior on step submission
   submitAction?: FormStepSubmitAction;
+  // Where to navigate after successful login (only used when submitAction = 'login')
+  loginDestination?: LoginDestination;
   fields: FormField[];
   // Special elements
   addressValidationEnabled?: boolean;

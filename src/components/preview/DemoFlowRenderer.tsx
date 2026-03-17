@@ -1151,6 +1151,11 @@ export function DemoFlowRenderer({
     if (currentStep?.submitAction === 'login') {
       const success = await authenticateLogin();
       if (!success) return;
+      // If destination is portal, navigate directly to portal instead of next step
+      if (currentStep.loginDestination === 'portal') {
+        onNavigateToPortal?.();
+        return;
+      }
       proceedToNextStep();
       return;
 
