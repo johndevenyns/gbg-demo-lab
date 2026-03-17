@@ -65,7 +65,7 @@ export function BankingDashboard({ userName, accentColor, portalConfig }: Bankin
               position: 'absolute', top: '-20px', right: '-20px', width: '100px', height: '100px',
               borderRadius: '50%', background: `rgba(255,255,255,${acct.variant === 'primary' ? '0.1' : '0.05'})`,
             }} />
-            <p style={{ fontSize: '13px', opacity: 0.85, margin: 0, letterSpacing: '0.5px', textTransform: 'uppercase' }}>
+            <p style={{ fontSize: '13px', opacity: acct.variant === 'primary' ? primaryCardSubTextOpacity : 0.85, margin: 0, letterSpacing: '0.5px', textTransform: 'uppercase' }}>
               {acct.name}
             </p>
             <p style={{ fontSize: '32px', fontWeight: 700, margin: '8px 0 4px', fontFamily: 'SF Mono, monospace' }}>
