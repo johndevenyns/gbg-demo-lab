@@ -16,6 +16,10 @@ interface PortalPreviewDialogProps {
     accentColor?: string;
     logoUrl?: string;
   };
+  /** Override the user name displayed in the portal */
+  userNameOverride?: string;
+  /** Override the user email displayed in the portal */
+  userEmailOverride?: string;
 }
 
 export function PortalPreviewDialog({
@@ -24,6 +28,8 @@ export function PortalPreviewDialog({
   portalType,
   portalConfig,
   brandingOverrides,
+  userNameOverride,
+  userEmailOverride,
 }: PortalPreviewDialogProps) {
   const [verifyAction, setVerifyAction] = useState<string | null>(null);
 
@@ -52,8 +58,8 @@ export function PortalPreviewDialog({
       <DialogContent className="max-w-6xl h-[85vh] p-0 overflow-hidden">
         <div className="h-full overflow-auto">
           <BankingPortalShell
-            userName={config.userName || 'Jane Cooper'}
-            userEmail={config.userEmail || 'jane.cooper@email.com'}
+            userName={userNameOverride || config.userName || 'Jane Cooper'}
+            userEmail={userEmailOverride || config.userEmail || 'jane.cooper@email.com'}
             accentColor={accentColor}
             logoUrl={logoUrl}
             bankName={bankName}

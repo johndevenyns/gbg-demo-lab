@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Pencil, Trash2, Check, X, Monitor } from "lucide-react";
+import { Plus, Pencil, Trash2, Check, X, Monitor, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,12 +16,15 @@ import {
 import {
   usePortalTypes, useCreatePortalType, useUpdatePortalType, useDeletePortalType, PortalType,
 } from "@/hooks/usePortalTypes";
+import { useAuth } from "@/hooks/useAuth";
+import { PortalPreviewDialog } from "./PortalPreviewDialog";
 import * as LucideIcons from "lucide-react";
 
-function PortalTypeCard({ pt, onUpdate, onDelete }: {
+function PortalTypeCard({ pt, onUpdate, onDelete, onPreview }: {
   pt: PortalType;
   onUpdate: (updates: Partial<PortalType>) => void;
   onDelete: () => void;
+  onPreview: () => void;
 }) {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -66,6 +69,9 @@ function PortalTypeCard({ pt, onUpdate, onDelete }: {
                 </>
               ) : (
                 <>
+                  <Button variant="ghost" size="icon" onClick={onPreview} title="Preview portal">
+                    <Eye className="w-4 h-4" />
+                  </Button>
                   <Button variant="ghost" size="icon" onClick={() => { setEditVals({ displayName: pt.displayName, description: pt.description || '' }); setEditing(true); }}>
                     <Pencil className="w-4 h-4" />
                   </Button>
@@ -100,8 +106,16 @@ export function PortalTypeManagement() {
   const createMutation = useCreatePortalType();
   const updateMutation = useUpdatePortalType();
   const deleteMutation = useDeletePortalType();
+  const { user } = useAuth();
   const [addOpen, setAddOpen] = useState(false);
   const [newType, setNewType] = useState({ typeKey: '', displayName: '', description: '' });
+  const [previewType, setPreviewType] = useState<string | null>(null);
+
+  // Derive admin user's display name from email
+  const adminName = user?.email
+    ? user.email.split('@')[0].replace(/[._-]/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+    : 'Admin User';
+  const adminEmail = user?.email || 'admin@demo.com';
 
   const handleAdd = () => {
     if (!newType.typeKey || !newType.displayName) return;
@@ -130,10 +144,23 @@ export function PortalTypeManagement() {
               pt={pt}
               onUpdate={updates => updateMutation.mutate({ id: pt.id, updates })}
               onDelete={() => deleteMutation.mutate(pt.id)}
+              onPreview={() => setPreviewType(pt.typeKey)}
             />
           ))}
         </div>
       )}
+
+      {/* Portal Preview Dialog */}
+      <PortalPreviewDialog
+        open={!!previewType}
+        onOpenChange={(open) => { if (!open) setPreviewType(null); }}
+        portalType={previewType || 'none'}
+        brandingOverrides={{
+          bankName: 'Demo Bank',
+        }}
+        userNameOverride={adminName}
+        userEmailOverride={adminEmail}
+      />
 
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
         <DialogContent className="max-w-md">
