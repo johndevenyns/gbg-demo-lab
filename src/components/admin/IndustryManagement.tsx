@@ -88,7 +88,7 @@ export function IndustryManagement() {
     description: string;
     iconName: string;
     portalType: string;
-    useCases: { title: string; description: string; defaultFormSteps: Record<string, unknown>[]; defaultVerificationType: string; pageContent: Record<string, unknown>; showFillPass: boolean; showFillFail: boolean; isEnabled: boolean }[];
+    useCases: Array<{ title: string; description: string; defaultFormSteps: Record<string, unknown>[]; defaultVerificationType: string; pageContent: any; showFillPass: boolean; showFillFail: boolean; isEnabled: boolean }>;
   }) => {
     createIndustry.mutate({
       title: data.title,
