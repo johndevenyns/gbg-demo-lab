@@ -1735,6 +1735,21 @@ export function DemoFlowRenderer({
       defaultButtons.next = { enabled: false, label: 'Continue' };
       defaultButtons.submit = { enabled: false, label: 'Submit' };
     }
+    // Handle login step - show a "Log In" button by default
+    else if (currentStep?.submitAction === 'login') {
+      if (currentStep.buttons) {
+        currentStep.buttons.forEach(btn => {
+          if (btn.id === 'back') defaultButtons.back = { enabled: btn.enabled && !isFirstStep, label: btn.label };
+          if (btn.id === 'next') defaultButtons.next = { enabled: btn.enabled, label: btn.label };
+          if (btn.id === 'submit') defaultButtons.submit = { enabled: btn.enabled, label: btn.label };
+        });
+      }
+      // If no explicit submit/next config, ensure a "Log In" button shows
+      if (!currentStep.buttons) {
+        defaultButtons.next = { enabled: false, label: 'Next' };
+        defaultButtons.submit = { enabled: true, label: 'Log In' };
+      }
+    }
     // Handle standard button config from step.buttons
     else if (currentStep?.buttons) {
       currentStep.buttons.forEach(btn => {
