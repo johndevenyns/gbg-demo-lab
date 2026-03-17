@@ -550,54 +550,13 @@ export function IndustryManagement() {
         </CardContent>
       </Card>
 
-      {/* Create Industry Dialog */}
-      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Create Industry</DialogTitle>
-            <DialogDescription>Define a new industry vertical.</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label>Title</Label>
-              <Input
-                value={newIndustry.title}
-                onChange={(e) => setNewIndustry(prev => ({ ...prev, title: e.target.value }))}
-                placeholder="e.g., Telecommunications"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Description</Label>
-              <Textarea
-                value={newIndustry.description}
-                onChange={(e) => setNewIndustry(prev => ({ ...prev, description: e.target.value }))}
-                placeholder="Brief description"
-                rows={2}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Portal Type</Label>
-              <Select
-                value={newIndustry.portalType}
-                onValueChange={(val) => setNewIndustry(prev => ({ ...prev, portalType: val }))}
-              >
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {PORTAL_TYPE_OPTIONS.map(opt => (
-                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setCreateOpen(false)}>Cancel</Button>
-            <Button onClick={handleCreateIndustry} disabled={!newIndustry.title || createIndustry.isPending}>
-              Create
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Create Industry Wizard */}
+      <CreateIndustryWizard
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        onComplete={handleCreateIndustry}
+        existingIndustryCount={industries.length}
+      />
 
       {/* Create Use Case Dialog */}
       <Dialog open={!!createUseCaseIndustryId} onOpenChange={(open) => !open && setCreateUseCaseIndustryId(null)}>
