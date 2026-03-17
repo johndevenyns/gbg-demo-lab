@@ -540,6 +540,7 @@ export type Database = {
       portal_types: {
         Row: {
           created_at: string
+          default_config: Json | null
           description: string | null
           display_name: string
           display_order: number
@@ -551,6 +552,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          default_config?: Json | null
           description?: string | null
           display_name: string
           display_order?: number
@@ -562,6 +564,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          default_config?: Json | null
           description?: string | null
           display_name?: string
           display_order?: number
