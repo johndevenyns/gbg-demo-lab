@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
 import { FormStep, FormField, DemoEnvironment } from '@/types/demo';
 import { VERIFICATION_PATHS } from '@/types/formBuilder';
 import { ADDRESS_VALIDATION_FIELDS, ADDRESS_FIELD_LABELS } from './FieldPalette';
@@ -23,7 +25,7 @@ import {
   GripVertical, Trash2, ChevronDown, ChevronUp, Edit2, Check, X,
   User, Mail, Phone, Calendar, Hash, MapPin, Building, DollarSign, 
   FileText, Type, CheckSquare, MapPinCheck, Send, Smartphone, Database, FileCheck,
-  Plug, QrCode, Activity, Workflow, SplitSquareVertical, Shield
+  Plug, QrCode, Activity, Workflow, SplitSquareVertical, Shield, LogIn
 } from 'lucide-react';
 
 const FIELD_ICONS: Record<string, React.ReactNode> = {
