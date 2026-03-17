@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Pencil, Trash2, Check, X, Monitor, Eye } from "lucide-react";
+import { Plus, Pencil, Trash2, Check, X, Monitor, Eye, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,13 +18,15 @@ import {
 } from "@/hooks/usePortalTypes";
 import { useAuth } from "@/hooks/useAuth";
 import { PortalPreviewDialog } from "./PortalPreviewDialog";
+import { PortalConfig, DEFAULT_BANKING_CONFIG } from "@/types/portalConfig";
 import * as LucideIcons from "lucide-react";
 
-function PortalTypeCard({ pt, onUpdate, onDelete, onPreview }: {
+function PortalTypeCard({ pt, onUpdate, onDelete, onPreview, onConfigureContent }: {
   pt: PortalType;
   onUpdate: (updates: Partial<PortalType>) => void;
   onDelete: () => void;
   onPreview: () => void;
+  onConfigureContent: () => void;
 }) {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -69,6 +71,9 @@ function PortalTypeCard({ pt, onUpdate, onDelete, onPreview }: {
                 </>
               ) : (
                 <>
+                  <Button variant="ghost" size="icon" onClick={onConfigureContent} title="Configure content">
+                    <Settings className="w-4 h-4" />
+                  </Button>
                   <Button variant="ghost" size="icon" onClick={onPreview} title="Preview portal">
                     <Eye className="w-4 h-4" />
                   </Button>
@@ -101,6 +106,190 @@ function PortalTypeCard({ pt, onUpdate, onDelete, onPreview }: {
   );
 }
 
+function PortalConfigEditorDialog({
+  portalType,
+  open,
+  onOpenChange,
+  onSaveConfig,
+}: {
+  portalType: PortalType;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSaveConfig: (config: PortalConfig) => void;
+}) {
+  const cfg: PortalConfig = { ...DEFAULT_BANKING_CONFIG, ...portalType.defaultConfig };
+
+  const saveConfig = (updates: Partial<PortalConfig>) => {
+    const merged = { ...cfg, ...updates };
+    onSaveConfig(merged);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Configure Portal Content — {portalType.displayName}</DialogTitle>
+          <DialogDescription>
+            Customize the default content, accounts, transactions, and verification triggers for this portal type.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-6 py-2">
+          {/* User Info */}
+          <div>
+            <h4 className="text-sm font-medium mb-2">Portal User</h4>
+            <p className="text-xs text-muted-foreground mb-3">
+              These are default values. When a demo user logs in, their profile data (name, email, phone) will automatically populate the portal instead.
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs">Default Name</Label>
+                <Input defaultValue={cfg.userName} className="h-8 text-sm"
+                  placeholder="Populated from user profile"
+                  onBlur={(e) => saveConfig({ userName: e.target.value })} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Default Email</Label>
+                <Input defaultValue={cfg.userEmail} className="h-8 text-sm"
+                  placeholder="Populated from user profile"
+                  onBlur={(e) => saveConfig({ userEmail: e.target.value })} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Default Phone</Label>
+                <Input defaultValue={cfg.userPhone} className="h-8 text-sm"
+                  placeholder="Populated from user profile"
+                  onBlur={(e) => saveConfig({ userPhone: e.target.value })} />
+              </div>
+            </div>
+          </div>
+
+          {/* Accounts */}
+          <div>
+            <h4 className="text-sm font-medium mb-3">Dashboard Accounts</h4>
+            <div className="space-y-3">
+              {(cfg.accounts || []).map((acct, idx) => (
+                <div key={idx} className="grid grid-cols-4 gap-2 items-end border rounded-lg p-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs">Name</Label>
+                    <Input defaultValue={acct.name} className="h-8 text-sm"
+                      onBlur={(e) => {
+                        const updated = [...(cfg.accounts || [])];
+                        updated[idx] = { ...updated[idx], name: e.target.value };
+                        saveConfig({ accounts: updated });
+                      }} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Balance</Label>
+                    <Input type="number" defaultValue={acct.balance} className="h-8 text-sm"
+                      onBlur={(e) => {
+                        const updated = [...(cfg.accounts || [])];
+                        updated[idx] = { ...updated[idx], balance: parseFloat(e.target.value) || 0 };
+                        saveConfig({ accounts: updated });
+                      }} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Last 4</Label>
+                    <Input defaultValue={acct.lastFour} className="h-8 text-sm" maxLength={4}
+                      onBlur={(e) => {
+                        const updated = [...(cfg.accounts || [])];
+                        updated[idx] = { ...updated[idx], lastFour: e.target.value };
+                        saveConfig({ accounts: updated });
+                      }} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">APY</Label>
+                    <Input defaultValue={acct.apy || ''} className="h-8 text-sm" placeholder="e.g. 4.25%"
+                      onBlur={(e) => {
+                        const updated = [...(cfg.accounts || [])];
+                        updated[idx] = { ...updated[idx], apy: e.target.value || undefined };
+                        saveConfig({ accounts: updated });
+                      }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Verification Triggers */}
+          <div>
+            <h4 className="text-sm font-medium mb-3">Verification Triggers</h4>
+            <p className="text-xs text-muted-foreground mb-3">
+              Choose which settings actions require identity verification
+            </p>
+            <div className="space-y-2">
+              {(cfg.verificationTriggers || []).map((trigger, idx) => (
+                <div key={idx} className="flex items-center justify-between border rounded-lg p-3">
+                  <div>
+                    <p className="text-sm font-medium">{trigger.label}</p>
+                    <p className="text-xs text-muted-foreground">Action: "{trigger.action}"</p>
+                  </div>
+                  <Switch
+                    checked={trigger.enabled}
+                    onCheckedChange={(v) => {
+                      const updated = [...(cfg.verificationTriggers || [])];
+                      updated[idx] = { ...updated[idx], enabled: v };
+                      saveConfig({ verificationTriggers: updated });
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Transactions */}
+          <div>
+            <h4 className="text-sm font-medium mb-3">
+              Recent Transactions ({(cfg.transactions || []).length})
+            </h4>
+            <div className="space-y-2 max-h-60 overflow-y-auto">
+              {(cfg.transactions || []).map((tx, idx) => (
+                <div key={idx} className="grid grid-cols-4 gap-2 items-end border rounded-lg p-2">
+                  <div className="space-y-1">
+                    <Label className="text-xs">Icon</Label>
+                    <Input defaultValue={tx.icon} className="h-7 text-sm w-14"
+                      onBlur={(e) => {
+                        const updated = [...(cfg.transactions || [])];
+                        updated[idx] = { ...updated[idx], icon: e.target.value };
+                        saveConfig({ transactions: updated });
+                      }} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Merchant</Label>
+                    <Input defaultValue={tx.merchant} className="h-7 text-sm"
+                      onBlur={(e) => {
+                        const updated = [...(cfg.transactions || [])];
+                        updated[idx] = { ...updated[idx], merchant: e.target.value };
+                        saveConfig({ transactions: updated });
+                      }} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Amount</Label>
+                    <Input type="number" defaultValue={tx.amount} className="h-7 text-sm"
+                      onBlur={(e) => {
+                        const updated = [...(cfg.transactions || [])];
+                        updated[idx] = { ...updated[idx], amount: parseFloat(e.target.value) || 0 };
+                        saveConfig({ transactions: updated });
+                      }} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Date</Label>
+                    <Input defaultValue={tx.date} className="h-7 text-sm"
+                      onBlur={(e) => {
+                        const updated = [...(cfg.transactions || [])];
+                        updated[idx] = { ...updated[idx], date: e.target.value };
+                        saveConfig({ transactions: updated });
+                      }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export function PortalTypeManagement() {
   const { data: portalTypes = [], isLoading } = usePortalTypes();
   const createMutation = useCreatePortalType();
@@ -110,8 +299,8 @@ export function PortalTypeManagement() {
   const [addOpen, setAddOpen] = useState(false);
   const [newType, setNewType] = useState({ typeKey: '', displayName: '', description: '' });
   const [previewType, setPreviewType] = useState<string | null>(null);
+  const [configTypeId, setConfigTypeId] = useState<string | null>(null);
 
-  // Derive admin user's display name from email
   const adminName = user?.email
     ? user.email.split('@')[0].replace(/[._-]/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
     : 'Admin User';
@@ -121,6 +310,10 @@ export function PortalTypeManagement() {
     if (!newType.typeKey || !newType.displayName) return;
     createMutation.mutate(newType, { onSuccess: () => { setAddOpen(false); setNewType({ typeKey: '', displayName: '', description: '' }); } });
   };
+
+  const configPortalType = portalTypes.find(pt => pt.id === configTypeId);
+  const previewPortalType = portalTypes.find(pt => pt.typeKey === previewType);
+  const previewConfig = previewPortalType?.defaultConfig;
 
   return (
     <div className="space-y-6">
@@ -145,6 +338,7 @@ export function PortalTypeManagement() {
               onUpdate={updates => updateMutation.mutate({ id: pt.id, updates })}
               onDelete={() => deleteMutation.mutate(pt.id)}
               onPreview={() => setPreviewType(pt.typeKey)}
+              onConfigureContent={() => setConfigTypeId(pt.id)}
             />
           ))}
         </div>
@@ -155,12 +349,25 @@ export function PortalTypeManagement() {
         open={!!previewType}
         onOpenChange={(open) => { if (!open) setPreviewType(null); }}
         portalType={previewType || 'none'}
+        portalConfig={previewConfig}
         brandingOverrides={{
-          bankName: 'Demo Bank',
+          bankName: previewPortalType?.displayName || 'Demo Bank',
         }}
-        userNameOverride={adminName}
-        userEmailOverride={adminEmail}
+        userNameOverride={previewConfig?.userName || adminName}
+        userEmailOverride={previewConfig?.userEmail || adminEmail}
       />
+
+      {/* Portal Config Editor Dialog */}
+      {configPortalType && (
+        <PortalConfigEditorDialog
+          portalType={configPortalType}
+          open={!!configTypeId}
+          onOpenChange={(open) => { if (!open) setConfigTypeId(null); }}
+          onSaveConfig={(config) => {
+            updateMutation.mutate({ id: configPortalType.id, updates: { defaultConfig: config } });
+          }}
+        />
+      )}
 
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
         <DialogContent className="max-w-md">
