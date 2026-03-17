@@ -43,6 +43,7 @@ import { AdminResourceIdSettings } from "@/components/admin/AdminResourceIdSetti
 import { FormTemplateManagement } from "@/components/admin/FormTemplateManagement";
 import { GlobalFieldConfigManagement } from "@/components/admin/GlobalFieldConfigManagement";
 import { IndustryManagement } from "@/components/admin/IndustryManagement";
+import { PortalTypeManagement } from "@/components/admin/PortalTypeManagement";
 import { Key } from "lucide-react";
 
 // Icon mapping for verification types
