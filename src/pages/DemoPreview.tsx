@@ -141,7 +141,7 @@ export default function DemoPreview() {
 
   const handleNavigateToPortal = useCallback((loginUserData?: { email: string; profileData?: Record<string, unknown> }) => {
     // Navigate directly to the portal
-    const activePortalType = selectedUseCase?.portalType || industryPortalType;
+    const activePortalType = selectedUseCase?.portalType || demoPortalType;
     if (activePortalType && activePortalType !== 'none') {
       // Use login user data if provided, existing portal user, or create guest
       if (loginUserData) {
