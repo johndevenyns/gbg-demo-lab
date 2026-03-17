@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
 import { FormStep, FormField, DemoEnvironment } from '@/types/demo';
 import { VERIFICATION_PATHS } from '@/types/formBuilder';
 import { ADDRESS_VALIDATION_FIELDS, ADDRESS_FIELD_LABELS } from './FieldPalette';
@@ -23,7 +25,7 @@ import {
   GripVertical, Trash2, ChevronDown, ChevronUp, Edit2, Check, X,
   User, Mail, Phone, Calendar, Hash, MapPin, Building, DollarSign, 
   FileText, Type, CheckSquare, MapPinCheck, Send, Smartphone, Database, FileCheck,
-  Plug, QrCode, Activity, Workflow, SplitSquareVertical, Shield
+  Plug, QrCode, Activity, Workflow, SplitSquareVertical, Shield, LogIn
 } from 'lucide-react';
 
 const FIELD_ICONS: Record<string, React.ReactNode> = {
@@ -691,6 +693,33 @@ export function FormStepCard({
                 </SortableContext>
               )}
               
+              {/* Login Destination Config */}
+              {step.submitAction === 'login' && (
+                <div className="mt-4 pt-4 border-t border-border">
+                  <div className="flex items-center gap-3">
+                    <LogIn className="w-4 h-4 text-muted-foreground shrink-0" />
+                    <Label className="text-sm font-medium shrink-0">After successful login:</Label>
+                    <Select
+                      value={step.loginDestination || 'next_step'}
+                      onValueChange={(value) => onUpdateStep({ loginDestination: value as 'next_step' | 'portal' })}
+                    >
+                      <SelectTrigger className="h-8 w-[200px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="next_step">Go to next step</SelectItem>
+                        <SelectItem value="portal">Go to account portal</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {step.loginDestination === 'portal' && (
+                    <p className="text-xs text-muted-foreground mt-2 ml-7">
+                      User will be taken directly to the industry portal dashboard after logging in.
+                    </p>
+                  )}
+                </div>
+              )}
+
               {/* Step Actions Configuration */}
               <div className="mt-4 pt-4 border-t border-border">
                 <StepActionsConfig

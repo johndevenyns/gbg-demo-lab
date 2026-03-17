@@ -1151,6 +1151,11 @@ export function DemoFlowRenderer({
     if (currentStep?.submitAction === 'login') {
       const success = await authenticateLogin();
       if (!success) return;
+      // If destination is portal, navigate directly to portal instead of next step
+      if (currentStep.loginDestination === 'portal') {
+        onNavigateToPortal?.();
+        return;
+      }
       proceedToNextStep();
       return;
 
@@ -1190,7 +1195,7 @@ export function DemoFlowRenderer({
     
     // No validation needed or validation passed
     proceedToNextStep();
-  }, [currentStep, hasAddressFields, validateAddress, formData, proceedToNextStep, validateRequiredFields, authenticateLogin, validateRegistrationCode]);
+  }, [currentStep, hasAddressFields, validateAddress, formData, proceedToNextStep, validateRequiredFields, authenticateLogin, validateRegistrationCode, onNavigateToPortal]);
 
   const goToPrevStep = () => {
     if (!isFirstStep) {
