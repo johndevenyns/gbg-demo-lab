@@ -40,7 +40,7 @@ const sections: { id: ConfigSection; label: string; icon: React.ElementType; des
 ];
 
 // Site Settings Section
-function SiteSettingsSection({ demo, onUpdate }: { demo: DemoEnvironment; onUpdate: (updates: Partial<DemoEnvironment>) => void }) {
+function SiteSettingsSection({ demo, onUpdate, portalTypes }: { demo: DemoEnvironment; onUpdate: (updates: Partial<DemoEnvironment>) => void; portalTypes: { typeKey: string; displayName: string; description?: string }[] }) {
   const { toast } = useToast();
   const formatDate = (dateStr?: string) => {
     if (!dateStr) return 'Unknown';
