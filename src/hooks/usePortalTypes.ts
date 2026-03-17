@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { PortalConfig } from "@/types/portalConfig";
 
 export interface PortalType {
   id: string;
@@ -10,6 +11,7 @@ export interface PortalType {
   iconName: string;
   isEnabled: boolean;
   displayOrder: number;
+  defaultConfig?: PortalConfig;
   createdAt: string;
   updatedAt: string;
 }
@@ -22,6 +24,7 @@ const rowToPortalType = (row: any): PortalType => ({
   iconName: row.icon_name || 'Monitor',
   isEnabled: row.is_enabled,
   displayOrder: row.display_order,
+  defaultConfig: row.default_config || undefined,
   createdAt: row.created_at,
   updatedAt: row.updated_at,
 });
