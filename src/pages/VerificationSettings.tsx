@@ -571,6 +571,10 @@ export default function VerificationSettings() {
           <TabsContent value="industries" className="space-y-6">
             <IndustryManagement />
           </TabsContent>
+
+          <TabsContent value="portal-types" className="space-y-6">
+            <PortalTypeManagement />
+          </TabsContent>
         </Tabs>
       </main>
 
