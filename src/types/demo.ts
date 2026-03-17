@@ -422,6 +422,8 @@ export interface MethodSelectionStepConfig {
 
 export type FormStepSubmitAction = 'login' | 'register' | 'validate_code' | undefined;
 
+export type LoginDestination = 'next_step' | 'portal';
+
 export interface FormStep {
   id: string;
   title: string;
