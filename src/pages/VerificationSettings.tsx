@@ -459,6 +459,12 @@ export default function VerificationSettings() {
                 Industries
               </TabsTrigger>
             )}
+            {isGlobalAdmin && (
+              <TabsTrigger value="portal-types" className="flex items-center gap-2">
+                <Monitor className="w-4 h-4" />
+                Portal Types
+              </TabsTrigger>
+            )}
           </TabsList>
 
           <TabsContent value="types" className="space-y-6">
