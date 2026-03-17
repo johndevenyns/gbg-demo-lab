@@ -28,6 +28,8 @@ export function PortalPreviewDialog({
   portalType,
   portalConfig,
   brandingOverrides,
+  userNameOverride,
+  userEmailOverride,
 }: PortalPreviewDialogProps) {
   const [verifyAction, setVerifyAction] = useState<string | null>(null);
 
