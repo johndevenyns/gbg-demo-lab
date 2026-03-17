@@ -57,7 +57,7 @@ export function BankingDashboard({ userName, accentColor, portalConfig }: Bankin
               : 'linear-gradient(135deg, #1E293B, #334155)',
             borderRadius: '16px',
             padding: '24px',
-            color: 'white',
+            color: acct.variant === 'primary' ? primaryCardTextColor : 'white',
             position: 'relative',
             overflow: 'hidden',
           }}>
