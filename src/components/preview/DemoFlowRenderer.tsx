@@ -72,7 +72,7 @@ interface DemoFlowRendererProps {
   // Demo ID for login authentication
   demoId?: string;
   onNavigateToLogin?: () => void;
-  onNavigateToPortal?: () => void;
+  onNavigateToPortal?: (loginUserData?: { email: string; profileData?: Record<string, unknown> }) => void;
   onSubmissionLog?: (data: SubmissionLogData) => void;
   onComplete?: (success: boolean, referenceId?: string) => void;
   onLoginSuccess?: (userData: { email: string; profileData?: Record<string, unknown> }) => void;
