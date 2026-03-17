@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { BankingDashboard } from './BankingDashboard';
 import { BankingSettings } from './BankingSettings';
-import { PortalConfig, DEFAULT_BANKING_CONFIG } from '@/types/portalConfig';
+import { PortalConfig, PortalBranding, DEFAULT_BANKING_CONFIG } from '@/types/portalConfig';
 
 type PortalPage = 'dashboard' | 'settings';
 
@@ -23,6 +23,7 @@ export interface BankingPortalShellProps {
   logoUrl?: string;
   bankName: string;
   portalConfig?: PortalConfig;
+  branding?: PortalBranding;
   onTriggerVerification: (action: string) => void;
   onLogout: () => void;
 }
@@ -34,6 +35,7 @@ export function BankingPortalShell({
   logoUrl,
   bankName,
   portalConfig,
+  branding,
   onTriggerVerification,
   onLogout,
 }: BankingPortalShellProps) {
@@ -51,17 +53,28 @@ export function BankingPortalShell({
     .substring(0, 2)
     .toUpperCase();
 
+  const sidebarBg = branding?.sidebarBg || '#0F172A';
+  const sidebarText = branding?.sidebarText || '#ffffff';
+  const pageBg = branding?.pageBg || '#F8FAFC';
+  const brandAccent = branding?.accentColor || accentColor;
+  const fontFamily = branding?.fontFamily || '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+
+  // Derive readable muted colors from sidebar text
+  const sidebarTextMuted = `${sidebarText}88`;
+  const sidebarTextFaint = `${sidebarText}40`;
+  const sidebarBorder = `${sidebarText}14`;
+
   return (
     <div style={{
       display: 'flex',
       minHeight: '100vh',
-      background: '#F8FAFC',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      background: pageBg,
+      fontFamily,
     }}>
       {/* Sidebar - Desktop */}
       <aside style={{
         width: '240px',
-        background: '#0F172A',
+        background: sidebarBg,
         display: 'flex',
         flexDirection: 'column',
         flexShrink: 0,
@@ -69,7 +82,7 @@ export function BankingPortalShell({
         {/* Bank Logo / Name */}
         <div style={{
           padding: '20px 20px 24px',
-          borderBottom: '1px solid rgba(255,255,255,0.08)',
+          borderBottom: `1px solid ${sidebarBorder}`,
           display: 'flex',
           alignItems: 'center',
           gap: '12px',
@@ -80,12 +93,12 @@ export function BankingPortalShell({
             <>
               <div style={{
                 width: '32px', height: '32px', borderRadius: '8px',
-                background: accentColor, display: 'flex', alignItems: 'center',
+                background: brandAccent, display: 'flex', alignItems: 'center',
                 justifyContent: 'center', color: 'white', fontSize: '14px', fontWeight: 700,
               }}>
                 {bankName[0]?.toUpperCase()}
               </div>
-              <span style={{ color: 'white', fontWeight: 600, fontSize: '15px' }}>{bankName}</span>
+              <span style={{ color: sidebarText, fontWeight: 600, fontSize: '15px' }}>{bankName}</span>
             </>
           )}
         </div>
@@ -102,14 +115,14 @@ export function BankingPortalShell({
                   display: 'flex', alignItems: 'center', gap: '12px',
                   width: '100%', padding: '10px 14px', borderRadius: '10px',
                   border: 'none', cursor: 'pointer',
-                  background: isActive ? 'rgba(255,255,255,0.1)' : 'transparent',
-                  color: isActive ? 'white' : 'rgba(255,255,255,0.55)',
+                  background: isActive ? `${sidebarText}18` : 'transparent',
+                  color: isActive ? sidebarText : sidebarTextMuted,
                   fontSize: '14px', fontWeight: isActive ? 600 : 400,
                   transition: 'all 0.2s', marginBottom: '4px',
                   textAlign: 'left',
                 }}
                 onMouseEnter={(e) => {
-                  if (!isActive) e.currentTarget.style.background = 'rgba(255,255,255,0.06)';
+                  if (!isActive) e.currentTarget.style.background = `${sidebarText}0a`;
                 }}
                 onMouseLeave={(e) => {
                   if (!isActive) e.currentTarget.style.background = 'transparent';
@@ -125,12 +138,12 @@ export function BankingPortalShell({
         {/* User Profile Section */}
         <div style={{
           padding: '16px 14px',
-          borderTop: '1px solid rgba(255,255,255,0.08)',
+          borderTop: `1px solid ${sidebarBorder}`,
           display: 'flex', alignItems: 'center', gap: '12px',
         }}>
           <div style={{
             width: '36px', height: '36px', borderRadius: '50%',
-            background: `linear-gradient(135deg, ${accentColor}, ${accentColor}bb)`,
+            background: `linear-gradient(135deg, ${brandAccent}, ${brandAccent}bb)`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             color: 'white', fontSize: '13px', fontWeight: 600, flexShrink: 0,
           }}>
@@ -138,13 +151,13 @@ export function BankingPortalShell({
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <p style={{
-              fontSize: '13px', fontWeight: 600, color: 'white', margin: 0,
+              fontSize: '13px', fontWeight: 600, color: sidebarText, margin: 0,
               whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
             }}>
               {userName}
             </p>
             <p style={{
-              fontSize: '11px', color: 'rgba(255,255,255,0.45)', margin: '1px 0 0',
+              fontSize: '11px', color: sidebarTextFaint, margin: '1px 0 0',
               whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
             }}>
               {userEmail}
@@ -154,11 +167,11 @@ export function BankingPortalShell({
             onClick={onLogout}
             title="Sign out"
             style={{
-              background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)',
+              background: 'none', border: 'none', color: sidebarTextFaint,
               cursor: 'pointer', padding: '4px', fontSize: '16px',
             }}
             onMouseEnter={(e) => { e.currentTarget.style.color = '#F87171'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.4)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = sidebarTextFaint; }}
           >
             ↗
           </button>
@@ -186,8 +199,8 @@ export function BankingPortalShell({
                 onClick={() => setActivePage(item.key)}
                 style={{
                   padding: '6px 14px', borderRadius: '8px', border: 'none',
-                  background: activePage === item.key ? `${accentColor}10` : 'transparent',
-                  color: activePage === item.key ? accentColor : '#64748B',
+                  background: activePage === item.key ? `${brandAccent}10` : 'transparent',
+                  color: activePage === item.key ? brandAccent : '#64748B',
                   fontSize: '13px', fontWeight: activePage === item.key ? 600 : 400,
                   cursor: 'pointer',
                 }}
@@ -206,7 +219,7 @@ export function BankingPortalShell({
             </button>
             <div style={{
               width: '36px', height: '36px', borderRadius: '50%',
-              background: `linear-gradient(135deg, ${accentColor}, ${accentColor}bb)`,
+              background: `linear-gradient(135deg, ${brandAccent}, ${brandAccent}bb)`,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               color: 'white', fontSize: '12px', fontWeight: 600,
             }}>
@@ -217,14 +230,14 @@ export function BankingPortalShell({
 
         {/* Page Content */}
         {activePage === 'dashboard' && (
-          <BankingDashboard userName={userName} accentColor={accentColor} portalConfig={config} />
+          <BankingDashboard userName={userName} accentColor={brandAccent} portalConfig={config} />
         )}
         {activePage === 'settings' && (
           <BankingSettings
             userName={userName}
             userEmail={userEmail}
             userPhone={config.userPhone || '(555) 867-5309'}
-            accentColor={accentColor}
+            accentColor={brandAccent}
             portalConfig={config}
             onTriggerVerification={handleTriggerVerification}
           />

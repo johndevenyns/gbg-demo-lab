@@ -13,6 +13,7 @@ import { UseCaseLandingPage } from "@/components/preview/UseCaseLandingPage";
 import { BankingPortalShell } from "@/components/preview/mockPortal/BankingPortalShell";
 import { ResolvedUseCase } from "@/types/useCase";
 import { FormStep } from "@/types/demo";
+import { PortalBranding } from "@/types/portalConfig";
 
 // Helper functions for form styling
 function getFormBorderRadius(radius?: string): string {
@@ -205,6 +206,18 @@ export default function DemoPreview() {
     return portalUser.email.split('@')[0];
   }, [portalUser]);
 
+  // Build portal branding from demo's customer website branding
+  const portalBranding = useMemo((): PortalBranding | undefined => {
+    if (!demo) return undefined;
+    return {
+      sidebarBg: demo.headerBgColor || '#0F172A',
+      sidebarText: demo.headerTextColor || '#ffffff',
+      accentColor: demo.buttonColor || '#0D9488',
+      pageBg: demo.formStyle?.contentAreaBgColor || '#F8FAFC',
+      fontFamily: demo.formStyle?.fontFamily,
+    };
+  }, [demo]);
+
   // Build full HTML document for the preview iframe
   const previewDocument = useMemo(() => {
     if (!demo) return null;
@@ -309,6 +322,7 @@ export default function DemoPreview() {
             logoUrl={demo.useUploadedLogo ? demo.uploadedLogoUrl : demo.logoUrl}
             bankName={demo.customerName}
             portalConfig={demoIndustry?.portalConfig}
+            branding={portalBranding}
             onTriggerVerification={handlePortalVerification}
             onLogout={handlePortalLogout}
           />
@@ -367,6 +381,7 @@ export default function DemoPreview() {
           logoUrl={demo.useUploadedLogo ? demo.uploadedLogoUrl : demo.logoUrl}
           bankName={demo.customerName}
           portalConfig={demoIndustry?.portalConfig}
+          branding={portalBranding}
           onTriggerVerification={handlePortalVerification}
           onLogout={handlePortalLogout}
         />
