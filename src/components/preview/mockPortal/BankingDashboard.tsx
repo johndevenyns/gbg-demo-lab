@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import { PortalConfig, DEFAULT_BANKING_CONFIG } from '@/types/portalConfig';
 
 interface BankingDashboardProps {
