@@ -69,6 +69,9 @@ function PortalTypeCard({ pt, onUpdate, onDelete, onPreview }: {
                 </>
               ) : (
                 <>
+                  <Button variant="ghost" size="icon" onClick={onPreview} title="Preview portal">
+                    <Eye className="w-4 h-4" />
+                  </Button>
                   <Button variant="ghost" size="icon" onClick={() => { setEditVals({ displayName: pt.displayName, description: pt.description || '' }); setEditing(true); }}>
                     <Pencil className="w-4 h-4" />
                   </Button>
