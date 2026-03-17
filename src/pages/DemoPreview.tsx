@@ -144,12 +144,14 @@ export default function DemoPreview() {
     }
   }, [resolvedUseCases]);
 
-  const handleNavigateToPortal = useCallback(() => {
-    // Navigate directly to the portal by simulating a logged-in portal user
+  const handleNavigateToPortal = useCallback((loginUserData?: { email: string; profileData?: Record<string, unknown> }) => {
+    // Navigate directly to the portal
     const activePortalType = selectedUseCase?.portalType || industryPortalType;
     if (activePortalType && activePortalType !== 'none') {
-      // Use existing portal user or create a guest portal user
-      if (!portalUser) {
+      // Use login user data if provided, existing portal user, or create guest
+      if (loginUserData) {
+        setPortalUser({ email: loginUserData.email, profileData: loginUserData.profileData });
+      } else if (!portalUser) {
         setPortalUser({ email: 'guest@portal.demo', profileData: {} });
       }
       setShowPortal(true);

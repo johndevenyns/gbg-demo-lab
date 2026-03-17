@@ -72,7 +72,7 @@ interface DemoFlowRendererProps {
   // Demo ID for login authentication
   demoId?: string;
   onNavigateToLogin?: () => void;
-  onNavigateToPortal?: () => void;
+  onNavigateToPortal?: (loginUserData?: { email: string; profileData?: Record<string, unknown> }) => void;
   onSubmissionLog?: (data: SubmissionLogData) => void;
   onComplete?: (success: boolean, referenceId?: string) => void;
   onLoginSuccess?: (userData: { email: string; profileData?: Record<string, unknown> }) => void;
@@ -663,6 +663,7 @@ export function DemoFlowRenderer({
   } | null>(null);
   // State to trigger re-render when session data is set
   const [, forceUpdate] = useState({});
+  const lastLoginUserData = useRef<Record<string, unknown> | undefined>(undefined);
   const pollingRef = useRef<NodeJS.Timeout | null>(null);
 
   // Fetch mDL providers for unified verification step
@@ -1057,6 +1058,7 @@ export function DemoFlowRenderer({
       const profileData = (data.profile_data && typeof data.profile_data === 'object' && !Array.isArray(data.profile_data))
         ? data.profile_data as Record<string, unknown>
         : undefined;
+      lastLoginUserData.current = profileData;
       onLoginSuccess?.({ email: data.email, profileData });
 
       setIsLoading(false);
@@ -1153,7 +1155,10 @@ export function DemoFlowRenderer({
       if (!success) return;
       // If destination is portal, navigate directly to portal instead of next step
       if (currentStep.loginDestination === 'portal') {
-        onNavigateToPortal?.();
+        // Pass the login user data so the portal can use it immediately
+        const email = (formData.email || '').trim().toLowerCase();
+        const profileData = lastLoginUserData.current;
+        onNavigateToPortal?.({ email, profileData });
         return;
       }
       proceedToNextStep();
@@ -1729,6 +1734,21 @@ export function DemoFlowRenderer({
       // Unified verification handles its own navigation, so disable default buttons
       defaultButtons.next = { enabled: false, label: 'Continue' };
       defaultButtons.submit = { enabled: false, label: 'Submit' };
+    }
+    // Handle login step - show a "Log In" button by default
+    else if (currentStep?.submitAction === 'login') {
+      if (currentStep.buttons) {
+        currentStep.buttons.forEach(btn => {
+          if (btn.id === 'back') defaultButtons.back = { enabled: btn.enabled && !isFirstStep, label: btn.label };
+          if (btn.id === 'next') defaultButtons.next = { enabled: btn.enabled, label: btn.label };
+          if (btn.id === 'submit') defaultButtons.submit = { enabled: btn.enabled, label: btn.label };
+        });
+      }
+      // If no explicit submit/next config, ensure a "Log In" button shows
+      if (!currentStep.buttons) {
+        defaultButtons.next = { enabled: false, label: 'Next' };
+        defaultButtons.submit = { enabled: true, label: 'Log In' };
+      }
     }
     // Handle standard button config from step.buttons
     else if (currentStep?.buttons) {

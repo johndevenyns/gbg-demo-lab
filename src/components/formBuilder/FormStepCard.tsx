@@ -492,6 +492,12 @@ export function FormStepCard({
               Submit
             </Badge>
           )}
+          {step.submitAction === 'login' && (
+            <Badge variant="outline" className="text-xs bg-emerald-500/10 text-emerald-600 border-emerald-500/30">
+              <LogIn className="w-3 h-3 mr-1" />
+              Login
+            </Badge>
+          )}
           {step.apiConfig?.enabled && (
             <Badge variant="outline" className="text-xs bg-green-500/10 text-green-600 border-green-500/30">
               <Plug className="w-3 h-3 mr-1" />
@@ -693,6 +699,32 @@ export function FormStepCard({
                 </SortableContext>
               )}
               
+              {/* Submit Action Config */}
+              <div className="mt-4 pt-4 border-t border-border">
+                <div className="flex items-center gap-3">
+                  <Send className="w-4 h-4 text-muted-foreground shrink-0" />
+                  <Label className="text-sm font-medium shrink-0">Step action:</Label>
+                  <Select
+                    value={step.submitAction || 'none'}
+                    onValueChange={(value) => onUpdateStep({ 
+                      submitAction: value === 'none' ? undefined : value as FormStep['submitAction'],
+                      // Reset loginDestination when changing away from login
+                      ...(value !== 'login' ? { loginDestination: undefined } : {})
+                    })}
+                  >
+                    <SelectTrigger className="h-8 w-[200px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">None (standard)</SelectItem>
+                      <SelectItem value="login">Log in to account</SelectItem>
+                      <SelectItem value="register">Register account</SelectItem>
+                      <SelectItem value="validate_code">Validate code</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
               {/* Login Destination Config */}
               {step.submitAction === 'login' && (
                 <div className="mt-4 pt-4 border-t border-border">
