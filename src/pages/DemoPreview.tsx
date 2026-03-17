@@ -72,8 +72,8 @@ export default function DemoPreview() {
             : uc.defaultPageContent,
           isEnabled: link.isEnabled,
           displayOrder: link.displayOrder,
-          // Portal type comes from the industry, not the use case
-          portalType: industryPortalType,
+          // Portal type comes from the demo level
+          portalType: demoPortalType,
         };
       });
   }, [links, industryPortalType]);
