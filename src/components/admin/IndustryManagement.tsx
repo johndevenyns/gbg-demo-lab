@@ -682,21 +682,27 @@ export function IndustryManagement() {
               <div className="space-y-6 py-2">
                 {/* User Info */}
                 <div>
-                  <h4 className="text-sm font-medium mb-3">Portal User (Mock)</h4>
+                  <h4 className="text-sm font-medium mb-2">Portal User</h4>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    These are default values. When a demo user logs in, their profile data (name, email, phone) will automatically populate the portal instead.
+                  </p>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1.5">
-                      <Label className="text-xs">User Name</Label>
+                      <Label className="text-xs">Default Name</Label>
                       <Input defaultValue={cfg.userName} className="h-8 text-sm"
+                        placeholder="Populated from user profile"
                         onBlur={(e) => saveConfig({ userName: e.target.value })} />
                     </div>
                     <div className="space-y-1.5">
-                      <Label className="text-xs">User Email</Label>
+                      <Label className="text-xs">Default Email</Label>
                       <Input defaultValue={cfg.userEmail} className="h-8 text-sm"
+                        placeholder="Populated from user profile"
                         onBlur={(e) => saveConfig({ userEmail: e.target.value })} />
                     </div>
                     <div className="space-y-1.5">
-                      <Label className="text-xs">Phone Number</Label>
+                      <Label className="text-xs">Default Phone</Label>
                       <Input defaultValue={cfg.userPhone} className="h-8 text-sm"
+                        placeholder="Populated from user profile"
                         onBlur={(e) => saveConfig({ userPhone: e.target.value })} />
                     </div>
                   </div>
