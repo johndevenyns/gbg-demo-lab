@@ -293,7 +293,7 @@ export function CreateIndustryWizard({
                 </Card>
 
                 {portalTypes.filter(pt => pt.isEnabled).map(pt => {
-                  const icons = require('lucide-react') as Record<string, React.ComponentType<{ className?: string }>>;
+                  const icons = LucideIcons as unknown as Record<string, React.ComponentType<{ className?: string }>>;
                   const IconComp = icons[pt.iconName] || Monitor;
                   return (
                     <Card
