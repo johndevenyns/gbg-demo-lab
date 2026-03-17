@@ -58,8 +58,8 @@ export function PortalPreviewDialog({
       <DialogContent className="max-w-6xl h-[85vh] p-0 overflow-hidden">
         <div className="h-full overflow-auto">
           <BankingPortalShell
-            userName={config.userName || 'Jane Cooper'}
-            userEmail={config.userEmail || 'jane.cooper@email.com'}
+            userName={userNameOverride || config.userName || 'Jane Cooper'}
+            userEmail={userEmailOverride || config.userEmail || 'jane.cooper@email.com'}
             accentColor={accentColor}
             logoUrl={logoUrl}
             bankName={bankName}
