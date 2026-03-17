@@ -20,10 +20,11 @@ import { useAuth } from "@/hooks/useAuth";
 import { PortalPreviewDialog } from "./PortalPreviewDialog";
 import * as LucideIcons from "lucide-react";
 
-function PortalTypeCard({ pt, onUpdate, onDelete }: {
+function PortalTypeCard({ pt, onUpdate, onDelete, onPreview }: {
   pt: PortalType;
   onUpdate: (updates: Partial<PortalType>) => void;
   onDelete: () => void;
+  onPreview: () => void;
 }) {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [editing, setEditing] = useState(false);
