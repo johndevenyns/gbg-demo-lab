@@ -183,7 +183,9 @@ export function ResultPage({ config, formStyle, buttonColor, onButtonClick }: Re
             }}
           >
             {config.buttonText}
-            {config.buttonUrl ? (
+            {config.buttonAction === 'portal' ? (
+              <LogIn className="w-4 h-4 ml-2" />
+            ) : config.buttonUrl ? (
               <ExternalLink className="w-4 h-4 ml-2" />
             ) : (
               <ArrowRight className="w-4 h-4 ml-2" />
