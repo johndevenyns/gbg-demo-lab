@@ -1,5 +1,14 @@
 // Portal configuration types — stored in industries.portal_config
 
+/** Branding colors inherited from the customer website */
+export interface PortalBranding {
+  sidebarBg: string;       // from headerBgColor
+  sidebarText: string;     // from headerTextColor
+  accentColor: string;     // from buttonColor
+  pageBg?: string;         // from contentAreaBgColor
+  fontFamily?: string;     // from formStyle font
+}
+
 export interface PortalAccount {
   name: string;
   balance: number;
