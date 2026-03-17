@@ -208,6 +208,7 @@ export default function DemoConfig() {
   const { data: demo, isLoading, error } = useDemo(id || "");
   const updateDemoMutation = useUpdateDemo();
   const { data: useCaseLinks = [] } = useDemoUseCaseLinks(id);
+  const { data: portalTypes = [] } = useEnabledPortalTypes();
   
   // Per-user localStorage key for sidebar state
   const sidebarKey = user?.id ? `demoConfigSidebarCollapsed_${user.id}` : 'demoConfigSidebarCollapsed';
