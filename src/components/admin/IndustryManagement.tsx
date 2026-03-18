@@ -77,10 +77,10 @@ export function IndustryManagement() {
     load();
   }, []);
 
-  const useCasesForIndustry = (industryId: string) =>
-    allUseCases.filter(uc => uc.industryId === industryId);
+  const useCasesForIndustry = (_industryId: string) =>
+    allUseCases;
 
-  const unassignedUseCases = allUseCases.filter(uc => !uc.industryId);
+  const unassignedUseCases = allUseCases;
 
   const handleCreateIndustry = (data: {
     title: string;
