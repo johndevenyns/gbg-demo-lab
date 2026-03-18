@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,27 +8,17 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
-  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
-} from '@/components/ui/dialog';
-import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
-  Building2, Plus, Trash2, ChevronDown, ChevronRight, Package, FileText,
-  Landmark, Car, ShoppingBag, Shield, Heart, Eye, Settings,
+  Building2, Plus, Trash2, ChevronDown, ChevronRight,
+  Landmark, Car, ShoppingBag, Shield, Heart, Eye, Package,
 } from 'lucide-react';
 import { Industry, PORTAL_TYPE_OPTIONS } from '@/types/industry';
-import { GlobalUseCase, UseCasePageContent } from '@/types/useCase';
 import { useIndustries, useCreateIndustry, useUpdateIndustry, useDeleteIndustry } from '@/hooks/useIndustries';
-import {
-  useGlobalUseCases, useCreateGlobalUseCase, useUpdateGlobalUseCase, useDeleteGlobalUseCase,
-} from '@/hooks/useUseCases';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
 import { PortalPreviewDialog } from './PortalPreviewDialog';
-import { PortalConfig, DEFAULT_BANKING_CONFIG } from '@/types/portalConfig';
 import { CreateIndustryWizard } from './CreateIndustryWizard';
 
 const ICON_MAP: Record<string, React.ElementType> = {
