@@ -1,0 +1,251 @@
+import { useState, useRef } from "react";
+import { Upload, Trash2, Check, Image as ImageIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { DemoEnvironment } from "@/types/demo";
+
+interface ScreenshotUploadSectionProps {
+  demo: DemoEnvironment;
+  onApply: (updates: Partial<DemoEnvironment>) => void;
+}
+
+function generateUploadedHtml(
+  imageUrl: string,
+  bgColor: string,
+  alt: string
+): string {
+  return `<div style="width: 100%; background-color: ${bgColor}; display: flex; justify-content: center; align-items: center; padding: 0;"><img src="${imageUrl}" style="max-width: 100%; height: auto; display: block;" alt="${alt}" /></div>`;
+}
+
+export function ScreenshotUploadSection({ demo, onApply }: ScreenshotUploadSectionProps) {
+  const { toast } = useToast();
+  const headerInputRef = useRef<HTMLInputElement>(null);
+  const footerInputRef = useRef<HTMLInputElement>(null);
+
+  const [headerPreview, setHeaderPreview] = useState<string | null>(null);
+  const [footerPreview, setFooterPreview] = useState<string | null>(null);
+  const [headerBgColor, setHeaderBgColor] = useState("#ffffff");
+  const [footerBgColor, setFooterBgColor] = useState("#ffffff");
+  const [headerUploading, setHeaderUploading] = useState(false);
+  const [footerUploading, setFooterUploading] = useState(false);
+  const [headerUrl, setHeaderUrl] = useState<string | null>(null);
+  const [footerUrl, setFooterUrl] = useState<string | null>(null);
+
+  const uploadImage = async (file: File, type: "header" | "footer"): Promise<string | null> => {
+    const ext = file.name.split(".").pop() || "png";
+    const path = `${demo.id}/screenshot-${type}-${Date.now()}.${ext}`;
+
+    const { error } = await supabase.storage
+      .from("demo-logos")
+      .upload(path, file, { upsert: true });
+
+    if (error) {
+      toast({ title: "Upload failed", description: error.message, variant: "destructive" });
+      return null;
+    }
+
+    const { data: urlData } = supabase.storage
+      .from("demo-logos")
+      .getPublicUrl(path);
+
+    return urlData.publicUrl;
+  };
+
+  const handleFileSelect = async (file: File, type: "header" | "footer") => {
+    if (!file.type.startsWith("image/")) {
+      toast({ title: "Invalid file", description: "Please select an image file", variant: "destructive" });
+      return;
+    }
+
+    // Show local preview immediately
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      if (type === "header") setHeaderPreview(e.target?.result as string);
+      else setFooterPreview(e.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+
+    // Upload
+    const setter = type === "header" ? setHeaderUploading : setFooterUploading;
+    setter(true);
+    const url = await uploadImage(file, type);
+    setter(false);
+
+    if (url) {
+      if (type === "header") setHeaderUrl(url);
+      else setFooterUrl(url);
+      toast({ title: `${type === "header" ? "Header" : "Footer"} uploaded`, description: "Image ready to apply" });
+    }
+  };
+
+  const handleApply = () => {
+    const updates: Partial<DemoEnvironment> = {};
+
+    if (headerUrl) {
+      updates.mirrorScreenshotHeaderHtml = generateUploadedHtml(headerUrl, headerBgColor, "Site header");
+    }
+    if (footerUrl) {
+      updates.mirrorScreenshotFooterHtml = generateUploadedHtml(footerUrl, footerBgColor, "Site footer");
+    }
+
+    if (!headerUrl && !footerUrl) {
+      toast({ title: "No images", description: "Upload at least one image before applying", variant: "destructive" });
+      return;
+    }
+
+    onApply(updates);
+    toast({ title: "Custom images applied", description: "Header/footer images have been saved" });
+  };
+
+  const clearImage = (type: "header" | "footer") => {
+    if (type === "header") {
+      setHeaderPreview(null);
+      setHeaderUrl(null);
+      if (headerInputRef.current) headerInputRef.current.value = "";
+    } else {
+      setFooterPreview(null);
+      setFooterUrl(null);
+      if (footerInputRef.current) footerInputRef.current.value = "";
+    }
+  };
+
+  return (
+    <Card>
+      <CardContent className="pt-4 space-y-5">
+        <div>
+          <Label className="text-base font-semibold flex items-center gap-2">
+            <Upload className="w-4 h-4" />
+            Upload Custom Images
+          </Label>
+          <p className="text-sm text-muted-foreground mt-1">
+            Upload your own header and footer images. Set a background color to fill any extra space so sizing doesn't need to be exact.
+          </p>
+        </div>
+
+        {/* Header Upload */}
+        <div className="space-y-3 p-4 rounded-lg border bg-muted/30">
+          <Label className="font-medium">Header Image</Label>
+          <div className="flex items-center gap-3 flex-wrap">
+            <input
+              ref={headerInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => e.target.files?.[0] && handleFileSelect(e.target.files[0], "header")}
+            />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => headerInputRef.current?.click()}
+              disabled={headerUploading}
+            >
+              {headerUploading ? "Uploading…" : <><ImageIcon className="w-4 h-4 mr-2" />Choose Image</>}
+            </Button>
+            {headerPreview && (
+              <Button variant="ghost" size="sm" onClick={() => clearImage("header")}>
+                <Trash2 className="w-4 h-4 mr-1" /> Remove
+              </Button>
+            )}
+            <div className="flex items-center gap-2 ml-auto">
+              <Label className="text-xs whitespace-nowrap">Background</Label>
+              <input
+                type="color"
+                value={headerBgColor}
+                onChange={(e) => setHeaderBgColor(e.target.value)}
+                className="color-picker-swatch"
+              />
+              <Input
+                value={headerBgColor}
+                onChange={(e) => setHeaderBgColor(e.target.value)}
+                className="font-mono w-24 h-8 text-xs"
+              />
+            </div>
+          </div>
+          {headerPreview && (
+            <div
+              className="rounded-lg overflow-hidden border"
+              style={{ backgroundColor: headerBgColor }}
+            >
+              <img
+                src={headerPreview}
+                alt="Header preview"
+                className="max-w-full h-auto mx-auto block"
+                style={{ maxHeight: "200px" }}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Footer Upload */}
+        <div className="space-y-3 p-4 rounded-lg border bg-muted/30">
+          <Label className="font-medium">Footer Image</Label>
+          <div className="flex items-center gap-3 flex-wrap">
+            <input
+              ref={footerInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => e.target.files?.[0] && handleFileSelect(e.target.files[0], "footer")}
+            />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => footerInputRef.current?.click()}
+              disabled={footerUploading}
+            >
+              {footerUploading ? "Uploading…" : <><ImageIcon className="w-4 h-4 mr-2" />Choose Image</>}
+            </Button>
+            {footerPreview && (
+              <Button variant="ghost" size="sm" onClick={() => clearImage("footer")}>
+                <Trash2 className="w-4 h-4 mr-1" /> Remove
+              </Button>
+            )}
+            <div className="flex items-center gap-2 ml-auto">
+              <Label className="text-xs whitespace-nowrap">Background</Label>
+              <input
+                type="color"
+                value={footerBgColor}
+                onChange={(e) => setFooterBgColor(e.target.value)}
+                className="color-picker-swatch"
+              />
+              <Input
+                value={footerBgColor}
+                onChange={(e) => setFooterBgColor(e.target.value)}
+                className="font-mono w-24 h-8 text-xs"
+              />
+            </div>
+          </div>
+          {footerPreview && (
+            <div
+              className="rounded-lg overflow-hidden border"
+              style={{ backgroundColor: footerBgColor }}
+            >
+              <img
+                src={footerPreview}
+                alt="Footer preview"
+                className="max-w-full h-auto mx-auto block"
+                style={{ maxHeight: "200px" }}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Apply Button */}
+        <div className="flex justify-end">
+          <Button
+            onClick={handleApply}
+            disabled={!headerUrl && !footerUrl}
+            className="gradient-primary"
+          >
+            <Check className="w-4 h-4 mr-2" />
+            Apply Uploaded Images
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
