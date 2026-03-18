@@ -77,8 +77,8 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
   useEffect(() => {
     if (hasPortal && selectedIndustryId && useCasesInitialized) {
       const loginUseCase = globalUseCases.find(uc => 
-        uc.industryId === selectedIndustryId && 
         uc.isEnabled &&
+        uc.title.toLowerCase().includes('login')
         uc.title.toLowerCase().includes('login')
       );
       if (loginUseCase && !selectedUseCases.includes(loginUseCase.id)) {
