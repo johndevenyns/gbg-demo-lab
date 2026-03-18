@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, LogOut, Settings, Users, UserCheck, LayoutTemplate, ListChecks, Briefcase, Monitor, Shield } from "lucide-react";
+import { ArrowLeft, LogOut, Settings, Users, UserCheck, LayoutTemplate, ListChecks, Briefcase, Monitor, Shield, FolderOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
@@ -11,6 +11,7 @@ import { GlobalFieldConfigManagement } from "@/components/admin/GlobalFieldConfi
 import { IndustryManagement } from "@/components/admin/IndustryManagement";
 import { PortalTypeManagement } from "@/components/admin/PortalTypeManagement";
 import { UnifiedVerificationSettings } from "@/components/admin/UnifiedVerificationSettings";
+import { GlobalUseCaseManagement } from "@/components/admin/GlobalUseCaseManagement";
 
 export default function VerificationSettings() {
   const navigate = useNavigate();
@@ -79,6 +80,12 @@ export default function VerificationSettings() {
               </TabsTrigger>
             )}
             {isGlobalAdmin && (
+              <TabsTrigger value="use-cases" className="flex items-center gap-2">
+                <FolderOpen className="w-4 h-4" />
+                Use Cases
+              </TabsTrigger>
+            )}
+            {isGlobalAdmin && (
               <TabsTrigger value="industries" className="flex items-center gap-2">
                 <Briefcase className="w-4 h-4" />
                 Industries
@@ -110,6 +117,10 @@ export default function VerificationSettings() {
 
           <TabsContent value="field-config" className="space-y-6">
             <GlobalFieldConfigManagement />
+          </TabsContent>
+
+          <TabsContent value="use-cases" className="space-y-6">
+            <GlobalUseCaseManagement />
           </TabsContent>
 
           <TabsContent value="industries" className="space-y-6">
