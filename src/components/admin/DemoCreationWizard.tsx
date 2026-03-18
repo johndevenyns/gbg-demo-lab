@@ -275,7 +275,7 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
 
   // Find the login use case for the selected industry
   const loginUseCase = globalUseCases.find(uc => 
-    uc.industryId === selectedIndustryId && uc.isEnabled && uc.title.toLowerCase().includes('login')
+    uc.isEnabled && uc.title.toLowerCase().includes('login')
   );
 
   return (
