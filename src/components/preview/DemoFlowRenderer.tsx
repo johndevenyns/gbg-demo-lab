@@ -1088,6 +1088,20 @@ export function DemoFlowRenderer({
     setIsLoading(true);
 
     try {
+      // Check global master registration code first
+      const { data: masterCodes } = await supabase
+        .from('global_settings')
+        .select('value')
+        .eq('key', 'master_registration_code')
+        .maybeSingle();
+
+      const masterCode = masterCodes?.value;
+      if (masterCode && code === masterCode) {
+        // Master code accepted — no profile data to prefill
+        setIsLoading(false);
+        return true;
+      }
+
       const { data, error: queryError } = await supabase
         .from('demo_users')
         .select('id, email, registration_code, registration_code_expires_at, is_active, profile_data')
@@ -1123,13 +1137,11 @@ export function DemoFlowRenderer({
             prefillData[key] = value;
           }
         }
-        // Also include the user's email from the account
         if (data.email && !prefillData.email) {
           prefillData.email = data.email;
         }
         setFormData(prev => ({ ...prev, ...prefillData }));
       } else if (data.email) {
-        // At minimum, prefill email
         setFormData(prev => ({ ...prev, email: data.email }));
       }
 
