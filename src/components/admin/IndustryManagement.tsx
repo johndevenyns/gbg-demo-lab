@@ -104,7 +104,6 @@ export function IndustryManagement() {
             title: uc.title,
             description: uc.description || undefined,
             iconName: 'Package',
-            industryId: newIndustry.id,
             defaultFormSteps: uc.defaultFormSteps,
             defaultVerificationType: uc.defaultVerificationType,
             defaultPageContent: uc.pageContent as any,
