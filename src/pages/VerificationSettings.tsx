@@ -11,6 +11,7 @@ import { GlobalFieldConfigManagement } from "@/components/admin/GlobalFieldConfi
 import { IndustryManagement } from "@/components/admin/IndustryManagement";
 import { PortalTypeManagement } from "@/components/admin/PortalTypeManagement";
 import { UnifiedVerificationSettings } from "@/components/admin/UnifiedVerificationSettings";
+import { GlobalUseCaseManagement } from "@/components/admin/GlobalUseCaseManagement";
 
 export default function VerificationSettings() {
   const navigate = useNavigate();
