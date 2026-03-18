@@ -79,7 +79,6 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
       const loginUseCase = globalUseCases.find(uc => 
         uc.isEnabled &&
         uc.title.toLowerCase().includes('login')
-        uc.title.toLowerCase().includes('login')
       );
       if (loginUseCase && !selectedUseCases.includes(loginUseCase.id)) {
         setSelectedUseCases(prev => [loginUseCase.id, ...prev]);
