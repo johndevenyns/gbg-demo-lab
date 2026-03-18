@@ -11,7 +11,6 @@ function mapGlobalRow(row: Record<string, unknown>): GlobalUseCase {
     title: row.title as string,
     description: (row.description as string) ?? undefined,
     iconName: (row.icon_name as string) ?? 'Package',
-    industryId: (row.industry_id as string) ?? null,
     defaultFormSteps: (row.default_form_steps as Record<string, unknown>[]) ?? [],
     defaultVerificationType: (row.default_verification_type as string) ?? 'docBio',
     defaultPageContent: (row.default_page_content as UseCasePageContent) ?? {},
