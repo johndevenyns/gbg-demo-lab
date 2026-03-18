@@ -1,5 +1,6 @@
 import { useState, useMemo, useRef } from "react";
 import { Camera, Loader2, ExternalLink, Eye, Check, Monitor, Tablet, Smartphone, Paintbrush, RefreshCw, Crop, Ban } from "lucide-react";
+import { ScreenshotUploadSection } from "./ScreenshotUploadSection";
  import { Button } from "@/components/ui/button";
  import { Input } from "@/components/ui/input";
  import { Label } from "@/components/ui/label";
