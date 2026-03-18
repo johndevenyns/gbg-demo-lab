@@ -66,7 +66,7 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
   useEffect(() => {
     if (selectedIndustryId && !useCasesInitialized) {
       const industryUseCases = globalUseCases
-        .filter(uc => uc.industryId === selectedIndustryId && uc.isEnabled)
+        .filter(uc => uc.isEnabled)
         .map(uc => uc.id);
       setSelectedUseCases(industryUseCases);
       setUseCasesInitialized(true);
