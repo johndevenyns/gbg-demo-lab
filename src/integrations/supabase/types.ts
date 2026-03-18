@@ -398,7 +398,6 @@ export type Database = {
           display_order: number
           icon_name: string | null
           id: string
-          industry_id: string | null
           is_enabled: boolean
           portal_type: string | null
           show_fill_fail: boolean
@@ -415,7 +414,6 @@ export type Database = {
           display_order?: number
           icon_name?: string | null
           id?: string
-          industry_id?: string | null
           is_enabled?: boolean
           portal_type?: string | null
           show_fill_fail?: boolean
@@ -432,7 +430,6 @@ export type Database = {
           display_order?: number
           icon_name?: string | null
           id?: string
-          industry_id?: string | null
           is_enabled?: boolean
           portal_type?: string | null
           show_fill_fail?: boolean
@@ -440,15 +437,7 @@ export type Database = {
           title?: string
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "global_use_cases_industry_id_fkey"
-            columns: ["industry_id"]
-            isOneToOne: false
-            referencedRelation: "industries"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       industries: {
         Row: {
