@@ -119,6 +119,10 @@ export default function VerificationSettings() {
             <GlobalFieldConfigManagement />
           </TabsContent>
 
+          <TabsContent value="use-cases" className="space-y-6">
+            <GlobalUseCaseManagement />
+          </TabsContent>
+
           <TabsContent value="industries" className="space-y-6">
             <IndustryManagement />
           </TabsContent>
