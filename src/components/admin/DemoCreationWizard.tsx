@@ -109,7 +109,7 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
   };
 
   const selectedIndustry = industries.find(i => i.id === selectedIndustryId);
-  const industryUseCases = globalUseCases.filter(uc => uc.industryId === selectedIndustryId && uc.isEnabled);
+  const industryUseCases = globalUseCases.filter(uc => uc.isEnabled);
 
   const startProcessing = async () => {
     if (!customerName.trim() || !selectedIndustryId) return;
