@@ -80,6 +80,12 @@ export default function VerificationSettings() {
               </TabsTrigger>
             )}
             {isGlobalAdmin && (
+              <TabsTrigger value="use-cases" className="flex items-center gap-2">
+                <FolderOpen className="w-4 h-4" />
+                Use Cases
+              </TabsTrigger>
+            )}
+            {isGlobalAdmin && (
               <TabsTrigger value="industries" className="flex items-center gap-2">
                 <Briefcase className="w-4 h-4" />
                 Industries
