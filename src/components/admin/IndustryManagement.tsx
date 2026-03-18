@@ -128,7 +128,6 @@ export function IndustryManagement() {
       iconName: 'Package',
       defaultFormSteps: [],
       defaultVerificationType: 'docBio',
-      defaultVerificationType: 'docBio',
       showFillPass: false,
       showFillFail: false,
       defaultPageContent: {
