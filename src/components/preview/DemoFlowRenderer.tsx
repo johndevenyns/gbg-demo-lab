@@ -1090,12 +1090,12 @@ export function DemoFlowRenderer({
     try {
       // Check global master registration code first
       const { data: masterCodes } = await supabase
-        .from('global_settings')
+        .from('global_settings' as any)
         .select('value')
         .eq('key', 'master_registration_code')
         .maybeSingle();
 
-      const masterCode = masterCodes?.value;
+      const masterCode = (masterCodes as any)?.value;
       if (masterCode && code === masterCode) {
         // Master code accepted — no profile data to prefill
         setIsLoading(false);
