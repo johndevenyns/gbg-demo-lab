@@ -367,7 +367,7 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
                   const icons = LucideIcons as unknown as Record<string, React.ComponentType<{ className?: string }>>;
                   const IconComp = icons[ind.iconName] || icons['Building2'];
                   const isSelected = selectedIndustryId === ind.id;
-                  const ucCount = globalUseCases.filter(uc => uc.industryId === ind.id && uc.isEnabled).length;
+                  const ucCount = globalUseCases.filter(uc => uc.isEnabled).length;
 
                   return (
                     <button
