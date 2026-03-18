@@ -66,7 +66,7 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
   useEffect(() => {
     if (selectedIndustryId && !useCasesInitialized) {
       const industryUseCases = globalUseCases
-        .filter(uc => uc.industryId === selectedIndustryId && uc.isEnabled)
+        .filter(uc => uc.isEnabled)
         .map(uc => uc.id);
       setSelectedUseCases(industryUseCases);
       setUseCasesInitialized(true);
@@ -77,7 +77,6 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
   useEffect(() => {
     if (hasPortal && selectedIndustryId && useCasesInitialized) {
       const loginUseCase = globalUseCases.find(uc => 
-        uc.industryId === selectedIndustryId && 
         uc.isEnabled &&
         uc.title.toLowerCase().includes('login')
       );
@@ -109,7 +108,7 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
   };
 
   const selectedIndustry = industries.find(i => i.id === selectedIndustryId);
-  const industryUseCases = globalUseCases.filter(uc => uc.industryId === selectedIndustryId && uc.isEnabled);
+  const industryUseCases = globalUseCases.filter(uc => uc.isEnabled);
 
   const startProcessing = async () => {
     if (!customerName.trim() || !selectedIndustryId) return;
@@ -275,7 +274,7 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
 
   // Find the login use case for the selected industry
   const loginUseCase = globalUseCases.find(uc => 
-    uc.industryId === selectedIndustryId && uc.isEnabled && uc.title.toLowerCase().includes('login')
+    uc.isEnabled && uc.title.toLowerCase().includes('login')
   );
 
   return (
@@ -367,7 +366,7 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
                   const icons = LucideIcons as unknown as Record<string, React.ComponentType<{ className?: string }>>;
                   const IconComp = icons[ind.iconName] || icons['Building2'];
                   const isSelected = selectedIndustryId === ind.id;
-                  const ucCount = globalUseCases.filter(uc => uc.industryId === ind.id && uc.isEnabled).length;
+                  const ucCount = globalUseCases.filter(uc => uc.isEnabled).length;
 
                   return (
                     <button

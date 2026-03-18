@@ -77,10 +77,10 @@ export function IndustryManagement() {
     load();
   }, []);
 
-  const useCasesForIndustry = (industryId: string) =>
-    allUseCases.filter(uc => uc.industryId === industryId);
+  const useCasesForIndustry = (_industryId: string) =>
+    allUseCases;
 
-  const unassignedUseCases = allUseCases.filter(uc => !uc.industryId);
+  const unassignedUseCases = allUseCases;
 
   const handleCreateIndustry = (data: {
     title: string;
@@ -104,7 +104,6 @@ export function IndustryManagement() {
             title: uc.title,
             description: uc.description || undefined,
             iconName: 'Package',
-            industryId: newIndustry.id,
             defaultFormSteps: uc.defaultFormSteps,
             defaultVerificationType: uc.defaultVerificationType,
             defaultPageContent: uc.pageContent as any,
@@ -127,7 +126,6 @@ export function IndustryManagement() {
       title: newUseCase.title,
       description: newUseCase.description || undefined,
       iconName: 'Package',
-      industryId: isGeneric ? null : createUseCaseIndustryId,
       defaultFormSteps: [],
       defaultVerificationType: 'docBio',
       showFillPass: false,
@@ -514,11 +512,10 @@ export function IndustryManagement() {
                       title: uc.title,
                       description: uc.description,
                       iconName: uc.iconName,
-                      industryId,
                       defaultFormSteps: uc.defaultFormSteps,
                       defaultVerificationType: uc.defaultVerificationType,
                       defaultPageContent: { ...uc.defaultPageContent },
-                      displayOrder: industryUseCases.length,
+                      displayOrder: allUseCases.length,
                       isEnabled: true,
                       showFillPass: uc.showFillPass,
                       showFillFail: uc.showFillFail,

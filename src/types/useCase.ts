@@ -18,7 +18,6 @@ export interface GlobalUseCase {
   title: string;
   description?: string;
   iconName: string;
-  industryId?: string | null;
   defaultFormSteps: Record<string, unknown>[];
   defaultVerificationType: string;
   defaultPageContent: UseCasePageContent;

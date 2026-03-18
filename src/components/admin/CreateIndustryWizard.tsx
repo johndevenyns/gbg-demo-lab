@@ -88,7 +88,7 @@ export function CreateIndustryWizard({
   const [templates, setTemplates] = useState<FormTemplateOption[]>([]);
 
   // Generic (unassigned) use cases available as blueprints
-  const genericUseCases = allGlobalUseCases.filter(uc => !uc.industryId);
+  const genericUseCases = allGlobalUseCases;
 
   useEffect(() => {
     if (!open) return;

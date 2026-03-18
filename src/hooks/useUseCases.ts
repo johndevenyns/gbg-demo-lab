@@ -11,7 +11,6 @@ function mapGlobalRow(row: Record<string, unknown>): GlobalUseCase {
     title: row.title as string,
     description: (row.description as string) ?? undefined,
     iconName: (row.icon_name as string) ?? 'Package',
-    industryId: (row.industry_id as string) ?? null,
     defaultFormSteps: (row.default_form_steps as Record<string, unknown>[]) ?? [],
     defaultVerificationType: (row.default_verification_type as string) ?? 'docBio',
     defaultPageContent: (row.default_page_content as UseCasePageContent) ?? {},
@@ -49,7 +48,6 @@ export function useCreateGlobalUseCase() {
           title: uc.title,
           description: uc.description ?? null,
           icon_name: uc.iconName,
-          industry_id: uc.industryId ?? null,
           default_form_steps: JSON.parse(JSON.stringify(uc.defaultFormSteps)) as unknown as null,
           default_verification_type: uc.defaultVerificationType,
           default_page_content: uc.defaultPageContent as unknown as null,
@@ -85,7 +83,6 @@ export function useUpdateGlobalUseCase() {
       if (updates.showFillPass !== undefined) dbUpdates.show_fill_pass = updates.showFillPass;
       if (updates.showFillFail !== undefined) dbUpdates.show_fill_fail = updates.showFillFail;
       if (updates.portalType !== undefined) dbUpdates.portal_type = updates.portalType;
-      if (updates.industryId !== undefined) dbUpdates.industry_id = updates.industryId;
 
       const { data, error } = await supabase
         .from('global_use_cases')
