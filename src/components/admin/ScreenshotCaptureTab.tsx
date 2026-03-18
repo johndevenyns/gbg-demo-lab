@@ -287,9 +287,12 @@ export function ScreenshotCaptureTab({ demo, url, onUrlChange, onApply, isConfig
  
    const selectedScreenshot = getSelectedScreenshot();
  
-   return (
-     <div className="space-y-4">
-       <Card>
+    return (
+      <div className="space-y-4">
+        {/* Upload Custom Images */}
+        <ScreenshotUploadSection demo={demo} onApply={onApply} />
+
+        <Card>
           <CardContent className="pt-4 space-y-4">
             <p className="text-sm text-muted-foreground">
               Fetches full-page screenshots and lets you crop specific regions for the header and footer.
