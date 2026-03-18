@@ -51,12 +51,36 @@ export default function VerificationSettings() {
 
       {/* Main Content */}
       <main className="admin-container py-8">
-        <Tabs defaultValue={isGlobalAdmin ? "users" : "verification"} className="space-y-6">
+        <Tabs defaultValue={isGlobalAdmin ? "industries" : "verification"} className="space-y-6">
           <TabsList>
             {isGlobalAdmin && (
-              <TabsTrigger value="users" className="flex items-center gap-2">
-                <Users className="w-4 h-4" />
-                User Management
+              <TabsTrigger value="industries" className="flex items-center gap-2">
+                <Briefcase className="w-4 h-4" />
+                Industries
+              </TabsTrigger>
+            )}
+            {isGlobalAdmin && (
+              <TabsTrigger value="use-cases" className="flex items-center gap-2">
+                <FolderOpen className="w-4 h-4" />
+                Use Cases
+              </TabsTrigger>
+            )}
+            {isGlobalAdmin && (
+              <TabsTrigger value="templates" className="flex items-center gap-2">
+                <LayoutTemplate className="w-4 h-4" />
+                Form Templates
+              </TabsTrigger>
+            )}
+            {isGlobalAdmin && (
+              <TabsTrigger value="field-config" className="flex items-center gap-2">
+                <ListChecks className="w-4 h-4" />
+                Fields
+              </TabsTrigger>
+            )}
+            {isGlobalAdmin && (
+              <TabsTrigger value="portal-types" className="flex items-center gap-2">
+                <Monitor className="w-4 h-4" />
+                Portal Types
               </TabsTrigger>
             )}
             <TabsTrigger value="verification" className="flex items-center gap-2">
@@ -68,47 +92,19 @@ export default function VerificationSettings() {
               Test Profiles
             </TabsTrigger>
             {isGlobalAdmin && (
-              <TabsTrigger value="templates" className="flex items-center gap-2">
-                <LayoutTemplate className="w-4 h-4" />
-                Form Templates
-              </TabsTrigger>
-            )}
-            {isGlobalAdmin && (
-              <TabsTrigger value="field-config" className="flex items-center gap-2">
-                <ListChecks className="w-4 h-4" />
-                Field Configuration
-              </TabsTrigger>
-            )}
-            {isGlobalAdmin && (
-              <TabsTrigger value="use-cases" className="flex items-center gap-2">
-                <FolderOpen className="w-4 h-4" />
-                Use Cases
-              </TabsTrigger>
-            )}
-            {isGlobalAdmin && (
-              <TabsTrigger value="industries" className="flex items-center gap-2">
-                <Briefcase className="w-4 h-4" />
-                Industries
-              </TabsTrigger>
-            )}
-            {isGlobalAdmin && (
-              <TabsTrigger value="portal-types" className="flex items-center gap-2">
-                <Monitor className="w-4 h-4" />
-                Portal Types
+              <TabsTrigger value="users" className="flex items-center gap-2">
+                <Users className="w-4 h-4" />
+                User Management
               </TabsTrigger>
             )}
           </TabsList>
 
-          <TabsContent value="users" className="space-y-6">
-            <UserManagement />
+          <TabsContent value="industries" className="space-y-6">
+            <IndustryManagement />
           </TabsContent>
 
-          <TabsContent value="verification" className="space-y-6">
-            <UnifiedVerificationSettings isGlobalAdmin={isGlobalAdmin} />
-          </TabsContent>
-
-          <TabsContent value="profiles" className="space-y-6">
-            <TestProfileManagement />
+          <TabsContent value="use-cases" className="space-y-6">
+            <GlobalUseCaseManagement />
           </TabsContent>
 
           <TabsContent value="templates" className="space-y-6">
@@ -119,16 +115,20 @@ export default function VerificationSettings() {
             <GlobalFieldConfigManagement />
           </TabsContent>
 
-          <TabsContent value="use-cases" className="space-y-6">
-            <GlobalUseCaseManagement />
-          </TabsContent>
-
-          <TabsContent value="industries" className="space-y-6">
-            <IndustryManagement />
-          </TabsContent>
-
           <TabsContent value="portal-types" className="space-y-6">
             <PortalTypeManagement />
+          </TabsContent>
+
+          <TabsContent value="verification" className="space-y-6">
+            <UnifiedVerificationSettings isGlobalAdmin={isGlobalAdmin} />
+          </TabsContent>
+
+          <TabsContent value="profiles" className="space-y-6">
+            <TestProfileManagement />
+          </TabsContent>
+
+          <TabsContent value="users" className="space-y-6">
+            <UserManagement />
           </TabsContent>
         </Tabs>
       </main>
