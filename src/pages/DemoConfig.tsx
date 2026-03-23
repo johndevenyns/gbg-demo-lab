@@ -300,7 +300,7 @@ export default function DemoConfig() {
     updateDemoMutation.mutate({ id: localDemo.id, updates: localDemo });
   };
 
-
+  const renderSection = () => {
     switch (activeSection) {
       case 'settings':
         return <SiteSettingsSection demo={localDemo} onUpdate={handleUpdate} portalTypes={portalTypes} />;
