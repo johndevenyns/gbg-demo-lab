@@ -352,9 +352,9 @@ export default function DemoConfig() {
               <Button variant="outline" onClick={() => navigate(`/demo/${localDemo.slug}`)}>
                 <Eye className="w-4 h-4 mr-2" />Preview
               </Button>
-              <Button onClick={handleSave} disabled={updateDemoMutation.isPending} className="gradient-primary">
+              <Button onClick={handleSave} disabled={updateDemoMutation.isPending} variant="outline">
                 {updateDemoMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-                Save
+                {updateDemoMutation.isPending ? 'Saving...' : 'Save Now'}
               </Button>
               <ThemeToggle />
             </div>
