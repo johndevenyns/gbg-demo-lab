@@ -11,7 +11,7 @@ import { DemoEnvironment } from "@/types/demo";
 import { FormStyleConfig, DEFAULT_FORM_STYLE } from "@/types/formStyle";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { SiteMirrorCard } from "@/components/admin/SiteMirrorCard";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -236,11 +236,19 @@ export default function DemoConfig() {
   
   // Local state for form fields
   const [localDemo, setLocalDemo] = useState<DemoEnvironment | null>(null);
+  const pendingSaveRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastSaveTimestampRef = useRef<number>(0);
+  const initialLoadRef = useRef(true);
   
-  // Sync local state when demo loads
+  // Sync local state when demo loads — but only on first load or when
+  // the server data is newer than our last save (avoids overwriting local edits)
   useEffect(() => {
     if (demo) {
-      setLocalDemo(demo);
+      if (initialLoadRef.current) {
+        setLocalDemo(demo);
+        initialLoadRef.current = false;
+      }
+      // Don't overwrite local state on refetches — our auto-save is the source of truth
     }
   }, [demo]);
   
@@ -265,25 +273,34 @@ export default function DemoConfig() {
     );
   }
 
-  const handleUpdate = (updates: Partial<DemoEnvironment>, autoSave?: boolean) => {
-    setLocalDemo(prev => {
-      const newDemo = prev ? { ...prev, ...updates } : null;
-      
-      // If autoSave flag is set, save immediately with the new data
-      if (autoSave && newDemo) {
-        updateDemoMutation.mutate({ id: newDemo.id, updates });
-      }
-      
-      return newDemo;
-    });
+  // Auto-save: debounce updates to avoid excessive writes
+  const handleUpdate = (updates: Partial<DemoEnvironment>) => {
+    setLocalDemo(prev => prev ? { ...prev, ...updates } : null);
+    
+    // Clear any pending save
+    if (pendingSaveRef.current) clearTimeout(pendingSaveRef.current);
+    
+    // Debounce save by 800ms
+    pendingSaveRef.current = setTimeout(() => {
+      setLocalDemo(current => {
+        if (current) {
+          lastSaveTimestampRef.current = Date.now();
+          updateDemoMutation.mutate({ id: current.id, updates: current });
+        }
+        return current;
+      });
+    }, 800);
   };
 
   const handleSave = () => {
+    // Clear any pending debounce and save immediately
+    if (pendingSaveRef.current) clearTimeout(pendingSaveRef.current);
     if (!localDemo) return;
+    lastSaveTimestampRef.current = Date.now();
     updateDemoMutation.mutate({ id: localDemo.id, updates: localDemo });
   };
 
-  const renderSection = () => {
+
     switch (activeSection) {
       case 'settings':
         return <SiteSettingsSection demo={localDemo} onUpdate={handleUpdate} portalTypes={portalTypes} />;
@@ -335,9 +352,9 @@ export default function DemoConfig() {
               <Button variant="outline" onClick={() => navigate(`/demo/${localDemo.slug}`)}>
                 <Eye className="w-4 h-4 mr-2" />Preview
               </Button>
-              <Button onClick={handleSave} disabled={updateDemoMutation.isPending} className="gradient-primary">
+              <Button onClick={handleSave} disabled={updateDemoMutation.isPending} variant="outline">
                 {updateDemoMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-                Save
+                {updateDemoMutation.isPending ? 'Saving...' : 'Save Now'}
               </Button>
               <ThemeToggle />
             </div>
