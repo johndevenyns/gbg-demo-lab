@@ -11,7 +11,7 @@ import { DemoEnvironment } from "@/types/demo";
 import { FormStyleConfig, DEFAULT_FORM_STYLE } from "@/types/formStyle";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { SiteMirrorCard } from "@/components/admin/SiteMirrorCard";
 import { ThemeToggle } from "@/components/ThemeToggle";
