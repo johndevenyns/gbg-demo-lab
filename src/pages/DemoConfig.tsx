@@ -236,52 +236,23 @@ export default function DemoConfig() {
   
   // Local state for form fields
   const [localDemo, setLocalDemo] = useState<DemoEnvironment | null>(null);
+  const pendingSaveRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastSaveTimestampRef = useRef<number>(0);
+  const initialLoadRef = useRef(true);
   
-  // Sync local state when demo loads
+  // Sync local state when demo loads — but only on first load or when
+  // the server data is newer than our last save (avoids overwriting local edits)
   useEffect(() => {
     if (demo) {
-      setLocalDemo(demo);
+      if (initialLoadRef.current) {
+        setLocalDemo(demo);
+        initialLoadRef.current = false;
+      }
+      // Don't overwrite local state on refetches — our auto-save is the source of truth
     }
   }, [demo]);
   
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
-  
-  if (error || !demo || !localDemo) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Card className="glass-card max-w-md">
-          <CardContent className="pt-6 text-center">
-            <h2 className="text-xl font-semibold mb-2">Demo not found</h2>
-            <Button onClick={() => navigate("/admin")} variant="outline">Back to Dashboard</Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  const handleUpdate = (updates: Partial<DemoEnvironment>, autoSave?: boolean) => {
-    setLocalDemo(prev => {
-      const newDemo = prev ? { ...prev, ...updates } : null;
-      
-      // If autoSave flag is set, save immediately with the new data
-      if (autoSave && newDemo) {
-        updateDemoMutation.mutate({ id: newDemo.id, updates });
-      }
-      
-      return newDemo;
-    });
-  };
-
-  const handleSave = () => {
-    if (!localDemo) return;
-    updateDemoMutation.mutate({ id: localDemo.id, updates: localDemo });
-  };
 
   const renderSection = () => {
     switch (activeSection) {
