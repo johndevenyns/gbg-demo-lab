@@ -253,8 +253,54 @@ export default function DemoConfig() {
   }, [demo]);
   
   if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+  
+  if (error || !demo || !localDemo) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Card className="glass-card max-w-md">
+          <CardContent className="pt-6 text-center">
+            <h2 className="text-xl font-semibold mb-2">Demo not found</h2>
+            <Button onClick={() => navigate("/admin")} variant="outline">Back to Dashboard</Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
-  const renderSection = () => {
+  // Auto-save: debounce updates to avoid excessive writes
+  const handleUpdate = (updates: Partial<DemoEnvironment>) => {
+    setLocalDemo(prev => prev ? { ...prev, ...updates } : null);
+    
+    // Clear any pending save
+    if (pendingSaveRef.current) clearTimeout(pendingSaveRef.current);
+    
+    // Debounce save by 800ms
+    pendingSaveRef.current = setTimeout(() => {
+      setLocalDemo(current => {
+        if (current) {
+          lastSaveTimestampRef.current = Date.now();
+          updateDemoMutation.mutate({ id: current.id, updates: current });
+        }
+        return current;
+      });
+    }, 800);
+  };
+
+  const handleSave = () => {
+    // Clear any pending debounce and save immediately
+    if (pendingSaveRef.current) clearTimeout(pendingSaveRef.current);
+    if (!localDemo) return;
+    lastSaveTimestampRef.current = Date.now();
+    updateDemoMutation.mutate({ id: localDemo.id, updates: localDemo });
+  };
+
+
     switch (activeSection) {
       case 'settings':
         return <SiteSettingsSection demo={localDemo} onUpdate={handleUpdate} portalTypes={portalTypes} />;
