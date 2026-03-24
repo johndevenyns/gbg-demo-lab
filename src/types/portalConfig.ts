@@ -143,13 +143,13 @@ export const DEFAULT_BANKING_CONFIG: PortalConfig = {
   ],
 
   verificationTriggers: [
-    { id: 'bank-name', action: 'change your name', label: 'Change Name', enabled: true, category: 'settings_change', condition: 'always', successMessage: 'Your name has been updated successfully.' },
-    { id: 'bank-email', action: 'change your email address', label: 'Change Email', enabled: true, category: 'settings_change', condition: 'always', successMessage: 'Your email address has been updated.' },
-    { id: 'bank-phone', action: 'change your phone number', label: 'Change Phone', enabled: true, category: 'settings_change', condition: 'always', successMessage: 'Your phone number has been updated.' },
-    { id: 'bank-password', action: 'change your password', label: 'Change Password', enabled: true, category: 'settings_change', condition: 'always', successMessage: 'Your password has been changed.' },
-    { id: 'bank-2fa', action: 'update two-factor authentication', label: 'Update 2FA', enabled: true, category: 'settings_change', condition: 'always', successMessage: 'Two-factor authentication updated.' },
-    { id: 'bank-transfer', action: 'send a transfer', label: 'Send Transfer', enabled: true, category: 'transaction', condition: 'threshold', thresholdAmount: 500, thresholdCurrency: 'USD', successMessage: 'Transfer sent successfully!' },
-    { id: 'bank-payment', action: 'pay a bill', label: 'Pay Bill', enabled: true, category: 'transaction', condition: 'threshold', thresholdAmount: 1000, thresholdCurrency: 'USD', successMessage: 'Payment submitted successfully!' },
+    { id: 'bank-name', action: 'change your name', label: 'Change Name', enabled: true, category: 'settings_change', condition: 'always', successMessage: 'Your name has been updated successfully.', postVerificationBehavior: 'return_with_toast' },
+    { id: 'bank-email', action: 'change your email address', label: 'Change Email', enabled: true, category: 'settings_change', condition: 'always', successMessage: 'Your email address has been updated.', postVerificationBehavior: 'return_with_toast' },
+    { id: 'bank-phone', action: 'change your phone number', label: 'Change Phone', enabled: true, category: 'settings_change', condition: 'always', successMessage: 'Your phone number has been updated.', postVerificationBehavior: 'return_with_toast' },
+    { id: 'bank-password', action: 'change your password', label: 'Change Password', enabled: true, category: 'settings_change', condition: 'always', successMessage: 'Your password has been changed.', postVerificationBehavior: 'return_with_toast' },
+    { id: 'bank-2fa', action: 'update two-factor authentication', label: 'Update 2FA', enabled: true, category: 'settings_change', condition: 'always', successMessage: 'Two-factor authentication updated.', postVerificationBehavior: 'return_with_toast' },
+    { id: 'bank-transfer', action: 'send a transfer', label: 'Send Transfer', enabled: true, category: 'transaction', condition: 'threshold', thresholdAmount: 500, thresholdCurrency: 'USD', successMessage: 'Transfer sent successfully!', postVerificationBehavior: 'show_completion', completionTitle: 'Transfer Complete', completionActions: [{ label: 'Send Another', action: 'repeat', variant: 'secondary' }, { label: 'Return to Dashboard', action: 'return_to_dashboard', variant: 'primary' }] },
+    { id: 'bank-payment', action: 'pay a bill', label: 'Pay Bill', enabled: true, category: 'transaction', condition: 'threshold', thresholdAmount: 1000, thresholdCurrency: 'USD', successMessage: 'Payment submitted successfully!', postVerificationBehavior: 'show_completion', completionTitle: 'Payment Complete', completionActions: [{ label: 'Pay Another', action: 'repeat', variant: 'secondary' }, { label: 'Return to Dashboard', action: 'return_to_dashboard', variant: 'primary' }] },
   ],
 };
 
