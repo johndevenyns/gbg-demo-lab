@@ -15,7 +15,7 @@ import { SaveTemplateDialog } from './SaveTemplateDialog';
 import { StoredUserDataConfig } from './StoredUserDataConfig';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
-  LayoutGrid, Settings2, Workflow, ExternalLink, RotateCcw, Bookmark, Users, CheckCircle2, XCircle,
+  LayoutGrid, Settings2, Workflow, RotateCcw, Bookmark, Users,
   AlignLeft, AlignCenter, AlignRight
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
