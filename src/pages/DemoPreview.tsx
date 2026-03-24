@@ -81,6 +81,7 @@ export default function DemoPreview() {
             : uc.defaultPageContent,
           isEnabled: link.isEnabled,
           displayOrder: link.displayOrder,
+          showOnLandingPage: link.showOnLandingPage,
           // Portal type comes from the demo level
           portalType: demoPortalType,
         };
