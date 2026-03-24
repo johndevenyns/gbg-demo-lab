@@ -125,6 +125,7 @@ function mapLinkRow(row: Record<string, unknown>): DemoUseCaseLink {
     useCaseId: row.use_case_id as string,
     isEnabled: row.is_enabled as boolean,
     displayOrder: row.display_order as number,
+    showOnLandingPage: (row.show_on_landing_page as boolean) ?? true,
     formStepsOverride: (row.form_steps_override as Record<string, unknown>[]) ?? null,
     verificationTypeOverride: (row.verification_type_override as string) ?? null,
     pageContentOverride: (row.page_content_override as UseCasePageContent) ?? null,
@@ -194,6 +195,7 @@ export function useUpdateDemoUseCaseLink() {
       const dbUpdates: Record<string, unknown> = {};
       if (updates.isEnabled !== undefined) dbUpdates.is_enabled = updates.isEnabled;
       if (updates.displayOrder !== undefined) dbUpdates.display_order = updates.displayOrder;
+      if (updates.showOnLandingPage !== undefined) dbUpdates.show_on_landing_page = updates.showOnLandingPage;
       if (updates.formStepsOverride !== undefined) dbUpdates.form_steps_override = updates.formStepsOverride ? JSON.parse(JSON.stringify(updates.formStepsOverride)) : null;
       if (updates.verificationTypeOverride !== undefined) dbUpdates.verification_type_override = updates.verificationTypeOverride;
       if (updates.pageContentOverride !== undefined) dbUpdates.page_content_override = updates.pageContentOverride;
