@@ -162,7 +162,10 @@ export function UseCaseSection({ demoId, demo, onUpdateDemo }: UseCaseSectionPro
                           <IconComp className="w-5 h-5 text-primary shrink-0" />
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
-                              <span className="font-medium text-sm">{uc.title}</span>
+                              <span className="font-medium text-sm">{link.titleOverride || uc.title}</span>
+                              {link.titleOverride && (
+                                <Badge variant="outline" className="text-[10px]">Renamed</Badge>
+                              )}
                               {hasOverride && (
                                 <Badge variant="outline" className="text-[10px]">Customized</Badge>
                               )}
