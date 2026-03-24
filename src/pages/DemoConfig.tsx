@@ -493,6 +493,29 @@ export default function DemoConfig() {
           </div>
         </main>
       </div>
+
+      {/* Lifecycle Dialogs */}
+      <SaveAsNewDemoDialog
+        open={showCloneDialog}
+        onOpenChange={setShowCloneDialog}
+        demo={localDemo}
+        useCaseLinks={useCaseLinks}
+        onSuccess={(newId) => navigate(`/admin/demo/${newId}`)}
+      />
+      <SaveAsIndustryDialog
+        open={showIndustryDialog}
+        onOpenChange={setShowIndustryDialog}
+        demo={localDemo}
+        useCaseLinks={useCaseLinks}
+        onSuccess={() => {}}
+      />
+      <ArchiveDemoDialog
+        open={showArchiveDialog}
+        onOpenChange={setShowArchiveDialog}
+        demoName={localDemo.customerName}
+        saving={archiving}
+        onConfirm={handleArchive}
+      />
     </div>
   );
 }
