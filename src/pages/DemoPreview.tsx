@@ -14,7 +14,8 @@ import { BankingPortalShell } from "@/components/preview/mockPortal/BankingPorta
 import { ResolvedUseCase } from "@/types/useCase";
 import { FormStep } from "@/types/demo";
 import { PortalBranding, PortalVerificationTrigger } from "@/types/portalConfig";
-import { StepUpVerificationModal } from "@/components/preview/mockPortal/StepUpVerificationModal";
+import { StepUpVerificationModal, PostVerificationAction } from "@/components/preview/mockPortal/StepUpVerificationModal";
+import { toast } from "@/hooks/use-toast";
 
 // Helper functions for form styling
 function getFormBorderRadius(radius?: string): string {
