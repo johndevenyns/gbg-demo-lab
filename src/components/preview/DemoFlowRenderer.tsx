@@ -1021,18 +1021,52 @@ export function DemoFlowRenderer({
 
   // Complete the flow (success or failure)
   const completeFlow = useCallback(async (success: boolean, refId?: string) => {
-    setFlowComplete(success ? 'success' : 'failure');
     if (refId) setReferenceId(refId);
     onComplete?.(success, refId);
 
-    // Execute create_account completion actions if configured on the current step
+    // Process completion actions in order
     const actions = success
       ? currentStep?.stepCompletionConfig?.onSuccess
       : currentStep?.stepCompletionConfig?.onFailure;
-    if (actions?.some(a => a.type === 'create_account')) {
-      await executeCreateAccount(success);
+
+    if (actions && actions.length > 0) {
+      // Execute create_account if configured
+      if (actions.some(a => a.type === 'create_account')) {
+        await executeCreateAccount(success);
+      }
+
+      // Execute login_portal — navigate to portal and skip result page
+      if (actions.some(a => a.type === 'login_portal')) {
+        const email = (formData.email || '').trim().toLowerCase();
+        const profileData: Record<string, unknown> = {};
+        for (const [key, val] of Object.entries(formData)) {
+          if (val && key !== 'email' && key !== 'password') {
+            profileData[key] = val;
+          }
+        }
+        onNavigateToPortal?.({ email: email || 'verified@demo.portal', profileData });
+        return; // Don't show result page
+      }
+
+      // Check for next_step — advance instead of showing result
+      if (actions.some(a => a.type === 'next_step') && !actions.some(a => a.type === 'show_result_page')) {
+        if (!isLastStep) {
+          setCurrentStepIndex(prev => prev + 1);
+          return;
+        }
+      }
+
+      // Check for redirect
+      const redirectAction = actions.find(a => a.type === 'redirect' && a.redirectUrl);
+      if (redirectAction && !actions.some(a => a.type === 'show_result_page')) {
+        window.location.href = redirectAction.redirectUrl!;
+        return;
+      }
     }
-  }, [onComplete, currentStep, executeCreateAccount]);
+
+    // Default: show result page
+    setFlowComplete(success ? 'success' : 'failure');
+  }, [onComplete, currentStep, executeCreateAccount, formData, onNavigateToPortal, isLastStep]);
 
   // Handle address validation dialog proceed
   const handleAddressValidationProceed = useCallback((useOriginal: boolean) => {
@@ -2605,6 +2639,12 @@ export function DemoFlowRenderer({
   if (flowComplete) {
     const isSuccess = flowComplete === 'success';
     
+    // Check for stepCompletionConfig show_result_page action first
+    const completionActions = isSuccess
+      ? currentStep?.stepCompletionConfig?.onSuccess
+      : currentStep?.stepCompletionConfig?.onFailure;
+    const showResultAction = completionActions?.find(a => a.type === 'show_result_page');
+
     // Check if we have custom result pages from a decision choice
     let customSuccessPage: ResultPageConfig | undefined;
     let customFailurePage: ResultPageConfig | undefined;
@@ -2617,10 +2657,27 @@ export function DemoFlowRenderer({
         customFailurePage = selectedDecisionChoice.customFailurePage;
       }
     }
-    
-    const config: ResultPageConfig = isSuccess 
-      ? { ...DEFAULT_SUCCESS_CONFIG, ...successPageConfig, ...customSuccessPage, referenceId: referenceId || undefined }
-      : { ...DEFAULT_FAILURE_CONFIG, ...failurePageConfig, ...customFailurePage, referenceId: referenceId || undefined };
+
+    // Build config: completion action config > decision choice > legacy config
+    let config: ResultPageConfig;
+    if (showResultAction) {
+      config = {
+        ...(isSuccess ? { ...DEFAULT_SUCCESS_CONFIG, ...successPageConfig } : { ...DEFAULT_FAILURE_CONFIG, ...failurePageConfig }),
+        title: showResultAction.messageTitle || (isSuccess ? DEFAULT_SUCCESS_CONFIG.title : DEFAULT_FAILURE_CONFIG.title),
+        subtitle: showResultAction.subtitle,
+        message: showResultAction.message || (isSuccess ? DEFAULT_SUCCESS_CONFIG.message : DEFAULT_FAILURE_CONFIG.message),
+        showIcon: showResultAction.showIcon ?? true,
+        showReferenceId: showResultAction.showReferenceId ?? false,
+        buttonText: showResultAction.buttonText,
+        buttonAction: showResultAction.buttonAction,
+        buttonUrl: showResultAction.buttonUrl,
+        referenceId: referenceId || undefined,
+      };
+    } else {
+      config = isSuccess 
+        ? { ...DEFAULT_SUCCESS_CONFIG, ...successPageConfig, ...customSuccessPage, referenceId: referenceId || undefined }
+        : { ...DEFAULT_FAILURE_CONFIG, ...failurePageConfig, ...customFailurePage, referenceId: referenceId || undefined };
+    }
     
     return (
       <ResultPage
