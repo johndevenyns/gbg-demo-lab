@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, LogOut, Settings, Users, UserCheck, LayoutTemplate, ListChecks, Briefcase, Monitor, Shield, FolderOpen, KeyRound } from "lucide-react";
+import { ArrowLeft, LogOut, Settings, Users, UserCheck, LayoutTemplate, ListChecks, Briefcase, Monitor, Shield, FolderOpen, KeyRound, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
@@ -13,6 +13,7 @@ import { PortalTypeManagement } from "@/components/admin/PortalTypeManagement";
 import { UnifiedVerificationSettings } from "@/components/admin/UnifiedVerificationSettings";
 import { GlobalUseCaseManagement } from "@/components/admin/GlobalUseCaseManagement";
 import { GlobalRegistrationCodeManagement } from "@/components/admin/GlobalRegistrationCodeManagement";
+import { InvitationTemplateManagement } from "@/components/admin/InvitationTemplateManagement";
 
 export default function VerificationSettings() {
   const navigate = useNavigate();
