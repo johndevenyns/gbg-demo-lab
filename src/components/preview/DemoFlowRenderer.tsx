@@ -1329,7 +1329,6 @@ export function DemoFlowRenderer({
       if (!success) return;
       proceedToNextStep();
       return;
-    }
 
     // Handle credit card verification
     } else if (currentStep?.submitAction === 'verify_cc') {
