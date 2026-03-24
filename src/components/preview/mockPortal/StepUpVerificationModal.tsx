@@ -52,6 +52,15 @@ export function StepUpVerificationModal({
 }: StepUpVerificationModalProps) {
   const [showSuccess, setShowSuccess] = useState(false);
 
+  // Build initial form data from user profile for the verification API
+  const initialFormData = useMemo(() => {
+    const data: Record<string, string> = {};
+    if (userData?.firstName) data.firstName = userData.firstName;
+    if (userData?.lastName) data.lastName = userData.lastName;
+    if (userData?.email) data.email = userData.email;
+    return Object.keys(data).length > 0 ? data : undefined;
+  }, [userData]);
+
   if (!open || !trigger) return null;
 
   // Build default verification steps if no custom steps provided
