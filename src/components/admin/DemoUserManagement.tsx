@@ -411,6 +411,7 @@ export function DemoUserManagement({ demoId, demoName, demoSlug }: DemoUserManag
                 </DialogFooter>
               </DialogContent>
             </Dialog>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
