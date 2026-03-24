@@ -161,9 +161,10 @@ export default function DemoPreview() {
     }
   }, [selectedUseCase, demoPortalType, portalUser]);
 
-  // Handle portal verification trigger
-  const handlePortalVerification = useCallback((action: string) => {
-    setPortalVerificationAction(action);
+  // Handle portal verification trigger (now receives full trigger object)
+  const handlePortalVerification = useCallback((trigger: PortalVerificationTrigger) => {
+    setPortalVerificationAction(trigger.action);
+    setPortalVerificationTrigger(trigger);
   }, []);
 
   const handlePortalLogout = useCallback(() => {
