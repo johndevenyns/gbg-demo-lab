@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { FormStep, VerificationFlowConfig as VerificationFlowConfigType, AVAILABLE_MDL_PROVIDERS, DemoEnvironment } from '@/types/demo';
 import { VERIFICATION_PATHS } from '@/types/formBuilder';
 import { MdlProviderConfig } from './MdlProviderConfig';
-import { CompletionBehaviorConfig, CompletionBehaviorSettings } from './CompletionBehaviorConfig';
+import { StepCompletionActionsConfig } from './StepCompletionActionsConfig';
 import { 
   QrCode, Activity, Smartphone, ChevronDown, ChevronUp, Settings2, 
   Clock, ArrowRight, FileCheck, Database, Workflow, CheckCircle2
