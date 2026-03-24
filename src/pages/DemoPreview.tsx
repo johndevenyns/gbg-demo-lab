@@ -177,25 +177,8 @@ export default function DemoPreview() {
     }
   }, [resolvedUseCases]);
 
-  // Build verification steps for portal IDV trigger
-  const portalVerificationSteps: FormStep[] = useMemo(() => {
-    if (!portalVerificationAction) return [];
-    return [{
-      id: 'portal-verify',
-      title: 'Identity Verification',
-      description: `Verify your identity to ${portalVerificationAction}`,
-      order: 1,
-      stepType: 'unified_verification' as const,
-      fields: [],
-      unifiedVerificationConfig: {
-        methodSelection: 'admin_preselect' as const,
-        enabledTypes: ['docbio'],
-        typeConfigs: {},
-        successDestination: 'default' as const,
-        failureDestination: 'default' as const,
-      },
-    }];
-  }, [portalVerificationAction]);
+
+
 
   // Determine portal user name from profile data
   const portalUserName = useMemo(() => {
