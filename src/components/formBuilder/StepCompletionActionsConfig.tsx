@@ -5,17 +5,18 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { 
   CheckCircle2, XCircle, ChevronDown, Plus, Trash2, GripVertical,
-  MessageSquare, UserPlus, LogIn, ExternalLink, ArrowRight, Settings2
+  FileText, UserPlus, LogIn, ExternalLink, ArrowRight, Settings2
 } from 'lucide-react';
 import { StepCompletionConfig, StepCompletionAction, StepCompletionActionType } from '@/types/demo';
 
 const ACTION_TYPE_OPTIONS: { value: StepCompletionActionType; label: string; description: string; icon: React.ReactNode }[] = [
-  { value: 'show_message', label: 'Show Message', description: 'Display a success/failure message', icon: <MessageSquare className="w-4 h-4" /> },
+  { value: 'show_result_page', label: 'Show Result Page', description: 'Display a customizable success/failure result page', icon: <FileText className="w-4 h-4" /> },
   { value: 'create_account', label: 'Create Account', description: 'Create user account in the demo', icon: <UserPlus className="w-4 h-4" /> },
   { value: 'login_portal', label: 'Log Into Portal', description: 'Authenticate and open the portal', icon: <LogIn className="w-4 h-4" /> },
   { value: 'redirect', label: 'Redirect to URL', description: 'Navigate to an external URL', icon: <ExternalLink className="w-4 h-4" /> },
@@ -23,11 +24,11 @@ const ACTION_TYPE_OPTIONS: { value: StepCompletionActionType; label: string; des
 ];
 
 const DEFAULT_SUCCESS_ACTIONS: StepCompletionAction[] = [
-  { id: 'default-success', type: 'show_message', order: 0, messageTitle: 'Verification Complete', message: 'Your identity has been verified successfully.' },
+  { id: 'default-success', type: 'show_result_page', order: 0, messageTitle: 'Verification Complete', message: 'Your identity has been verified successfully.', showIcon: true, showReferenceId: true, buttonText: 'Continue' },
 ];
 
 const DEFAULT_FAILURE_ACTIONS: StepCompletionAction[] = [
-  { id: 'default-failure', type: 'show_message', order: 0, messageTitle: 'Verification Failed', message: 'We were unable to verify your identity. Please try again.' },
+  { id: 'default-failure', type: 'show_result_page', order: 0, messageTitle: 'Verification Failed', message: 'We were unable to verify your identity. Please try again.', showIcon: true, showReferenceId: true, buttonText: 'Try Again' },
 ];
 
 interface StepCompletionActionsConfigProps {
@@ -56,10 +57,13 @@ export function StepCompletionActionsConfig({ config, onChange, inline }: StepCo
     const actions = type === 'success' ? completionConfig.onSuccess : completionConfig.onFailure;
     const newAction: StepCompletionAction = {
       id: `action-${Date.now()}`,
-      type: 'show_message',
+      type: 'show_result_page',
       order: actions.length,
       messageTitle: type === 'success' ? 'Success' : 'Failed',
       message: '',
+      showIcon: true,
+      showReferenceId: true,
+      buttonText: type === 'success' ? 'Continue' : 'Try Again',
     };
     handleActionsChange(type, [...actions, newAction]);
   };
@@ -113,15 +117,24 @@ export function StepCompletionActionsConfig({ config, onChange, inline }: StepCo
 
         <p className="text-xs text-muted-foreground">{actionMeta?.description}</p>
 
-        {/* show_message fields */}
-        {action.type === 'show_message' && (
-          <div className="space-y-2">
+        {/* show_result_page fields */}
+        {action.type === 'show_result_page' && (
+          <div className="space-y-3">
             <div className="space-y-1">
               <Label className="text-xs">Title</Label>
               <Input
                 value={action.messageTitle || ''}
                 onChange={(e) => updateAction(type, action.id, { messageTitle: e.target.value })}
                 placeholder={type === 'success' ? 'Verification Complete' : 'Verification Failed'}
+                className="h-7 text-sm"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Subtitle</Label>
+              <Input
+                value={action.subtitle || ''}
+                onChange={(e) => updateAction(type, action.id, { subtitle: e.target.value })}
+                placeholder="A brief subtitle under the title"
                 className="h-7 text-sm"
               />
             </div>
@@ -133,6 +146,81 @@ export function StepCompletionActionsConfig({ config, onChange, inline }: StepCo
                 placeholder="Message shown to the user..."
                 rows={2}
                 className="text-sm"
+              />
+            </div>
+
+            {/* Toggle options */}
+            <div className="flex items-center justify-between">
+              <Label className="text-xs">Show Icon</Label>
+              <Switch
+                checked={action.showIcon !== false}
+                onCheckedChange={(checked) => updateAction(type, action.id, { showIcon: checked })}
+                className="scale-75"
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label className="text-xs">Show Reference ID</Label>
+              <Switch
+                checked={action.showReferenceId !== false}
+                onCheckedChange={(checked) => updateAction(type, action.id, { showReferenceId: checked })}
+                className="scale-75"
+              />
+            </div>
+
+            {/* Button settings */}
+            <div className="border-t border-border pt-3 space-y-2">
+              <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Button</Label>
+              <div className="space-y-1">
+                <Label className="text-xs">Button Text</Label>
+                <Input
+                  value={action.buttonText || ''}
+                  onChange={(e) => updateAction(type, action.id, { buttonText: e.target.value })}
+                  placeholder={type === 'success' ? 'Continue' : 'Try Again'}
+                  className="h-7 text-sm"
+                />
+              </div>
+
+              {type === 'success' && (
+                <div className="space-y-1">
+                  <Label className="text-xs">Button Action</Label>
+                  <Select
+                    value={action.buttonAction || 'url'}
+                    onValueChange={(v) => updateAction(type, action.id, { buttonAction: v as 'url' | 'portal' })}
+                  >
+                    <SelectTrigger className="h-7 text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background border z-50">
+                      <SelectItem value="url">Redirect to URL</SelectItem>
+                      <SelectItem value="portal">Go to account portal</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {(action.buttonAction !== 'portal' || type === 'failure') && (
+                <div className="space-y-1">
+                  <Label className="text-xs">Button URL (optional)</Label>
+                  <Input
+                    type="url"
+                    value={action.buttonUrl || ''}
+                    onChange={(e) => updateAction(type, action.id, { buttonUrl: e.target.value })}
+                    placeholder="https://yoursite.com/next-step"
+                    className="h-7 text-sm"
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Custom HTML */}
+            <div className="border-t border-border pt-3 space-y-1">
+              <Label className="text-xs">Custom HTML Content (optional)</Label>
+              <Textarea
+                value={action.customContent || ''}
+                onChange={(e) => updateAction(type, action.id, { customContent: e.target.value })}
+                placeholder="<p>Additional custom HTML content...</p>"
+                rows={2}
+                className="font-mono text-xs"
               />
             </div>
           </div>
