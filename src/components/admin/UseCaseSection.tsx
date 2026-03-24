@@ -292,14 +292,7 @@ export function UseCaseSection({ demoId, demo, onUpdateDemo }: UseCaseSectionPro
                           </div>
 
                           {/* Footer */}
-                          <div className="flex items-center justify-between border-t pt-4">
-                            <div className="flex items-center gap-2">
-                              <Switch
-                                checked={link.isEnabled}
-                                onCheckedChange={(v) => handleUpdate(link.id, { isEnabled: v })}
-                              />
-                              <span className="text-sm text-muted-foreground">Enabled</span>
-                            </div>
+                          <div className="flex items-center justify-end border-t pt-4">
                             <Button
                               variant="ghost"
                               size="sm"
