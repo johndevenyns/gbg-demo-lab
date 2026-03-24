@@ -33,12 +33,35 @@ interface PortalUser {
   updated_at: string;
 }
 
+// Generate a realistic-looking fake credit card number (Luhn-valid Visa)
+function generateCreditCardNumber(): string {
+  const prefix = '4'; // Visa
+  const digits = [parseInt(prefix)];
+  for (let i = 1; i < 15; i++) {
+    digits.push(Math.floor(Math.random() * 10));
+  }
+  // Calculate Luhn check digit
+  let sum = 0;
+  for (let i = 0; i < 15; i++) {
+    let d = digits[14 - i];
+    if (i % 2 === 0) {
+      d *= 2;
+      if (d > 9) d -= 9;
+    }
+    sum += d;
+  }
+  digits.push((10 - (sum % 10)) % 10);
+  const raw = digits.join('');
+  return `${raw.slice(0, 4)} ${raw.slice(4, 8)} ${raw.slice(8, 12)} ${raw.slice(12, 16)}`;
+}
+
 const PROFILE_FIELDS = [
   { key: 'firstName', label: 'First Name', placeholder: 'John' },
   { key: 'lastName', label: 'Last Name', placeholder: 'Doe' },
   { key: 'phone', label: 'Phone', placeholder: '(555) 123-4567' },
   { key: 'dateOfBirth', label: 'Date of Birth', placeholder: 'MM/DD/YYYY' },
   { key: 'ssn4', label: 'SSN (Last 4)', placeholder: '1234' },
+  { key: 'creditCardNumber', label: 'Credit Card Number', placeholder: '4XXX XXXX XXXX XXXX', generate: true },
   { key: 'streetAddress', label: 'Street Address', placeholder: '123 Main St' },
   { key: 'city', label: 'City', placeholder: 'Springfield' },
   { key: 'state', label: 'State', placeholder: 'IL' },
