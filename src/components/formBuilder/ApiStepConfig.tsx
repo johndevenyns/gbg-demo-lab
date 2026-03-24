@@ -5,6 +5,7 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { FormStep, ApiStepConfig as ApiStepConfigType } from '@/types/demo';
 import { Plug, Eye, Clock } from 'lucide-react';
+import { StepCompletionActionsConfig } from './StepCompletionActionsConfig';
 
 interface ApiStepConfigProps {
   step: FormStep;
@@ -156,6 +157,12 @@ export function ApiStepConfig({ step, onUpdateStep }: ApiStepConfigProps) {
           </div>
         </CardContent>
       </Card>
+
+      {/* Step Completion Actions */}
+      <StepCompletionActionsConfig
+        config={step.stepCompletionConfig}
+        onChange={(completionConfig) => onUpdateStep({ stepCompletionConfig: completionConfig })}
+      />
     </div>
   );
 }

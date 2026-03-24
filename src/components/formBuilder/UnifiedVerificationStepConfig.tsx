@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
+import { StepCompletionActionsConfig } from './StepCompletionActionsConfig';
 import { useAdminResourceIdsForUser } from '@/hooks/useAdminResourceIds';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -638,6 +639,12 @@ export function UnifiedVerificationStepConfig({ step, onUpdateStep, demo }: Unif
           </div>
         </CardContent>
       </Card>
+
+      {/* Step Completion Actions */}
+      <StepCompletionActionsConfig
+        config={step.stepCompletionConfig}
+        onChange={(completionConfig) => onUpdateStep({ stepCompletionConfig: completionConfig })}
+      />
     </div>
   );
 }

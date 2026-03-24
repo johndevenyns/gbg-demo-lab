@@ -425,6 +425,32 @@ export type FormStepSubmitAction = 'login' | 'register' | 'validate_code' | unde
 
 export type LoginDestination = 'next_step' | 'portal';
 
+// Step-level completion actions — what happens after pass/fail on verification or API steps
+export type StepCompletionActionType = 
+  | 'show_message'      // Display a custom message (toast or inline)
+  | 'create_account'    // Create user account in the demo environment
+  | 'login_portal'      // Log the user into the portal (banking, pharmacy, etc.)
+  | 'redirect'          // Redirect to a URL
+  | 'next_step';        // Continue to the next step in the flow
+
+export interface StepCompletionAction {
+  id: string;
+  type: StepCompletionActionType;
+  order: number;
+  // For show_message
+  message?: string;
+  messageTitle?: string;
+  // For redirect
+  redirectUrl?: string;
+  // For login_portal — which portal to log into (defaults to demo's portal_type)
+  portalType?: string;
+}
+
+export interface StepCompletionConfig {
+  onSuccess: StepCompletionAction[];
+  onFailure: StepCompletionAction[];
+}
+
 export interface FormStep {
   id: string;
   title: string;
@@ -463,6 +489,8 @@ export interface FormStep {
   decisionStepConfig?: DecisionStepConfig;
   // Unified verification step configuration (only used when stepType = 'unified_verification')
   unifiedVerificationConfig?: UnifiedVerificationConfig;
+  // Completion actions — what happens on pass/fail (for verification and API steps)
+  stepCompletionConfig?: StepCompletionConfig;
 }
 
 export interface FormField {
