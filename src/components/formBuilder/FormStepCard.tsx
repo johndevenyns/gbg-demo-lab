@@ -52,6 +52,9 @@ const FIELD_ICONS: Record<string, React.ReactNode> = {
   select: <FileText className="w-4 h-4" />,
   gender: <User className="w-4 h-4" />,
   nationality: <MapPin className="w-4 h-4" />,
+  credit_card: <CreditCard className="w-4 h-4" />,
+  cc_expiration: <CreditCard className="w-4 h-4" />,
+  cc_cvv: <CreditCard className="w-4 h-4" />,
 };
 
 const PATH_ICONS: Record<string, React.ReactNode> = {
