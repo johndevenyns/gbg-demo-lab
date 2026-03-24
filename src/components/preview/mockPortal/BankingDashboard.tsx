@@ -8,7 +8,7 @@ interface BankingDashboardProps {
   onQuickAction?: (actionLabel: string) => void;
 }
 
-export function BankingDashboard({ userName, accentColor, portalConfig }: BankingDashboardProps) {
+export function BankingDashboard({ userName, accentColor, portalConfig, onQuickAction }: BankingDashboardProps) {
   const config = { ...DEFAULT_BANKING_CONFIG, ...portalConfig };
   const accounts = config.accounts || DEFAULT_BANKING_CONFIG.accounts!;
   const transactions = config.transactions || DEFAULT_BANKING_CONFIG.transactions!;
