@@ -381,6 +381,25 @@ export default function DemoConfig() {
                 {updateDemoMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
                 {updateDemoMutation.isPending ? 'Saving...' : 'Save Now'}
               </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="icon">
+                    <MoreVertical className="w-4 h-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => setShowCloneDialog(true)}>
+                    <CopyPlus className="w-4 h-4 mr-2" />Save as New Demo
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setShowIndustryDialog(true)}>
+                    <Factory className="w-4 h-4 mr-2" />Save as Industry
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => setShowArchiveDialog(true)} className="text-destructive focus:text-destructive">
+                    <Archive className="w-4 h-4 mr-2" />Archive Demo
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <ThemeToggle />
             </div>
           </div>
