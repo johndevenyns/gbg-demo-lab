@@ -13,7 +13,8 @@ import { UseCaseLandingPage } from "@/components/preview/UseCaseLandingPage";
 import { BankingPortalShell } from "@/components/preview/mockPortal/BankingPortalShell";
 import { ResolvedUseCase } from "@/types/useCase";
 import { FormStep } from "@/types/demo";
-import { PortalBranding } from "@/types/portalConfig";
+import { PortalBranding, PortalVerificationTrigger } from "@/types/portalConfig";
+import { StepUpVerificationModal } from "@/components/preview/mockPortal/StepUpVerificationModal";
 
 // Helper functions for form styling
 function getFormBorderRadius(radius?: string): string {
@@ -50,6 +51,7 @@ export default function DemoPreview() {
   const [portalUser, setPortalUser] = useState<{ email: string; profileData?: Record<string, unknown> } | null>(null);
   const [showPortal, setShowPortal] = useState(false);
   const [portalVerificationAction, setPortalVerificationAction] = useState<string | null>(null);
+  const [portalVerificationTrigger, setPortalVerificationTrigger] = useState<PortalVerificationTrigger | null>(null);
 
   // Get portal type directly from the demo
   const demoPortalType = demo?.portalType || 'none';
@@ -160,9 +162,10 @@ export default function DemoPreview() {
     }
   }, [selectedUseCase, demoPortalType, portalUser]);
 
-  // Handle portal verification trigger
-  const handlePortalVerification = useCallback((action: string) => {
-    setPortalVerificationAction(action);
+  // Handle portal verification trigger (now receives full trigger object)
+  const handlePortalVerification = useCallback((trigger: PortalVerificationTrigger) => {
+    setPortalVerificationAction(trigger.action);
+    setPortalVerificationTrigger(trigger);
   }, []);
 
   const handlePortalLogout = useCallback(() => {
@@ -174,25 +177,8 @@ export default function DemoPreview() {
     }
   }, [resolvedUseCases]);
 
-  // Build verification steps for portal IDV trigger
-  const portalVerificationSteps: FormStep[] = useMemo(() => {
-    if (!portalVerificationAction) return [];
-    return [{
-      id: 'portal-verify',
-      title: 'Identity Verification',
-      description: `Verify your identity to ${portalVerificationAction}`,
-      order: 1,
-      stepType: 'unified_verification' as const,
-      fields: [],
-      unifiedVerificationConfig: {
-        methodSelection: 'admin_preselect' as const,
-        enabledTypes: ['docbio'],
-        typeConfigs: {},
-        successDestination: 'default' as const,
-        failureDestination: 'default' as const,
-      },
-    }];
-  }, [portalVerificationAction]);
+
+
 
   // Determine portal user name from profile data
   const portalUserName = useMemo(() => {
@@ -311,67 +297,6 @@ export default function DemoPreview() {
 
   // Show portal when login completes for a bank demo
   if (showPortal && portalUser && demo) {
-    // If a verification action is in progress, show the verification overlay
-    if (portalVerificationAction && portalVerificationSteps.length > 0) {
-      return (
-        <div style={{ position: 'relative', minHeight: '100vh' }}>
-          <BankingPortalShell
-            userName={portalUserName}
-            userEmail={portalUser.email}
-            accentColor={demo.buttonColor || '#0D9488'}
-            logoUrl={demo.useUploadedLogo ? demo.uploadedLogoUrl : demo.logoUrl}
-            bankName={demo.customerName}
-            portalConfig={demoIndustry?.portalConfig}
-            branding={portalBranding}
-            onTriggerVerification={handlePortalVerification}
-            onLogout={handlePortalLogout}
-          />
-          {/* Verification Overlay */}
-          <div style={{
-            position: 'fixed', inset: 0, zIndex: 200,
-            background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            <div style={{
-              background: 'white', borderRadius: '16px', padding: '32px',
-              maxWidth: '500px', width: '90%', maxHeight: '80vh', overflowY: 'auto',
-              boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
-            }}>
-              <DemoFlowRenderer
-                steps={portalVerificationSteps}
-                buttonColor={demo.buttonColor}
-                formStyle={demo.formStyle}
-                customerName={demo.customerName}
-                logoUrl={demo.useUploadedLogo ? demo.uploadedLogoUrl : demo.logoUrl}
-                headerBgColor={demo.headerBgColor}
-                headerTextColor={demo.headerTextColor}
-                resourceId={demo.resourceId}
-                resourceIdDocBio={demo.resourceIdDocBio}
-                resourceIdDataBio={demo.resourceIdDataBio}
-                resourceIdDataOnly={demo.resourceIdDataOnly}
-                demoId={demo.id}
-                includeQr={demo.includeQr}
-                onComplete={(success) => {
-                  setPortalVerificationAction(null);
-                }}
-              />
-              <button
-                onClick={() => setPortalVerificationAction(null)}
-                style={{
-                  marginTop: '16px', width: '100%', padding: '10px',
-                  background: 'transparent', border: '1px solid #E2E8F0',
-                  borderRadius: '8px', color: '#64748B', cursor: 'pointer',
-                  fontSize: '14px',
-                }}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      );
-    }
-
     return (
       <div style={{ position: 'relative' }}>
         <BankingPortalShell
@@ -385,6 +310,34 @@ export default function DemoPreview() {
           onTriggerVerification={handlePortalVerification}
           onLogout={handlePortalLogout}
         />
+
+        {/* Step-Up Verification Modal */}
+        <StepUpVerificationModal
+          open={!!portalVerificationTrigger}
+          trigger={portalVerificationTrigger}
+          buttonColor={demo.buttonColor}
+          formStyle={demo.formStyle}
+          customerName={demo.customerName}
+          logoUrl={demo.useUploadedLogo ? demo.uploadedLogoUrl : demo.logoUrl}
+          headerBgColor={demo.headerBgColor}
+          headerTextColor={demo.headerTextColor}
+          resourceId={demo.resourceId}
+          resourceIdDocBio={demo.resourceIdDocBio}
+          resourceIdDataBio={demo.resourceIdDataBio}
+          resourceIdDataOnly={demo.resourceIdDataOnly}
+          demoId={demo.id}
+          includeQr={demo.includeQr}
+          accentColor={demo.buttonColor || '#0D9488'}
+          onComplete={(success) => {
+            setPortalVerificationAction(null);
+            setPortalVerificationTrigger(null);
+          }}
+          onCancel={() => {
+            setPortalVerificationAction(null);
+            setPortalVerificationTrigger(null);
+          }}
+        />
+
         {/* Admin Exit Bar */}
         {!authLoading && isAdmin && (
           <>

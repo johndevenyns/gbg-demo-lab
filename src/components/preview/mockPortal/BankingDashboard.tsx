@@ -5,9 +5,10 @@ interface BankingDashboardProps {
   userName: string;
   accentColor: string;
   portalConfig?: PortalConfig;
+  onQuickAction?: (actionLabel: string) => void;
 }
 
-export function BankingDashboard({ userName, accentColor, portalConfig }: BankingDashboardProps) {
+export function BankingDashboard({ userName, accentColor, portalConfig, onQuickAction }: BankingDashboardProps) {
   const config = { ...DEFAULT_BANKING_CONFIG, ...portalConfig };
   const accounts = config.accounts || DEFAULT_BANKING_CONFIG.accounts!;
   const transactions = config.transactions || DEFAULT_BANKING_CONFIG.transactions!;
@@ -83,6 +84,7 @@ export function BankingDashboard({ userName, accentColor, portalConfig }: Bankin
         {quickActions.map((action) => (
           <button
             key={action.label}
+            onClick={() => onQuickAction?.(action.label)}
             style={{
               display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px',
               padding: '16px 20px', background: 'white', border: '1px solid #E2E8F0',

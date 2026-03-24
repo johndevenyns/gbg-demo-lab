@@ -30,10 +30,21 @@ export interface PortalQuickAction {
   color: string;
 }
 
+export type TriggerCategory = 'settings_change' | 'transaction' | 'account_action';
+export type TriggerCondition = 'always' | 'threshold';
+
 export interface PortalVerificationTrigger {
+  id: string;
   action: string;
   label: string;
   enabled: boolean;
+  category: TriggerCategory;
+  condition: TriggerCondition;
+  thresholdAmount?: number;          // for transaction triggers
+  thresholdCurrency?: string;        // e.g. 'USD'
+  verificationType?: string | null;  // null = use demo default
+  useCaseId?: string | null;         // reference to a step-up use case / form template
+  successMessage?: string;           // shown after successful verification
 }
 
 // ── Pharmacy-specific types ──
@@ -117,11 +128,13 @@ export const DEFAULT_BANKING_CONFIG: PortalConfig = {
   ],
 
   verificationTriggers: [
-    { action: 'change your name', label: 'Change Name', enabled: true },
-    { action: 'change your email address', label: 'Change Email', enabled: true },
-    { action: 'change your phone number', label: 'Change Phone', enabled: true },
-    { action: 'change your password', label: 'Change Password', enabled: true },
-    { action: 'update two-factor authentication', label: 'Update 2FA', enabled: true },
+    { id: 'bank-name', action: 'change your name', label: 'Change Name', enabled: true, category: 'settings_change', condition: 'always', successMessage: 'Your name has been updated successfully.' },
+    { id: 'bank-email', action: 'change your email address', label: 'Change Email', enabled: true, category: 'settings_change', condition: 'always', successMessage: 'Your email address has been updated.' },
+    { id: 'bank-phone', action: 'change your phone number', label: 'Change Phone', enabled: true, category: 'settings_change', condition: 'always', successMessage: 'Your phone number has been updated.' },
+    { id: 'bank-password', action: 'change your password', label: 'Change Password', enabled: true, category: 'settings_change', condition: 'always', successMessage: 'Your password has been changed.' },
+    { id: 'bank-2fa', action: 'update two-factor authentication', label: 'Update 2FA', enabled: true, category: 'settings_change', condition: 'always', successMessage: 'Two-factor authentication updated.' },
+    { id: 'bank-transfer', action: 'send a transfer', label: 'Send Transfer', enabled: true, category: 'transaction', condition: 'threshold', thresholdAmount: 500, thresholdCurrency: 'USD', successMessage: 'Transfer sent successfully!' },
+    { id: 'bank-payment', action: 'pay a bill', label: 'Pay Bill', enabled: true, category: 'transaction', condition: 'threshold', thresholdAmount: 1000, thresholdCurrency: 'USD', successMessage: 'Payment submitted successfully!' },
   ],
 };
 
@@ -158,12 +171,12 @@ export const DEFAULT_PHARMACY_CONFIG: PortalConfig = {
   ],
 
   verificationTriggers: [
-    { action: 'change your name', label: 'Change Name', enabled: true },
-    { action: 'change your email address', label: 'Change Email', enabled: true },
-    { action: 'change your phone number', label: 'Change Phone', enabled: true },
-    { action: 'change your password', label: 'Change Password', enabled: true },
-    { action: 'update two-factor authentication', label: 'Update 2FA', enabled: true },
-    { action: 'update your insurance information', label: 'Update Insurance', enabled: true },
-    { action: 'add a new authorized pickup person', label: 'Add Pickup Person', enabled: true },
+    { id: 'pharm-name', action: 'change your name', label: 'Change Name', enabled: true, category: 'settings_change', condition: 'always', successMessage: 'Your name has been updated.' },
+    { id: 'pharm-email', action: 'change your email address', label: 'Change Email', enabled: true, category: 'settings_change', condition: 'always', successMessage: 'Your email has been updated.' },
+    { id: 'pharm-phone', action: 'change your phone number', label: 'Change Phone', enabled: true, category: 'settings_change', condition: 'always', successMessage: 'Your phone number has been updated.' },
+    { id: 'pharm-password', action: 'change your password', label: 'Change Password', enabled: true, category: 'settings_change', condition: 'always', successMessage: 'Your password has been changed.' },
+    { id: 'pharm-2fa', action: 'update two-factor authentication', label: 'Update 2FA', enabled: true, category: 'settings_change', condition: 'always', successMessage: 'Two-factor authentication updated.' },
+    { id: 'pharm-insurance', action: 'update your insurance information', label: 'Update Insurance', enabled: true, category: 'settings_change', condition: 'always', successMessage: 'Insurance information updated.' },
+    { id: 'pharm-pickup', action: 'add a new authorized pickup person', label: 'Add Pickup Person', enabled: true, category: 'account_action', condition: 'always', successMessage: 'Authorized pickup person added.' },
   ],
 };

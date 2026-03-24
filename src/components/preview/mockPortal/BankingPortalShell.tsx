@@ -1,9 +1,10 @@
 import { useState, useCallback } from 'react';
 import { BankingDashboard } from './BankingDashboard';
 import { BankingSettings } from './BankingSettings';
-import { PortalConfig, PortalBranding, DEFAULT_BANKING_CONFIG } from '@/types/portalConfig';
+import { BankingTransferFlow } from './BankingTransferFlow';
+import { PortalConfig, PortalBranding, DEFAULT_BANKING_CONFIG, PortalVerificationTrigger } from '@/types/portalConfig';
 
-type PortalPage = 'dashboard' | 'settings';
+type PortalPage = 'dashboard' | 'settings' | 'transfer' | 'pay-bills';
 
 interface NavItem {
   key: PortalPage;
@@ -24,7 +25,7 @@ export interface BankingPortalShellProps {
   bankName: string;
   portalConfig?: PortalConfig;
   branding?: PortalBranding;
-  onTriggerVerification: (action: string) => void;
+  onTriggerVerification: (trigger: PortalVerificationTrigger) => void;
   onLogout: () => void;
 }
 
@@ -42,9 +43,26 @@ export function BankingPortalShell({
   const config = { ...DEFAULT_BANKING_CONFIG, ...portalConfig };
   const [activePage, setActivePage] = useState<PortalPage>('dashboard');
 
-  const handleTriggerVerification = useCallback((action: string) => {
-    onTriggerVerification(action);
+  const handleTriggerVerification = useCallback((trigger: PortalVerificationTrigger) => {
+    onTriggerVerification(trigger);
   }, [onTriggerVerification]);
+
+  // Legacy string-based trigger handler for settings page
+  const handleSettingsTrigger = useCallback((action: string) => {
+    const triggers = config.verificationTriggers || DEFAULT_BANKING_CONFIG.verificationTriggers!;
+    const trigger = triggers.find(t => t.action === action);
+    if (trigger) {
+      onTriggerVerification(trigger);
+    }
+  }, [config.verificationTriggers, onTriggerVerification]);
+
+  const handleQuickAction = useCallback((actionLabel: string) => {
+    if (actionLabel === 'Transfer') {
+      setActivePage('transfer');
+    } else if (actionLabel === 'Pay Bills') {
+      setActivePage('pay-bills');
+    }
+  }, []);
 
   const initials = userName
     .split(' ')
@@ -59,10 +77,12 @@ export function BankingPortalShell({
   const brandAccent = branding?.accentColor || accentColor;
   const fontFamily = branding?.fontFamily || '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
 
-  // Derive readable muted colors from sidebar text
   const sidebarTextMuted = `${sidebarText}88`;
   const sidebarTextFaint = `${sidebarText}40`;
   const sidebarBorder = `${sidebarText}14`;
+
+  // For display in nav, transfer/pay-bills show as "dashboard" active
+  const navActivePage = (activePage === 'transfer' || activePage === 'pay-bills') ? 'dashboard' : activePage;
 
   return (
     <div style={{
@@ -71,7 +91,7 @@ export function BankingPortalShell({
       background: pageBg,
       fontFamily,
     }}>
-      {/* Sidebar - Desktop */}
+      {/* Sidebar */}
       <aside style={{
         width: '240px',
         background: sidebarBg,
@@ -79,7 +99,6 @@ export function BankingPortalShell({
         flexDirection: 'column',
         flexShrink: 0,
       }}>
-        {/* Bank Logo / Name */}
         <div style={{
           padding: '20px 20px 24px',
           borderBottom: `1px solid ${sidebarBorder}`,
@@ -103,10 +122,9 @@ export function BankingPortalShell({
           )}
         </div>
 
-        {/* Navigation */}
         <nav style={{ padding: '12px 10px', flex: 1 }}>
           {NAV_ITEMS.map((item) => {
-            const isActive = activePage === item.key;
+            const isActive = navActivePage === item.key;
             return (
               <button
                 key={item.key}
@@ -135,7 +153,6 @@ export function BankingPortalShell({
           })}
         </nav>
 
-        {/* User Profile Section */}
         <div style={{
           padding: '16px 14px',
           borderTop: `1px solid ${sidebarBorder}`,
@@ -199,9 +216,9 @@ export function BankingPortalShell({
                 onClick={() => setActivePage(item.key)}
                 style={{
                   padding: '6px 14px', borderRadius: '8px', border: 'none',
-                  background: activePage === item.key ? `${brandAccent}10` : 'transparent',
-                  color: activePage === item.key ? brandAccent : '#64748B',
-                  fontSize: '13px', fontWeight: activePage === item.key ? 600 : 400,
+                  background: navActivePage === item.key ? `${brandAccent}10` : 'transparent',
+                  color: navActivePage === item.key ? brandAccent : '#64748B',
+                  fontSize: '13px', fontWeight: navActivePage === item.key ? 600 : 400,
                   cursor: 'pointer',
                 }}
               >
@@ -230,7 +247,12 @@ export function BankingPortalShell({
 
         {/* Page Content */}
         {activePage === 'dashboard' && (
-          <BankingDashboard userName={userName} accentColor={brandAccent} portalConfig={config} />
+          <BankingDashboard
+            userName={userName}
+            accentColor={brandAccent}
+            portalConfig={config}
+            onQuickAction={handleQuickAction}
+          />
         )}
         {activePage === 'settings' && (
           <BankingSettings
@@ -239,7 +261,25 @@ export function BankingPortalShell({
             userPhone={config.userPhone || '(555) 867-5309'}
             accentColor={brandAccent}
             portalConfig={config}
+            onTriggerVerification={handleSettingsTrigger}
+          />
+        )}
+        {activePage === 'transfer' && (
+          <BankingTransferFlow
+            userName={userName}
+            accentColor={brandAccent}
+            portalConfig={config}
             onTriggerVerification={handleTriggerVerification}
+            onBack={() => setActivePage('dashboard')}
+          />
+        )}
+        {activePage === 'pay-bills' && (
+          <BankingTransferFlow
+            userName={userName}
+            accentColor={brandAccent}
+            portalConfig={config}
+            onTriggerVerification={handleTriggerVerification}
+            onBack={() => setActivePage('dashboard')}
           />
         )}
       </main>
