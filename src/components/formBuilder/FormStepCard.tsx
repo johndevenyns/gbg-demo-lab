@@ -498,6 +498,18 @@ export function FormStepCard({
               Login
             </Badge>
           )}
+          {step.submitAction === 'validate_code' && (
+            <Badge variant="outline" className="text-xs bg-amber-500/10 text-amber-600 border-amber-500/30">
+              <KeyRound className="w-3 h-3 mr-1" />
+              Code
+            </Badge>
+          )}
+          {step.submitAction === 'verify_cc' && (
+            <Badge variant="outline" className="text-xs bg-blue-500/10 text-blue-600 border-blue-500/30">
+              <CreditCard className="w-3 h-3 mr-1" />
+              Verify CC
+            </Badge>
+          )}
           {step.apiConfig?.enabled && (
             <Badge variant="outline" className="text-xs bg-green-500/10 text-green-600 border-green-500/30">
               <Plug className="w-3 h-3 mr-1" />
