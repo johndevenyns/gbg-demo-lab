@@ -515,7 +515,7 @@ export function UnifiedVerificationStepConfig({ step, onUpdateStep, demo }: Unif
         </div>
       )}
 
-      {/* Post-Verification Handling */}
+      {/* Post-Verification Behavior */}
       <Card className="border-border">
         <CardContent className="pt-4 space-y-4">
           <Label className="text-sm font-semibold flex items-center gap-2">
@@ -523,75 +523,12 @@ export function UnifiedVerificationStepConfig({ step, onUpdateStep, demo }: Unif
             Post-Verification Behavior
           </Label>
 
-          <div className="grid grid-cols-2 gap-4">
-            {/* Success Destination */}
-            <div className="space-y-2">
-              <Label className="text-sm text-success flex items-center gap-1">
-                <Check className="w-3 h-3" />
-                On Success
-              </Label>
-              <RadioGroup
-                value={config.successDestination}
-                onValueChange={(v) => handleConfigUpdate({ successDestination: v as 'default' | 'custom' | 'per_type' })}
-                className="space-y-1"
-              >
-                <div className="flex items-center gap-2">
-                  <RadioGroupItem value="default" id="success_default" />
-                  <Label htmlFor="success_default" className="text-sm cursor-pointer">Use demo default</Label>
-                </div>
-                <div className="flex items-center gap-2">
-                  <RadioGroupItem value="custom" id="success_custom" />
-                  <Label htmlFor="success_custom" className="text-sm cursor-pointer">Custom URL</Label>
-                </div>
-                <div className="flex items-center gap-2">
-                  <RadioGroupItem value="per_type" id="success_per_type" />
-                  <Label htmlFor="success_per_type" className="text-sm cursor-pointer">Per-type override</Label>
-                </div>
-              </RadioGroup>
-              {config.successDestination === 'custom' && (
-                <Input
-                  value={config.customSuccessUrl || ''}
-                  onChange={(e) => handleConfigUpdate({ customSuccessUrl: e.target.value })}
-                  placeholder="https://..."
-                  className="h-8 text-sm"
-                />
-              )}
-            </div>
-
-            {/* Failure Destination */}
-            <div className="space-y-2">
-              <Label className="text-sm text-destructive flex items-center gap-1">
-                <AlertCircle className="w-3 h-3" />
-                On Failure
-              </Label>
-              <RadioGroup
-                value={config.failureDestination}
-                onValueChange={(v) => handleConfigUpdate({ failureDestination: v as 'default' | 'custom' | 'per_type' })}
-                className="space-y-1"
-              >
-                <div className="flex items-center gap-2">
-                  <RadioGroupItem value="default" id="failure_default" />
-                  <Label htmlFor="failure_default" className="text-sm cursor-pointer">Use demo default</Label>
-                </div>
-                <div className="flex items-center gap-2">
-                  <RadioGroupItem value="custom" id="failure_custom" />
-                  <Label htmlFor="failure_custom" className="text-sm cursor-pointer">Custom URL</Label>
-                </div>
-                <div className="flex items-center gap-2">
-                  <RadioGroupItem value="per_type" id="failure_per_type" />
-                  <Label htmlFor="failure_per_type" className="text-sm cursor-pointer">Per-type override</Label>
-                </div>
-              </RadioGroup>
-              {config.failureDestination === 'custom' && (
-                <Input
-                  value={config.customFailureUrl || ''}
-                  onChange={(e) => handleConfigUpdate({ customFailureUrl: e.target.value })}
-                  placeholder="https://..."
-                  className="h-8 text-sm"
-                />
-              )}
-            </div>
-          </div>
+          {/* Completion Actions */}
+          <StepCompletionActionsConfig
+            config={step.stepCompletionConfig}
+            onChange={(completionConfig) => onUpdateStep({ stepCompletionConfig: completionConfig })}
+            inline
+          />
 
           {/* Navigation Buttons */}
           <div className="pt-4 border-t border-border space-y-3">
@@ -639,12 +576,6 @@ export function UnifiedVerificationStepConfig({ step, onUpdateStep, demo }: Unif
           </div>
         </CardContent>
       </Card>
-
-      {/* Step Completion Actions */}
-      <StepCompletionActionsConfig
-        config={step.stepCompletionConfig}
-        onChange={(completionConfig) => onUpdateStep({ stepCompletionConfig: completionConfig })}
-      />
     </div>
   );
 }

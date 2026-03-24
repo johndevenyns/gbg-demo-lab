@@ -33,10 +33,11 @@ const DEFAULT_FAILURE_ACTIONS: StepCompletionAction[] = [
 interface StepCompletionActionsConfigProps {
   config?: StepCompletionConfig;
   onChange: (config: StepCompletionConfig) => void;
+  inline?: boolean;
 }
 
-export function StepCompletionActionsConfig({ config, onChange }: StepCompletionActionsConfigProps) {
-  const [isExpanded, setIsExpanded] = useState(!!config);
+export function StepCompletionActionsConfig({ config, onChange, inline }: StepCompletionActionsConfigProps) {
+  const [isExpanded, setIsExpanded] = useState(!!config || !!inline);
   const [activeTab, setActiveTab] = useState<'success' | 'failure'>('success');
 
   const completionConfig: StepCompletionConfig = config || {
@@ -200,6 +201,33 @@ export function StepCompletionActionsConfig({ config, onChange }: StepCompletion
     );
   };
 
+  const content = (
+    <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'success' | 'failure')}>
+      <TabsList className="grid w-full grid-cols-2 mb-4">
+        <TabsTrigger value="success" className="flex items-center gap-2 text-xs">
+          <CheckCircle2 className="w-3 h-3 text-green-500" />
+          On Success ({completionConfig.onSuccess.length})
+        </TabsTrigger>
+        <TabsTrigger value="failure" className="flex items-center gap-2 text-xs">
+          <XCircle className="w-3 h-3 text-red-500" />
+          On Failure ({completionConfig.onFailure.length})
+        </TabsTrigger>
+      </TabsList>
+
+      <TabsContent value="success">
+        {renderActionsList('success')}
+      </TabsContent>
+
+      <TabsContent value="failure">
+        {renderActionsList('failure')}
+      </TabsContent>
+    </Tabs>
+  );
+
+  if (inline) {
+    return content;
+  }
+
   return (
     <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
       <CollapsibleTrigger asChild>
@@ -220,26 +248,7 @@ export function StepCompletionActionsConfig({ config, onChange }: StepCompletion
       <CollapsibleContent className="pt-4">
         <Card>
           <CardContent className="pt-4">
-            <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'success' | 'failure')}>
-              <TabsList className="grid w-full grid-cols-2 mb-4">
-                <TabsTrigger value="success" className="flex items-center gap-2 text-xs">
-                  <CheckCircle2 className="w-3 h-3 text-green-500" />
-                  On Success ({completionConfig.onSuccess.length})
-                </TabsTrigger>
-                <TabsTrigger value="failure" className="flex items-center gap-2 text-xs">
-                  <XCircle className="w-3 h-3 text-red-500" />
-                  On Failure ({completionConfig.onFailure.length})
-                </TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="success">
-                {renderActionsList('success')}
-              </TabsContent>
-
-              <TabsContent value="failure">
-                {renderActionsList('failure')}
-              </TabsContent>
-            </Tabs>
+            {content}
           </CardContent>
         </Card>
       </CollapsibleContent>
