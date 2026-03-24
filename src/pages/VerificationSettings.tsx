@@ -88,6 +88,12 @@ export default function VerificationSettings() {
               <Shield className="w-4 h-4" />
               Verification
             </TabsTrigger>
+            {isGlobalAdmin && (
+              <TabsTrigger value="reg-codes" className="flex items-center gap-2">
+                <KeyRound className="w-4 h-4" />
+                Registration Codes
+              </TabsTrigger>
+            )}
             <TabsTrigger value="profiles" className="flex items-center gap-2">
               <UserCheck className="w-4 h-4" />
               Test Profiles
