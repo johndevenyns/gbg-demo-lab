@@ -186,12 +186,12 @@ export const DEFAULT_PHARMACY_CONFIG: PortalConfig = {
   ],
 
   verificationTriggers: [
-    { id: 'pharm-name', action: 'change your name', label: 'Change Name', enabled: true, category: 'settings_change', condition: 'always', successMessage: 'Your name has been updated.' },
-    { id: 'pharm-email', action: 'change your email address', label: 'Change Email', enabled: true, category: 'settings_change', condition: 'always', successMessage: 'Your email has been updated.' },
-    { id: 'pharm-phone', action: 'change your phone number', label: 'Change Phone', enabled: true, category: 'settings_change', condition: 'always', successMessage: 'Your phone number has been updated.' },
-    { id: 'pharm-password', action: 'change your password', label: 'Change Password', enabled: true, category: 'settings_change', condition: 'always', successMessage: 'Your password has been changed.' },
-    { id: 'pharm-2fa', action: 'update two-factor authentication', label: 'Update 2FA', enabled: true, category: 'settings_change', condition: 'always', successMessage: 'Two-factor authentication updated.' },
-    { id: 'pharm-insurance', action: 'update your insurance information', label: 'Update Insurance', enabled: true, category: 'settings_change', condition: 'always', successMessage: 'Insurance information updated.' },
-    { id: 'pharm-pickup', action: 'add a new authorized pickup person', label: 'Add Pickup Person', enabled: true, category: 'account_action', condition: 'always', successMessage: 'Authorized pickup person added.' },
+    { id: 'pharm-name', action: 'change your name', label: 'Change Name', enabled: true, category: 'settings_change', condition: 'always', successMessage: 'Your name has been updated.', postVerificationBehavior: 'return_with_toast' },
+    { id: 'pharm-email', action: 'change your email address', label: 'Change Email', enabled: true, category: 'settings_change', condition: 'always', successMessage: 'Your email has been updated.', postVerificationBehavior: 'return_with_toast' },
+    { id: 'pharm-phone', action: 'change your phone number', label: 'Change Phone', enabled: true, category: 'settings_change', condition: 'always', successMessage: 'Your phone number has been updated.', postVerificationBehavior: 'return_with_toast' },
+    { id: 'pharm-password', action: 'change your password', label: 'Change Password', enabled: true, category: 'settings_change', condition: 'always', successMessage: 'Your password has been changed.', postVerificationBehavior: 'return_with_toast' },
+    { id: 'pharm-2fa', action: 'update two-factor authentication', label: 'Update 2FA', enabled: true, category: 'settings_change', condition: 'always', successMessage: 'Two-factor authentication updated.', postVerificationBehavior: 'return_with_toast' },
+    { id: 'pharm-insurance', action: 'update your insurance information', label: 'Update Insurance', enabled: true, category: 'settings_change', condition: 'always', successMessage: 'Insurance information updated.', postVerificationBehavior: 'return_with_toast' },
+    { id: 'pharm-pickup', action: 'add a new authorized pickup person', label: 'Add Pickup Person', enabled: true, category: 'account_action', condition: 'always', successMessage: 'Authorized pickup person added.', postVerificationBehavior: 'return_with_toast' },
   ],
 };
