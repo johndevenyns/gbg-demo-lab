@@ -5,6 +5,7 @@ interface BankingDashboardProps {
   userName: string;
   accentColor: string;
   portalConfig?: PortalConfig;
+  onQuickAction?: (actionLabel: string) => void;
 }
 
 export function BankingDashboard({ userName, accentColor, portalConfig }: BankingDashboardProps) {
