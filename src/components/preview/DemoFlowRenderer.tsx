@@ -999,7 +999,7 @@ export function DemoFlowRenderer({
     return step.fields.some(f => addressFieldTypes.includes(f.type));
   }, []);
 
-  // Authenticate against demo_users table
+  // Authenticate against portal_users table via assignments
   const authenticateLogin = useCallback(async (): Promise<boolean> => {
     if (!demoId) {
       setLoginError('Login is not available for this demo.');
@@ -1017,52 +1017,50 @@ export function DemoFlowRenderer({
     setIsLoading(true);
 
     try {
-      // Check demo-scoped users first, then super demo users
-      const { data: scopedUser, error: scopedError } = await supabase
-        .from('demo_users')
-        .select('id, email, password, is_active, profile_data')
-        .eq('demo_id', demoId)
+      // Find user by email in portal_users
+      const { data: portalUser, error: userError } = await supabase
+        .from('portal_users')
+        .select('id, email, password, is_active, is_default, profile_data')
         .eq('email', email)
         .eq('is_active', true)
-        .eq('is_super', false)
         .maybeSingle();
 
-      if (scopedError) throw scopedError;
+      if (userError) throw userError;
 
-      let data = scopedUser;
-
-      // If no scoped user found, check for super demo users (can log into any demo)
-      if (!data) {
-        const { data: superUser, error: superError } = await supabase
-          .from('demo_users')
-          .select('id, email, password, is_active, profile_data')
-          .eq('email', email)
-          .eq('is_active', true)
-          .eq('is_super', true)
-          .maybeSingle();
-
-        if (superError) throw superError;
-        data = superUser;
-      }
-
-      if (!data) {
+      if (!portalUser) {
         setLoginError('Invalid email or password.');
         setIsLoading(false);
         return false;
       }
 
-      if (data.password !== password) {
+      // Check if user has access to this demo (is_default or has assignment)
+      if (!portalUser.is_default) {
+        const { data: assignment } = await supabase
+          .from('portal_user_demo_assignments')
+          .select('id')
+          .eq('portal_user_id', portalUser.id)
+          .eq('demo_id', demoId)
+          .maybeSingle();
+
+        if (!assignment) {
+          setLoginError('Invalid email or password.');
+          setIsLoading(false);
+          return false;
+        }
+      }
+
+      if (portalUser.password !== password) {
         setLoginError('Invalid email or password.');
         setIsLoading(false);
         return false;
       }
 
       // Notify parent of successful login with user data
-      const profileData = (data.profile_data && typeof data.profile_data === 'object' && !Array.isArray(data.profile_data))
-        ? data.profile_data as Record<string, unknown>
+      const profileData = (portalUser.profile_data && typeof portalUser.profile_data === 'object' && !Array.isArray(portalUser.profile_data))
+        ? portalUser.profile_data as Record<string, unknown>
         : undefined;
       lastLoginUserData.current = profileData;
-      onLoginSuccess?.({ email: data.email, profileData });
+      onLoginSuccess?.({ email: portalUser.email, profileData });
 
       setIsLoading(false);
       return true;
