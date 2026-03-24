@@ -157,6 +157,12 @@ export function ApiStepConfig({ step, onUpdateStep }: ApiStepConfigProps) {
           </div>
         </CardContent>
       </Card>
+
+      {/* Step Completion Actions */}
+      <StepCompletionActionsConfig
+        config={step.stepCompletionConfig}
+        onChange={(completionConfig) => onUpdateStep({ stepCompletionConfig: completionConfig })}
+      />
     </div>
   );
 }

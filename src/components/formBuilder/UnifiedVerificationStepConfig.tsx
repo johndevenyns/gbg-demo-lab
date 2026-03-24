@@ -639,6 +639,12 @@ export function UnifiedVerificationStepConfig({ step, onUpdateStep, demo }: Unif
           </div>
         </CardContent>
       </Card>
+
+      {/* Step Completion Actions */}
+      <StepCompletionActionsConfig
+        config={step.stepCompletionConfig}
+        onChange={(completionConfig) => onUpdateStep({ stepCompletionConfig: completionConfig })}
+      />
     </div>
   );
 }
