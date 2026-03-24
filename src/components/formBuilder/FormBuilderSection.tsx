@@ -379,21 +379,6 @@ export function FormBuilderSection({ demo, onUpdate }: FormBuilderSectionProps) 
             />
           </TabsContent>
 
-          <TabsContent value="results" className="mt-0">
-            <ResultPagesConfig
-              approvedUrl={demo.approvedUrl || ''}
-              rejectedUrl={demo.rejectedUrl || ''}
-              returnUrl={demo.returnUrl}
-              successPageConfig={demo.successPageConfig}
-              failurePageConfig={demo.failurePageConfig}
-              buttonColor={demo.buttonColor}
-              onUpdateApprovedUrl={(url) => onUpdate({ approvedUrl: url })}
-              onUpdateRejectedUrl={(url) => onUpdate({ rejectedUrl: url })}
-              onUpdateReturnUrl={(url) => onUpdate({ returnUrl: url })}
-              onUpdateSuccessPage={(config) => onUpdate({ successPageConfig: config })}
-              onUpdateFailurePage={(config) => onUpdate({ failurePageConfig: config })}
-            />
-          </TabsContent>
 
           <TabsContent value="testdata" className="mt-0">
             <StoredUserDataConfig
