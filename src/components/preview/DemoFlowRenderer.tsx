@@ -2641,8 +2641,8 @@ export function DemoFlowRenderer({
     
     // Check for stepCompletionConfig show_result_page action first
     const completionActions = isSuccess
-      ? completionStep?.stepCompletionConfig?.onSuccess
-      : completionStep?.stepCompletionConfig?.onFailure;
+      ? currentStep?.stepCompletionConfig?.onSuccess
+      : currentStep?.stepCompletionConfig?.onFailure;
     const showResultAction = completionActions?.find(a => a.type === 'show_result_page');
 
     // Check if we have custom result pages from a decision choice
