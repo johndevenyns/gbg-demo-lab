@@ -37,6 +37,7 @@ export interface DemoUseCaseLink {
   useCaseId: string;
   isEnabled: boolean;
   displayOrder: number;
+  showOnLandingPage: boolean;
   formStepsOverride?: Record<string, unknown>[] | null;
   verificationTypeOverride?: string | null;
   pageContentOverride?: UseCasePageContent | null;
