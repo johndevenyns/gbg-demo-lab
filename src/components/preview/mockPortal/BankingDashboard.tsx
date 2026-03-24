@@ -84,6 +84,7 @@ export function BankingDashboard({ userName, accentColor, portalConfig, onQuickA
         {quickActions.map((action) => (
           <button
             key={action.label}
+            onClick={() => onQuickAction?.(action.label)}
             style={{
               display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px',
               padding: '16px 20px', background: 'white', border: '1px solid #E2E8F0',
