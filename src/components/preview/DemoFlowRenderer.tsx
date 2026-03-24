@@ -2639,6 +2639,12 @@ export function DemoFlowRenderer({
   if (flowComplete) {
     const isSuccess = flowComplete === 'success';
     
+    // Check for stepCompletionConfig show_result_page action first
+    const completionActions = isSuccess
+      ? completionStep?.stepCompletionConfig?.onSuccess
+      : completionStep?.stepCompletionConfig?.onFailure;
+    const showResultAction = completionActions?.find(a => a.type === 'show_result_page');
+
     // Check if we have custom result pages from a decision choice
     let customSuccessPage: ResultPageConfig | undefined;
     let customFailurePage: ResultPageConfig | undefined;
@@ -2651,10 +2657,27 @@ export function DemoFlowRenderer({
         customFailurePage = selectedDecisionChoice.customFailurePage;
       }
     }
-    
-    const config: ResultPageConfig = isSuccess 
-      ? { ...DEFAULT_SUCCESS_CONFIG, ...successPageConfig, ...customSuccessPage, referenceId: referenceId || undefined }
-      : { ...DEFAULT_FAILURE_CONFIG, ...failurePageConfig, ...customFailurePage, referenceId: referenceId || undefined };
+
+    // Build config: completion action config > decision choice > legacy config
+    let config: ResultPageConfig;
+    if (showResultAction) {
+      config = {
+        ...(isSuccess ? { ...DEFAULT_SUCCESS_CONFIG, ...successPageConfig } : { ...DEFAULT_FAILURE_CONFIG, ...failurePageConfig }),
+        title: showResultAction.messageTitle || (isSuccess ? DEFAULT_SUCCESS_CONFIG.title : DEFAULT_FAILURE_CONFIG.title),
+        subtitle: showResultAction.subtitle,
+        message: showResultAction.message || (isSuccess ? DEFAULT_SUCCESS_CONFIG.message : DEFAULT_FAILURE_CONFIG.message),
+        showIcon: showResultAction.showIcon ?? true,
+        showReferenceId: showResultAction.showReferenceId ?? false,
+        buttonText: showResultAction.buttonText,
+        buttonAction: showResultAction.buttonAction,
+        buttonUrl: showResultAction.buttonUrl,
+        referenceId: referenceId || undefined,
+      };
+    } else {
+      config = isSuccess 
+        ? { ...DEFAULT_SUCCESS_CONFIG, ...successPageConfig, ...customSuccessPage, referenceId: referenceId || undefined }
+        : { ...DEFAULT_FAILURE_CONFIG, ...failurePageConfig, ...customFailurePage, referenceId: referenceId || undefined };
+    }
     
     return (
       <ResultPage
