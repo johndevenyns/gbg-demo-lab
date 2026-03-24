@@ -1331,6 +1331,14 @@ export function DemoFlowRenderer({
       return;
     }
 
+    // Handle credit card verification
+    } else if (currentStep?.submitAction === 'verify_cc') {
+      const success = await verifyCreditCard();
+      if (!success) return;
+      proceedToNextStep();
+      return;
+    }
+
     // Check if address validation is enabled and step has address fields
     if (currentStep?.addressValidationEnabled && hasAddressFields(currentStep)) {
       setIsLoading(true);
