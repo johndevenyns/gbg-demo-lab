@@ -177,7 +177,13 @@ export function UseCaseSection({ demoId, demo, onUpdateDemo }: UseCaseSectionPro
                               <p className="text-xs text-muted-foreground truncate mt-0.5">{uc.description}</p>
                             )}
                           </div>
-                          {isExpanded ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
+                          <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
+                            <Switch
+                              checked={link.isEnabled}
+                              onCheckedChange={(v) => handleUpdate(link.id, { isEnabled: v })}
+                            />
+                          </div>
+                          {isExpanded ? <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0" /> : <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />}
                         </button>
                       </CollapsibleTrigger>
 
