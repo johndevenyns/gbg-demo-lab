@@ -130,15 +130,15 @@ export function DemoUserManagement({ demoId, demoName, demoSlug }: DemoUserManag
         if (value && value.trim()) cleanProfile[key] = value.trim();
       }
 
-      const { error } = await supabase.from('demo_users').insert({
+      const { error } = await supabase.from('demo_users').upsert({
         demo_id: demoId,
         email: newEmail.trim(),
         password: newPassword.trim(),
         profile_data: Object.keys(cleanProfile).length > 0 ? cleanProfile : {},
-      });
+      }, { onConflict: 'demo_id,email' });
       if (error) throw error;
       queryClient.invalidateQueries({ queryKey: ['demo-users', demoId] });
-      toast({ title: 'User added', description: `${newEmail} has been added.` });
+      toast({ title: 'User saved', description: `${newEmail} has been added/updated.` });
       setNewEmail('');
       setNewPassword('');
       setNewProfileData({});
