@@ -102,6 +102,12 @@ export default function VerificationSettings() {
                 Registration Codes
               </TabsTrigger>
             )}
+            {isGlobalAdmin && (
+              <TabsTrigger value="portal-users" className="flex items-center gap-2">
+                <Globe className="w-4 h-4" />
+                Portal Users
+              </TabsTrigger>
+            )}
             <TabsTrigger value="profiles" className="flex items-center gap-2">
               <UserCheck className="w-4 h-4" />
               Test Profiles
