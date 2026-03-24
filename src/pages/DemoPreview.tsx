@@ -13,7 +13,8 @@ import { UseCaseLandingPage } from "@/components/preview/UseCaseLandingPage";
 import { BankingPortalShell } from "@/components/preview/mockPortal/BankingPortalShell";
 import { ResolvedUseCase } from "@/types/useCase";
 import { FormStep } from "@/types/demo";
-import { PortalBranding } from "@/types/portalConfig";
+import { PortalBranding, PortalVerificationTrigger } from "@/types/portalConfig";
+import { StepUpVerificationModal } from "@/components/preview/mockPortal/StepUpVerificationModal";
 
 // Helper functions for form styling
 function getFormBorderRadius(radius?: string): string {
