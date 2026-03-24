@@ -184,13 +184,15 @@ export function BankingPortalShell({
             onClick={onLogout}
             title="Sign out"
             style={{
-              background: 'none', border: 'none', color: sidebarTextFaint,
-              cursor: 'pointer', padding: '4px', fontSize: '16px',
+              background: 'none', border: 'none', color: sidebarTextMuted,
+              cursor: 'pointer', padding: '6px 10px', fontSize: '12px',
+              display: 'flex', alignItems: 'center', gap: '4px',
+              borderRadius: '6px', transition: 'all 0.2s',
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.color = '#F87171'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.color = sidebarTextFaint; }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(248,113,113,0.15)'; e.currentTarget.style.color = '#F87171'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = sidebarTextMuted; }}
           >
-            ↗
+            ↗ Logout
           </button>
         </div>
       </aside>
