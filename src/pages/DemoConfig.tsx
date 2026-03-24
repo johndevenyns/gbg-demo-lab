@@ -238,6 +238,27 @@ export default function DemoConfig() {
     });
   };
   
+  // Lifecycle dialog states
+  const [showCloneDialog, setShowCloneDialog] = useState(false);
+  const [showIndustryDialog, setShowIndustryDialog] = useState(false);
+  const [showArchiveDialog, setShowArchiveDialog] = useState(false);
+  const [archiving, setArchiving] = useState(false);
+
+  const handleArchive = async () => {
+    if (!localDemo) return;
+    setArchiving(true);
+    try {
+      await updateDemoMutation.mutateAsync({ id: localDemo.id, updates: { isActive: false } });
+      toast({ title: "Demo archived", description: `${localDemo.customerName} has been archived.` });
+      setShowArchiveDialog(false);
+      navigate('/admin');
+    } catch {
+      toast({ title: "Error", description: "Failed to archive demo." });
+    } finally {
+      setArchiving(false);
+    }
+  };
+
   // Local state for form fields
   const [localDemo, setLocalDemo] = useState<DemoEnvironment | null>(null);
   const pendingSaveRef = useRef<ReturnType<typeof setTimeout> | null>(null);
