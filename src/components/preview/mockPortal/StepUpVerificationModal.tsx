@@ -33,6 +33,7 @@ export function StepUpVerificationModal({
   open,
   trigger,
   customSteps,
+  userData,
   buttonColor,
   formStyle,
   customerName,
