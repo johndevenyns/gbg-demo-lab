@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { DemoFlowRenderer } from '@/components/preview/DemoFlowRenderer';
 import { FormStep } from '@/types/demo';
 import { FormStyleConfig } from '@/types/formStyle';
