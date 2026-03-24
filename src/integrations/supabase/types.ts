@@ -208,6 +208,7 @@ export type Database = {
           page_content_override: Json | null
           portal_type_override: string | null
           show_on_landing_page: boolean
+          title_override: string | null
           updated_at: string
           use_case_id: string
           verification_type_override: string | null
@@ -222,6 +223,7 @@ export type Database = {
           page_content_override?: Json | null
           portal_type_override?: string | null
           show_on_landing_page?: boolean
+          title_override?: string | null
           updated_at?: string
           use_case_id: string
           verification_type_override?: string | null
@@ -236,6 +238,7 @@ export type Database = {
           page_content_override?: Json | null
           portal_type_override?: string | null
           show_on_landing_page?: boolean
+          title_override?: string | null
           updated_at?: string
           use_case_id?: string
           verification_type_override?: string | null
