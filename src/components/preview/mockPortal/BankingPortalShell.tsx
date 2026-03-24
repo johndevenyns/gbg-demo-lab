@@ -107,7 +107,7 @@ export function BankingPortalShell({
           gap: '12px',
         }}>
           {logoUrl ? (
-            <img src={logoUrl} alt={bankName} style={{ height: '28px', maxWidth: '140px', objectFit: 'contain' }} />
+            <img src={logoUrl} alt={bankName} style={{ height: '44px', maxWidth: '180px', objectFit: 'contain' }} />
           ) : (
             <>
               <div style={{
