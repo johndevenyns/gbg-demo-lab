@@ -60,5 +60,6 @@ export interface ResolvedUseCase {
   pageContent: UseCasePageContent;
   isEnabled: boolean;
   displayOrder: number;
+  showOnLandingPage: boolean;
   portalType?: string | null;
 }
