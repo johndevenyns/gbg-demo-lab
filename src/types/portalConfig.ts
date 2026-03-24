@@ -30,10 +30,21 @@ export interface PortalQuickAction {
   color: string;
 }
 
+export type TriggerCategory = 'settings_change' | 'transaction' | 'account_action';
+export type TriggerCondition = 'always' | 'threshold';
+
 export interface PortalVerificationTrigger {
+  id: string;
   action: string;
   label: string;
   enabled: boolean;
+  category: TriggerCategory;
+  condition: TriggerCondition;
+  thresholdAmount?: number;          // for transaction triggers
+  thresholdCurrency?: string;        // e.g. 'USD'
+  verificationType?: string | null;  // null = use demo default
+  useCaseId?: string | null;         // reference to a step-up use case / form template
+  successMessage?: string;           // shown after successful verification
 }
 
 // ── Pharmacy-specific types ──
