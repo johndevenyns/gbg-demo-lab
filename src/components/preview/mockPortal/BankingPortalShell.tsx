@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { BankingDashboard } from './BankingDashboard';
 import { BankingSettings } from './BankingSettings';
 import { BankingTransferFlow } from './BankingTransferFlow';
@@ -25,7 +25,10 @@ export interface BankingPortalShellProps {
   bankName: string;
   portalConfig?: PortalConfig;
   branding?: PortalBranding;
-  onTriggerVerification: (trigger: PortalVerificationTrigger) => void;
+  onTriggerVerification: (trigger: PortalVerificationTrigger, txContext?: { amount?: number; recipientName?: string; fromAccount?: string }) => void;
+  /** Navigation command from parent (e.g. after verification completes) */
+  navCommand?: 'dashboard' | 'repeat_transfer' | null;
+  onNavCommandHandled?: () => void;
   onLogout: () => void;
 }
 
@@ -38,13 +41,29 @@ export function BankingPortalShell({
   portalConfig,
   branding,
   onTriggerVerification,
+  navCommand,
+  onNavCommandHandled,
   onLogout,
 }: BankingPortalShellProps) {
   const config = { ...DEFAULT_BANKING_CONFIG, ...portalConfig };
   const [activePage, setActivePage] = useState<PortalPage>('dashboard');
+  const [transferKey, setTransferKey] = useState(0); // key to reset transfer form
 
-  const handleTriggerVerification = useCallback((trigger: PortalVerificationTrigger) => {
-    onTriggerVerification(trigger);
+  // Handle navigation commands from parent
+  useEffect(() => {
+    if (!navCommand) return;
+    if (navCommand === 'dashboard') {
+      setActivePage('dashboard');
+    } else if (navCommand === 'repeat_transfer') {
+      // Reset transfer form and navigate to it
+      setTransferKey(k => k + 1);
+      setActivePage('transfer');
+    }
+    onNavCommandHandled?.();
+  }, [navCommand, onNavCommandHandled]);
+
+  const handleTriggerVerification = useCallback((trigger: PortalVerificationTrigger, txContext?: { amount?: number; recipientName?: string; fromAccount?: string }) => {
+    onTriggerVerification(trigger, txContext);
   }, [onTriggerVerification]);
 
   // Legacy string-based trigger handler for settings page
@@ -268,6 +287,7 @@ export function BankingPortalShell({
         )}
         {activePage === 'transfer' && (
           <BankingTransferFlow
+            key={`transfer-${transferKey}`}
             userName={userName}
             accentColor={brandAccent}
             portalConfig={config}
@@ -277,6 +297,7 @@ export function BankingPortalShell({
         )}
         {activePage === 'pay-bills' && (
           <BankingTransferFlow
+            key={`paybills-${transferKey}`}
             userName={userName}
             accentColor={brandAccent}
             portalConfig={config}

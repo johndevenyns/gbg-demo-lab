@@ -7,7 +7,7 @@ interface BankingTransferFlowProps {
   userName: string;
   accentColor: string;
   portalConfig?: PortalConfig;
-  onTriggerVerification: (trigger: PortalVerificationTrigger) => void;
+  onTriggerVerification: (trigger: PortalVerificationTrigger, txContext?: { amount?: number; recipientName?: string; fromAccount?: string }) => void;
   onBack: () => void;
 }
 
@@ -44,7 +44,11 @@ export function BankingTransferFlow({
 
   const handleConfirm = () => {
     if (requiresVerification && transferTrigger) {
-      onTriggerVerification(transferTrigger);
+      onTriggerVerification(transferTrigger, {
+        amount: parsedAmount,
+        recipientName: recipientName,
+        fromAccount: `${accounts[fromAccount]?.name} •••• ${accounts[fromAccount]?.lastFour}`,
+      });
     } else {
       setStep('success');
     }

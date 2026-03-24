@@ -14,7 +14,8 @@ import { BankingPortalShell } from "@/components/preview/mockPortal/BankingPorta
 import { ResolvedUseCase } from "@/types/useCase";
 import { FormStep } from "@/types/demo";
 import { PortalBranding, PortalVerificationTrigger } from "@/types/portalConfig";
-import { StepUpVerificationModal } from "@/components/preview/mockPortal/StepUpVerificationModal";
+import { StepUpVerificationModal, PostVerificationAction } from "@/components/preview/mockPortal/StepUpVerificationModal";
+import { toast } from "@/hooks/use-toast";
 
 // Helper functions for form styling
 function getFormBorderRadius(radius?: string): string {
@@ -52,6 +53,8 @@ export default function DemoPreview() {
   const [showPortal, setShowPortal] = useState(false);
   const [portalVerificationAction, setPortalVerificationAction] = useState<string | null>(null);
   const [portalVerificationTrigger, setPortalVerificationTrigger] = useState<PortalVerificationTrigger | null>(null);
+  const [portalTransactionContext, setPortalTransactionContext] = useState<{ amount?: number; recipientName?: string; fromAccount?: string } | undefined>(undefined);
+  const [portalNavCommand, setPortalNavCommand] = useState<'dashboard' | 'repeat_transfer' | null>(null);
 
   // Get portal type directly from the demo
   const demoPortalType = demo?.portalType || 'none';
@@ -165,9 +168,10 @@ export default function DemoPreview() {
   }, [selectedUseCase, demoPortalType, portalUser]);
 
   // Handle portal verification trigger (now receives full trigger object)
-  const handlePortalVerification = useCallback((trigger: PortalVerificationTrigger) => {
+  const handlePortalVerification = useCallback((trigger: PortalVerificationTrigger, txContext?: { amount?: number; recipientName?: string; fromAccount?: string }) => {
     setPortalVerificationAction(trigger.action);
     setPortalVerificationTrigger(trigger);
+    setPortalTransactionContext(txContext);
   }, []);
 
   const handlePortalLogout = useCallback(() => {
@@ -310,6 +314,8 @@ export default function DemoPreview() {
           portalConfig={demoIndustry?.portalConfig}
           branding={portalBranding}
           onTriggerVerification={handlePortalVerification}
+          navCommand={portalNavCommand}
+          onNavCommandHandled={() => setPortalNavCommand(null)}
           onLogout={handlePortalLogout}
         />
 
@@ -322,6 +328,7 @@ export default function DemoPreview() {
             lastName: (portalUser?.profileData?.lastName || portalUser?.profileData?.last_name || '') as string,
             email: portalUser?.email,
           }}
+          transactionContext={portalTransactionContext}
           buttonColor={demo.buttonColor}
           formStyle={demo.formStyle}
           customerName={demo.customerName}
@@ -335,13 +342,33 @@ export default function DemoPreview() {
           demoId={demo.id}
           includeQr={demo.includeQr}
           accentColor={demo.buttonColor || '#0D9488'}
-          onComplete={(success) => {
+          onComplete={(success, action) => {
+            const trigger = portalVerificationTrigger;
             setPortalVerificationAction(null);
             setPortalVerificationTrigger(null);
+            setPortalTransactionContext(undefined);
+
+            if (success && trigger) {
+              const behavior = trigger.postVerificationBehavior ||
+                (trigger.category === 'transaction' ? 'show_completion' : 'return_with_toast');
+
+              if (behavior === 'return_with_toast') {
+                // Show toast and stay on current page — settings change reflected
+                toast({
+                  title: '✓ ' + (trigger.completionTitle || 'Success'),
+                  description: trigger.successMessage || 'Change applied successfully.',
+                });
+              } else if (action === 'return_to_dashboard') {
+                setPortalNavCommand('dashboard');
+              } else if (action === 'repeat') {
+                setPortalNavCommand('repeat_transfer');
+              }
+            }
           }}
           onCancel={() => {
             setPortalVerificationAction(null);
             setPortalVerificationTrigger(null);
+            setPortalTransactionContext(undefined);
           }}
         />
 
