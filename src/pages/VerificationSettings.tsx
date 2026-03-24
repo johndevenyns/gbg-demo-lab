@@ -152,6 +152,10 @@ export default function VerificationSettings() {
             <GlobalRegistrationCodeManagement />
           </TabsContent>
 
+          <TabsContent value="portal-users" className="space-y-6">
+            <PortalUserManagement />
+          </TabsContent>
+
           <TabsContent value="profiles" className="space-y-6">
             <TestProfileManagement />
           </TabsContent>
