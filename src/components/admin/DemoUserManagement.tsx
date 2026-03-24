@@ -41,9 +41,18 @@ const PROFILE_FIELDS = [
   { key: 'zipCode', label: 'ZIP Code', placeholder: '62704' },
 ];
 
+interface InvitationTemplate {
+  id: string;
+  name: string;
+  subject: string;
+  body_html: string;
+  is_default: boolean;
+}
+
 interface DemoUserManagementProps {
   demoId: string;
   demoName: string;
+  demoSlug?: string;
 }
 
 export function DemoUserManagement({ demoId, demoName }: DemoUserManagementProps) {
