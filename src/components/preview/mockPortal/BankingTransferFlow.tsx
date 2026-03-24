@@ -7,7 +7,7 @@ interface BankingTransferFlowProps {
   userName: string;
   accentColor: string;
   portalConfig?: PortalConfig;
-  onTriggerVerification: (trigger: PortalVerificationTrigger) => void;
+  onTriggerVerification: (trigger: PortalVerificationTrigger, txContext?: { amount?: number; recipientName?: string; fromAccount?: string }) => void;
   onBack: () => void;
 }
 
