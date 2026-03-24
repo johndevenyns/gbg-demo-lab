@@ -4,7 +4,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { FormStep, ApiStepConfig as ApiStepConfigType } from '@/types/demo';
-import { Plug, Eye, Clock } from 'lucide-react';
+import { Plug, Eye, Clock, Settings2 } from 'lucide-react';
 import { StepCompletionActionsConfig } from './StepCompletionActionsConfig';
 
 interface ApiStepConfigProps {
