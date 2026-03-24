@@ -174,6 +174,7 @@ export function StepUpVerificationModal({
               resourceIdDataOnly={resourceIdDataOnly}
               demoId={demoId}
               includeQr={includeQr}
+              initialFormData={initialFormData}
               onComplete={handleComplete}
             />
           )}
