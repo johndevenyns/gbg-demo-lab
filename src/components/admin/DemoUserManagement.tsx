@@ -27,6 +27,7 @@ interface PortalUser {
   is_super: boolean;
   registration_code: string | null;
   registration_code_expires_at: string | null;
+  verification_status: string;
   created_by: string | null;
   created_at: string;
   updated_at: string;
