@@ -314,6 +314,8 @@ export default function DemoPreview() {
           portalConfig={demoIndustry?.portalConfig}
           branding={portalBranding}
           onTriggerVerification={handlePortalVerification}
+          navCommand={portalNavCommand}
+          onNavCommandHandled={() => setPortalNavCommand(null)}
           onLogout={handlePortalLogout}
         />
 
@@ -326,6 +328,7 @@ export default function DemoPreview() {
             lastName: (portalUser?.profileData?.lastName || portalUser?.profileData?.last_name || '') as string,
             email: portalUser?.email,
           }}
+          transactionContext={portalTransactionContext}
           buttonColor={demo.buttonColor}
           formStyle={demo.formStyle}
           customerName={demo.customerName}
@@ -339,13 +342,33 @@ export default function DemoPreview() {
           demoId={demo.id}
           includeQr={demo.includeQr}
           accentColor={demo.buttonColor || '#0D9488'}
-          onComplete={(success) => {
+          onComplete={(success, action) => {
+            const trigger = portalVerificationTrigger;
             setPortalVerificationAction(null);
             setPortalVerificationTrigger(null);
+            setPortalTransactionContext(undefined);
+
+            if (success && trigger) {
+              const behavior = trigger.postVerificationBehavior ||
+                (trigger.category === 'transaction' ? 'show_completion' : 'return_with_toast');
+
+              if (behavior === 'return_with_toast') {
+                // Show toast and stay on current page — settings change reflected
+                toast({
+                  title: '✓ ' + (trigger.completionTitle || 'Success'),
+                  description: trigger.successMessage || 'Change applied successfully.',
+                });
+              } else if (action === 'return_to_dashboard') {
+                setPortalNavCommand('dashboard');
+              } else if (action === 'repeat') {
+                setPortalNavCommand('repeat_transfer');
+              }
+            }
           }}
           onCancel={() => {
             setPortalVerificationAction(null);
             setPortalVerificationTrigger(null);
+            setPortalTransactionContext(undefined);
           }}
         />
 
