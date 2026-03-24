@@ -44,7 +44,11 @@ export function BankingTransferFlow({
 
   const handleConfirm = () => {
     if (requiresVerification && transferTrigger) {
-      onTriggerVerification(transferTrigger);
+      onTriggerVerification(transferTrigger, {
+        amount: parsedAmount,
+        recipientName: recipientName,
+        fromAccount: `${accounts[fromAccount]?.name} •••• ${accounts[fromAccount]?.lastFour}`,
+      });
     } else {
       setStep('success');
     }

@@ -287,6 +287,7 @@ export function BankingPortalShell({
         )}
         {activePage === 'transfer' && (
           <BankingTransferFlow
+            key={`transfer-${transferKey}`}
             userName={userName}
             accentColor={brandAccent}
             portalConfig={config}
@@ -296,6 +297,7 @@ export function BankingPortalShell({
         )}
         {activePage === 'pay-bills' && (
           <BankingTransferFlow
+            key={`paybills-${transferKey}`}
             userName={userName}
             accentColor={brandAccent}
             portalConfig={config}
