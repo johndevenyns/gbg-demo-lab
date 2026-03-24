@@ -472,6 +472,7 @@ export function DemoUserManagement({ demoId, demoName, demoSlug }: DemoUserManag
                   <TableHead>Name</TableHead>
                   <TableHead>Profile</TableHead>
                   <TableHead>Reg Code</TableHead>
+                  <TableHead>Verified</TableHead>
                   <TableHead>Scope</TableHead>
                   <TableHead>Active</TableHead>
                   <TableHead className="w-[150px]">Actions</TableHead>
