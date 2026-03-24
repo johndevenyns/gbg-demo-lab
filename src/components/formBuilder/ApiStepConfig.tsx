@@ -155,14 +155,21 @@ export function ApiStepConfig({ step, onUpdateStep }: ApiStepConfigProps) {
               </div>
             )}
           </div>
+
+          {/* Post-API Completion Actions */}
+          <div className="pt-4 border-t border-border">
+            <Label className="text-sm font-semibold flex items-center gap-2 mb-3">
+              <Settings2 className="w-4 h-4" />
+              Post-API Behavior
+            </Label>
+            <StepCompletionActionsConfig
+              config={step.stepCompletionConfig}
+              onChange={(completionConfig) => onUpdateStep({ stepCompletionConfig: completionConfig })}
+              inline
+            />
+          </div>
         </CardContent>
       </Card>
-
-      {/* Step Completion Actions */}
-      <StepCompletionActionsConfig
-        config={step.stepCompletionConfig}
-        onChange={(completionConfig) => onUpdateStep({ stepCompletionConfig: completionConfig })}
-      />
     </div>
   );
 }
