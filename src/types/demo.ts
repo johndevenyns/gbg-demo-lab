@@ -489,6 +489,8 @@ export interface FormStep {
   decisionStepConfig?: DecisionStepConfig;
   // Unified verification step configuration (only used when stepType = 'unified_verification')
   unifiedVerificationConfig?: UnifiedVerificationConfig;
+  // Completion actions — what happens on pass/fail (for verification and API steps)
+  stepCompletionConfig?: StepCompletionConfig;
 }
 
 export interface FormField {
