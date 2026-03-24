@@ -183,7 +183,19 @@ export function UseCaseSection({ demoId, demo, onUpdateDemo }: UseCaseSectionPro
 
                       <CollapsibleContent>
                         <div className="border-t p-4 space-y-4">
-                          {/* Show on Landing Page Toggle */}
+                          {/* Use Case Name Override */}
+                          <div className="space-y-2">
+                            <Label className="text-sm">Use Case Name</Label>
+                            <Input
+                              placeholder={uc.title}
+                              defaultValue={link.titleOverride ?? ''}
+                              onBlur={(e) => {
+                                const val = e.target.value.trim() || null;
+                                handleUpdate(link.id, { titleOverride: val });
+                              }}
+                            />
+                            <p className="text-xs text-muted-foreground">Leave blank to use the global name "{uc.title}"</p>
+                          </div>
                           <div className="flex items-center gap-3">
                             <Switch
                               checked={link.showOnLandingPage}
