@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Trash2, UserPlus, Users, AlertCircle, KeyRound, Copy, Check, Clock, ChevronDown, UserCog, ShieldCheck, Send } from 'lucide-react';
+import { Loader2, Trash2, UserPlus, Users, AlertCircle, KeyRound, Copy, Check, Clock, ChevronDown, UserCog, ShieldCheck, Send, CheckCircle2, XCircle } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
 
@@ -27,6 +27,7 @@ interface PortalUser {
   is_super: boolean;
   registration_code: string | null;
   registration_code_expires_at: string | null;
+  verification_status: string;
   created_by: string | null;
   created_at: string;
   updated_at: string;
@@ -471,6 +472,7 @@ export function DemoUserManagement({ demoId, demoName, demoSlug }: DemoUserManag
                   <TableHead>Name</TableHead>
                   <TableHead>Profile</TableHead>
                   <TableHead>Reg Code</TableHead>
+                  <TableHead>Verified</TableHead>
                   <TableHead>Scope</TableHead>
                   <TableHead>Active</TableHead>
                   <TableHead className="w-[150px]">Actions</TableHead>
@@ -539,6 +541,19 @@ export function DemoUserManagement({ demoId, demoName, demoSlug }: DemoUserManag
                           </div>
                         ) : (
                           <span className="text-xs text-muted-foreground">None</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {user.verification_status === 'verified' ? (
+                          <Badge variant="secondary" className="bg-green-500/10 text-green-600 text-[10px]">
+                            <CheckCircle2 className="w-2.5 h-2.5 mr-0.5" /> Verified
+                          </Badge>
+                        ) : user.verification_status === 'failed' ? (
+                          <Badge variant="secondary" className="bg-destructive/10 text-destructive text-[10px]">
+                            <XCircle className="w-2.5 h-2.5 mr-0.5" /> Failed
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-muted-foreground text-[10px]">Unverified</Badge>
                         )}
                       </TableCell>
                       <TableCell>

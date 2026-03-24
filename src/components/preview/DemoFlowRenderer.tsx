@@ -950,12 +950,89 @@ export function DemoFlowRenderer({
     }
   }, [formData, onSubmissionLog]);
 
+  // Execute create_account completion action — upsert portal user with form data + verification status
+  const executeCreateAccount = useCallback(async (success: boolean) => {
+    if (!demoId) return;
+    const email = (formData.email || '').trim().toLowerCase();
+    if (!email) return;
+
+    const profileData: Record<string, string> = {};
+    const profileFieldMap: Record<string, string> = {
+      first_name: 'firstName', last_name: 'lastName', phone: 'phone',
+      date_of_birth: 'dateOfBirth', ssn: 'ssn4',
+      address_street: 'streetAddress', address_city: 'city',
+      address_state: 'state', address_zip: 'zipCode',
+    };
+    // Collect all form data into profile
+    for (const [key, val] of Object.entries(formData)) {
+      if (val && key !== 'email' && key !== 'password') {
+        const mapped = profileFieldMap[key] || key;
+        profileData[mapped] = val;
+      }
+    }
+
+    const displayName = [formData.first_name, formData.last_name].filter(Boolean).join(' ') || null;
+    const verificationStatus = success ? 'verified' : 'failed';
+
+    try {
+      // Check if user already exists
+      const { data: existing } = await supabase
+        .from('portal_users')
+        .select('id')
+        .eq('email', email)
+        .maybeSingle();
+
+      if (existing) {
+        // Update existing user
+        await supabase.from('portal_users').update({
+          profile_data: profileData,
+          display_name: displayName,
+          verification_status: verificationStatus,
+        }).eq('id', existing.id);
+
+        // Ensure assignment exists
+        await supabase.from('portal_user_demo_assignments').upsert(
+          { portal_user_id: existing.id, demo_id: demoId },
+          { onConflict: 'portal_user_id,demo_id' }
+        );
+      } else {
+        // Create new user
+        const password = formData.password || Math.random().toString(36).slice(-8);
+        const { data: newUser } = await supabase.from('portal_users').insert({
+          email,
+          password,
+          display_name: displayName,
+          profile_data: profileData,
+          verification_status: verificationStatus,
+        }).select('id').single();
+
+        if (newUser) {
+          await supabase.from('portal_user_demo_assignments').insert({
+            portal_user_id: newUser.id,
+            demo_id: demoId,
+          });
+        }
+      }
+      console.log('Account created/updated with verification status:', verificationStatus);
+    } catch (err) {
+      console.error('Failed to create/update account:', err);
+    }
+  }, [formData, demoId]);
+
   // Complete the flow (success or failure)
-  const completeFlow = useCallback((success: boolean, refId?: string) => {
+  const completeFlow = useCallback(async (success: boolean, refId?: string) => {
     setFlowComplete(success ? 'success' : 'failure');
     if (refId) setReferenceId(refId);
     onComplete?.(success, refId);
-  }, [onComplete]);
+
+    // Execute create_account completion actions if configured on the current step
+    const actions = success
+      ? currentStep?.stepCompletionConfig?.onSuccess
+      : currentStep?.stepCompletionConfig?.onFailure;
+    if (actions?.some(a => a.type === 'create_account')) {
+      await executeCreateAccount(success);
+    }
+  }, [onComplete, currentStep, executeCreateAccount]);
 
   // Handle address validation dialog proceed
   const handleAddressValidationProceed = useCallback((useOriginal: boolean) => {
