@@ -634,6 +634,78 @@ export type Database = {
         }
         Relationships: []
       }
+      portal_user_demo_assignments: {
+        Row: {
+          created_at: string
+          demo_id: string
+          id: string
+          portal_user_id: string
+        }
+        Insert: {
+          created_at?: string
+          demo_id: string
+          id?: string
+          portal_user_id: string
+        }
+        Update: {
+          created_at?: string
+          demo_id?: string
+          id?: string
+          portal_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "portal_user_demo_assignments_demo_id_fkey"
+            columns: ["demo_id"]
+            isOneToOne: false
+            referencedRelation: "demo_environments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "portal_user_demo_assignments_portal_user_id_fkey"
+            columns: ["portal_user_id"]
+            isOneToOne: false
+            referencedRelation: "portal_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      portal_users: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          email: string
+          id: string
+          is_active: boolean
+          is_default: boolean
+          password: string
+          profile_data: Json | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          email: string
+          id?: string
+          is_active?: boolean
+          is_default?: boolean
+          password: string
+          profile_data?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          email?: string
+          id?: string
+          is_active?: boolean
+          is_default?: boolean
+          password?: string
+          profile_data?: Json | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       test_user_profiles: {
         Row: {
           created_at: string

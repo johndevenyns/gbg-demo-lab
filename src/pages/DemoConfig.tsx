@@ -26,6 +26,7 @@ import { LogoUploadSection } from "@/components/admin/LogoUploadSection";
 import { BrandingScrapeSection } from "@/components/admin/BrandingScrapeSection";
 import { cn } from "@/lib/utils";
 import { DemoUserManagement } from "@/components/admin/DemoUserManagement";
+import { PortalUserManagement } from "@/components/admin/PortalUserManagement";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { SaveAsNewDemoDialog } from "@/components/admin/SaveAsNewDemoDialog";
 import { SaveAsIndustryDialog } from "@/components/admin/SaveAsIndustryDialog";
@@ -350,7 +351,12 @@ export default function DemoConfig() {
       case 'use-cases':
         return <UseCaseSection demoId={localDemo.id} demo={localDemo} onUpdateDemo={handleUpdate} />;
       case 'users':
-        return <DemoUserManagement demoId={localDemo.id} demoName={localDemo.customerName} demoSlug={localDemo.slug} />;
+        return (
+          <div className="space-y-6">
+            <DemoUserManagement demoId={localDemo.id} demoName={localDemo.customerName} demoSlug={localDemo.slug} />
+            <PortalUserManagement demoId={localDemo.id} />
+          </div>
+        );
       case 'preview':
         return <FormPreviewPanel demo={localDemo} />;
       default:
