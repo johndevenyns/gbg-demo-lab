@@ -12,6 +12,7 @@ import { IndustryManagement } from "@/components/admin/IndustryManagement";
 import { PortalTypeManagement } from "@/components/admin/PortalTypeManagement";
 import { UnifiedVerificationSettings } from "@/components/admin/UnifiedVerificationSettings";
 import { GlobalUseCaseManagement } from "@/components/admin/GlobalUseCaseManagement";
+import { GlobalRegistrationCodeManagement } from "@/components/admin/GlobalRegistrationCodeManagement";
 
 export default function VerificationSettings() {
   const navigate = useNavigate();
