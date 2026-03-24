@@ -60,6 +60,8 @@ interface DemoFlowRendererProps {
   referenceIdPrefix?: string;
   storedTestData?: StoredTestData;
   showTestButtons?: boolean;
+  /** Pre-populated form data (e.g. user name from portal session) */
+  initialFormData?: Record<string, string>;
   // Branding props for verification session
   logoUrl?: string;
   headerBgColor?: string;
