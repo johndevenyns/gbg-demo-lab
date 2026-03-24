@@ -38,6 +38,7 @@ export interface DemoUseCaseLink {
   isEnabled: boolean;
   displayOrder: number;
   showOnLandingPage: boolean;
+  titleOverride?: string | null;
   formStepsOverride?: Record<string, unknown>[] | null;
   verificationTypeOverride?: string | null;
   pageContentOverride?: UseCasePageContent | null;
@@ -53,6 +54,7 @@ export interface ResolvedUseCase {
   linkId: string;
   useCaseId: string;
   title: string;
+  titleOverride?: string | null;
   description?: string;
   iconName: string;
   formSteps: Record<string, unknown>[];

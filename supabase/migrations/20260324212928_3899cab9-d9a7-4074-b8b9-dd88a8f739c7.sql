@@ -1,0 +1,1 @@
+ALTER TABLE public.demo_use_case_links ADD COLUMN title_override text DEFAULT NULL;

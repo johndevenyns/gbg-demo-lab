@@ -162,7 +162,10 @@ export function UseCaseSection({ demoId, demo, onUpdateDemo }: UseCaseSectionPro
                           <IconComp className="w-5 h-5 text-primary shrink-0" />
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
-                              <span className="font-medium text-sm">{uc.title}</span>
+                              <span className="font-medium text-sm">{link.titleOverride || uc.title}</span>
+                              {link.titleOverride && (
+                                <Badge variant="outline" className="text-[10px]">Renamed</Badge>
+                              )}
                               {hasOverride && (
                                 <Badge variant="outline" className="text-[10px]">Customized</Badge>
                               )}
@@ -180,7 +183,19 @@ export function UseCaseSection({ demoId, demo, onUpdateDemo }: UseCaseSectionPro
 
                       <CollapsibleContent>
                         <div className="border-t p-4 space-y-4">
-                          {/* Show on Landing Page Toggle */}
+                          {/* Use Case Name Override */}
+                          <div className="space-y-2">
+                            <Label className="text-sm">Use Case Name</Label>
+                            <Input
+                              placeholder={uc.title}
+                              defaultValue={link.titleOverride ?? ''}
+                              onBlur={(e) => {
+                                const val = e.target.value.trim() || null;
+                                handleUpdate(link.id, { titleOverride: val });
+                              }}
+                            />
+                            <p className="text-xs text-muted-foreground">Leave blank to use the global name "{uc.title}"</p>
+                          </div>
                           <div className="flex items-center gap-3">
                             <Switch
                               checked={link.showOnLandingPage}
