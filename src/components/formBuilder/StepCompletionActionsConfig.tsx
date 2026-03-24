@@ -33,10 +33,11 @@ const DEFAULT_FAILURE_ACTIONS: StepCompletionAction[] = [
 interface StepCompletionActionsConfigProps {
   config?: StepCompletionConfig;
   onChange: (config: StepCompletionConfig) => void;
+  inline?: boolean;
 }
 
-export function StepCompletionActionsConfig({ config, onChange }: StepCompletionActionsConfigProps) {
-  const [isExpanded, setIsExpanded] = useState(!!config);
+export function StepCompletionActionsConfig({ config, onChange, inline }: StepCompletionActionsConfigProps) {
+  const [isExpanded, setIsExpanded] = useState(!!config || !!inline);
   const [activeTab, setActiveTab] = useState<'success' | 'failure'>('success');
 
   const completionConfig: StepCompletionConfig = config || {
