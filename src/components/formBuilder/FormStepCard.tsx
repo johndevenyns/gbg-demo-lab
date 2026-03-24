@@ -25,7 +25,7 @@ import {
   GripVertical, Trash2, ChevronDown, ChevronUp, Edit2, Check, X,
   User, Mail, Phone, Calendar, Hash, MapPin, Building, DollarSign, 
   FileText, Type, CheckSquare, MapPinCheck, Send, Smartphone, Database, FileCheck,
-  Plug, QrCode, Activity, Workflow, SplitSquareVertical, Shield, LogIn
+  Plug, QrCode, Activity, Workflow, SplitSquareVertical, Shield, LogIn, KeyRound, CreditCard
 } from 'lucide-react';
 
 const FIELD_ICONS: Record<string, React.ReactNode> = {
@@ -52,6 +52,9 @@ const FIELD_ICONS: Record<string, React.ReactNode> = {
   select: <FileText className="w-4 h-4" />,
   gender: <User className="w-4 h-4" />,
   nationality: <MapPin className="w-4 h-4" />,
+  credit_card: <CreditCard className="w-4 h-4" />,
+  cc_expiration: <CreditCard className="w-4 h-4" />,
+  cc_cvv: <CreditCard className="w-4 h-4" />,
 };
 
 const PATH_ICONS: Record<string, React.ReactNode> = {
@@ -498,6 +501,18 @@ export function FormStepCard({
               Login
             </Badge>
           )}
+          {step.submitAction === 'validate_code' && (
+            <Badge variant="outline" className="text-xs bg-amber-500/10 text-amber-600 border-amber-500/30">
+              <KeyRound className="w-3 h-3 mr-1" />
+              Code
+            </Badge>
+          )}
+          {step.submitAction === 'verify_cc' && (
+            <Badge variant="outline" className="text-xs bg-blue-500/10 text-blue-600 border-blue-500/30">
+              <CreditCard className="w-3 h-3 mr-1" />
+              Verify CC
+            </Badge>
+          )}
           {step.apiConfig?.enabled && (
             <Badge variant="outline" className="text-xs bg-green-500/10 text-green-600 border-green-500/30">
               <Plug className="w-3 h-3 mr-1" />
@@ -720,6 +735,7 @@ export function FormStepCard({
                       <SelectItem value="login">Log in to account</SelectItem>
                       <SelectItem value="register">Register account</SelectItem>
                       <SelectItem value="validate_code">Validate code</SelectItem>
+                      <SelectItem value="verify_cc">Verify credit card</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

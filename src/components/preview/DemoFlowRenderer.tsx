@@ -1302,6 +1302,81 @@ export function DemoFlowRenderer({
     }
   }, [demoId, formData]);
 
+  // Verify credit card number against portal_users profile_data
+  const verifyCreditCard = useCallback(async (): Promise<boolean> => {
+    if (!demoId) {
+      setLoginError('Card verification is not available for this demo.');
+      return false;
+    }
+    const ccNumber = (formData.credit_card_number || formData.creditCardNumber || '').trim();
+    
+    if (!ccNumber) {
+      setLoginError('Please enter your credit card number.');
+      return false;
+    }
+
+    setLoginError(null);
+    setIsLoading(true);
+
+    try {
+      const normalizedInput = ccNumber.replace(/[\s-]/g, '');
+
+      const { data: assignments } = await supabase
+        .from('portal_user_demo_assignments')
+        .select('portal_user_id')
+        .eq('demo_id', demoId);
+
+      const assignedIds = (assignments || []).map(a => a.portal_user_id);
+
+      const { data: users } = await supabase
+        .from('portal_users')
+        .select('id, email, display_name, profile_data, is_default, is_active')
+        .eq('is_active', true);
+
+      const matchingUser = (users || []).find(user => {
+        if (!user.is_default && !assignedIds.includes(user.id)) return false;
+        const pd = user.profile_data as Record<string, string> | null;
+        if (!pd?.creditCardNumber) return false;
+        return pd.creditCardNumber.replace(/[\s-]/g, '') === normalizedInput;
+      });
+
+      if (!matchingUser) {
+        setLoginError('Card number not recognized. Please check and try again.');
+        setIsLoading(false);
+        return false;
+      }
+
+      // Pre-fill form data from matched user's profile
+      const pd = matchingUser.profile_data as Record<string, string> | null;
+      if (pd) {
+        const prefillMap: Record<string, string> = {
+          firstName: 'first_name', lastName: 'last_name', phone: 'phone',
+          dateOfBirth: 'dateOfBirth', ssn4: 'ssn4',
+          streetAddress: 'streetAddress', city: 'city', state: 'state', zipCode: 'zipCode',
+        };
+        for (const [profileKey, formKey] of Object.entries(prefillMap)) {
+          if (pd[profileKey]) {
+            setFormData(prev => ({ ...prev, [formKey]: pd[profileKey] }));
+          }
+        }
+        if (matchingUser.email) {
+          setFormData(prev => ({ ...prev, email: matchingUser.email }));
+        }
+      }
+
+      lastLoginUserData.current = (pd as Record<string, unknown>) || {};
+      onLoginSuccess?.({ email: matchingUser.email, profileData: (pd as Record<string, unknown>) || {} });
+
+      setIsLoading(false);
+      return true;
+    } catch (err) {
+      console.error('CC verification error:', err);
+      setLoginError('An error occurred. Please try again.');
+      setIsLoading(false);
+      return false;
+    }
+  }, [demoId, formData, onLoginSuccess]);
+
   const goToNextStep = useCallback(async () => {
     // First validate required fields for form steps
     if (currentStep?.stepType === 'form' && !validateRequiredFields()) {
@@ -1326,6 +1401,13 @@ export function DemoFlowRenderer({
     // Handle registration code validation
     } else if (currentStep?.submitAction === 'validate_code') {
       const success = await validateRegistrationCode();
+      if (!success) return;
+      proceedToNextStep();
+      return;
+
+    // Handle credit card verification
+    } else if (currentStep?.submitAction === 'verify_cc') {
+      const success = await verifyCreditCard();
       if (!success) return;
       proceedToNextStep();
       return;
@@ -1359,7 +1441,7 @@ export function DemoFlowRenderer({
     
     // No validation needed or validation passed
     proceedToNextStep();
-  }, [currentStep, hasAddressFields, validateAddress, formData, proceedToNextStep, validateRequiredFields, authenticateLogin, validateRegistrationCode, onNavigateToPortal]);
+  }, [currentStep, hasAddressFields, validateAddress, formData, proceedToNextStep, validateRequiredFields, authenticateLogin, validateRegistrationCode, verifyCreditCard, onNavigateToPortal]);
 
   const goToPrevStep = () => {
     if (!isFirstStep) {
@@ -2463,7 +2545,7 @@ export function DemoFlowRenderer({
               onNavigateToLogin={onNavigateToLogin}
             />
             {/* Login / code validation error message */}
-            {(currentStep.submitAction === 'login' || currentStep.submitAction === 'validate_code') && loginError && (
+            {(currentStep.submitAction === 'login' || currentStep.submitAction === 'validate_code' || currentStep.submitAction === 'verify_cc') && loginError && (
               <div style={{
                 marginTop: '12px',
                 padding: '10px 14px',
