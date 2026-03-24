@@ -23,5 +23,5 @@ export { StoredUserDataConfig } from './StoredUserDataConfig';
 export { FormPreviewPanel } from './FormPreviewPanel';
 export { SubmissionLogPanel, type SubmissionLogEntry } from './SubmissionLogPanel';
 export { AddStepDialog, type StepTypeOption } from './AddStepDialog';
-export { CompletionBehaviorConfig, type CompletionBehaviorSettings, type ResultPageMode } from './CompletionBehaviorConfig';
+export { StepCompletionActionsConfig } from './StepCompletionActionsConfig';
 export { UnifiedVerificationStepConfig } from './UnifiedVerificationStepConfig';
