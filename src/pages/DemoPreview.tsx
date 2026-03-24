@@ -453,7 +453,7 @@ export default function DemoPreview() {
           >
             {hasUseCases && selectedUseCase ? (
               <UseCaseLandingPage
-                useCases={resolvedUseCases}
+                useCases={resolvedUseCases.filter(uc => uc.showOnLandingPage)}
                 selectedUseCase={selectedUseCase}
                 buttonColor={demo.buttonColor}
                 onSelectUseCase={setSelectedUseCase}

@@ -180,6 +180,20 @@ export function UseCaseSection({ demoId, demo, onUpdateDemo }: UseCaseSectionPro
 
                       <CollapsibleContent>
                         <div className="border-t p-4 space-y-4">
+                          {/* Show on Landing Page Toggle */}
+                          <div className="flex items-center gap-3">
+                            <Switch
+                              checked={link.showOnLandingPage}
+                              onCheckedChange={(v) => {
+                                handleUpdate(link.id, { showOnLandingPage: v });
+                              }}
+                            />
+                            <div>
+                              <Label className="text-sm">Show on Landing Page</Label>
+                              <p className="text-xs text-muted-foreground">When off, this use case won't appear in the landing page tabs (e.g. step-up verification flows)</p>
+                            </div>
+                          </div>
+
                           {/* Landing Page Toggle */}
                           <div className="flex items-center gap-3">
                             <Switch
