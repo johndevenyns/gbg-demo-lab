@@ -90,6 +90,12 @@ export default function VerificationSettings() {
               Verification
             </TabsTrigger>
             {isGlobalAdmin && (
+              <TabsTrigger value="invite-templates" className="flex items-center gap-2">
+                <Mail className="w-4 h-4" />
+                Invite Templates
+              </TabsTrigger>
+            )}
+            {isGlobalAdmin && (
               <TabsTrigger value="reg-codes" className="flex items-center gap-2">
                 <KeyRound className="w-4 h-4" />
                 Registration Codes
