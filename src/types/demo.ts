@@ -421,7 +421,7 @@ export interface MethodSelectionStepConfig {
   mobileIdProviders?: MdlProvider[];
 }
 
-export type FormStepSubmitAction = 'login' | 'register' | 'validate_code' | undefined;
+export type FormStepSubmitAction = 'login' | 'register' | 'validate_code' | 'verify_cc' | undefined;
 
 export type LoginDestination = 'next_step' | 'portal';
 

@@ -720,6 +720,7 @@ export function FormStepCard({
                       <SelectItem value="login">Log in to account</SelectItem>
                       <SelectItem value="register">Register account</SelectItem>
                       <SelectItem value="validate_code">Validate code</SelectItem>
+                      <SelectItem value="verify_cc">Verify credit card</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
