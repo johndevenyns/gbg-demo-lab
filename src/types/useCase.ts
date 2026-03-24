@@ -54,6 +54,7 @@ export interface ResolvedUseCase {
   linkId: string;
   useCaseId: string;
   title: string;
+  titleOverride?: string | null;
   description?: string;
   iconName: string;
   formSteps: Record<string, unknown>[];
