@@ -442,25 +442,15 @@ export function VerificationFlowConfig({ step, onUpdateStep, demo }: Verificatio
                   </p>
                 </div>
 
-                {/* Result Page Settings */}
+                {/* Completion Actions */}
                 <div className="pt-3 border-t border-border/50">
-                  <CompletionBehaviorConfig
-                    settings={{
-                      successPageMode: config.successPageMode || 'default',
-                      failurePageMode: config.failurePageMode || 'default',
-                      customSuccessPage: config.customSuccessPage,
-                      customFailurePage: config.customFailurePage,
-                    }}
-                    onChange={(settings: CompletionBehaviorSettings) => {
-                      handleConfigUpdate({
-                        successPageMode: settings.successPageMode,
-                        failurePageMode: settings.failurePageMode,
-                        customSuccessPage: settings.customSuccessPage,
-                        customFailurePage: settings.customFailurePage,
-                      });
-                    }}
-                    defaultSuccessPage={demo?.successPageConfig}
-                    defaultFailurePage={demo?.failurePageConfig}
+                  <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3 block">
+                    Completion Actions
+                  </Label>
+                  <StepCompletionActionsConfig
+                    config={step.stepCompletionConfig}
+                    onChange={(completionConfig) => onUpdateStep({ stepCompletionConfig: completionConfig })}
+                    inline
                   />
                 </div>
               </div>
