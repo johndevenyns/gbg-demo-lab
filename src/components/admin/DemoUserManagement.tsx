@@ -611,6 +611,121 @@ export function DemoUserManagement({ demoId, demoName, demoSlug }: DemoUserManag
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Invite User Dialog */}
+      <Dialog open={inviteDialogOpen} onOpenChange={(v) => { setInviteDialogOpen(v); if (!v) { setInviteError(null); setInviteResult(null); } }}>
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Invite User</DialogTitle>
+            <DialogDescription>
+              Send an invitation with an auto-generated registration code and demo link.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            {inviteError && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{inviteError}</AlertDescription>
+              </Alert>
+            )}
+
+            {inviteResult ? (
+              <div className="space-y-4">
+                <Alert>
+                  <AlertDescription>
+                    User created/updated with registration code. Share the details below manually until email infrastructure is configured.
+                  </AlertDescription>
+                </Alert>
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">Registration Code</Label>
+                  <div className="flex items-center gap-2">
+                    <code className="bg-muted px-3 py-2 rounded text-lg font-mono tracking-widest">{inviteResult.registrationCode}</code>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => copyCode(inviteResult.registrationCode)}>
+                      {copiedCode === inviteResult.registrationCode ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                    </Button>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">Demo Link</Label>
+                  <div className="flex items-center gap-2">
+                    <Input readOnly value={inviteResult.demoLink} className="text-xs" />
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { navigator.clipboard.writeText(inviteResult.demoLink); toast({ title: 'Copied!' }); }}>
+                      <Copy className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">Email Preview</Label>
+                  <div className="border rounded-lg p-3 bg-muted/50 max-h-[200px] overflow-y-auto">
+                    <p className="text-xs font-semibold mb-1">Subject: {inviteResult.emailSubject}</p>
+                    <div className="text-xs" dangerouslySetInnerHTML={{ __html: inviteResult.emailBody }} />
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="space-y-2">
+                  <Label>Recipient Email</Label>
+                  <Input type="email" placeholder="user@example.com" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Password (optional)</Label>
+                  <Input type="password" placeholder="Leave blank for default" value={invitePassword} onChange={(e) => setInvitePassword(e.target.value)} />
+                  <p className="text-xs text-muted-foreground">Set an initial password, or leave blank for a default.</p>
+                </div>
+                <div className="space-y-2">
+                  <Label>Invitation Template</Label>
+                  <Select value={inviteTemplateId} onValueChange={setInviteTemplateId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a template" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="default">Default Template</SelectItem>
+                      {invitationTemplates.map((t) => (
+                        <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <Collapsible open={inviteProfileOpen} onOpenChange={setInviteProfileOpen}>
+                  <CollapsibleTrigger asChild>
+                    <Button variant="ghost" size="sm" className="w-full justify-between text-muted-foreground">
+                      <span className="flex items-center gap-2">
+                        <UserCog className="w-4 h-4" />
+                        Profile Data
+                      </span>
+                      <ChevronDown className={`w-4 h-4 transition-transform ${inviteProfileOpen ? 'rotate-180' : ''}`} />
+                    </Button>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="space-y-3 pt-2">
+                    {PROFILE_FIELDS.map(field => (
+                      <div key={field.key} className="space-y-1">
+                        <Label className="text-xs">{field.label}</Label>
+                        <Input
+                          placeholder={field.placeholder}
+                          value={inviteProfileData[field.key] || ''}
+                          onChange={(e) => setInviteProfileData(prev => ({ ...prev, [field.key]: e.target.value }))}
+                        />
+                      </div>
+                    ))}
+                  </CollapsibleContent>
+                </Collapsible>
+              </>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setInviteDialogOpen(false)}>
+              {inviteResult ? 'Close' : 'Cancel'}
+            </Button>
+            {!inviteResult && (
+              <Button onClick={handleSendInvite} disabled={isInviting}>
+                {isInviting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Sending...</> : <><Send className="w-4 h-4 mr-2" />Send Invite</>}
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
