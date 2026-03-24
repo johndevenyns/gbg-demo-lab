@@ -251,6 +251,51 @@ export function DemoUserManagement({ demoId, demoName, demoSlug }: DemoUserManag
     setTimeout(() => setCopiedCode(null), 2000);
   };
 
+  // Send invite
+  const handleSendInvite = async () => {
+    setInviteError(null);
+    if (!inviteEmail.trim()) { setInviteError('Email is required'); return; }
+    setIsInviting(true);
+    setInviteResult(null);
+    try {
+      const cleanProfile: Record<string, string> = {};
+      for (const [key, value] of Object.entries(inviteProfileData)) {
+        if (value && value.trim()) cleanProfile[key] = value.trim();
+      }
+
+      const { data, error } = await supabase.functions.invoke('send-demo-invite', {
+        body: {
+          demoId,
+          email: inviteEmail.trim(),
+          password: invitePassword.trim() || undefined,
+          profileData: Object.keys(cleanProfile).length > 0 ? cleanProfile : undefined,
+          templateId: inviteTemplateId !== 'default' ? inviteTemplateId : undefined,
+        },
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      queryClient.invalidateQueries({ queryKey: ['demo-users', demoId] });
+      setInviteResult({
+        registrationCode: data.registrationCode,
+        demoLink: data.demoLink,
+        emailBody: data.emailBody,
+        emailSubject: data.emailSubject,
+      });
+
+      if (data.emailSent) {
+        toast({ title: 'Invite sent!', description: `Invitation email sent to ${inviteEmail}.` });
+      } else {
+        toast({ title: 'User created with code', description: data.emailError || 'Share the code and link manually.' });
+      }
+    } catch (err: any) {
+      setInviteError(err.message || 'Failed to send invite');
+    } finally {
+      setIsInviting(false);
+    }
+  };
+
   const isCodeExpired = (expiresAt: string | null) => {
     if (!expiresAt) return false;
     return new Date(expiresAt) < new Date();
