@@ -427,7 +427,7 @@ export type LoginDestination = 'next_step' | 'portal';
 
 // Step-level completion actions — what happens after pass/fail on verification or API steps
 export type StepCompletionActionType = 
-  | 'show_message'      // Display a custom message (toast or inline)
+  | 'show_result_page'   // Display a full result page (title, subtitle, message, button, etc.)
   | 'create_account'    // Create user account in the demo environment
   | 'login_portal'      // Log the user into the portal (banking, pharmacy, etc.)
   | 'redirect'          // Redirect to a URL
@@ -437,9 +437,16 @@ export interface StepCompletionAction {
   id: string;
   type: StepCompletionActionType;
   order: number;
-  // For show_message
-  message?: string;
+  // For show_result_page
   messageTitle?: string;
+  subtitle?: string;
+  message?: string;
+  showIcon?: boolean;
+  showReferenceId?: boolean;
+  buttonText?: string;
+  buttonAction?: 'url' | 'portal';
+  buttonUrl?: string;
+  customContent?: string;
   // For redirect
   redirectUrl?: string;
   // For login_portal — which portal to log into (defaults to demo's portal_type)
