@@ -457,11 +457,24 @@ export function DemoUserManagement({ demoId, demoName, demoSlug }: DemoUserManag
                       {PROFILE_FIELDS.map(field => (
                         <div key={field.key} className="space-y-1">
                           <Label className="text-xs">{field.label}</Label>
-                          <Input
-                            placeholder={field.placeholder}
-                            value={newProfileData[field.key] || ''}
-                            onChange={(e) => setNewProfileData(prev => ({ ...prev, [field.key]: e.target.value }))}
-                          />
+                          <div className="flex gap-2">
+                            <Input
+                              placeholder={field.placeholder}
+                              value={newProfileData[field.key] || ''}
+                              onChange={(e) => setNewProfileData(prev => ({ ...prev, [field.key]: e.target.value }))}
+                            />
+                            {field.generate && (
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="shrink-0 text-xs"
+                                onClick={() => setNewProfileData(prev => ({ ...prev, [field.key]: generateCreditCardNumber() }))}
+                              >
+                                Generate
+                              </Button>
+                            )}
+                          </div>
                         </div>
                       ))}
                     </CollapsibleContent>
