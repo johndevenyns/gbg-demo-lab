@@ -130,6 +130,10 @@ export default function VerificationSettings() {
             <UnifiedVerificationSettings isGlobalAdmin={isGlobalAdmin} />
           </TabsContent>
 
+          <TabsContent value="reg-codes" className="space-y-6">
+            <GlobalRegistrationCodeManagement />
+          </TabsContent>
+
           <TabsContent value="profiles" className="space-y-6">
             <TestProfileManagement />
           </TabsContent>
