@@ -229,7 +229,7 @@ export function DemoUserManagement({ demoId, demoName, demoSlug }: DemoUserManag
   const generateCodeMutation = useMutation({
     mutationFn: async (userId: string) => {
       const code = String(Math.floor(100000 + Math.random() * 900000));
-      const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+      const expiresAt = new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString();
       const { error } = await supabase.from('demo_users').update({
         registration_code: code,
         registration_code_expires_at: expiresAt,
