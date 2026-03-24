@@ -50,6 +50,7 @@ export default function DemoPreview() {
   const [portalUser, setPortalUser] = useState<{ email: string; profileData?: Record<string, unknown> } | null>(null);
   const [showPortal, setShowPortal] = useState(false);
   const [portalVerificationAction, setPortalVerificationAction] = useState<string | null>(null);
+  const [portalVerificationTrigger, setPortalVerificationTrigger] = useState<PortalVerificationTrigger | null>(null);
 
   // Get portal type directly from the demo
   const demoPortalType = demo?.portalType || 'none';
