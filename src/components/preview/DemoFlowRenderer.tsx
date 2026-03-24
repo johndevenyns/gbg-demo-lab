@@ -2545,7 +2545,7 @@ export function DemoFlowRenderer({
               onNavigateToLogin={onNavigateToLogin}
             />
             {/* Login / code validation error message */}
-            {(currentStep.submitAction === 'login' || currentStep.submitAction === 'validate_code') && loginError && (
+            {(currentStep.submitAction === 'login' || currentStep.submitAction === 'validate_code' || currentStep.submitAction === 'verify_cc') && loginError && (
               <div style={{
                 marginTop: '12px',
                 padding: '10px 14px',
