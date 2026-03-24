@@ -14,17 +14,20 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Trash2, UserPlus, Users, AlertCircle, KeyRound, Copy, Check, Clock, ChevronDown, UserCog, ShieldCheck, Send } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
+import { Checkbox } from '@/components/ui/checkbox';
 
-interface DemoUser {
+interface PortalUser {
   id: string;
-  demo_id: string;
   email: string;
   password: string;
-  registration_code: string | null;
-  registration_code_expires_at: string | null;
+  display_name: string | null;
+  profile_data: Record<string, string> | null;
+  is_default: boolean;
   is_active: boolean;
   is_super: boolean;
-  profile_data: Record<string, string> | null;
+  registration_code: string | null;
+  registration_code_expires_at: string | null;
+  created_by: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -61,6 +64,8 @@ export function DemoUserManagement({ demoId, demoName, demoSlug }: DemoUserManag
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [newEmail, setNewEmail] = useState('');
   const [newPassword, setNewPassword] = useState('');
+  const [newDisplayName, setNewDisplayName] = useState('');
+  const [newIsDefault, setNewIsDefault] = useState(false);
   const [newProfileData, setNewProfileData] = useState<Record<string, string>>({});
   const [profileOpen, setProfileOpen] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
@@ -103,44 +108,76 @@ export function DemoUserManagement({ demoId, demoName, demoSlug }: DemoUserManag
       return data as InvitationTemplate[];
     },
   });
-  // Fetch demo users for this demo
-  const { data: demoUsers = [], isLoading } = useQuery({
-    queryKey: ['demo-users', demoId],
+
+  // Fetch all portal users
+  const { data: allPortalUsers = [], isLoading: loadingUsers } = useQuery({
+    queryKey: ['portal-users'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('demo_users')
+        .from('portal_users')
         .select('*')
-        .eq('demo_id', demoId)
         .order('created_at', { ascending: false });
       if (error) throw error;
-      return (data || []) as DemoUser[];
+      return (data || []) as PortalUser[];
     },
   });
 
-  // Add user
+  // Fetch assignments for this demo
+  const { data: assignments = [], isLoading: loadingAssignments } = useQuery({
+    queryKey: ['portal-user-assignments', demoId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('portal_user_demo_assignments')
+        .select('*')
+        .eq('demo_id', demoId);
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  const isLoading = loadingUsers || loadingAssignments;
+
+  // Users visible in this demo: assigned + default users
+  const assignedUserIds = new Set(assignments.map((a: any) => a.portal_user_id));
+  const demoUsers = allPortalUsers.filter(u => u.is_default || assignedUserIds.has(u.id));
+
+  // Add user (create portal_user + assign to this demo)
   const handleAddUser = async () => {
     setAddError(null);
     if (!newEmail.trim()) { setAddError('Email is required'); return; }
     if (!newPassword.trim() || newPassword.length < 6) { setAddError('Password must be at least 6 characters'); return; }
     setIsAdding(true);
     try {
-      // Clean profile data - remove empty values
       const cleanProfile: Record<string, string> = {};
       for (const [key, value] of Object.entries(newProfileData)) {
         if (value && value.trim()) cleanProfile[key] = value.trim();
       }
 
-      const { error } = await supabase.from('demo_users').upsert({
-        demo_id: demoId,
+      // Upsert into portal_users
+      const { data: upserted, error } = await supabase.from('portal_users').upsert({
         email: newEmail.trim(),
         password: newPassword.trim(),
+        display_name: newDisplayName.trim() || null,
+        is_default: newIsDefault,
         profile_data: Object.keys(cleanProfile).length > 0 ? cleanProfile : {},
-      }, { onConflict: 'demo_id,email' });
+      }, { onConflict: 'email' }).select().single();
       if (error) throw error;
-      queryClient.invalidateQueries({ queryKey: ['demo-users', demoId] });
+
+      // Assign to this demo
+      if (upserted) {
+        await supabase.from('portal_user_demo_assignments').upsert(
+          { portal_user_id: upserted.id, demo_id: demoId },
+          { onConflict: 'portal_user_id,demo_id' }
+        );
+      }
+
+      queryClient.invalidateQueries({ queryKey: ['portal-users'] });
+      queryClient.invalidateQueries({ queryKey: ['portal-user-assignments', demoId] });
       toast({ title: 'User saved', description: `${newEmail} has been added/updated.` });
       setNewEmail('');
       setNewPassword('');
+      setNewDisplayName('');
+      setNewIsDefault(false);
       setNewProfileData({});
       setProfileOpen(false);
       setAddDialogOpen(false);
@@ -151,15 +188,18 @@ export function DemoUserManagement({ demoId, demoName, demoSlug }: DemoUserManag
     }
   };
 
-  // Delete user
-  const deleteMutation = useMutation({
+  // Remove user from this demo (unassign, don't delete the user)
+  const unassignMutation = useMutation({
     mutationFn: async (userId: string) => {
-      const { error } = await supabase.from('demo_users').delete().eq('id', userId);
+      const { error } = await supabase.from('portal_user_demo_assignments')
+        .delete()
+        .eq('portal_user_id', userId)
+        .eq('demo_id', demoId);
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['demo-users', demoId] });
-      toast({ title: 'User removed' });
+      queryClient.invalidateQueries({ queryKey: ['portal-user-assignments', demoId] });
+      toast({ title: 'User removed from demo' });
     },
     onError: (e: Error) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
   });
@@ -167,25 +207,10 @@ export function DemoUserManagement({ demoId, demoName, demoSlug }: DemoUserManag
   // Toggle active
   const toggleActiveMutation = useMutation({
     mutationFn: async ({ userId, isActive }: { userId: string; isActive: boolean }) => {
-      const { error } = await supabase.from('demo_users').update({ is_active: isActive }).eq('id', userId);
+      const { error } = await supabase.from('portal_users').update({ is_active: isActive }).eq('id', userId);
       if (error) throw error;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['demo-users', demoId] });
-    },
-    onError: (e: Error) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
-  });
-
-  // Toggle super user
-  const toggleSuperMutation = useMutation({
-    mutationFn: async ({ userId, isSuper }: { userId: string; isSuper: boolean }) => {
-      const { error } = await supabase.from('demo_users').update({ is_super: isSuper } as any).eq('id', userId);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['demo-users', demoId] });
-      toast({ title: 'Updated', description: 'Super user status changed.' });
-    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['portal-users'] }),
     onError: (e: Error) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
   });
 
@@ -194,9 +219,9 @@ export function DemoUserManagement({ demoId, demoName, demoSlug }: DemoUserManag
     setResetError(null);
     if (!resetPassword.trim() || resetPassword.length < 6) { setResetError('Password must be at least 6 characters'); return; }
     try {
-      const { error } = await supabase.from('demo_users').update({ password: resetPassword.trim() }).eq('id', resetUserId!);
+      const { error } = await supabase.from('portal_users').update({ password: resetPassword.trim() }).eq('id', resetUserId!);
       if (error) throw error;
-      queryClient.invalidateQueries({ queryKey: ['demo-users', demoId] });
+      queryClient.invalidateQueries({ queryKey: ['portal-users'] });
       toast({ title: 'Password updated', description: `Password set for ${resetEmail}.` });
       setResetDialogOpen(false);
       setResetPassword('');
@@ -213,11 +238,11 @@ export function DemoUserManagement({ demoId, demoName, demoSlug }: DemoUserManag
       for (const [key, value] of Object.entries(editProfileData)) {
         if (value && value.trim()) cleanProfile[key] = value.trim();
       }
-      const { error } = await supabase.from('demo_users').update({
+      const { error } = await supabase.from('portal_users').update({
         profile_data: cleanProfile,
       }).eq('id', editProfileUserId);
       if (error) throw error;
-      queryClient.invalidateQueries({ queryKey: ['demo-users', demoId] });
+      queryClient.invalidateQueries({ queryKey: ['portal-users'] });
       toast({ title: 'Profile updated', description: `Profile data saved for ${editProfileEmail}.` });
       setEditProfileDialogOpen(false);
     } catch (err: any) {
@@ -225,12 +250,12 @@ export function DemoUserManagement({ demoId, demoName, demoSlug }: DemoUserManag
     }
   };
 
-  // Generate registration code (6-digit, expires in 24h)
+  // Generate registration code
   const generateCodeMutation = useMutation({
     mutationFn: async (userId: string) => {
       const code = String(Math.floor(100000 + Math.random() * 900000));
       const expiresAt = new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString();
-      const { error } = await supabase.from('demo_users').update({
+      const { error } = await supabase.from('portal_users').update({
         registration_code: code,
         registration_code_expires_at: expiresAt,
       }).eq('id', userId);
@@ -238,7 +263,7 @@ export function DemoUserManagement({ demoId, demoName, demoSlug }: DemoUserManag
       return code;
     },
     onSuccess: (code) => {
-      queryClient.invalidateQueries({ queryKey: ['demo-users', demoId] });
+      queryClient.invalidateQueries({ queryKey: ['portal-users'] });
       toast({ title: 'Registration code generated', description: `Code: ${code}` });
     },
     onError: (e: Error) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
@@ -276,7 +301,8 @@ export function DemoUserManagement({ demoId, demoName, demoSlug }: DemoUserManag
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
 
-      queryClient.invalidateQueries({ queryKey: ['demo-users', demoId] });
+      queryClient.invalidateQueries({ queryKey: ['portal-users'] });
+      queryClient.invalidateQueries({ queryKey: ['portal-user-assignments', demoId] });
       setInviteResult({
         registrationCode: data.registrationCode,
         demoLink: data.demoLink,
@@ -357,8 +383,8 @@ export function DemoUserManagement({ demoId, demoName, demoSlug }: DemoUserManag
               </DialogTrigger>
               <DialogContent className="max-h-[85vh] overflow-y-auto">
                 <DialogHeader>
-                  <DialogTitle>Add Demo User</DialogTitle>
-                  <DialogDescription>Create a user account for this demo environment.</DialogDescription>
+                  <DialogTitle>Add User</DialogTitle>
+                  <DialogDescription>Create or update a user and assign them to this demo.</DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 py-4">
                   {addError && (
@@ -374,6 +400,20 @@ export function DemoUserManagement({ demoId, demoName, demoSlug }: DemoUserManag
                   <div className="space-y-2">
                     <Label>Password</Label>
                     <Input type="password" placeholder="Min 6 characters" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Display Name (optional)</Label>
+                    <Input placeholder="John Doe" value={newDisplayName} onChange={(e) => setNewDisplayName(e.target.value)} />
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Checkbox
+                      id="add-is-default"
+                      checked={newIsDefault}
+                      onCheckedChange={(v) => setNewIsDefault(!!v)}
+                    />
+                    <Label htmlFor="add-is-default" className="cursor-pointer text-sm">
+                      Add to all demo environments by default
+                    </Label>
                   </div>
                   
                   <Collapsible open={profileOpen} onOpenChange={setProfileOpen}>
@@ -420,112 +460,106 @@ export function DemoUserManagement({ demoId, demoName, demoSlug }: DemoUserManag
               <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-3">
                 <Users className="w-6 h-6 text-muted-foreground" />
               </div>
-              <p className="text-muted-foreground">No users created yet.</p>
-              <p className="text-sm text-muted-foreground mt-1">Add a user to get started.</p>
+              <p className="text-muted-foreground">No users assigned to this demo yet.</p>
+              <p className="text-sm text-muted-foreground mt-1">Add a user or invite someone to get started.</p>
             </div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Email</TableHead>
+                  <TableHead>Name</TableHead>
                   <TableHead>Profile</TableHead>
-                  <TableHead>Super</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Registration Code</TableHead>
-                  <TableHead>Created</TableHead>
-                  <TableHead className="w-[180px]">Actions</TableHead>
+                  <TableHead>Reg Code</TableHead>
+                  <TableHead>Scope</TableHead>
+                  <TableHead>Active</TableHead>
+                  <TableHead className="w-[150px]">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {demoUsers.map((user) => {
+                  const expired = isCodeExpired(user.registration_code_expires_at);
                   const profileSummary = getProfileSummary(user.profile_data);
                   return (
                     <TableRow key={user.id}>
                       <TableCell className="font-medium">{user.email}</TableCell>
+                      <TableCell className="text-muted-foreground">{user.display_name || '—'}</TableCell>
                       <TableCell>
                         {profileSummary ? (
-                          <Badge variant="outline" className="text-xs">{profileSummary}</Badge>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-xs text-muted-foreground"
+                            onClick={() => {
+                              setEditProfileUserId(user.id);
+                              setEditProfileEmail(user.email);
+                              setEditProfileData((user.profile_data as Record<string, string>) || {});
+                              setEditProfileDialogOpen(true);
+                            }}
+                          >
+                            <UserCog className="w-3 h-3 mr-1" />
+                            {profileSummary}
+                          </Button>
                         ) : (
-                          <span className="text-muted-foreground text-sm">—</span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-xs text-muted-foreground"
+                            onClick={() => {
+                              setEditProfileUserId(user.id);
+                              setEditProfileEmail(user.email);
+                              setEditProfileData({});
+                              setEditProfileDialogOpen(true);
+                            }}
+                          >
+                            <UserCog className="w-3 h-3 mr-1" />
+                            Add
+                          </Button>
                         )}
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Switch
-                            checked={user.is_super}
-                            onCheckedChange={(checked) => toggleSuperMutation.mutate({ userId: user.id, isSuper: checked })}
-                          />
-                          {user.is_super && <ShieldCheck className="w-4 h-4 text-primary" />}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <button
-                          onClick={() => toggleActiveMutation.mutate({ userId: user.id, isActive: !user.is_active })}
-                          className="cursor-pointer"
-                        >
-                          <Badge variant={user.is_active ? 'default' : 'secondary'}>
-                            {user.is_active ? 'Active' : 'Inactive'}
-                          </Badge>
-                        </button>
-                      </TableCell>
-                      <TableCell>
                         {user.registration_code ? (
-                          <div className="flex items-center gap-2">
-                            <code className="bg-muted px-2 py-1 rounded text-sm font-mono">{user.registration_code}</code>
+                          <div className="flex items-center gap-1">
+                            <code className={`text-xs px-1.5 py-0.5 rounded ${expired ? 'bg-destructive/10 text-destructive line-through' : 'bg-muted'}`}>
+                              {user.registration_code}
+                            </code>
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-7 w-7"
+                              className="h-6 w-6"
                               onClick={() => copyCode(user.registration_code!)}
                             >
-                              {copiedCode === user.registration_code ? (
-                                <Check className="w-3 h-3 text-green-500" />
-                              ) : (
-                                <Copy className="w-3 h-3" />
-                              )}
+                              {copiedCode === user.registration_code ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3" />}
                             </Button>
-                            {isCodeExpired(user.registration_code_expires_at) && (
-                              <Badge variant="destructive" className="text-xs">
-                                <Clock className="w-3 h-3 mr-1" />Expired
+                            {expired && (
+                              <Badge variant="outline" className="text-destructive border-destructive/30 text-[10px]">
+                                <Clock className="w-2.5 h-2.5 mr-0.5" /> Expired
                               </Badge>
                             )}
                           </div>
                         ) : (
-                          <span className="text-muted-foreground text-sm">—</span>
+                          <span className="text-xs text-muted-foreground">None</span>
                         )}
                       </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {new Date(user.created_at).toLocaleDateString()}
+                      <TableCell>
+                        {user.is_default ? (
+                          <Badge variant="secondary" className="bg-amber-500/10 text-amber-600 text-[10px]">All Demos</Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-[10px]">This Demo</Badge>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <Switch
+                          checked={user.is_active}
+                          onCheckedChange={(v) => toggleActiveMutation.mutate({ userId: user.id, isActive: v })}
+                        />
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1">
                           <Button
                             variant="ghost"
-                            size="sm"
-                            className="text-xs"
-                            onClick={() => generateCodeMutation.mutate(user.id)}
-                            disabled={generateCodeMutation.isPending}
-                          >
-                            Gen Code
-                          </Button>
-                          <Button
-                            variant="ghost"
                             size="icon"
-                            className="text-muted-foreground hover:text-primary hover:bg-primary/10"
-                            onClick={() => {
-                              setEditProfileUserId(user.id);
-                              setEditProfileEmail(user.email);
-                              setEditProfileData(user.profile_data || {});
-                              setEditProfileDialogOpen(true);
-                            }}
-                            title="Edit profile data"
-                          >
-                            <UserCog className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-muted-foreground hover:text-primary hover:bg-primary/10"
+                            className="h-7 w-7 text-muted-foreground hover:text-primary"
                             onClick={() => {
                               setResetUserId(user.id);
                               setResetEmail(user.email);
@@ -535,18 +569,30 @@ export function DemoUserManagement({ demoId, demoName, demoSlug }: DemoUserManag
                             }}
                             title="Reset password"
                           >
-                            <KeyRound className="w-4 h-4" />
+                            <KeyRound className="w-3.5 h-3.5" />
                           </Button>
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                            onClick={() => deleteMutation.mutate(user.id)}
-                            disabled={deleteMutation.isPending}
-                            title="Delete user"
+                            className="h-7 w-7 text-muted-foreground hover:text-primary"
+                            onClick={() => generateCodeMutation.mutate(user.id)}
+                            disabled={generateCodeMutation.isPending}
+                            title="Generate registration code"
                           >
-                            <Trash2 className="w-4 h-4" />
+                            <ShieldCheck className="w-3.5 h-3.5" />
                           </Button>
+                          {!user.is_default && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
+                              onClick={() => unassignMutation.mutate(user.id)}
+                              disabled={unassignMutation.isPending}
+                              title="Remove from this demo"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>
@@ -559,7 +605,7 @@ export function DemoUserManagement({ demoId, demoName, demoSlug }: DemoUserManag
       </Card>
 
       {/* Reset Password Dialog */}
-      <Dialog open={resetDialogOpen} onOpenChange={(v) => { setResetDialogOpen(v); if (!v) setResetError(null); }}>
+      <Dialog open={resetDialogOpen} onOpenChange={setResetDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Reset Password</DialogTitle>
@@ -589,14 +635,12 @@ export function DemoUserManagement({ demoId, demoName, demoSlug }: DemoUserManag
         <DialogContent className="max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Profile Data</DialogTitle>
-            <DialogDescription>
-              Set profile data for {editProfileEmail}. These fields are pre-filled when the user enters their registration code.
-            </DialogDescription>
+            <DialogDescription>Profile data for {editProfileEmail}. Used for form pre-filling.</DialogDescription>
           </DialogHeader>
           <div className="space-y-3 py-4">
             {PROFILE_FIELDS.map(field => (
               <div key={field.key} className="space-y-1">
-                <Label className="text-sm">{field.label}</Label>
+                <Label className="text-xs">{field.label}</Label>
                 <Input
                   placeholder={field.placeholder}
                   value={editProfileData[field.key] || ''}
@@ -613,81 +657,72 @@ export function DemoUserManagement({ demoId, demoName, demoSlug }: DemoUserManag
       </Dialog>
 
       {/* Invite User Dialog */}
-      <Dialog open={inviteDialogOpen} onOpenChange={(v) => { setInviteDialogOpen(v); if (!v) { setInviteError(null); setInviteResult(null); } }}>
-        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+      <Dialog open={inviteDialogOpen} onOpenChange={(v) => { setInviteDialogOpen(v); if (!v) setInviteResult(null); }}>
+        <DialogContent className="max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Invite User</DialogTitle>
-            <DialogDescription>
-              Send an invitation with an auto-generated registration code and demo link.
-            </DialogDescription>
+            <DialogDescription>Send an invitation with a registration code and demo link.</DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            {inviteError && (
-              <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{inviteError}</AlertDescription>
+          {inviteResult ? (
+            <div className="space-y-4 py-4">
+              <Alert>
+                <AlertDescription>
+                  <p className="font-medium mb-2">User created successfully!</p>
+                  <div className="space-y-2 text-sm">
+                    <p><strong>Registration Code:</strong>{' '}
+                      <code className="bg-muted px-2 py-0.5 rounded">{inviteResult.registrationCode}</code>
+                      <Button variant="ghost" size="icon" className="h-6 w-6 ml-1" onClick={() => copyCode(inviteResult.registrationCode)}>
+                        {copiedCode === inviteResult.registrationCode ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3" />}
+                      </Button>
+                    </p>
+                    <p><strong>Demo Link:</strong>{' '}
+                      <a href={inviteResult.demoLink} target="_blank" rel="noopener noreferrer" className="text-primary underline break-all">{inviteResult.demoLink}</a>
+                    </p>
+                  </div>
+                </AlertDescription>
               </Alert>
-            )}
-
-            {inviteResult ? (
-              <div className="space-y-4">
-                <Alert>
-                  <AlertDescription>
-                    User created/updated with registration code. Share the details below manually until email infrastructure is configured.
-                  </AlertDescription>
-                </Alert>
-                <div className="space-y-2">
-                  <Label className="text-xs text-muted-foreground">Registration Code</Label>
-                  <div className="flex items-center gap-2">
-                    <code className="bg-muted px-3 py-2 rounded text-lg font-mono tracking-widest">{inviteResult.registrationCode}</code>
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => copyCode(inviteResult.registrationCode)}>
-                      {copiedCode === inviteResult.registrationCode ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
-                    </Button>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-xs text-muted-foreground">Demo Link</Label>
-                  <div className="flex items-center gap-2">
-                    <Input readOnly value={inviteResult.demoLink} className="text-xs" />
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { navigator.clipboard.writeText(inviteResult.demoLink); toast({ title: 'Copied!' }); }}>
-                      <Copy className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-xs text-muted-foreground">Email Preview</Label>
-                  <div className="border rounded-lg p-3 bg-muted/50 max-h-[200px] overflow-y-auto">
-                    <p className="text-xs font-semibold mb-1">Subject: {inviteResult.emailSubject}</p>
-                    <div className="text-xs" dangerouslySetInnerHTML={{ __html: inviteResult.emailBody }} />
-                  </div>
-                </div>
+              <div className="space-y-2">
+                <Label>Email Subject</Label>
+                <Input readOnly value={inviteResult.emailSubject} />
               </div>
-            ) : (
-              <>
+              <div className="space-y-2">
+                <Label>Email Body (HTML)</Label>
+                <div className="border rounded-md p-3 text-sm bg-muted/50 max-h-40 overflow-auto" dangerouslySetInnerHTML={{ __html: inviteResult.emailBody }} />
+              </div>
+              <DialogFooter>
+                <Button onClick={() => { setInviteDialogOpen(false); setInviteResult(null); }}>Done</Button>
+              </DialogFooter>
+            </div>
+          ) : (
+            <>
+              <div className="space-y-4 py-4">
+                {inviteError && (
+                  <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>{inviteError}</AlertDescription>
+                  </Alert>
+                )}
                 <div className="space-y-2">
-                  <Label>Recipient Email</Label>
+                  <Label>Email</Label>
                   <Input type="email" placeholder="user@example.com" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} />
                 </div>
                 <div className="space-y-2">
                   <Label>Password (optional)</Label>
                   <Input type="password" placeholder="Leave blank for default" value={invitePassword} onChange={(e) => setInvitePassword(e.target.value)} />
-                  <p className="text-xs text-muted-foreground">Set an initial password, or leave blank for a default.</p>
+                  <p className="text-xs text-muted-foreground">Default: changeme123</p>
                 </div>
                 <div className="space-y-2">
                   <Label>Invitation Template</Label>
                   <Select value={inviteTemplateId} onValueChange={setInviteTemplateId}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a template" />
-                    </SelectTrigger>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="default">Default Template</SelectItem>
-                      {invitationTemplates.map((t) => (
+                      {invitationTemplates.map(t => (
                         <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
-
                 <Collapsible open={inviteProfileOpen} onOpenChange={setInviteProfileOpen}>
                   <CollapsibleTrigger asChild>
                     <Button variant="ghost" size="sm" className="w-full justify-between text-muted-foreground">
@@ -711,19 +746,15 @@ export function DemoUserManagement({ demoId, demoName, demoSlug }: DemoUserManag
                     ))}
                   </CollapsibleContent>
                 </Collapsible>
-              </>
-            )}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setInviteDialogOpen(false)}>
-              {inviteResult ? 'Close' : 'Cancel'}
-            </Button>
-            {!inviteResult && (
-              <Button onClick={handleSendInvite} disabled={isInviting}>
-                {isInviting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Sending...</> : <><Send className="w-4 h-4 mr-2" />Send Invite</>}
-              </Button>
-            )}
-          </DialogFooter>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setInviteDialogOpen(false)}>Cancel</Button>
+                <Button onClick={handleSendInvite} disabled={isInviting}>
+                  {isInviting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Sending...</> : <><Send className="w-4 h-4 mr-2" />Send Invite</>}
+                </Button>
+              </DialogFooter>
+            </>
+          )}
         </DialogContent>
       </Dialog>
     </>
