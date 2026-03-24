@@ -325,7 +325,7 @@ export function FormBuilderSection({ demo, onUpdate }: FormBuilderSectionProps) 
       />
       <CardContent>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-5 mb-6">
+          <TabsList className="grid w-full grid-cols-4 mb-6">
             <TabsTrigger value="builder" className="flex items-center gap-2">
               <LayoutGrid className="w-4 h-4" />
               <span className="hidden sm:inline">Form Builder</span>
@@ -333,10 +333,6 @@ export function FormBuilderSection({ demo, onUpdate }: FormBuilderSectionProps) 
             <TabsTrigger value="paths" className="flex items-center gap-2">
               <Workflow className="w-4 h-4" />
               <span className="hidden sm:inline">Verification Types</span>
-            </TabsTrigger>
-            <TabsTrigger value="results" className="flex items-center gap-2">
-              <ExternalLink className="w-4 h-4" />
-              <span className="hidden sm:inline">Results</span>
             </TabsTrigger>
             <TabsTrigger value="testdata" className="flex items-center gap-2">
               <Users className="w-4 h-4" />
