@@ -1072,7 +1072,7 @@ export function DemoFlowRenderer({
     }
   }, [demoId, formData, onLoginSuccess]);
 
-  // Validate registration code against demo_users table
+  // Validate registration code against portal_users table
   const validateRegistrationCode = useCallback(async (): Promise<boolean> => {
     if (!demoId) {
       setLoginError('Code validation is not available for this demo.');
@@ -1122,25 +1122,41 @@ export function DemoFlowRenderer({
         return true;
       }
 
-      const { data, error: queryError } = await supabase
-        .from('demo_users')
-        .select('id, email, registration_code, registration_code_expires_at, is_active, profile_data')
-        .eq('demo_id', demoId)
+      // Find portal user by registration code
+      const { data: portalUser, error: queryError } = await supabase
+        .from('portal_users')
+        .select('id, email, registration_code, registration_code_expires_at, is_active, is_default, profile_data')
         .eq('registration_code', code)
         .eq('is_active', true)
         .maybeSingle();
 
       if (queryError) throw queryError;
 
-      if (!data) {
+      if (!portalUser) {
         setLoginError('Invalid registration code.');
         setIsLoading(false);
         return false;
       }
 
+      // Check if user has access to this demo
+      if (!portalUser.is_default) {
+        const { data: assignment } = await supabase
+          .from('portal_user_demo_assignments')
+          .select('id')
+          .eq('portal_user_id', portalUser.id)
+          .eq('demo_id', demoId)
+          .maybeSingle();
+
+        if (!assignment) {
+          setLoginError('Invalid registration code.');
+          setIsLoading(false);
+          return false;
+        }
+      }
+
       // Check expiration
-      if (data.registration_code_expires_at) {
-        const expiresAt = new Date(data.registration_code_expires_at);
+      if (portalUser.registration_code_expires_at) {
+        const expiresAt = new Date(portalUser.registration_code_expires_at);
         if (expiresAt < new Date()) {
           setLoginError('This registration code has expired. Please request a new one.');
           setIsLoading(false);
@@ -1149,20 +1165,20 @@ export function DemoFlowRenderer({
       }
 
       // Populate form data with profile_data from the matched user
-      if (data.profile_data && typeof data.profile_data === 'object' && !Array.isArray(data.profile_data)) {
-        const profileData = data.profile_data as Record<string, unknown>;
+      if (portalUser.profile_data && typeof portalUser.profile_data === 'object' && !Array.isArray(portalUser.profile_data)) {
+        const profileData = portalUser.profile_data as Record<string, unknown>;
         const prefillData: Record<string, string> = {};
         for (const [key, value] of Object.entries(profileData)) {
           if (typeof value === 'string' && value.trim()) {
             prefillData[key] = value;
           }
         }
-        if (data.email && !prefillData.email) {
-          prefillData.email = data.email;
+        if (portalUser.email && !prefillData.email) {
+          prefillData.email = portalUser.email;
         }
         setFormData(prev => ({ ...prev, ...prefillData }));
-      } else if (data.email) {
-        setFormData(prev => ({ ...prev, email: data.email }));
+      } else if (portalUser.email) {
+        setFormData(prev => ({ ...prev, email: portalUser.email }));
       }
 
       setIsLoading(false);
