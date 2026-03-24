@@ -1441,7 +1441,7 @@ export function DemoFlowRenderer({
     
     // No validation needed or validation passed
     proceedToNextStep();
-  }, [currentStep, hasAddressFields, validateAddress, formData, proceedToNextStep, validateRequiredFields, authenticateLogin, validateRegistrationCode, onNavigateToPortal]);
+  }, [currentStep, hasAddressFields, validateAddress, formData, proceedToNextStep, validateRequiredFields, authenticateLogin, validateRegistrationCode, verifyCreditCard, onNavigateToPortal]);
 
   const goToPrevStep = () => {
     if (!isFirstStep) {
