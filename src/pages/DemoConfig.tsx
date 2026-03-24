@@ -1,5 +1,5 @@
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Save, Eye, Loader2, Settings, Globe, Palette, PlayCircle, Calendar, User, PanelLeftClose, PanelLeft, Copy, ExternalLink, Briefcase, Users, Monitor } from "lucide-react";
+import { ArrowLeft, Save, Eye, Loader2, Settings, Globe, Palette, PlayCircle, Calendar, User, PanelLeftClose, PanelLeft, Copy, ExternalLink, Briefcase, Users, Monitor, MoreVertical, Archive, CopyPlus, Factory } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,6 +26,10 @@ import { LogoUploadSection } from "@/components/admin/LogoUploadSection";
 import { BrandingScrapeSection } from "@/components/admin/BrandingScrapeSection";
 import { cn } from "@/lib/utils";
 import { DemoUserManagement } from "@/components/admin/DemoUserManagement";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { SaveAsNewDemoDialog } from "@/components/admin/SaveAsNewDemoDialog";
+import { SaveAsIndustryDialog } from "@/components/admin/SaveAsIndustryDialog";
+import { ArchiveDemoDialog } from "@/components/admin/ArchiveDemoDialog";
 
 // Navigation sections
 type ConfigSection = 'settings' | 'mirror' | 'branding' | 'use-cases' | 'users' | 'preview';
@@ -234,6 +238,27 @@ export default function DemoConfig() {
     });
   };
   
+  // Lifecycle dialog states
+  const [showCloneDialog, setShowCloneDialog] = useState(false);
+  const [showIndustryDialog, setShowIndustryDialog] = useState(false);
+  const [showArchiveDialog, setShowArchiveDialog] = useState(false);
+  const [archiving, setArchiving] = useState(false);
+
+  const handleArchive = async () => {
+    if (!localDemo) return;
+    setArchiving(true);
+    try {
+      await updateDemoMutation.mutateAsync({ id: localDemo.id, updates: { isActive: false } });
+      toast({ title: "Demo archived", description: `${localDemo.customerName} has been archived.` });
+      setShowArchiveDialog(false);
+      navigate('/admin');
+    } catch {
+      toast({ title: "Error", description: "Failed to archive demo." });
+    } finally {
+      setArchiving(false);
+    }
+  };
+
   // Local state for form fields
   const [localDemo, setLocalDemo] = useState<DemoEnvironment | null>(null);
   const pendingSaveRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -356,6 +381,25 @@ export default function DemoConfig() {
                 {updateDemoMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
                 {updateDemoMutation.isPending ? 'Saving...' : 'Save Now'}
               </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="icon">
+                    <MoreVertical className="w-4 h-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => setShowCloneDialog(true)}>
+                    <CopyPlus className="w-4 h-4 mr-2" />Save as New Demo
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setShowIndustryDialog(true)}>
+                    <Factory className="w-4 h-4 mr-2" />Save as Industry
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => setShowArchiveDialog(true)} className="text-destructive focus:text-destructive">
+                    <Archive className="w-4 h-4 mr-2" />Archive Demo
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <ThemeToggle />
             </div>
           </div>
@@ -449,6 +493,29 @@ export default function DemoConfig() {
           </div>
         </main>
       </div>
+
+      {/* Lifecycle Dialogs */}
+      <SaveAsNewDemoDialog
+        open={showCloneDialog}
+        onOpenChange={setShowCloneDialog}
+        demo={localDemo}
+        useCaseLinks={useCaseLinks}
+        onSuccess={(newId) => navigate(`/admin/demo/${newId}`)}
+      />
+      <SaveAsIndustryDialog
+        open={showIndustryDialog}
+        onOpenChange={setShowIndustryDialog}
+        demo={localDemo}
+        useCaseLinks={useCaseLinks}
+        onSuccess={() => {}}
+      />
+      <ArchiveDemoDialog
+        open={showArchiveDialog}
+        onOpenChange={setShowArchiveDialog}
+        demoName={localDemo.customerName}
+        saving={archiving}
+        onConfirm={handleArchive}
+      />
     </div>
   );
 }
