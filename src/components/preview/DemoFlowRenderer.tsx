@@ -1091,16 +1091,35 @@ export function DemoFlowRenderer({
     setIsLoading(true);
 
     try {
-      // Check global master registration code first
+      // Check global registration codes first
+      const { data: globalCodeRows } = await supabase
+        .from('global_settings')
+        .select('value')
+        .like('key', 'global_reg_code_%');
+
+      if (globalCodeRows && globalCodeRows.length > 0) {
+        const isGlobalCode = globalCodeRows.some(row => {
+          try {
+            const parsed = JSON.parse(row.value);
+            return parsed.isActive !== false && parsed.code === code;
+          } catch {
+            return row.value === code;
+          }
+        });
+        if (isGlobalCode) {
+          setIsLoading(false);
+          return true;
+        }
+      }
+
+      // Also check legacy single master code
       const { data: masterCodes } = await supabase
-        .from('global_settings' as any)
+        .from('global_settings')
         .select('value')
         .eq('key', 'master_registration_code')
         .maybeSingle();
 
-      const masterCode = (masterCodes as any)?.value;
-      if (masterCode && code === masterCode) {
-        // Master code accepted — no profile data to prefill
+      if ((masterCodes as any)?.value && code === (masterCodes as any).value) {
         setIsLoading(false);
         return true;
       }

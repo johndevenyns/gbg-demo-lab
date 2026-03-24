@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, LogOut, Settings, Users, UserCheck, LayoutTemplate, ListChecks, Briefcase, Monitor, Shield, FolderOpen } from "lucide-react";
+import { ArrowLeft, LogOut, Settings, Users, UserCheck, LayoutTemplate, ListChecks, Briefcase, Monitor, Shield, FolderOpen, KeyRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
@@ -12,6 +12,7 @@ import { IndustryManagement } from "@/components/admin/IndustryManagement";
 import { PortalTypeManagement } from "@/components/admin/PortalTypeManagement";
 import { UnifiedVerificationSettings } from "@/components/admin/UnifiedVerificationSettings";
 import { GlobalUseCaseManagement } from "@/components/admin/GlobalUseCaseManagement";
+import { GlobalRegistrationCodeManagement } from "@/components/admin/GlobalRegistrationCodeManagement";
 
 export default function VerificationSettings() {
   const navigate = useNavigate();
@@ -87,6 +88,12 @@ export default function VerificationSettings() {
               <Shield className="w-4 h-4" />
               Verification
             </TabsTrigger>
+            {isGlobalAdmin && (
+              <TabsTrigger value="reg-codes" className="flex items-center gap-2">
+                <KeyRound className="w-4 h-4" />
+                Registration Codes
+              </TabsTrigger>
+            )}
             <TabsTrigger value="profiles" className="flex items-center gap-2">
               <UserCheck className="w-4 h-4" />
               Test Profiles
@@ -121,6 +128,10 @@ export default function VerificationSettings() {
 
           <TabsContent value="verification" className="space-y-6">
             <UnifiedVerificationSettings isGlobalAdmin={isGlobalAdmin} />
+          </TabsContent>
+
+          <TabsContent value="reg-codes" className="space-y-6">
+            <GlobalRegistrationCodeManagement />
           </TabsContent>
 
           <TabsContent value="profiles" className="space-y-6">
