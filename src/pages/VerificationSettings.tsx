@@ -137,6 +137,10 @@ export default function VerificationSettings() {
             <UnifiedVerificationSettings isGlobalAdmin={isGlobalAdmin} />
           </TabsContent>
 
+          <TabsContent value="invite-templates" className="space-y-6">
+            <InvitationTemplateManagement />
+          </TabsContent>
+
           <TabsContent value="reg-codes" className="space-y-6">
             <GlobalRegistrationCodeManagement />
           </TabsContent>
