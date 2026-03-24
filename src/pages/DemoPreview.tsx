@@ -315,6 +315,11 @@ export default function DemoPreview() {
         <StepUpVerificationModal
           open={!!portalVerificationTrigger}
           trigger={portalVerificationTrigger}
+          userData={{
+            firstName: (portalUser?.profileData?.firstName || portalUser?.profileData?.first_name || '') as string,
+            lastName: (portalUser?.profileData?.lastName || portalUser?.profileData?.last_name || '') as string,
+            email: portalUser?.email,
+          }}
           buttonColor={demo.buttonColor}
           formStyle={demo.formStyle}
           customerName={demo.customerName}
