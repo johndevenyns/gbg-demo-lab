@@ -80,7 +80,7 @@ export function PortalPreviewDialog({
               logoUrl={logoUrl}
               bankName={portalName}
               portalConfig={config}
-              onTriggerVerification={(action) => setVerifyAction(action)}
+              onTriggerVerification={(trigger) => setVerifyAction(trigger.action)}
               onLogout={() => onOpenChange(false)}
             />
           )}
