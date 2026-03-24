@@ -126,6 +126,7 @@ function mapLinkRow(row: Record<string, unknown>): DemoUseCaseLink {
     isEnabled: row.is_enabled as boolean,
     displayOrder: row.display_order as number,
     showOnLandingPage: (row.show_on_landing_page as boolean) ?? true,
+    titleOverride: (row.title_override as string) ?? null,
     formStepsOverride: (row.form_steps_override as Record<string, unknown>[]) ?? null,
     verificationTypeOverride: (row.verification_type_override as string) ?? null,
     pageContentOverride: (row.page_content_override as UseCasePageContent) ?? null,
