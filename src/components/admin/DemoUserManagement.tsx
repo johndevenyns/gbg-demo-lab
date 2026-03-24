@@ -55,7 +55,7 @@ interface DemoUserManagementProps {
   demoSlug?: string;
 }
 
-export function DemoUserManagement({ demoId, demoName }: DemoUserManagementProps) {
+export function DemoUserManagement({ demoId, demoName, demoSlug }: DemoUserManagementProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [addDialogOpen, setAddDialogOpen] = useState(false);
