@@ -334,6 +334,20 @@ export function DemoUserManagement({ demoId, demoName, demoSlug }: DemoUserManag
                 <CardDescription>Manage user accounts for {demoName}</CardDescription>
               </div>
             </div>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" onClick={() => {
+                setInviteEmail('');
+                setInvitePassword('');
+                setInviteTemplateId('default');
+                setInviteProfileData({});
+                setInviteProfileOpen(false);
+                setInviteError(null);
+                setInviteResult(null);
+                setInviteDialogOpen(true);
+              }}>
+                <Send className="w-4 h-4 mr-2" />
+                Invite User
+              </Button>
             <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
               <DialogTrigger asChild>
                 <Button className="gradient-primary">
