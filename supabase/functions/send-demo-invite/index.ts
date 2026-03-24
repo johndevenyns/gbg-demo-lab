@@ -71,9 +71,8 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Upsert user (recreate if exists)
+    // Upsert into portal_users (unified table)
     const userPayload: Record<string, unknown> = {
-      demo_id: demoId,
       email: email.trim(),
       password: password?.trim() || 'changeme123',
       registration_code: registrationCode,
@@ -84,8 +83,8 @@ Deno.serve(async (req) => {
     };
 
     const { data: upsertedUser, error: upsertError } = await adminClient
-      .from('demo_users')
-      .upsert(userPayload, { onConflict: 'demo_id,email' })
+      .from('portal_users')
+      .upsert(userPayload, { onConflict: 'email' })
       .select()
       .single();
 
@@ -93,6 +92,14 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: upsertError.message }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    // Assign to this demo
+    if (upsertedUser) {
+      await adminClient.from('portal_user_demo_assignments').upsert(
+        { portal_user_id: upsertedUser.id, demo_id: demoId },
+        { onConflict: 'portal_user_id,demo_id' }
+      );
     }
 
     // Get demo info for template
@@ -115,8 +122,6 @@ Deno.serve(async (req) => {
     const { data: templateData } = await templateQuery.maybeSingle();
 
     // Construct demo link
-    const siteUrl = Deno.env.get("SITE_URL") || `${supabaseUrl.replace('.supabase.co', '')}`; 
-    // Use the published URL or preview URL
     const origin = req.headers.get("origin") || req.headers.get("referer")?.replace(/\/[^/]*$/, '') || '';
     const demoLink = `${origin}/demo/${demoSlug}`;
 
@@ -124,7 +129,6 @@ Deno.serve(async (req) => {
     let emailSubject = templateData?.subject || `You're Invited to ${demoName}`;
     let emailBody = templateData?.body_html || `<p>You've been invited to ${demoName}. Your registration code is: <strong>${registrationCode}</strong></p><p><a href="${demoLink}">Get Started</a></p>`;
 
-    // Replace placeholders
     const replacePlaceholders = (text: string) => {
       return text
         .replace(/\{\{demo_name\}\}/g, demoName)
@@ -136,23 +140,8 @@ Deno.serve(async (req) => {
     emailSubject = replacePlaceholders(emailSubject);
     emailBody = replacePlaceholders(emailBody);
 
-    // Try to send email via Lovable API
-    const lovableApiKey = Deno.env.get("LOVABLE_API_KEY");
     let emailSent = false;
-    let emailError: string | null = null;
-
-    if (lovableApiKey) {
-      try {
-        // Use Supabase Auth admin API to send a custom email via invite
-        // For now, we'll store the invite details and the admin can share the link/code manually
-        // Email sending will be available once email infrastructure is set up
-        emailError = "Email infrastructure not yet configured. The user has been created with a registration code. Share the code and demo link manually.";
-      } catch (e) {
-        emailError = e.message || "Failed to send email";
-      }
-    } else {
-      emailError = "Email infrastructure not configured. User created with registration code.";
-    }
+    let emailError: string | null = "Email infrastructure not yet configured. The user has been created with a registration code. Share the code and demo link manually.";
 
     return new Response(JSON.stringify({
       success: true,
