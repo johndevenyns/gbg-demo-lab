@@ -1,0 +1,1 @@
+ALTER TABLE public.demo_use_case_links ADD COLUMN show_on_landing_page boolean NOT NULL DEFAULT true;
