@@ -9,6 +9,8 @@ interface StepUpVerificationModalProps {
   trigger: PortalVerificationTrigger | null;
   /** Custom form steps from use case — if not provided, falls back to default unified verification */
   customSteps?: FormStep[] | null;
+  /** Pre-populated user data (first/last name) to send with the verification API call */
+  userData?: { firstName?: string; lastName?: string; email?: string };
   // Demo branding props
   buttonColor: string;
   formStyle?: FormStyleConfig;

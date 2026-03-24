@@ -628,6 +628,7 @@ export function DemoFlowRenderer({
   referenceIdPrefix,
   storedTestData,
   showTestButtons = false,
+  initialFormData,
   logoUrl,
   headerBgColor,
   headerTextColor,
@@ -643,7 +644,7 @@ export function DemoFlowRenderer({
   onLoginSuccess
 }: DemoFlowRendererProps) {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
-  const [formData, setFormData] = useState<Record<string, string>>({});
+  const [formData, setFormData] = useState<Record<string, string>>(initialFormData || {});
   const [apiResponses, setApiResponses] = useState<StepApiResponse[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
