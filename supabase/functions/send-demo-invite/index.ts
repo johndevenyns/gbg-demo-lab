@@ -59,7 +59,7 @@ Deno.serve(async (req) => {
 
     // Generate registration code
     const registrationCode = String(Math.floor(100000 + Math.random() * 900000));
-    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+    const expiresAt = new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString();
 
     // Clean profile data
     const cleanProfile: Record<string, string> = {};
