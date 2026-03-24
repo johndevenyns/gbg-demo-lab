@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { DemoFlowRenderer } from '@/components/preview/DemoFlowRenderer';
 import { FormStep } from '@/types/demo';
 import { FormStyleConfig } from '@/types/formStyle';
@@ -9,6 +9,8 @@ interface StepUpVerificationModalProps {
   trigger: PortalVerificationTrigger | null;
   /** Custom form steps from use case — if not provided, falls back to default unified verification */
   customSteps?: FormStep[] | null;
+  /** Pre-populated user data (first/last name) to send with the verification API call */
+  userData?: { firstName?: string; lastName?: string; email?: string };
   // Demo branding props
   buttonColor: string;
   formStyle?: FormStyleConfig;
@@ -31,6 +33,7 @@ export function StepUpVerificationModal({
   open,
   trigger,
   customSteps,
+  userData,
   buttonColor,
   formStyle,
   customerName,
@@ -48,6 +51,15 @@ export function StepUpVerificationModal({
   onCancel,
 }: StepUpVerificationModalProps) {
   const [showSuccess, setShowSuccess] = useState(false);
+
+  // Build initial form data from user profile for the verification API
+  const initialFormData = useMemo(() => {
+    const data: Record<string, string> = {};
+    if (userData?.firstName) data.firstName = userData.firstName;
+    if (userData?.lastName) data.lastName = userData.lastName;
+    if (userData?.email) data.email = userData.email;
+    return Object.keys(data).length > 0 ? data : undefined;
+  }, [userData]);
 
   if (!open || !trigger) return null;
 
@@ -162,6 +174,7 @@ export function StepUpVerificationModal({
               resourceIdDataOnly={resourceIdDataOnly}
               demoId={demoId}
               includeQr={includeQr}
+              initialFormData={initialFormData}
               onComplete={handleComplete}
             />
           )}
