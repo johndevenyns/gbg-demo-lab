@@ -33,6 +33,15 @@ export interface PortalQuickAction {
 export type TriggerCategory = 'settings_change' | 'transaction' | 'account_action';
 export type TriggerCondition = 'always' | 'threshold';
 
+/** What happens after successful step-up verification */
+export type PostVerificationBehavior = 'show_completion' | 'return_with_toast';
+
+export interface CompletionAction {
+  label: string;
+  action: 'repeat' | 'return_to_dashboard' | 'return_to_previous';
+  variant?: 'primary' | 'secondary';
+}
+
 export interface PortalVerificationTrigger {
   id: string;
   action: string;
@@ -45,6 +54,12 @@ export interface PortalVerificationTrigger {
   verificationType?: string | null;  // null = use demo default
   useCaseId?: string | null;         // reference to a step-up use case / form template
   successMessage?: string;           // shown after successful verification
+  /** Controls post-verification UX. Defaults: transactions → 'show_completion', settings → 'return_with_toast' */
+  postVerificationBehavior?: PostVerificationBehavior;
+  /** Title shown on completion screen (show_completion only) */
+  completionTitle?: string;
+  /** Buttons on completion screen */
+  completionActions?: CompletionAction[];
 }
 
 // ── Pharmacy-specific types ──
