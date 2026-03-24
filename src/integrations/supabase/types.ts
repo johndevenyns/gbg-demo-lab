@@ -685,6 +685,7 @@ export type Database = {
           registration_code: string | null
           registration_code_expires_at: string | null
           updated_at: string
+          verification_status: string
         }
         Insert: {
           created_at?: string
@@ -700,6 +701,7 @@ export type Database = {
           registration_code?: string | null
           registration_code_expires_at?: string | null
           updated_at?: string
+          verification_status?: string
         }
         Update: {
           created_at?: string
@@ -715,6 +717,7 @@ export type Database = {
           registration_code?: string | null
           registration_code_expires_at?: string | null
           updated_at?: string
+          verification_status?: string
         }
         Relationships: []
       }
