@@ -544,6 +544,19 @@ export function DemoUserManagement({ demoId, demoName, demoSlug }: DemoUserManag
                         )}
                       </TableCell>
                       <TableCell>
+                        {user.verification_status === 'verified' ? (
+                          <Badge variant="secondary" className="bg-green-500/10 text-green-600 text-[10px]">
+                            <CheckCircle2 className="w-2.5 h-2.5 mr-0.5" /> Verified
+                          </Badge>
+                        ) : user.verification_status === 'failed' ? (
+                          <Badge variant="secondary" className="bg-destructive/10 text-destructive text-[10px]">
+                            <XCircle className="w-2.5 h-2.5 mr-0.5" /> Failed
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-muted-foreground text-[10px]">Unverified</Badge>
+                        )}
+                      </TableCell>
+                      <TableCell>
                         {user.is_default ? (
                           <Badge variant="secondary" className="bg-amber-500/10 text-amber-600 text-[10px]">All Demos</Badge>
                         ) : (
