@@ -511,6 +511,42 @@ export type Database = {
         }
         Relationships: []
       }
+      invitation_templates: {
+        Row: {
+          body_html: string
+          category: string | null
+          created_at: string
+          description: string | null
+          id: string
+          is_default: boolean
+          name: string
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          body_html?: string
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_default?: boolean
+          name: string
+          subject?: string
+          updated_at?: string
+        }
+        Update: {
+          body_html?: string
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_default?: boolean
+          name?: string
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       mdl_providers: {
         Row: {
           config_options: Json | null

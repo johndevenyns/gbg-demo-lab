@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, LogOut, Settings, Users, UserCheck, LayoutTemplate, ListChecks, Briefcase, Monitor, Shield, FolderOpen, KeyRound } from "lucide-react";
+import { ArrowLeft, LogOut, Settings, Users, UserCheck, LayoutTemplate, ListChecks, Briefcase, Monitor, Shield, FolderOpen, KeyRound, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
@@ -13,6 +13,7 @@ import { PortalTypeManagement } from "@/components/admin/PortalTypeManagement";
 import { UnifiedVerificationSettings } from "@/components/admin/UnifiedVerificationSettings";
 import { GlobalUseCaseManagement } from "@/components/admin/GlobalUseCaseManagement";
 import { GlobalRegistrationCodeManagement } from "@/components/admin/GlobalRegistrationCodeManagement";
+import { InvitationTemplateManagement } from "@/components/admin/InvitationTemplateManagement";
 
 export default function VerificationSettings() {
   const navigate = useNavigate();
@@ -89,6 +90,12 @@ export default function VerificationSettings() {
               Verification
             </TabsTrigger>
             {isGlobalAdmin && (
+              <TabsTrigger value="invite-templates" className="flex items-center gap-2">
+                <Mail className="w-4 h-4" />
+                Invite Templates
+              </TabsTrigger>
+            )}
+            {isGlobalAdmin && (
               <TabsTrigger value="reg-codes" className="flex items-center gap-2">
                 <KeyRound className="w-4 h-4" />
                 Registration Codes
@@ -128,6 +135,10 @@ export default function VerificationSettings() {
 
           <TabsContent value="verification" className="space-y-6">
             <UnifiedVerificationSettings isGlobalAdmin={isGlobalAdmin} />
+          </TabsContent>
+
+          <TabsContent value="invite-templates" className="space-y-6">
+            <InvitationTemplateManagement />
           </TabsContent>
 
           <TabsContent value="reg-codes" className="space-y-6">
