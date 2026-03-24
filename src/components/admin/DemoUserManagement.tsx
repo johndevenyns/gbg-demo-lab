@@ -79,6 +79,30 @@ export function DemoUserManagement({ demoId, demoName, demoSlug }: DemoUserManag
 
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
+  // Invite dialog state
+  const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [invitePassword, setInvitePassword] = useState('');
+  const [inviteTemplateId, setInviteTemplateId] = useState<string>('default');
+  const [inviteProfileData, setInviteProfileData] = useState<Record<string, string>>({});
+  const [inviteProfileOpen, setInviteProfileOpen] = useState(false);
+  const [inviteError, setInviteError] = useState<string | null>(null);
+  const [inviteResult, setInviteResult] = useState<{ registrationCode: string; demoLink: string; emailBody: string; emailSubject: string } | null>(null);
+  const [isInviting, setIsInviting] = useState(false);
+
+  // Fetch invitation templates
+  const { data: invitationTemplates = [] } = useQuery({
+    queryKey: ['invitation-templates'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('invitation_templates')
+        .select('*')
+        .order('is_default', { ascending: false })
+        .order('name');
+      if (error) throw error;
+      return data as InvitationTemplate[];
+    },
+  });
   // Fetch demo users for this demo
   const { data: demoUsers = [], isLoading } = useQuery({
     queryKey: ['demo-users', demoId],
