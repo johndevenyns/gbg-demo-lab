@@ -25,7 +25,7 @@ import {
   GripVertical, Trash2, ChevronDown, ChevronUp, Edit2, Check, X,
   User, Mail, Phone, Calendar, Hash, MapPin, Building, DollarSign, 
   FileText, Type, CheckSquare, MapPinCheck, Send, Smartphone, Database, FileCheck,
-  Plug, QrCode, Activity, Workflow, SplitSquareVertical, Shield, LogIn
+  Plug, QrCode, Activity, Workflow, SplitSquareVertical, Shield, LogIn, KeyRound, CreditCard
 } from 'lucide-react';
 
 const FIELD_ICONS: Record<string, React.ReactNode> = {
