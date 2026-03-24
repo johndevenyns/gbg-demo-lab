@@ -10,7 +10,7 @@ import { Switch } from '@/components/ui/switch';
 import { FormBuilderCanvas } from './FormBuilderCanvas';
 import { TemplateSelector } from './TemplateSelector';
 import { VerificationPathConfig } from './VerificationPathConfig';
-import { ResultPagesConfig } from './ResultPagesConfig';
+
 import { SaveTemplateDialog } from './SaveTemplateDialog';
 import { StoredUserDataConfig } from './StoredUserDataConfig';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
