@@ -10,12 +10,12 @@ import { Switch } from '@/components/ui/switch';
 import { FormBuilderCanvas } from './FormBuilderCanvas';
 import { TemplateSelector } from './TemplateSelector';
 import { VerificationPathConfig } from './VerificationPathConfig';
-import { ResultPagesConfig } from './ResultPagesConfig';
+
 import { SaveTemplateDialog } from './SaveTemplateDialog';
 import { StoredUserDataConfig } from './StoredUserDataConfig';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
-  LayoutGrid, Settings2, Workflow, ExternalLink, RotateCcw, Bookmark, Users, CheckCircle2, XCircle,
+  LayoutGrid, Settings2, Workflow, RotateCcw, Bookmark, Users,
   AlignLeft, AlignCenter, AlignRight
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -325,7 +325,7 @@ export function FormBuilderSection({ demo, onUpdate }: FormBuilderSectionProps) 
       />
       <CardContent>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-5 mb-6">
+          <TabsList className="grid w-full grid-cols-4 mb-6">
             <TabsTrigger value="builder" className="flex items-center gap-2">
               <LayoutGrid className="w-4 h-4" />
               <span className="hidden sm:inline">Form Builder</span>
@@ -333,10 +333,6 @@ export function FormBuilderSection({ demo, onUpdate }: FormBuilderSectionProps) 
             <TabsTrigger value="paths" className="flex items-center gap-2">
               <Workflow className="w-4 h-4" />
               <span className="hidden sm:inline">Verification Types</span>
-            </TabsTrigger>
-            <TabsTrigger value="results" className="flex items-center gap-2">
-              <ExternalLink className="w-4 h-4" />
-              <span className="hidden sm:inline">Results</span>
             </TabsTrigger>
             <TabsTrigger value="testdata" className="flex items-center gap-2">
               <Users className="w-4 h-4" />
@@ -383,21 +379,6 @@ export function FormBuilderSection({ demo, onUpdate }: FormBuilderSectionProps) 
             />
           </TabsContent>
 
-          <TabsContent value="results" className="mt-0">
-            <ResultPagesConfig
-              approvedUrl={demo.approvedUrl || ''}
-              rejectedUrl={demo.rejectedUrl || ''}
-              returnUrl={demo.returnUrl}
-              successPageConfig={demo.successPageConfig}
-              failurePageConfig={demo.failurePageConfig}
-              buttonColor={demo.buttonColor}
-              onUpdateApprovedUrl={(url) => onUpdate({ approvedUrl: url })}
-              onUpdateRejectedUrl={(url) => onUpdate({ rejectedUrl: url })}
-              onUpdateReturnUrl={(url) => onUpdate({ returnUrl: url })}
-              onUpdateSuccessPage={(config) => onUpdate({ successPageConfig: config })}
-              onUpdateFailurePage={(config) => onUpdate({ failurePageConfig: config })}
-            />
-          </TabsContent>
 
           <TabsContent value="testdata" className="mt-0">
             <StoredUserDataConfig
