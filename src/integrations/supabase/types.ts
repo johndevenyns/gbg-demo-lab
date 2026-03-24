@@ -673,35 +673,47 @@ export type Database = {
       portal_users: {
         Row: {
           created_at: string
+          created_by: string | null
           display_name: string | null
           email: string
           id: string
           is_active: boolean
           is_default: boolean
+          is_super: boolean
           password: string
           profile_data: Json | null
+          registration_code: string | null
+          registration_code_expires_at: string | null
           updated_at: string
         }
         Insert: {
           created_at?: string
+          created_by?: string | null
           display_name?: string | null
           email: string
           id?: string
           is_active?: boolean
           is_default?: boolean
+          is_super?: boolean
           password: string
           profile_data?: Json | null
+          registration_code?: string | null
+          registration_code_expires_at?: string | null
           updated_at?: string
         }
         Update: {
           created_at?: string
+          created_by?: string | null
           display_name?: string | null
           email?: string
           id?: string
           is_active?: boolean
           is_default?: boolean
+          is_super?: boolean
           password?: string
           profile_data?: Json | null
+          registration_code?: string | null
+          registration_code_expires_at?: string | null
           updated_at?: string
         }
         Relationships: []
