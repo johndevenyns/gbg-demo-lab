@@ -244,14 +244,14 @@ export function HeaderElementPicker({
           ref={iframeRef}
           srcDoc={iframeSrcDoc}
           className="w-full border-0"
-          style={{ height: "auto", minHeight: "60px", maxHeight: "200px" }}
+          style={{ height: "auto", minHeight: "80px" }}
           title="Header element picker"
           sandbox="allow-same-origin"
           onLoad={(e) => {
             const iframe = e.target as HTMLIFrameElement;
             try {
-              const height = iframe.contentDocument?.body?.scrollHeight || 80;
-              iframe.style.height = `${Math.min(height, 200)}px`;
+              const height = iframe.contentDocument?.body?.scrollHeight || 120;
+              iframe.style.height = `${height}px`;
             } catch {
               iframe.style.height = "80px";
             }
