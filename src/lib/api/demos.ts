@@ -91,6 +91,7 @@ const rowToDemo = (row: any): DemoEnvironment => {
     successPageConfig: formStyle?.successPageConfig,
     failurePageConfig: formStyle?.failurePageConfig,
     storedTestData: storedTestData || undefined,
+    landingHeading: row.landing_heading || undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     isActive: row.is_active ?? true,
