@@ -176,10 +176,19 @@ export function UseCaseSection({ demoId, demo, onUpdateDemo }: UseCaseSectionPro
                     <div className="border rounded-lg">
                       <CollapsibleTrigger asChild>
                         <button className="w-full flex items-center gap-3 p-3 hover:bg-muted/50 transition-colors text-left">
+                          <div className="flex flex-col gap-0.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+                            <Button variant="ghost" size="icon" className="h-5 w-5" disabled={index === 0} onClick={() => handleMoveUp(index)}>
+                              <ArrowUp className="w-3 h-3" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-5 w-5" disabled={index === links.length - 1} onClick={() => handleMoveDown(index)}>
+                              <ArrowDown className="w-3 h-3" />
+                            </Button>
+                          </div>
                           <IconComp className="w-5 h-5 text-primary shrink-0" />
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
                               <span className="font-medium text-sm">{link.titleOverride || uc.title}</span>
+                              <Badge variant="outline" className="text-[10px]">#{index + 1}</Badge>
                               {link.titleOverride && (
                                 <Badge variant="outline" className="text-[10px]">Renamed</Badge>
                               )}
@@ -188,6 +197,9 @@ export function UseCaseSection({ demoId, demo, onUpdateDemo }: UseCaseSectionPro
                               )}
                               {!link.isEnabled && (
                                 <Badge variant="secondary" className="text-[10px]">Disabled</Badge>
+                              )}
+                              {!link.showOnLandingPage && (
+                                <Badge variant="secondary" className="text-[10px]">Hidden</Badge>
                               )}
                             </div>
                             {uc.description && (
