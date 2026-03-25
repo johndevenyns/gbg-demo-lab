@@ -1,19 +1,18 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import { MousePointerClick, X, Check, RotateCcw } from "lucide-react";
+import { MousePointerClick, X, Check, RotateCcw, Trash2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DemoUseCaseLink } from "@/types/useCase";
+import { HeaderCtaLink, useHeaderCtaLinks, useAddHeaderCtaLink, useDeleteHeaderCtaLink } from "@/hooks/useHeaderCtaLinks";
 
 interface HeaderElementPickerProps {
+  demoId: string;
   headerHtml: string;
   cssContent?: string;
-  currentSelector?: string;
-  currentUseCaseId?: string;
   useCaseLinks: DemoUseCaseLink[];
-  onSelectorChange: (selector: string | undefined, useCaseId: string | undefined) => void;
 }
 
 function generateSelector(el: Element): string {
@@ -52,27 +51,23 @@ function generateSelector(el: Element): string {
 }
 
 export function HeaderElementPicker({
+  demoId,
   headerHtml,
   cssContent,
-  currentSelector,
-  currentUseCaseId,
   useCaseLinks,
-  onSelectorChange,
 }: HeaderElementPickerProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [pickingMode, setPickingMode] = useState(false);
   const [hoveredSelector, setHoveredSelector] = useState<string | null>(null);
-  const [selectedSelector, setSelectedSelector] = useState<string>(currentSelector || "");
-  const [selectedLabel, setSelectedLabel] = useState<string>("");
-  const [selectedUseCaseId, setSelectedUseCaseId] = useState<string>(currentUseCaseId || "");
+  const [pendingSelector, setPendingSelector] = useState<string>("");
+  const [pendingLabel, setPendingLabel] = useState<string>("");
+  const [pendingUseCaseId, setPendingUseCaseId] = useState<string>("");
 
-  useEffect(() => {
-    setSelectedSelector(currentSelector || "");
-  }, [currentSelector]);
+  const { data: ctaLinks = [] } = useHeaderCtaLinks(demoId);
+  const addLink = useAddHeaderCtaLink();
+  const deleteLink = useDeleteHeaderCtaLink();
 
-  useEffect(() => {
-    setSelectedUseCaseId(currentUseCaseId || "");
-  }, [currentUseCaseId]);
+  const enabledLinks = useCaseLinks.filter(l => l.isEnabled && l.globalUseCase);
 
   const getIframeDoc = useCallback(() => {
     try {
@@ -111,20 +106,25 @@ export function HeaderElementPicker({
     doc.querySelectorAll("[data-cta-hover]").forEach((el) => el.removeAttribute("data-cta-hover"));
   }, [getIframeDoc]);
 
-  const highlightSelected = useCallback(() => {
+  const highlightExisting = useCallback(() => {
     const doc = getIframeDoc();
-    if (!doc || !selectedSelector) return;
+    if (!doc) return;
     doc.querySelectorAll("[data-cta-selected]").forEach((el) => el.removeAttribute("data-cta-selected"));
-    try {
-      const el = doc.querySelector(selectedSelector);
-      if (el) el.setAttribute("data-cta-selected", "true");
-    } catch {}
-  }, [getIframeDoc, selectedSelector]);
+    ctaLinks.forEach((link) => {
+      try {
+        const el = doc.querySelector(link.cssSelector);
+        if (el) el.setAttribute("data-cta-selected", "true");
+      } catch {}
+    });
+  }, [getIframeDoc, ctaLinks]);
 
   const startPicking = useCallback(() => {
     const doc = getIframeDoc();
     if (!doc) return;
     setPickingMode(true);
+    setPendingSelector("");
+    setPendingLabel("");
+    setPendingUseCaseId("");
     injectPickerStyles();
     doc.body.classList.add("cta-picker-active");
 
@@ -144,8 +144,8 @@ export function HeaderElementPicker({
       const clickable = target.closest("a, button, [role='button'], [onclick]") || target;
       const sel = generateSelector(clickable);
       const label = clickable.textContent?.trim().substring(0, 50) || clickable.tagName.toLowerCase();
-      setSelectedSelector(sel);
-      setSelectedLabel(label);
+      setPendingSelector(sel);
+      setPendingLabel(label);
       setPickingMode(false);
       clearHighlights();
       doc.body.classList.remove("cta-picker-active");
@@ -166,30 +166,28 @@ export function HeaderElementPicker({
     doc.body.classList.remove("cta-picker-active");
   }, [getIframeDoc, clearHighlights]);
 
-  const handleApply = () => {
-    onSelectorChange(
-      selectedSelector || undefined,
-      selectedUseCaseId || undefined
-    );
+  const handleSaveNew = () => {
+    if (!pendingSelector || !pendingUseCaseId) return;
+    addLink.mutate({
+      demoId,
+      cssSelector: pendingSelector,
+      useCaseId: pendingUseCaseId,
+      elementLabel: pendingLabel || undefined,
+      displayOrder: ctaLinks.length,
+    });
+    setPendingSelector("");
+    setPendingLabel("");
+    setPendingUseCaseId("");
   };
 
-  const handleClear = () => {
-    setSelectedSelector("");
-    setSelectedLabel("");
-    setSelectedUseCaseId("");
-    onSelectorChange(undefined, undefined);
-    const doc = getIframeDoc();
-    if (doc) {
-      doc.querySelectorAll("[data-cta-selected]").forEach((el) => el.removeAttribute("data-cta-selected"));
-    }
+  const handleDelete = (linkId: string) => {
+    deleteLink.mutate({ id: linkId, demoId });
   };
 
   const handleIframeLoad = () => {
     injectPickerStyles();
-    if (selectedSelector) highlightSelected();
+    highlightExisting();
   };
-
-  const enabledLinks = useCaseLinks.filter(l => l.isEnabled && l.globalUseCase);
 
   const iframeSrcDoc = `<!DOCTYPE html><html><head><meta charset="utf-8">
     <style>body{margin:0;padding:0;}*{box-sizing:border-box;}a{pointer-events:auto !important;}</style>
@@ -201,18 +199,44 @@ export function HeaderElementPicker({
       <div className="flex items-center justify-between">
         <Label className="text-sm font-semibold flex items-center gap-2">
           <MousePointerClick className="w-4 h-4" />
-          Link Header Element to Use Case
+          Link Header Elements to Use Cases
         </Label>
-        {currentSelector && (
+        {ctaLinks.length > 0 && (
           <Badge variant="secondary" className="text-xs">
-            Linked
+            {ctaLinks.length} link{ctaLinks.length !== 1 ? 's' : ''}
           </Badge>
         )}
       </div>
 
       <p className="text-xs text-muted-foreground">
-        Select a button or link in the header (e.g., "Get a demo") and choose which use case it should navigate to when clicked.
+        Pick buttons or links in the header and map each one to a different use case.
       </p>
+
+      {/* Existing CTA links list */}
+      {ctaLinks.length > 0 && (
+        <div className="space-y-2">
+          {ctaLinks.map((link) => {
+            const ucTitle = enabledLinks.find(l => l.useCaseId === link.useCaseId)?.globalUseCase?.title || 'Unknown';
+            return (
+              <div key={link.id} className="flex items-center gap-2 p-2 rounded-md bg-muted/50 border text-xs">
+                <div className="flex-1 min-w-0 space-y-0.5">
+                  {link.elementLabel && (
+                    <div className="font-medium truncate">"{link.elementLabel}"</div>
+                  )}
+                  <div className="text-muted-foreground">
+                    <code className="font-mono bg-muted px-1 rounded text-[10px]">{link.cssSelector}</code>
+                    {' → '}
+                    <span className="font-medium text-foreground">{ucTitle}</span>
+                  </div>
+                </div>
+                <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive hover:text-destructive" onClick={() => handleDelete(link.id)}>
+                  <Trash2 className="w-3 h-3" />
+                </Button>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* Header preview for picking */}
       <div className="border rounded-lg overflow-hidden bg-background relative">
@@ -246,14 +270,15 @@ export function HeaderElementPicker({
         )}
       </div>
 
-      {/* Controls */}
+      {/* Pick / Add controls */}
       <div className="flex items-center gap-2">
-        {!pickingMode ? (
+        {!pickingMode && !pendingSelector && (
           <Button variant="outline" size="sm" onClick={startPicking} className="gap-2">
-            <MousePointerClick className="w-4 h-4" />
-            {selectedSelector ? "Re-pick Element" : "Pick Element"}
+            <Plus className="w-4 h-4" />
+            Pick Element to Link
           </Button>
-        ) : (
+        )}
+        {pickingMode && (
           <div className="text-xs text-muted-foreground">
             {hoveredSelector ? (
               <span className="font-mono bg-muted px-2 py-1 rounded">{hoveredSelector}</span>
@@ -262,83 +287,63 @@ export function HeaderElementPicker({
             )}
           </div>
         )}
-
-        {selectedSelector && !pickingMode && (
-          <>
-            <Button variant="default" size="sm" onClick={handleApply} className="gap-1" disabled={!selectedUseCaseId}>
-              <Check className="w-3 h-3" /> Save
-            </Button>
-            <Button variant="ghost" size="sm" onClick={handleClear} className="gap-1">
-              <RotateCcw className="w-3 h-3" /> Clear
-            </Button>
-          </>
-        )}
       </div>
 
-      {/* Use case selector - shown when an element is picked */}
-      {selectedSelector && !pickingMode && (
-        <div className="space-y-2">
-          <Label className="text-xs font-medium">Navigate to Use Case</Label>
-          {enabledLinks.length === 0 ? (
-            <p className="text-xs text-muted-foreground">
-              No use cases linked to this demo. Add use cases in the Use Cases tab first.
-            </p>
-          ) : (
-            <Select value={selectedUseCaseId} onValueChange={setSelectedUseCaseId}>
-              <SelectTrigger className="h-8 text-xs">
-                <SelectValue placeholder="Select a use case..." />
-              </SelectTrigger>
-              <SelectContent>
-                {enabledLinks.map((link) => (
-                  <SelectItem key={link.useCaseId} value={link.useCaseId}>
-                    {link.globalUseCase?.title || 'Unknown Use Case'}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-        </div>
-      )}
-
-      {/* Selected element info */}
-      {selectedSelector && !pickingMode && (
-        <div className="p-2 rounded-md bg-muted/50 border text-xs space-y-1">
-          {selectedLabel && (
-            <div>
-              <span className="font-medium">Element:</span>{" "}
-              <span className="text-foreground">"{selectedLabel}"</span>
-            </div>
-          )}
-          <div>
-            <span className="font-medium">Selector:</span>{" "}
-            <code className="font-mono text-xs bg-muted px-1 rounded">{selectedSelector}</code>
+      {/* Pending new link form */}
+      {pendingSelector && !pickingMode && (
+        <div className="border rounded-lg p-3 space-y-3 bg-muted/30">
+          <div className="text-xs space-y-1">
+            {pendingLabel && (
+              <div><span className="font-medium">Element:</span> "{pendingLabel}"</div>
+            )}
+            <div><span className="font-medium">Selector:</span> <code className="font-mono bg-muted px-1 rounded">{pendingSelector}</code></div>
           </div>
-          {selectedUseCaseId && enabledLinks.length > 0 && (
-            <div>
-              <span className="font-medium">Links to:</span>{" "}
-              <span className="text-foreground">
-                {enabledLinks.find(l => l.useCaseId === selectedUseCaseId)?.globalUseCase?.title || 'Unknown'}
-              </span>
-            </div>
-          )}
+
+          <div className="space-y-2">
+            <Label className="text-xs font-medium">Navigate to Use Case</Label>
+            {enabledLinks.length === 0 ? (
+              <p className="text-xs text-muted-foreground">No use cases linked to this demo yet.</p>
+            ) : (
+              <Select value={pendingUseCaseId} onValueChange={setPendingUseCaseId}>
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue placeholder="Select a use case..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {enabledLinks.map((link) => (
+                    <SelectItem key={link.useCaseId} value={link.useCaseId}>
+                      {link.globalUseCase?.title || 'Unknown Use Case'}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
+
+          <div className="flex gap-2">
+            <Button variant="default" size="sm" onClick={handleSaveNew} disabled={!pendingUseCaseId} className="gap-1">
+              <Check className="w-3 h-3" /> Add Link
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => { setPendingSelector(""); setPendingLabel(""); setPendingUseCaseId(""); }} className="gap-1">
+              <RotateCcw className="w-3 h-3" /> Cancel
+            </Button>
+          </div>
         </div>
       )}
 
-      {/* Manual CSS selector override */}
-      <div className="space-y-1">
-        <Label className="text-xs text-muted-foreground">Or enter CSS selector manually</Label>
-        <div className="flex gap-2">
-          <Input
-            value={selectedSelector}
-            onChange={(e) => setSelectedSelector(e.target.value)}
-            placeholder='e.g. a.cta-button, #get-demo'
-            className="font-mono text-xs h-8"
-          />
-          <Button variant="outline" size="sm" onClick={handleApply} className="h-8 text-xs" disabled={!selectedSelector || !selectedUseCaseId}>
-            Apply
-          </Button>
+      {/* Manual CSS selector */}
+      {!pendingSelector && !pickingMode && (
+        <div className="space-y-1">
+          <Label className="text-xs text-muted-foreground">Or enter CSS selector manually</Label>
+          <div className="flex gap-2">
+            <Input
+              value={pendingSelector}
+              onChange={(e) => setPendingSelector(e.target.value)}
+              placeholder='e.g. a.cta-button, #get-demo'
+              className="font-mono text-xs h-8"
+            />
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
