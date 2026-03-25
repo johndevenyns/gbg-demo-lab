@@ -98,6 +98,15 @@ function SiteSettingsSection({ demo, onUpdate, portalTypes }: { demo: DemoEnviro
             </div>
           </div>
           <div className="md:col-span-2 space-y-2">
+            <Label>Landing Page Heading</Label>
+            <p className="text-xs text-muted-foreground">Heading shown above use case tabs (leave empty for global default)</p>
+            <Input
+              value={demo.landingHeading || ''}
+              onChange={(e) => onUpdate({ landingHeading: e.target.value || undefined })}
+              placeholder="Access Your Account"
+            />
+          </div>
+          <div className="md:col-span-2 space-y-2">
             <Label>Portal Type</Label>
             <p className="text-xs text-muted-foreground">Choose whether this demo includes a simulated portal for logged-in users</p>
             <Select value={demo.portalType || 'none'} onValueChange={(v) => onUpdate({ portalType: v })}>

@@ -91,6 +91,7 @@ const rowToDemo = (row: any): DemoEnvironment => {
     successPageConfig: formStyle?.successPageConfig,
     failurePageConfig: formStyle?.failurePageConfig,
     storedTestData: storedTestData || undefined,
+    landingHeading: row.landing_heading || undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     isActive: row.is_active ?? true,
@@ -148,6 +149,7 @@ const demoToRow = (demo: Partial<DemoEnvironment>) => {
     };
   }
   if (demo.storedTestData !== undefined) row.stored_test_data = demo.storedTestData;
+  if (demo.landingHeading !== undefined) row.landing_heading = demo.landingHeading;
   if (demo.isActive !== undefined) row.is_active = demo.isActive;
   return row;
 };

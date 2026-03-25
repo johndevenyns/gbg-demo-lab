@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Loader2, ArrowLeft, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useCallback, useMemo, useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { DemoFlowRenderer } from "@/components/preview/DemoFlowRenderer";
 import { DEFAULT_SUCCESS_CONFIG, DEFAULT_FAILURE_CONFIG } from "@/components/preview/ResultPage";
 import { DEFAULT_FORM_STYLE } from "@/types/formStyle";
@@ -17,6 +18,7 @@ import { FormStep } from "@/types/demo";
 import { PortalBranding, PortalVerificationTrigger } from "@/types/portalConfig";
 import { StepUpVerificationModal, PostVerificationAction } from "@/components/preview/mockPortal/StepUpVerificationModal";
 import { toast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 // Helper functions for form styling
 function getFormBorderRadius(radius?: string): string {
@@ -49,6 +51,18 @@ export default function DemoPreview() {
   const { data: links = [] } = useDemoUseCaseLinks(demo?.id);
   const { data: ctaLinks = [] } = useHeaderCtaLinks(demo?.id);
   const { data: allIndustries = [] } = useIndustries();
+  const { data: defaultLandingHeading } = useQuery({
+    queryKey: ['global-settings', 'default_landing_heading'],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('global_settings')
+        .select('value')
+        .eq('key', 'default_landing_heading')
+        .maybeSingle();
+      return data?.value || 'Access Your Account';
+    },
+    staleTime: 10 * 60 * 1000,
+  });
   const formRef = useRef<HTMLDivElement>(null);
   const [selectedUseCase, setSelectedUseCase] = useState<ResolvedUseCase | null>(null);
   const [portalUser, setPortalUser] = useState<{ email: string; profileData?: Record<string, unknown> } | null>(null);
@@ -487,6 +501,7 @@ export default function DemoPreview() {
                 useCases={resolvedUseCases.filter(uc => uc.showOnLandingPage)}
                 selectedUseCase={selectedUseCase}
                 buttonColor={demo.buttonColor}
+                heading={demo.landingHeading || defaultLandingHeading}
                 onSelectUseCase={setSelectedUseCase}
               >
                 {activeFormSteps.length > 0 ? (

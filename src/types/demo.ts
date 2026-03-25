@@ -87,6 +87,9 @@ export interface DemoEnvironment {
   // Form configuration
   formSteps: FormStep[];
   
+  // Landing page
+  landingHeading?: string;
+  
   // Metadata
   createdAt: string;
   updatedAt: string;
