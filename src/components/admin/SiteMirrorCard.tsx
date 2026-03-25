@@ -138,94 +138,116 @@ interface SiteMirrorCardProps {
               <ScrollArea className="w-full rounded-lg border bg-muted/30">
                 <div
                   className={cn(
-                    "transition-all duration-300",
-                    previewViewport === 'desktop' ? "w-full" : "flex justify-center p-4"
+                    "p-4",
+                    previewViewport === 'desktop' ? "min-w-[1280px]" : "flex justify-center"
                   )}
-                  style={previewViewport !== 'desktop' ? { minWidth: vpConfig.width } : undefined}
                 >
                   <div
-                    className={cn(
-                      "transition-all duration-300",
-                      previewViewport !== 'desktop' && "border rounded-lg shadow-sm overflow-hidden"
-                    )}
-                    style={{ 
-                      ...(previewViewport !== 'desktop' ? { width: vpConfig.width } : undefined),
-                      backgroundColor: '#ffffff',
-                    }}
+                    className="overflow-hidden rounded-lg border bg-background shadow-sm"
+                    style={{ width: previewViewport === 'desktop' ? '1280px' : vpConfig.width }}
                   >
-                     {previewViewport === 'desktop' ? (
-                      <div className="w-full relative" style={{ overflow: 'visible' }}>
-                        <iframe
-                          srcDoc={generatePreviewDocument({
-                            formStyle: demo.formStyle || DEFAULT_FORM_STYLE,
-                            buttonColor: demo.buttonColor || '#3b82f6',
-                            headerHtml: headerHtml || '',
-                            footerHtml: footerHtml || '',
-                            cssContent: cssContent || undefined,
-                          })}
-                          className="border-0"
-                          style={{
-                            width: '1280px',
-                            height: '1600px',
-                            transformOrigin: 'top left',
-                          }}
-                          title="Live site preview"
-                          sandbox="allow-same-origin"
-                          ref={(el) => {
-                            if (el) {
-                              const wrapper = el.parentElement;
-                              if (wrapper) {
-                                const applyScale = () => {
-                                  const wrapperWidth = wrapper.clientWidth || wrapper.getBoundingClientRect().width;
-                                  if (!wrapperWidth) return;
-                                  const scale = wrapperWidth / 1280;
-                                  el.style.transform = `scale(${scale})`;
-                                  // Get actual content height after load
-                                  let docHeight = 1600;
-                                  try {
-                                    docHeight = el.contentDocument?.documentElement?.scrollHeight || 1600;
-                                    el.style.height = `${docHeight}px`;
-                                  } catch { /* cross-origin fallback */ }
-                                  wrapper.style.height = `${docHeight * scale}px`;
-                                };
-                                // Apply on load (content ready)
-                                el.addEventListener('load', () => {
-                                  // Small delay to ensure content has rendered
-                                  requestAnimationFrame(() => {
-                                    applyScale();
-                                    // Second pass for lazy content
-                                    setTimeout(applyScale, 200);
-                                  });
-                                });
-                                // Handle container width changes
-                                const ro = new ResizeObserver((entries) => {
-                                  // Only react to width changes
-                                  const entry = entries[0];
-                                  if (entry) applyScale();
-                                });
-                                ro.observe(wrapper);
-                              }
-                            }
-                          }}
-                        />
-                      </div>
-                    ) : (
+                    {headerHtml && (
                       <iframe
-                        srcDoc={generatePreviewDocument({
-                          formStyle: demo.formStyle || DEFAULT_FORM_STYLE,
-                          buttonColor: demo.buttonColor || '#3b82f6',
-                          headerHtml: headerHtml || '',
-                          footerHtml: footerHtml || '',
-                          cssContent: cssContent || undefined,
-                        })}
-                        className="w-full h-[500px] border-0"
-                        title="Live site preview"
+                        srcDoc={`
+                          <!DOCTYPE html>
+                          <html>
+                            <head>
+                              <meta charset="utf-8">
+                              <meta name="viewport" content="width=device-width, initial-scale=1">
+                              <style>
+                                html, body { margin: 0; padding: 0; overflow: hidden; background: transparent; }
+                                * { box-sizing: border-box; }
+                                a { pointer-events: none; }
+                              </style>
+                              ${cssContent ? `<style>${cssContent}</style>` : ''}
+                            </head>
+                            <body>
+                              ${headerHtml}
+                            </body>
+                          </html>
+                        `}
+                        className="block w-full border-0"
+                        style={{ height: '120px' }}
+                        title="Live site header preview"
                         sandbox="allow-same-origin"
+                        onLoad={(e) => {
+                          const iframe = e.target as HTMLIFrameElement;
+                          try {
+                            const body = iframe.contentDocument?.body;
+                            const firstChild = body?.firstElementChild as HTMLElement | null;
+                            const height = firstChild?.offsetHeight || body?.scrollHeight || 120;
+                            iframe.style.height = `${Math.max(height, 80)}px`;
+                          } catch {
+                            iframe.style.height = '120px';
+                          }
+                        }}
+                      />
+                    )}
+
+                    <iframe
+                      srcDoc={generatePreviewDocument({
+                        formStyle: demo.formStyle || DEFAULT_FORM_STYLE,
+                        buttonColor: demo.buttonColor || '#3b82f6',
+                        headerHtml: '',
+                        footerHtml: '',
+                        contentBgColor: demo.formStyle?.contentAreaBgColor,
+                      })}
+                      className="block w-full border-0"
+                      style={{ height: '720px' }}
+                      title="Live form preview"
+                      sandbox="allow-same-origin"
+                      onLoad={(e) => {
+                        const iframe = e.target as HTMLIFrameElement;
+                        try {
+                          const body = iframe.contentDocument?.body;
+                          const height = body?.scrollHeight || 720;
+                          iframe.style.height = `${Math.max(height, 520)}px`;
+                        } catch {
+                          iframe.style.height = '720px';
+                        }
+                      }}
+                    />
+
+                    {footerHtml && (
+                      <iframe
+                        srcDoc={`
+                          <!DOCTYPE html>
+                          <html>
+                            <head>
+                              <meta charset="utf-8">
+                              <meta name="viewport" content="width=device-width, initial-scale=1">
+                              <style>
+                                html, body { margin: 0; padding: 0; overflow: hidden; background: transparent; }
+                                * { box-sizing: border-box; }
+                                a { pointer-events: none; }
+                              </style>
+                              ${cssContent ? `<style>${cssContent}</style>` : ''}
+                            </head>
+                            <body>
+                              ${footerHtml}
+                            </body>
+                          </html>
+                        `}
+                        className="block w-full border-0"
+                        style={{ height: '160px' }}
+                        title="Live site footer preview"
+                        sandbox="allow-same-origin"
+                        onLoad={(e) => {
+                          const iframe = e.target as HTMLIFrameElement;
+                          try {
+                            const body = iframe.contentDocument?.body;
+                            const firstChild = body?.firstElementChild as HTMLElement | null;
+                            const height = firstChild?.offsetHeight || body?.scrollHeight || 160;
+                            iframe.style.height = `${Math.max(height, 100)}px`;
+                          } catch {
+                            iframe.style.height = '160px';
+                          }
+                        }}
                       />
                     )}
                   </div>
                 </div>
-                <ScrollBar orientation="horizontal" />
+                {previewViewport === 'desktop' && <ScrollBar orientation="horizontal" />}
               </ScrollArea>
             ) : (
               <div className="flex items-center justify-center h-64 bg-muted rounded-lg border border-dashed">
