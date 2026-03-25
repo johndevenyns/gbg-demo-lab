@@ -101,6 +101,8 @@ export default function DemoPreview() {
           isEnabled: link.isEnabled,
           displayOrder: link.displayOrder,
           showOnLandingPage: link.showOnLandingPage,
+          showFillPass: uc.showFillPass,
+          showFillFail: uc.showFillFail,
           // Portal type comes from the demo level
           portalType: demoPortalType,
         };
@@ -285,6 +287,17 @@ export default function DemoPreview() {
     ? (selectedUseCase.formSteps as unknown as FormStep[])
     : demo.formSteps;
 
+  // Build effective storedTestData: when a use case is selected, override the fill button visibility
+  const effectiveStoredTestData = selectedUseCase
+    ? {
+        ...demo.storedTestData,
+        passData: demo.storedTestData?.passData || {},
+        failData: demo.storedTestData?.failData || {},
+        showFillPassButton: selectedUseCase.showFillPass,
+        showFillFailButton: selectedUseCase.showFillFail,
+      }
+    : demo.storedTestData;
+
   const renderFlowRenderer = (steps: typeof activeFormSteps, key: string) => (
     <DemoFlowRenderer
       key={key}
@@ -299,7 +312,7 @@ export default function DemoPreview() {
       returnUrl={demo.returnUrl}
       includeQr={demo.includeQr}
       referenceIdPrefix={demo.referenceIdPrefix}
-      storedTestData={demo.storedTestData}
+      storedTestData={effectiveStoredTestData}
       showTestButtons={true}
       logoUrl={demo.logoUrl}
       headerBgColor={demo.headerBgColor}
