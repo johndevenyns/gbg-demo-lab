@@ -1,5 +1,5 @@
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Save, Eye, Loader2, Settings, Globe, Palette, PlayCircle, Calendar, User, PanelLeftClose, PanelLeft, Copy, ExternalLink, Briefcase, Users, Monitor, MoreVertical, Archive, CopyPlus, Factory } from "lucide-react";
+import { ArrowLeft, Save, Eye, Loader2, Settings, Globe, Palette, Calendar, User, PanelLeftClose, PanelLeft, Copy, ExternalLink, Briefcase, Users, MoreVertical, Archive, CopyPlus, Factory } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,7 +21,7 @@ import { useEnabledPortalTypes } from "@/hooks/usePortalTypes";
 
  // Lazy import FormStyleCard to pass into SiteMirrorCard
  import { FormStyleCard } from "@/components/admin/FormStyleCard";
-import { FormPreviewPanel } from "@/components/formBuilder/FormPreviewPanel";
+
 import { LogoUploadSection } from "@/components/admin/LogoUploadSection";
 import { BrandingScrapeSection } from "@/components/admin/BrandingScrapeSection";
 import { cn } from "@/lib/utils";
@@ -32,7 +32,7 @@ import { SaveAsIndustryDialog } from "@/components/admin/SaveAsIndustryDialog";
 import { ArchiveDemoDialog } from "@/components/admin/ArchiveDemoDialog";
 
 // Navigation sections
-type ConfigSection = 'settings' | 'mirror' | 'branding' | 'use-cases' | 'users' | 'preview';
+type ConfigSection = 'settings' | 'mirror' | 'branding' | 'use-cases' | 'users';
 
 const sections: { id: ConfigSection; label: string; icon: React.ElementType; description: string }[] = [
   { id: 'settings', label: 'Site Settings', icon: Settings, description: 'Core configuration' },
@@ -40,7 +40,6 @@ const sections: { id: ConfigSection; label: string; icon: React.ElementType; des
   { id: 'branding', label: 'Mobile Branding', icon: Palette, description: 'Colors & logo' },
   { id: 'use-cases', label: 'Use Cases', icon: Briefcase, description: 'Journeys & form builder' },
   { id: 'users', label: 'Demo Users', icon: Users, description: 'Manage demo user accounts' },
-  { id: 'preview', label: 'Live Preview', icon: PlayCircle, description: 'Test the flow' },
 ];
 
 // Site Settings Section
@@ -360,8 +359,6 @@ export default function DemoConfig() {
         return <UseCaseSection demoId={localDemo.id} demo={localDemo} onUpdateDemo={handleUpdate} />;
       case 'users':
         return <DemoUserManagement demoId={localDemo.id} demoName={localDemo.customerName} demoSlug={localDemo.slug} />;
-      case 'preview':
-        return <FormPreviewPanel demo={localDemo} />;
       default:
         return <SiteSettingsSection demo={localDemo} onUpdate={handleUpdate} portalTypes={portalTypes} />;
     }

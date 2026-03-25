@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/select';
 import {
   Briefcase, Plus, Trash2, ChevronDown, ChevronRight, UserPlus, FastForward, Package, Layout, Eye,
-  GripVertical, ArrowUp, ArrowDown,
+  ArrowUp, ArrowDown, X,
 } from 'lucide-react';
 import { DemoUseCaseLink, UseCasePageContent } from '@/types/useCase';
 import { DemoEnvironment, FormStep } from '@/types/demo';
@@ -21,7 +21,9 @@ import {
 } from '@/hooks/useUseCases';
 import { useIndustries } from '@/hooks/useIndustries';
 import { FormBuilderSection } from '@/components/formBuilder';
+import { FormPreviewPanel } from '@/components/formBuilder/FormPreviewPanel';
 import { PortalPreviewDialog } from './PortalPreviewDialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const ICON_MAP: Record<string, React.ElementType> = {
   UserPlus, FastForward, Package, Briefcase,
@@ -43,6 +45,8 @@ export function UseCaseSection({ demoId, demo, onUpdateDemo }: UseCaseSectionPro
   const [formBuilderLinkId, setFormBuilderLinkId] = useState<string | null>(null);
   const [showPortalPreview, setShowPortalPreview] = useState(false);
   const { data: allIndustries = [] } = useIndustries();
+  // Track which tab is active in the form builder area: 'builder' or 'preview'
+  const [builderTab, setBuilderTab] = useState<'builder' | 'preview'>('builder');
 
   const demoIndustry = useMemo(() => {
     if (!demo.industryId) return null;
@@ -108,8 +112,14 @@ export function UseCaseSection({ demoId, demo, onUpdateDemo }: UseCaseSectionPro
     };
   }, [handleUpdate, onUpdateDemo]);
 
+  // The active form builder link data
+  const activeBuilderLink = formBuilderLinkId ? links.find(l => l.id === formBuilderLinkId) : null;
+  const activeBuilderDemo = activeBuilderLink ? createUseCaseDemo(activeBuilderLink) : null;
+  const activeBuilderTitle = activeBuilderLink?.globalUseCase?.title ?? 'Use Case';
+
   return (
     <div className="space-y-6">
+      {/* Use Case List */}
       <Card className="glass-card">
         <CardHeader className="pb-4">
           <div className="flex items-center justify-between">
@@ -119,7 +129,7 @@ export function UseCaseSection({ demoId, demo, onUpdateDemo }: UseCaseSectionPro
                 Use Cases
               </CardTitle>
               <CardDescription>
-                Select which use cases are available in this demo. Each use case has its own form steps and verification settings.
+                Manage verification journeys for this demo
               </CardDescription>
             </div>
             <div className="flex items-center gap-2">
@@ -130,7 +140,7 @@ export function UseCaseSection({ demoId, demo, onUpdateDemo }: UseCaseSectionPro
               )}
               {availableToAdd.length > 0 && (
                 <Select onValueChange={handleAdd}>
-                  <SelectTrigger className="w-[220px]">
+                  <SelectTrigger className="w-[200px]">
                     <div className="flex items-center gap-2">
                       <Plus className="w-4 h-4" />
                       <span>Add Use Case</span>
@@ -149,33 +159,34 @@ export function UseCaseSection({ demoId, demo, onUpdateDemo }: UseCaseSectionPro
           </div>
         </CardHeader>
 
-        <CardContent>
+        <CardContent className="pt-0">
           {isLoading ? (
             <p className="text-sm text-muted-foreground">Loading...</p>
           ) : links.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <Briefcase className="w-10 h-10 mx-auto mb-3 opacity-40" />
-              <p className="text-sm">No use cases added to this demo yet.</p>
-              <p className="text-xs mt-1">Use the dropdown above to add a global use case.</p>
+              <p className="text-sm">No use cases added yet.</p>
+              <p className="text-xs mt-1">Use the dropdown above to add one.</p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {links.map((link, index) => {
                 const uc = link.globalUseCase;
                 if (!uc) return null;
                 const IconComp = ICON_MAP[uc.iconName] ?? Package;
                 const isExpanded = expandedId === link.id;
                 const hasOverride = !!link.formStepsOverride || !!link.pageContentOverride || !!link.verificationTypeOverride;
-                const showFormBuilder = formBuilderLinkId === link.id;
+                const isBuilderActive = formBuilderLinkId === link.id;
 
                 return (
                   <Collapsible key={link.id} open={isExpanded} onOpenChange={(open) => {
                     setExpandedId(open ? link.id : null);
-                    if (!open && formBuilderLinkId === link.id) setFormBuilderLinkId(null);
+                    if (!open && isBuilderActive) setFormBuilderLinkId(null);
                   }}>
-                    <div className="border rounded-lg">
+                    <div className="border rounded-lg overflow-hidden">
+                      {/* Row header */}
                       <CollapsibleTrigger asChild>
-                        <button className="w-full flex items-center gap-3 p-3 hover:bg-muted/50 transition-colors text-left">
+                        <button className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-muted/50 transition-colors text-left">
                           <div className="flex flex-col gap-0.5 shrink-0" onClick={(e) => e.stopPropagation()}>
                             <Button variant="ghost" size="icon" className="h-5 w-5" disabled={index === 0} onClick={() => handleMoveUp(index)}>
                               <ArrowUp className="w-3 h-3" />
@@ -184,27 +195,14 @@ export function UseCaseSection({ demoId, demo, onUpdateDemo }: UseCaseSectionPro
                               <ArrowDown className="w-3 h-3" />
                             </Button>
                           </div>
-                          <IconComp className="w-5 h-5 text-primary shrink-0" />
+                          <IconComp className="w-4 h-4 text-primary shrink-0" />
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
                               <span className="font-medium text-sm">{link.titleOverride || uc.title}</span>
-                              <Badge variant="outline" className="text-[10px]">#{index + 1}</Badge>
-                              {link.titleOverride && (
-                                <Badge variant="outline" className="text-[10px]">Renamed</Badge>
-                              )}
-                              {hasOverride && (
-                                <Badge variant="outline" className="text-[10px]">Customized</Badge>
-                              )}
-                              {!link.isEnabled && (
-                                <Badge variant="secondary" className="text-[10px]">Disabled</Badge>
-                              )}
-                              {!link.showOnLandingPage && (
-                                <Badge variant="secondary" className="text-[10px]">Hidden</Badge>
-                              )}
+                              {hasOverride && <Badge variant="outline" className="text-[10px]">Customized</Badge>}
+                              {!link.isEnabled && <Badge variant="secondary" className="text-[10px]">Disabled</Badge>}
+                              {!link.showOnLandingPage && <Badge variant="secondary" className="text-[10px]">Hidden</Badge>}
                             </div>
-                            {uc.description && (
-                              <p className="text-xs text-muted-foreground truncate mt-0.5">{uc.description}</p>
-                            )}
                           </div>
                           <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
                             <Switch
@@ -217,134 +215,131 @@ export function UseCaseSection({ demoId, demo, onUpdateDemo }: UseCaseSectionPro
                       </CollapsibleTrigger>
 
                       <CollapsibleContent>
-                        <div className="border-t p-4 space-y-4">
-                          {/* Use Case Name Override */}
-                          <div className="space-y-2">
-                            <Label className="text-sm">Use Case Name</Label>
-                            <Input
-                              placeholder={uc.title}
-                              defaultValue={link.titleOverride ?? ''}
-                              onBlur={(e) => {
-                                const val = e.target.value.trim() || null;
-                                handleUpdate(link.id, { titleOverride: val });
-                              }}
-                            />
-                            <p className="text-xs text-muted-foreground">Leave blank to use the global name "{uc.title}"</p>
-                          </div>
-                          {/* Tab Label Override */}
-                          <div className="space-y-2">
-                            <Label className="text-sm">Tab Label</Label>
-                            <Input
-                              placeholder={link.titleOverride || uc.title}
-                              defaultValue={link.pageContentOverride?.tabLabel ?? ''}
-                              onBlur={(e) => {
-                                const val = e.target.value.trim() || undefined;
-                                const existing = link.pageContentOverride || {};
-                                handleUpdate(link.id, {
-                                  pageContentOverride: { ...existing, tabLabel: val },
-                                });
-                              }}
-                            />
-                            <p className="text-xs text-muted-foreground">Short label for the landing page tab (e.g. "Sign In", "Register")</p>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <Switch
-                              checked={link.showOnLandingPage}
-                              onCheckedChange={(v) => {
-                                handleUpdate(link.id, { showOnLandingPage: v });
-                              }}
-                            />
-                            <div>
-                              <Label className="text-sm">Show on Landing Page</Label>
-                              <p className="text-xs text-muted-foreground">When off, this use case won't appear in the landing page tabs (e.g. step-up verification flows)</p>
+                        <div className="border-t px-4 py-4 space-y-4 bg-muted/20">
+                          {/* Settings grid - compact two-column layout */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-1.5">
+                              <Label className="text-xs font-medium">Use Case Name</Label>
+                              <Input
+                                placeholder={uc.title}
+                                defaultValue={link.titleOverride ?? ''}
+                                className="h-8 text-sm"
+                                onBlur={(e) => {
+                                  const val = e.target.value.trim() || null;
+                                  handleUpdate(link.id, { titleOverride: val });
+                                }}
+                              />
+                            </div>
+                            <div className="space-y-1.5">
+                              <Label className="text-xs font-medium">Tab Label</Label>
+                              <Input
+                                placeholder={link.titleOverride || uc.title}
+                                defaultValue={link.pageContentOverride?.tabLabel ?? ''}
+                                className="h-8 text-sm"
+                                onBlur={(e) => {
+                                  const val = e.target.value.trim() || undefined;
+                                  const existing = link.pageContentOverride || {};
+                                  handleUpdate(link.id, {
+                                    pageContentOverride: { ...existing, tabLabel: val },
+                                  });
+                                }}
+                              />
                             </div>
                           </div>
 
-                          {/* Landing Page Toggle */}
-                          <div className="flex items-center gap-3">
-                            <Switch
-                              checked={link.pageContentOverride?.showLandingPage ?? uc.defaultPageContent?.showLandingPage ?? false}
-                              onCheckedChange={(v) => {
-                                const existing = link.pageContentOverride || {};
-                                handleUpdate(link.id, {
-                                  pageContentOverride: { ...existing, showLandingPage: v },
-                                });
-                              }}
-                            />
-                            <div>
-                              <Label className="text-sm">Show Landing Page</Label>
-                              <p className="text-xs text-muted-foreground">When off, users go directly to the first form step</p>
-                            </div>
+                          {/* Toggles row */}
+                          <div className="flex flex-wrap items-center gap-6 text-sm">
+                            <label className="flex items-center gap-2 cursor-pointer">
+                              <Switch
+                                checked={link.showOnLandingPage}
+                                onCheckedChange={(v) => handleUpdate(link.id, { showOnLandingPage: v })}
+                                className="scale-90"
+                              />
+                              <span className="text-xs">Show on Landing Page</span>
+                            </label>
+                            <label className="flex items-center gap-2 cursor-pointer">
+                              <Switch
+                                checked={link.pageContentOverride?.showLandingPage ?? uc.defaultPageContent?.showLandingPage ?? false}
+                                onCheckedChange={(v) => {
+                                  const existing = link.pageContentOverride || {};
+                                  handleUpdate(link.id, {
+                                    pageContentOverride: { ...existing, showLandingPage: v },
+                                  });
+                                }}
+                                className="scale-90"
+                              />
+                              <span className="text-xs">Show Landing Page</span>
+                            </label>
                           </div>
 
-                          {/* Page Content Override */}
-                          <div>
-                            <h4 className="text-sm font-medium mb-3">Page Content Override</h4>
-                            <p className="text-xs text-muted-foreground mb-3">Leave blank to inherit from global defaults</p>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <div className="space-y-2">
-                                <Label>Hero Title</Label>
-                                <Input
-                                  placeholder={uc.defaultPageContent?.heroTitle || 'Inherited from global'}
-                                  defaultValue={link.pageContentOverride?.heroTitle ?? ''}
-                                  onBlur={(e) => {
-                                    const val = e.target.value || undefined;
-                                    const existing = link.pageContentOverride || {};
-                                    handleUpdate(link.id, {
-                                      pageContentOverride: val ? { ...existing, heroTitle: val } : existing,
-                                    });
-                                  }}
-                                />
+                          {/* Page content overrides - collapsible for less clutter */}
+                          <Collapsible>
+                            <CollapsibleTrigger asChild>
+                              <Button variant="ghost" size="sm" className="text-xs text-muted-foreground gap-1 h-7 px-2">
+                                <ChevronRight className="w-3 h-3 transition-transform [[data-state=open]>&]:rotate-90" />
+                                Page Content Overrides
+                              </Button>
+                            </CollapsibleTrigger>
+                            <CollapsibleContent>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2 pl-2">
+                                <div className="space-y-1.5">
+                                  <Label className="text-xs">Hero Title</Label>
+                                  <Input
+                                    placeholder={uc.defaultPageContent?.heroTitle || 'Inherited from global'}
+                                    defaultValue={link.pageContentOverride?.heroTitle ?? ''}
+                                    className="h-8 text-sm"
+                                    onBlur={(e) => {
+                                      const val = e.target.value || undefined;
+                                      const existing = link.pageContentOverride || {};
+                                      handleUpdate(link.id, {
+                                        pageContentOverride: val ? { ...existing, heroTitle: val } : existing,
+                                      });
+                                    }}
+                                  />
+                                </div>
+                                <div className="space-y-1.5">
+                                  <Label className="text-xs">Hero Subtitle</Label>
+                                  <Input
+                                    placeholder={uc.defaultPageContent?.heroSubtitle || 'Inherited from global'}
+                                    defaultValue={link.pageContentOverride?.heroSubtitle ?? ''}
+                                    className="h-8 text-sm"
+                                    onBlur={(e) => {
+                                      const val = e.target.value || undefined;
+                                      const existing = link.pageContentOverride || {};
+                                      handleUpdate(link.id, {
+                                        pageContentOverride: val ? { ...existing, heroSubtitle: val } : existing,
+                                      });
+                                    }}
+                                  />
+                                </div>
                               </div>
-                              <div className="space-y-2">
-                                <Label>Hero Subtitle</Label>
-                                <Input
-                                  placeholder={uc.defaultPageContent?.heroSubtitle || 'Inherited from global'}
-                                  defaultValue={link.pageContentOverride?.heroSubtitle ?? ''}
-                                  onBlur={(e) => {
-                                    const val = e.target.value || undefined;
-                                    const existing = link.pageContentOverride || {};
-                                    handleUpdate(link.id, {
-                                      pageContentOverride: val ? { ...existing, heroSubtitle: val } : existing,
-                                    });
-                                  }}
-                                />
-                              </div>
-                            </div>
-                          </div>
+                            </CollapsibleContent>
+                          </Collapsible>
 
-
-
-                          {/* Form Builder Toggle */}
-                          <div className="border-t pt-4">
+                          {/* Action buttons */}
+                          <div className="flex items-center justify-between pt-2 border-t border-border/50">
                             <Button
-                              variant={showFormBuilder ? "default" : "outline"}
+                              variant={isBuilderActive ? "default" : "outline"}
                               size="sm"
-                              onClick={() => setFormBuilderLinkId(showFormBuilder ? null : link.id)}
-                              className="gap-2"
+                              className="gap-2 h-8 text-xs"
+                              onClick={() => {
+                                setFormBuilderLinkId(isBuilderActive ? null : link.id);
+                                setBuilderTab('builder');
+                              }}
                             >
-                              <Layout className="w-4 h-4" />
-                              {showFormBuilder ? 'Hide Form Builder' : 'Edit Form Steps'}
+                              <Layout className="w-3.5 h-3.5" />
+                              {isBuilderActive ? 'Close Form Builder' : 'Edit Form Steps'}
                               {link.formStepsOverride && (
-                                <Badge variant="outline" className="text-[10px] ml-1">Overridden</Badge>
+                                <Badge variant="outline" className="text-[9px] ml-1">Overridden</Badge>
                               )}
                             </Button>
-                            {!link.formStepsOverride && !showFormBuilder && (
-                              <p className="text-xs text-muted-foreground mt-2">
-                                Currently using {(uc.defaultFormSteps?.length ?? 0)} default step(s) from global definition. Click to customize.
-                              </p>
-                            )}
-                          </div>
-
-                          {/* Footer */}
-                          <div className="flex items-center justify-end border-t pt-4">
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="text-destructive hover:text-destructive"
+                              className="text-destructive hover:text-destructive h-8 text-xs"
                               onClick={() => handleRemove(link.id)}
                             >
-                              <Trash2 className="w-4 h-4 mr-1" /> Remove
+                              <Trash2 className="w-3.5 h-3.5 mr-1" /> Remove
                             </Button>
                           </div>
                         </div>
@@ -358,32 +353,58 @@ export function UseCaseSection({ demoId, demo, onUpdateDemo }: UseCaseSectionPro
         </CardContent>
       </Card>
 
-      {/* Form Builder rendered outside the card for the active use case */}
-      {formBuilderLinkId && (() => {
-        const activeLink = links.find(l => l.id === formBuilderLinkId);
-        if (!activeLink) return null;
-        const useCaseDemo = createUseCaseDemo(activeLink);
-        const ucTitle = activeLink.globalUseCase?.title ?? 'Use Case';
-        return (
-          <Card className="glass-card">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Layout className="w-4 h-4" />
-                Form Builder — {ucTitle}
-              </CardTitle>
-              <CardDescription>
-                Configure form steps for this use case. Changes are saved as overrides for this demo.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="p-0">
+      {/* Form Builder + Preview for the active use case */}
+      {activeBuilderLink && activeBuilderDemo && (
+        <Card className="glass-card">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Layout className="w-4 h-4" />
+                  {activeBuilderTitle}
+                </CardTitle>
+                <CardDescription className="text-xs">
+                  Build form steps and preview the flow for this use case
+                </CardDescription>
+              </div>
+              <div className="flex items-center gap-2">
+                <Tabs value={builderTab} onValueChange={(v) => setBuilderTab(v as 'builder' | 'preview')}>
+                  <TabsList className="h-8">
+                    <TabsTrigger value="builder" className="text-xs h-7 px-3 gap-1.5">
+                      <Layout className="w-3.5 h-3.5" />
+                      Builder
+                    </TabsTrigger>
+                    <TabsTrigger value="preview" className="text-xs h-7 px-3 gap-1.5">
+                      <Eye className="w-3.5 h-3.5" />
+                      Preview
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => setFormBuilderLinkId(null)}
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="p-0">
+            {builderTab === 'builder' ? (
               <FormBuilderSection
-                demo={useCaseDemo}
-                onUpdate={createUseCaseUpdateHandler(formBuilderLinkId)}
+                demo={activeBuilderDemo}
+                onUpdate={createUseCaseUpdateHandler(formBuilderLinkId!)}
               />
-            </CardContent>
-          </Card>
-        );
-      })()}
+            ) : (
+              <div className="p-6">
+                <FormPreviewPanel demo={activeBuilderDemo} />
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Portal Preview */}
       {showPortalPreview && demoIndustry && (
