@@ -1,5 +1,5 @@
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Save, Eye, Loader2, Settings, Globe, Palette, PlayCircle, Calendar, User, PanelLeftClose, PanelLeft, Copy, ExternalLink, Briefcase, Users, Monitor, MoreVertical, Archive, CopyPlus, Factory } from "lucide-react";
+import { ArrowLeft, Save, Eye, Loader2, Settings, Globe, Palette, Calendar, User, PanelLeftClose, PanelLeft, Copy, ExternalLink, Briefcase, Users, MoreVertical, Archive, CopyPlus, Factory } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
