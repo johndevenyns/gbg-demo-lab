@@ -5,6 +5,7 @@ interface UseCaseLandingPageProps {
   useCases: ResolvedUseCase[];
   selectedUseCase: ResolvedUseCase;
   buttonColor?: string;
+  heading?: string;
   onSelectUseCase: (useCase: ResolvedUseCase) => void;
   children: ReactNode;
 }
