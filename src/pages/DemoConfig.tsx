@@ -21,7 +21,7 @@ import { useEnabledPortalTypes } from "@/hooks/usePortalTypes";
 
  // Lazy import FormStyleCard to pass into SiteMirrorCard
  import { FormStyleCard } from "@/components/admin/FormStyleCard";
-import { FormPreviewPanel } from "@/components/formBuilder/FormPreviewPanel";
+
 import { LogoUploadSection } from "@/components/admin/LogoUploadSection";
 import { BrandingScrapeSection } from "@/components/admin/BrandingScrapeSection";
 import { cn } from "@/lib/utils";
