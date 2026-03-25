@@ -241,8 +241,7 @@ export default function DemoPreview() {
       `;
     }
 
-    const headerCtaUseCaseId = demo.headerCtaUseCaseId || '';
-    return { headerHtml, footerHtml, cssContent, formStyle, headerCtaSelector: demo.headerCtaSelector || '', headerCtaUseCaseId };
+    return { headerHtml, footerHtml, cssContent, formStyle };
   }, [demo]);
 
   if (isLoading) {
