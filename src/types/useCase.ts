@@ -63,5 +63,7 @@ export interface ResolvedUseCase {
   isEnabled: boolean;
   displayOrder: number;
   showOnLandingPage: boolean;
+  showFillPass: boolean;
+  showFillFail: boolean;
   portalType?: string | null;
 }
