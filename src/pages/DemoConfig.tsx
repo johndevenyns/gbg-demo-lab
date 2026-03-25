@@ -361,8 +361,6 @@ export default function DemoConfig() {
         return <UseCaseSection demoId={localDemo.id} demo={localDemo} onUpdateDemo={handleUpdate} />;
       case 'users':
         return <DemoUserManagement demoId={localDemo.id} demoName={localDemo.customerName} demoSlug={localDemo.slug} />;
-      case 'preview':
-        return <FormPreviewPanel demo={localDemo} />;
       default:
         return <SiteSettingsSection demo={localDemo} onUpdate={handleUpdate} portalTypes={portalTypes} />;
     }
