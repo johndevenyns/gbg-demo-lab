@@ -239,12 +239,12 @@ export function HeaderElementPicker({
       )}
 
       {/* Header preview for picking */}
-      <div className="border rounded-lg overflow-hidden bg-background relative">
+      <div className="border rounded-lg overflow-x-auto overflow-y-hidden bg-background relative">
         <iframe
           ref={iframeRef}
           srcDoc={iframeSrcDoc}
-          className="w-full border-0"
-          style={{ height: "auto", minHeight: "80px" }}
+          className="block max-w-none border-0"
+          style={{ width: "1280px", height: "auto", minHeight: "80px" }}
           title="Header element picker"
           sandbox="allow-same-origin"
           onLoad={(e) => {
