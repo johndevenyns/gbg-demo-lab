@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/select';
 import {
   Briefcase, Plus, Trash2, ChevronDown, ChevronRight, UserPlus, FastForward, Package, Layout, Eye,
+  GripVertical, ArrowUp, ArrowDown,
 } from 'lucide-react';
 import { DemoUseCaseLink, UseCasePageContent } from '@/types/useCase';
 import { DemoEnvironment, FormStep } from '@/types/demo';
@@ -64,6 +65,22 @@ export function UseCaseSection({ demoId, demo, onUpdateDemo }: UseCaseSectionPro
       removeLink.mutate({ id: linkId, demoId });
     }
   }, [removeLink, demoId]);
+
+  const handleMoveUp = useCallback((index: number) => {
+    if (index <= 0) return;
+    const current = links[index];
+    const above = links[index - 1];
+    updateLink.mutate({ id: current.id, demoId, updates: { displayOrder: above.displayOrder } });
+    updateLink.mutate({ id: above.id, demoId, updates: { displayOrder: current.displayOrder } });
+  }, [links, updateLink, demoId]);
+
+  const handleMoveDown = useCallback((index: number) => {
+    if (index >= links.length - 1) return;
+    const current = links[index];
+    const below = links[index + 1];
+    updateLink.mutate({ id: current.id, demoId, updates: { displayOrder: below.displayOrder } });
+    updateLink.mutate({ id: below.id, demoId, updates: { displayOrder: current.displayOrder } });
+  }, [links, updateLink, demoId]);
 
   // Create a virtual DemoEnvironment scoped to a specific use case link
   const createUseCaseDemo = useCallback((link: DemoUseCaseLink): DemoEnvironment => {
@@ -143,7 +160,7 @@ export function UseCaseSection({ demoId, demo, onUpdateDemo }: UseCaseSectionPro
             </div>
           ) : (
             <div className="space-y-3">
-              {links.map((link) => {
+              {links.map((link, index) => {
                 const uc = link.globalUseCase;
                 if (!uc) return null;
                 const IconComp = ICON_MAP[uc.iconName] ?? Package;
@@ -159,10 +176,19 @@ export function UseCaseSection({ demoId, demo, onUpdateDemo }: UseCaseSectionPro
                     <div className="border rounded-lg">
                       <CollapsibleTrigger asChild>
                         <button className="w-full flex items-center gap-3 p-3 hover:bg-muted/50 transition-colors text-left">
+                          <div className="flex flex-col gap-0.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+                            <Button variant="ghost" size="icon" className="h-5 w-5" disabled={index === 0} onClick={() => handleMoveUp(index)}>
+                              <ArrowUp className="w-3 h-3" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-5 w-5" disabled={index === links.length - 1} onClick={() => handleMoveDown(index)}>
+                              <ArrowDown className="w-3 h-3" />
+                            </Button>
+                          </div>
                           <IconComp className="w-5 h-5 text-primary shrink-0" />
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
                               <span className="font-medium text-sm">{link.titleOverride || uc.title}</span>
+                              <Badge variant="outline" className="text-[10px]">#{index + 1}</Badge>
                               {link.titleOverride && (
                                 <Badge variant="outline" className="text-[10px]">Renamed</Badge>
                               )}
@@ -171,6 +197,9 @@ export function UseCaseSection({ demoId, demo, onUpdateDemo }: UseCaseSectionPro
                               )}
                               {!link.isEnabled && (
                                 <Badge variant="secondary" className="text-[10px]">Disabled</Badge>
+                              )}
+                              {!link.showOnLandingPage && (
+                                <Badge variant="secondary" className="text-[10px]">Hidden</Badge>
                               )}
                             </div>
                             {uc.description && (
@@ -201,6 +230,22 @@ export function UseCaseSection({ demoId, demo, onUpdateDemo }: UseCaseSectionPro
                               }}
                             />
                             <p className="text-xs text-muted-foreground">Leave blank to use the global name "{uc.title}"</p>
+                          </div>
+                          {/* Tab Label Override */}
+                          <div className="space-y-2">
+                            <Label className="text-sm">Tab Label</Label>
+                            <Input
+                              placeholder={link.titleOverride || uc.title}
+                              defaultValue={link.pageContentOverride?.tabLabel ?? ''}
+                              onBlur={(e) => {
+                                const val = e.target.value.trim() || undefined;
+                                const existing = link.pageContentOverride || {};
+                                handleUpdate(link.id, {
+                                  pageContentOverride: { ...existing, tabLabel: val },
+                                });
+                              }}
+                            />
+                            <p className="text-xs text-muted-foreground">Short label for the landing page tab (e.g. "Sign In", "Register")</p>
                           </div>
                           <div className="flex items-center gap-3">
                             <Switch
