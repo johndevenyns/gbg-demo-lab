@@ -145,8 +145,8 @@ interface SiteMirrorCardProps {
                 >
                   <div
                     className={cn(
-                      "overflow-hidden transition-all duration-300",
-                      previewViewport !== 'desktop' && "border rounded-lg shadow-sm"
+                      "transition-all duration-300",
+                      previewViewport !== 'desktop' && "border rounded-lg shadow-sm overflow-hidden"
                     )}
                     style={{ 
                       ...(previewViewport !== 'desktop' ? { width: vpConfig.width } : undefined),
