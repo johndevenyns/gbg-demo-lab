@@ -14,6 +14,7 @@ export function UseCaseLandingPage({
   useCases,
   selectedUseCase,
   buttonColor,
+  heading,
   onSelectUseCase,
   children,
 }: UseCaseLandingPageProps) {
