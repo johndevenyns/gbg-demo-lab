@@ -714,6 +714,29 @@ export function FormStepCard({
                 </SortableContext>
               )}
               
+              {/* Fill Pass / Fill Fail per-step toggles */}
+              <div className="mt-4 pt-4 border-t border-border">
+                <div className="flex items-center gap-4">
+                  <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Test Buttons</Label>
+                  <div className="flex items-center gap-1.5">
+                    <Switch
+                      checked={step.showFillPass ?? false}
+                      onCheckedChange={(v) => onUpdateStep({ showFillPass: v })}
+                      className="scale-75"
+                    />
+                    <span className="text-xs text-muted-foreground">Fill Pass</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Switch
+                      checked={step.showFillFail ?? false}
+                      onCheckedChange={(v) => onUpdateStep({ showFillFail: v })}
+                      className="scale-75"
+                    />
+                    <span className="text-xs text-muted-foreground">Fill Fail</span>
+                  </div>
+                </div>
+              </div>
+
               {/* Submit Action Config */}
               <div className="mt-4 pt-4 border-t border-border">
                 <div className="flex items-center gap-3">
