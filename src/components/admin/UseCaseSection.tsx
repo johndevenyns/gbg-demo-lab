@@ -231,6 +231,22 @@ export function UseCaseSection({ demoId, demo, onUpdateDemo }: UseCaseSectionPro
                             />
                             <p className="text-xs text-muted-foreground">Leave blank to use the global name "{uc.title}"</p>
                           </div>
+                          {/* Tab Label Override */}
+                          <div className="space-y-2">
+                            <Label className="text-sm">Tab Label</Label>
+                            <Input
+                              placeholder={link.titleOverride || uc.title}
+                              defaultValue={link.pageContentOverride?.tabLabel ?? ''}
+                              onBlur={(e) => {
+                                const val = e.target.value.trim() || undefined;
+                                const existing = link.pageContentOverride || {};
+                                handleUpdate(link.id, {
+                                  pageContentOverride: { ...existing, tabLabel: val },
+                                });
+                              }}
+                            />
+                            <p className="text-xs text-muted-foreground">Short label for the landing page tab (e.g. "Sign In", "Register")</p>
+                          </div>
                           <div className="flex items-center gap-3">
                             <Switch
                               checked={link.showOnLandingPage}
