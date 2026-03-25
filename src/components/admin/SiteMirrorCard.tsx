@@ -246,17 +246,10 @@ interface SiteMirrorCardProps {
             {hasAnyContent && headerHtml && (
               <div className="mt-4">
                 <HeaderElementPicker
+                  demoId={demo.id}
                   headerHtml={headerHtml}
                   cssContent={cssContent || undefined}
-                  currentSelector={demo.headerCtaSelector}
-                  currentUseCaseId={demo.headerCtaUseCaseId}
                   useCaseLinks={useCaseLinks}
-                  onSelectorChange={(selector, useCaseId) => {
-                    onApplyBranding({ 
-                      headerCtaSelector: selector || '', 
-                      headerCtaUseCaseId: useCaseId || '' 
-                    }, true);
-                  }}
                 />
               </div>
             )}

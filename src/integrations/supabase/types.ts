@@ -197,6 +197,54 @@ export type Database = {
           },
         ]
       }
+      demo_header_cta_links: {
+        Row: {
+          created_at: string
+          css_selector: string
+          demo_id: string
+          display_order: number
+          element_label: string | null
+          id: string
+          updated_at: string
+          use_case_id: string
+        }
+        Insert: {
+          created_at?: string
+          css_selector: string
+          demo_id: string
+          display_order?: number
+          element_label?: string | null
+          id?: string
+          updated_at?: string
+          use_case_id: string
+        }
+        Update: {
+          created_at?: string
+          css_selector?: string
+          demo_id?: string
+          display_order?: number
+          element_label?: string | null
+          id?: string
+          updated_at?: string
+          use_case_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "demo_header_cta_links_demo_id_fkey"
+            columns: ["demo_id"]
+            isOneToOne: false
+            referencedRelation: "demo_environments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "demo_header_cta_links_use_case_id_fkey"
+            columns: ["use_case_id"]
+            isOneToOne: false
+            referencedRelation: "global_use_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       demo_use_case_links: {
         Row: {
           created_at: string

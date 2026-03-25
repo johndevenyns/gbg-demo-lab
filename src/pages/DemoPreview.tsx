@@ -8,6 +8,7 @@ import { DemoFlowRenderer } from "@/components/preview/DemoFlowRenderer";
 import { DEFAULT_SUCCESS_CONFIG, DEFAULT_FAILURE_CONFIG } from "@/components/preview/ResultPage";
 import { DEFAULT_FORM_STYLE } from "@/types/formStyle";
 import { useDemoUseCaseLinks } from "@/hooks/useUseCases";
+import { useHeaderCtaLinks } from "@/hooks/useHeaderCtaLinks";
 import { useIndustries } from "@/hooks/useIndustries";
 import { UseCaseLandingPage } from "@/components/preview/UseCaseLandingPage";
 import { BankingPortalShell } from "@/components/preview/mockPortal/BankingPortalShell";
@@ -46,6 +47,7 @@ export default function DemoPreview() {
   const { isAdmin, isLoading: authLoading } = useAuth();
   const { data: demo, isLoading, error } = useDemoBySlug(slug || "");
   const { data: links = [] } = useDemoUseCaseLinks(demo?.id);
+  const { data: ctaLinks = [] } = useHeaderCtaLinks(demo?.id);
   const { data: allIndustries = [] } = useIndustries();
   const formRef = useRef<HTMLDivElement>(null);
   const [selectedUseCase, setSelectedUseCase] = useState<ResolvedUseCase | null>(null);
@@ -239,8 +241,7 @@ export default function DemoPreview() {
       `;
     }
 
-    const headerCtaUseCaseId = demo.headerCtaUseCaseId || '';
-    return { headerHtml, footerHtml, cssContent, formStyle, headerCtaSelector: demo.headerCtaSelector || '', headerCtaUseCaseId };
+    return { headerHtml, footerHtml, cssContent, formStyle };
   }, [demo]);
 
   if (isLoading) {
@@ -421,22 +422,24 @@ export default function DemoPreview() {
                   body { margin: 0; padding: 0; overflow: hidden; }
                   html { overflow: hidden; }
                   a { pointer-events: none; }
-                  ${previewDocument.headerCtaSelector ? `${previewDocument.headerCtaSelector} { pointer-events: auto !important; cursor: pointer !important; }` : ''}
+                  ${ctaLinks.map(l => `${l.cssSelector} { pointer-events: auto !important; cursor: pointer !important; }`).join('\n')}
                 </style>
                 ${previewDocument.cssContent ? `<style>${previewDocument.cssContent}</style>` : ''}
               </head>
               <body>
                 ${previewDocument.headerHtml}
-                ${previewDocument.headerCtaSelector ? `
+                ${ctaLinks.length > 0 ? `
                 <script>
+                  var ctaMappings = ${JSON.stringify(ctaLinks.map(l => ({ selector: l.cssSelector, useCaseId: l.useCaseId })))};
                   document.addEventListener('click', function(e) {
-                    var target = e.target.closest('${previewDocument.headerCtaSelector.replace(/'/g, "\\'")}');
-                    if (target) {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      ${previewDocument.headerCtaUseCaseId 
-                        ? `window.parent.postMessage({ type: 'cta-use-case', useCaseId: '${previewDocument.headerCtaUseCaseId}' }, '*');`
-                        : `window.parent.postMessage({ type: 'scroll-to-form' }, '*');`
+                    for (var i = 0; i < ctaMappings.length; i++) {
+                      var m = ctaMappings[i];
+                      var target = e.target.closest(m.selector);
+                      if (target) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        window.parent.postMessage({ type: 'cta-use-case', useCaseId: m.useCaseId }, '*');
+                        return;
                       }
                     }
                   }, true);
