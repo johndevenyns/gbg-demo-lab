@@ -160,7 +160,7 @@ export function UseCaseSection({ demoId, demo, onUpdateDemo }: UseCaseSectionPro
             </div>
           ) : (
             <div className="space-y-3">
-              {links.map((link) => {
+              {links.map((link, index) => {
                 const uc = link.globalUseCase;
                 if (!uc) return null;
                 const IconComp = ICON_MAP[uc.iconName] ?? Package;
