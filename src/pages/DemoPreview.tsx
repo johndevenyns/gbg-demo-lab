@@ -287,6 +287,18 @@ export default function DemoPreview() {
     ? (selectedUseCase.formSteps as unknown as FormStep[])
     : demo.formSteps;
 
+  // Build effective storedTestData: when a use case is selected, override the fill button visibility
+  const effectiveStoredTestData = useMemo(() => {
+    if (!selectedUseCase) return demo.storedTestData;
+    return {
+      ...demo.storedTestData,
+      passData: demo.storedTestData?.passData || {},
+      failData: demo.storedTestData?.failData || {},
+      showFillPassButton: selectedUseCase.showFillPass,
+      showFillFailButton: selectedUseCase.showFillFail,
+    };
+  }, [selectedUseCase, demo.storedTestData]);
+
   const renderFlowRenderer = (steps: typeof activeFormSteps, key: string) => (
     <DemoFlowRenderer
       key={key}
@@ -301,7 +313,7 @@ export default function DemoPreview() {
       returnUrl={demo.returnUrl}
       includeQr={demo.includeQr}
       referenceIdPrefix={demo.referenceIdPrefix}
-      storedTestData={demo.storedTestData}
+      storedTestData={effectiveStoredTestData}
       showTestButtons={true}
       logoUrl={demo.logoUrl}
       headerBgColor={demo.headerBgColor}
