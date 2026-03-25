@@ -2771,9 +2771,13 @@ export function DemoFlowRenderer({
     );
   }
 
-  // Determine which fill buttons to show based on config - show button if toggle is enabled
-  const showPassButton = showTestButtons && storedTestData?.showFillPassButton === true;
-  const showFailButton = showTestButtons && storedTestData?.showFillFailButton === true;
+  // Determine which fill buttons to show based on per-step config (falls back to global toggle)
+  const globalShowPass = storedTestData?.showFillPassButton === true;
+  const globalShowFail = storedTestData?.showFillFailButton === true;
+  const stepShowPass = currentStep?.showFillPass !== undefined ? currentStep.showFillPass : globalShowPass;
+  const stepShowFail = currentStep?.showFillFail !== undefined ? currentStep.showFillFail : globalShowFail;
+  const showPassButton = showTestButtons && stepShowPass;
+  const showFailButton = showTestButtons && stepShowFail;
   const showAnyFillButton = (showPassButton || showFailButton) && (currentStep?.stepType === 'form' || !currentStep?.stepType);
 
   return (

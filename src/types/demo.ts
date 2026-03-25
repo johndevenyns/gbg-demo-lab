@@ -501,6 +501,9 @@ export interface FormStep {
   unifiedVerificationConfig?: UnifiedVerificationConfig;
   // Completion actions — what happens on pass/fail (for verification and API steps)
   stepCompletionConfig?: StepCompletionConfig;
+  // Per-step control over Fill Pass / Fill Fail buttons (form steps only)
+  showFillPass?: boolean;
+  showFillFail?: boolean;
 }
 
 export interface FormField {
