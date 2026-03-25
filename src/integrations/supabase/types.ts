@@ -62,6 +62,7 @@ export type Database = {
           industry_id: string | null
           industry_template: Database["public"]["Enums"]["industry_template"]
           is_active: boolean | null
+          landing_heading: string | null
           logo_url: string | null
           mirror_active_method: string
           mirror_html_css: string | null
@@ -108,6 +109,7 @@ export type Database = {
           industry_id?: string | null
           industry_template?: Database["public"]["Enums"]["industry_template"]
           is_active?: boolean | null
+          landing_heading?: string | null
           logo_url?: string | null
           mirror_active_method?: string
           mirror_html_css?: string | null
@@ -154,6 +156,7 @@ export type Database = {
           industry_id?: string | null
           industry_template?: Database["public"]["Enums"]["industry_template"]
           is_active?: boolean | null
+          landing_heading?: string | null
           logo_url?: string | null
           mirror_active_method?: string
           mirror_html_css?: string | null

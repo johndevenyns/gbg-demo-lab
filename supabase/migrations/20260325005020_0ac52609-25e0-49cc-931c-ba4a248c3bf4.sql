@@ -1,0 +1,1 @@
+ALTER TABLE public.demo_environments ADD COLUMN landing_heading text DEFAULT NULL;
