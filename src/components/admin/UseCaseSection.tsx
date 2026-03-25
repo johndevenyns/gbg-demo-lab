@@ -66,6 +66,22 @@ export function UseCaseSection({ demoId, demo, onUpdateDemo }: UseCaseSectionPro
     }
   }, [removeLink, demoId]);
 
+  const handleMoveUp = useCallback((index: number) => {
+    if (index <= 0) return;
+    const current = links[index];
+    const above = links[index - 1];
+    updateLink.mutate({ id: current.id, demoId, updates: { displayOrder: above.displayOrder } });
+    updateLink.mutate({ id: above.id, demoId, updates: { displayOrder: current.displayOrder } });
+  }, [links, updateLink, demoId]);
+
+  const handleMoveDown = useCallback((index: number) => {
+    if (index >= links.length - 1) return;
+    const current = links[index];
+    const below = links[index + 1];
+    updateLink.mutate({ id: current.id, demoId, updates: { displayOrder: below.displayOrder } });
+    updateLink.mutate({ id: below.id, demoId, updates: { displayOrder: current.displayOrder } });
+  }, [links, updateLink, demoId]);
+
   // Create a virtual DemoEnvironment scoped to a specific use case link
   const createUseCaseDemo = useCallback((link: DemoUseCaseLink): DemoEnvironment => {
     const globalSteps = link.globalUseCase?.defaultFormSteps ?? [];
