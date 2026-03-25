@@ -51,6 +51,18 @@ export default function DemoPreview() {
   const { data: links = [] } = useDemoUseCaseLinks(demo?.id);
   const { data: ctaLinks = [] } = useHeaderCtaLinks(demo?.id);
   const { data: allIndustries = [] } = useIndustries();
+  const { data: defaultLandingHeading } = useQuery({
+    queryKey: ['global-settings', 'default_landing_heading'],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('global_settings')
+        .select('value')
+        .eq('key', 'default_landing_heading')
+        .maybeSingle();
+      return data?.value || 'Access Your Account';
+    },
+    staleTime: 10 * 60 * 1000,
+  });
   const formRef = useRef<HTMLDivElement>(null);
   const [selectedUseCase, setSelectedUseCase] = useState<ResolvedUseCase | null>(null);
   const [portalUser, setPortalUser] = useState<{ email: string; profileData?: Record<string, unknown> } | null>(null);
