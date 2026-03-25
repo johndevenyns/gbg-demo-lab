@@ -153,8 +153,8 @@ interface SiteMirrorCardProps {
                       backgroundColor: '#ffffff',
                     }}
                   >
-                    {previewViewport === 'desktop' ? (
-                     <div className="w-full overflow-hidden">
+                     {previewViewport === 'desktop' ? (
+                      <div className="w-full relative" style={{ overflow: 'visible' }}>
                         <iframe
                           srcDoc={generatePreviewDocument({
                             formStyle: demo.formStyle || DEFAULT_FORM_STYLE,
@@ -163,34 +163,47 @@ interface SiteMirrorCardProps {
                             footerHtml: footerHtml || '',
                             cssContent: cssContent || undefined,
                           })}
-                          className="border-0 origin-top-left"
+                          className="border-0"
                           style={{
                             width: '1280px',
                             height: '1600px',
-                            transform: 'scale(var(--preview-scale))',
+                            transformOrigin: 'top left',
                           }}
                           title="Live site preview"
                           sandbox="allow-same-origin"
                           ref={(el) => {
                             if (el) {
-                              const container = el.parentElement;
-                              if (container) {
-                                const updateScale = () => {
-                                  const scale = container.clientWidth / 1280;
-                                  el.style.setProperty('--preview-scale', String(scale));
-                                  // Try to get actual content height from iframe
+                              const wrapper = el.parentElement;
+                              if (wrapper) {
+                                const applyScale = () => {
+                                  const wrapperWidth = wrapper.clientWidth || wrapper.getBoundingClientRect().width;
+                                  if (!wrapperWidth) return;
+                                  const scale = wrapperWidth / 1280;
+                                  el.style.transform = `scale(${scale})`;
+                                  // Get actual content height after load
+                                  let docHeight = 1600;
                                   try {
-                                    const docHeight = el.contentDocument?.documentElement?.scrollHeight || 1600;
+                                    docHeight = el.contentDocument?.documentElement?.scrollHeight || 1600;
                                     el.style.height = `${docHeight}px`;
-                                    container.style.height = `${docHeight * scale}px`;
-                                  } catch {
-                                    container.style.height = `${1600 * scale}px`;
-                                  }
+                                  } catch { /* cross-origin fallback */ }
+                                  wrapper.style.height = `${docHeight * scale}px`;
                                 };
-                                updateScale();
-                                el.addEventListener('load', updateScale);
-                                const observer = new ResizeObserver(() => updateScale());
-                                observer.observe(container);
+                                // Apply on load (content ready)
+                                el.addEventListener('load', () => {
+                                  // Small delay to ensure content has rendered
+                                  requestAnimationFrame(() => {
+                                    applyScale();
+                                    // Second pass for lazy content
+                                    setTimeout(applyScale, 200);
+                                  });
+                                });
+                                // Handle container width changes
+                                const ro = new ResizeObserver((entries) => {
+                                  // Only react to width changes
+                                  const entry = entries[0];
+                                  if (entry) applyScale();
+                                });
+                                ro.observe(wrapper);
                               }
                             }
                           }}
