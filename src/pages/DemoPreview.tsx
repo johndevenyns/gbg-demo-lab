@@ -487,6 +487,7 @@ export default function DemoPreview() {
                 useCases={resolvedUseCases.filter(uc => uc.showOnLandingPage)}
                 selectedUseCase={selectedUseCase}
                 buttonColor={demo.buttonColor}
+                heading={demo.landingHeading}
                 onSelectUseCase={setSelectedUseCase}
               >
                 {activeFormSteps.length > 0 ? (

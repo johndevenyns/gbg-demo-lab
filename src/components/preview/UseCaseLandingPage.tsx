@@ -29,7 +29,7 @@ export function UseCaseLandingPage({
             className="text-xl font-bold text-center mb-5"
             style={{ color: '#1f2937' }}
           >
-            Access Your Account
+            {heading || 'Access Your Account'}
           </h2>
           <div
             className="flex rounded-lg p-1 mb-6"
