@@ -32,8 +32,6 @@ import { SaveAsIndustryDialog } from "@/components/admin/SaveAsIndustryDialog";
 import { ArchiveDemoDialog } from "@/components/admin/ArchiveDemoDialog";
 
 // Navigation sections
-type ConfigSection = 'settings' | 'mirror' | 'branding' | 'use-cases' | 'users' | 'preview';
-
 type ConfigSection = 'settings' | 'mirror' | 'branding' | 'use-cases' | 'users';
 
 const sections: { id: ConfigSection; label: string; icon: React.ElementType; description: string }[] = [
