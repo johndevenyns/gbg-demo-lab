@@ -270,7 +270,7 @@ export function HeaderElementPicker({
         )}
       </div>
 
-      {/* Pick / Add controls */}
+      {/* Pick / Add controls — always visible */}
       <div className="flex items-center gap-2">
         {!pickingMode && !pendingSelector && (
           <Button variant="outline" size="sm" onClick={startPicking} className="gap-2">
@@ -330,14 +330,22 @@ export function HeaderElementPicker({
         </div>
       )}
 
-      {/* Manual CSS selector */}
+      {/* Manual CSS selector — inline add */}
       {!pendingSelector && !pickingMode && (
         <div className="space-y-1">
           <Label className="text-xs text-muted-foreground">Or enter CSS selector manually</Label>
           <div className="flex gap-2">
             <Input
-              value={pendingSelector}
-              onChange={(e) => setPendingSelector(e.target.value)}
+              onChange={(e) => {
+                if (e.target.value.trim()) {
+                  setPendingSelector(e.target.value.trim());
+                }
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && (e.target as HTMLInputElement).value.trim()) {
+                  setPendingSelector((e.target as HTMLInputElement).value.trim());
+                }
+              }}
               placeholder='e.g. a.cta-button, #get-demo'
               className="font-mono text-xs h-8"
             />
