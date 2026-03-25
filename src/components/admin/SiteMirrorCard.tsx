@@ -219,8 +219,6 @@ interface SiteMirrorCardProps {
                               <style>
                                 html, body { margin: 0; padding: 0; overflow: hidden; background: transparent; }
                                 * { box-sizing: border-box; }
-                                body { display: flex; flex-direction: column; align-items: center; }
-                                body > * { width: 100%; max-width: 1280px; margin-left: auto; margin-right: auto; }
                                 a { pointer-events: none; }
                               </style>
                               ${cssContent ? `<style>${cssContent}</style>` : ''}
