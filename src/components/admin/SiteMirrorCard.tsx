@@ -154,7 +154,7 @@ interface SiteMirrorCardProps {
                     }}
                   >
                     {previewViewport === 'desktop' ? (
-                      <div className="w-full overflow-hidden" style={{ height: '500px' }}>
+                     <div className="w-full overflow-hidden">
                         <iframe
                           srcDoc={generatePreviewDocument({
                             formStyle: demo.formStyle || DEFAULT_FORM_STYLE,
@@ -166,7 +166,7 @@ interface SiteMirrorCardProps {
                           className="border-0 origin-top-left"
                           style={{
                             width: '1280px',
-                            height: '625px',
+                            height: '1600px',
                             transform: 'scale(var(--preview-scale))',
                           }}
                           title="Live site preview"
@@ -175,13 +175,21 @@ interface SiteMirrorCardProps {
                             if (el) {
                               const container = el.parentElement;
                               if (container) {
-                                const scale = container.clientWidth / 1280;
-                                el.style.setProperty('--preview-scale', String(scale));
-                                const observer = new ResizeObserver(() => {
-                                  const s = container.clientWidth / 1280;
-                                  el.style.setProperty('--preview-scale', String(s));
-                                  container.style.height = `${625 * s}px`;
-                                });
+                                const updateScale = () => {
+                                  const scale = container.clientWidth / 1280;
+                                  el.style.setProperty('--preview-scale', String(scale));
+                                  // Try to get actual content height from iframe
+                                  try {
+                                    const docHeight = el.contentDocument?.documentElement?.scrollHeight || 1600;
+                                    el.style.height = `${docHeight}px`;
+                                    container.style.height = `${docHeight * scale}px`;
+                                  } catch {
+                                    container.style.height = `${1600 * scale}px`;
+                                  }
+                                };
+                                updateScale();
+                                el.addEventListener('load', updateScale);
+                                const observer = new ResizeObserver(() => updateScale());
                                 observer.observe(container);
                               }
                             }
