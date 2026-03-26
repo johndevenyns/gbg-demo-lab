@@ -270,6 +270,22 @@ export function UseCaseSection({ demoId, demo, onUpdateDemo }: UseCaseSectionPro
                               />
                               <span className="text-xs">Show Landing Page</span>
                             </label>
+                            <label className="flex items-center gap-2 cursor-pointer">
+                              <Switch
+                                checked={link.showFillPass ?? uc.showFillPass}
+                                onCheckedChange={(v) => handleUpdate(link.id, { showFillPass: v })}
+                                className="scale-90"
+                              />
+                              <span className="text-xs">Fill Pass</span>
+                            </label>
+                            <label className="flex items-center gap-2 cursor-pointer">
+                              <Switch
+                                checked={link.showFillFail ?? uc.showFillFail}
+                                onCheckedChange={(v) => handleUpdate(link.id, { showFillFail: v })}
+                                className="scale-90"
+                              />
+                              <span className="text-xs">Fill Fail</span>
+                            </label>
                           </div>
 
                           {/* Page content overrides - collapsible for less clutter */}

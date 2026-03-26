@@ -101,8 +101,8 @@ export default function DemoPreview() {
           isEnabled: link.isEnabled,
           displayOrder: link.displayOrder,
           showOnLandingPage: link.showOnLandingPage,
-          showFillPass: uc.showFillPass,
-          showFillFail: uc.showFillFail,
+          showFillPass: link.showFillPass ?? uc.showFillPass,
+          showFillFail: link.showFillFail ?? uc.showFillFail,
           // Portal type comes from the demo level
           portalType: demoPortalType,
         };

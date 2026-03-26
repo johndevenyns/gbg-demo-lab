@@ -131,6 +131,8 @@ function mapLinkRow(row: Record<string, unknown>): DemoUseCaseLink {
     verificationTypeOverride: (row.verification_type_override as string) ?? null,
     pageContentOverride: (row.page_content_override as UseCasePageContent) ?? null,
     portalTypeOverride: (row.portal_type_override as string) ?? null,
+    showFillPass: row.show_fill_pass as boolean | null ?? null,
+    showFillFail: row.show_fill_fail as boolean | null ?? null,
     createdAt: row.created_at as string,
     updatedAt: row.updated_at as string,
   };
@@ -202,6 +204,8 @@ export function useUpdateDemoUseCaseLink() {
       if (updates.verificationTypeOverride !== undefined) dbUpdates.verification_type_override = updates.verificationTypeOverride;
       if (updates.pageContentOverride !== undefined) dbUpdates.page_content_override = updates.pageContentOverride;
       if (updates.portalTypeOverride !== undefined) dbUpdates.portal_type_override = updates.portalTypeOverride;
+      if (updates.showFillPass !== undefined) dbUpdates.show_fill_pass = updates.showFillPass;
+      if (updates.showFillFail !== undefined) dbUpdates.show_fill_fail = updates.showFillFail;
 
       const { error } = await supabase
         .from('demo_use_case_links')
