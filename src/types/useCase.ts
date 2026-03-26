@@ -43,6 +43,8 @@ export interface DemoUseCaseLink {
   verificationTypeOverride?: string | null;
   pageContentOverride?: UseCasePageContent | null;
   portalTypeOverride?: string | null;
+  showFillPass?: boolean | null;
+  showFillFail?: boolean | null;
   createdAt: string;
   updatedAt: string;
   // Joined data from global_use_cases (populated via query)

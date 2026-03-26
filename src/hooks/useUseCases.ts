@@ -204,6 +204,8 @@ export function useUpdateDemoUseCaseLink() {
       if (updates.verificationTypeOverride !== undefined) dbUpdates.verification_type_override = updates.verificationTypeOverride;
       if (updates.pageContentOverride !== undefined) dbUpdates.page_content_override = updates.pageContentOverride;
       if (updates.portalTypeOverride !== undefined) dbUpdates.portal_type_override = updates.portalTypeOverride;
+      if (updates.showFillPass !== undefined) dbUpdates.show_fill_pass = updates.showFillPass;
+      if (updates.showFillFail !== undefined) dbUpdates.show_fill_fail = updates.showFillFail;
 
       const { error } = await supabase
         .from('demo_use_case_links')
