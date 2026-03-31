@@ -94,6 +94,7 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
     setEnableMirroring(false);
     setSelectedIndustryId(null);
     setSelectedUseCases([]);
+    setHiddenFromLanding(new Set());
     setUseCasesInitialized(false);
     setHasPortal(false);
     setSelectedPortalType('');
