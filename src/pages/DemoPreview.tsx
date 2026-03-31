@@ -458,51 +458,88 @@ export default function DemoPreview() {
                 ${ctaLinks.length > 0 ? `
                 <script>
                   var ctaMappings = ${JSON.stringify(ctaLinks.map(l => ({ selector: l.cssSelector, useCaseId: l.useCaseId, label: l.elementLabel })))};
-                  // Pre-tag each matched element with its use case ID so duplicate selectors resolve correctly
+                  var normalizeCtaValue = function(value) {
+                    return (value || '').replace(/\s+/g, ' ').trim().toLowerCase();
+                  };
+                  var elementMatchesCtaLabel = function(el, label) {
+                    var expected = normalizeCtaValue(label);
+                    if (!expected || !el) return false;
+                    var candidates = [
+                      el.getAttribute ? el.getAttribute('aria-label') : '',
+                      el.getAttribute ? el.getAttribute('title') : '',
+                      el.textContent || '',
+                      el.innerText || ''
+                    ];
+                    for (var i = 0; i < candidates.length; i++) {
+                      if (normalizeCtaValue(candidates[i]) === expected) {
+                        return true;
+                      }
+                    }
+                    return false;
+                  };
+                  var resolveCtaUseCaseId = function(startNode) {
+                    var node = startNode;
+                    while (node && node !== document.body && node !== document.documentElement) {
+                      var taggedUseCaseId = node.getAttribute && node.getAttribute('data-cta-uc');
+                      if (taggedUseCaseId) {
+                        return taggedUseCaseId;
+                      }
+                      if (node.matches) {
+                        for (var i = 0; i < ctaMappings.length; i++) {
+                          var mapping = ctaMappings[i];
+                          if (!mapping.selector || !node.matches(mapping.selector)) continue;
+                          if (!mapping.label || elementMatchesCtaLabel(node, mapping.label)) {
+                            return mapping.useCaseId;
+                          }
+                        }
+                      }
+                      node = node.parentElement;
+                    }
+                    return null;
+                  };
+                  // Pre-tag matched elements with their use case ID so repeated selectors work across breakpoints.
                   (function() {
                     var selectorIndex = {};
                     for (var i = 0; i < ctaMappings.length; i++) {
                       var m = ctaMappings[i];
                       var key = m.selector;
                       var els = document.querySelectorAll(key);
-                      if (els.length > 0) {
-                        var matched = false;
-                        // If we have a label, try to match by text content first
-                        if (m.label) {
-                          for (var j = 0; j < els.length; j++) {
-                            var txt = (els[j].textContent || '').trim().toLowerCase();
-                            if (txt === m.label.trim().toLowerCase() && !els[j].getAttribute('data-cta-uc')) {
-                              els[j].setAttribute('data-cta-uc', m.useCaseId);
-                              matched = true;
-                              break;
-                            }
+                      if (els.length === 0) continue;
+
+                      var matchingEls = [];
+                      if (m.label) {
+                        for (var j = 0; j < els.length; j++) {
+                          if (elementMatchesCtaLabel(els[j], m.label)) {
+                            matchingEls.push(els[j]);
                           }
-                        }
-                        // Fallback to index-based assignment if label didn't match
-                        if (!matched) {
-                          if (!selectorIndex[key]) selectorIndex[key] = 0;
-                          var idx = selectorIndex[key];
-                          var el = els[idx < els.length ? idx : els.length - 1];
-                          if (!el.getAttribute('data-cta-uc')) {
-                            el.setAttribute('data-cta-uc', m.useCaseId);
-                          }
-                          selectorIndex[key] = idx + 1;
                         }
                       }
+
+                      if (matchingEls.length > 0) {
+                        for (var k = 0; k < matchingEls.length; k++) {
+                          matchingEls[k].setAttribute('data-cta-uc', m.useCaseId);
+                        }
+                        continue;
+                      }
+
+                      if (!selectorIndex[key]) selectorIndex[key] = 0;
+                      var idx = selectorIndex[key];
+                      while (idx < els.length && els[idx].getAttribute('data-cta-uc')) {
+                        idx += 1;
+                      }
+                      var el = els[idx < els.length ? idx : els.length - 1];
+                      if (el) {
+                        el.setAttribute('data-cta-uc', m.useCaseId);
+                      }
+                      selectorIndex[key] = idx + 1;
                     }
                   })();
                   document.addEventListener('click', function(e) {
-                    // Walk up from click target to find the nearest element with a CTA tag
-                    var node = e.target;
-                    while (node && node !== document.body && node !== document.documentElement) {
-                      if (node.getAttribute && node.getAttribute('data-cta-uc')) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        window.parent.postMessage({ type: 'cta-use-case', useCaseId: node.getAttribute('data-cta-uc') }, '*');
-                        return;
-                      }
-                      node = node.parentElement;
-                    }
+                    var useCaseId = resolveCtaUseCaseId(e.target);
+                    if (!useCaseId) return;
+                    e.preventDefault();
+                    e.stopPropagation();
+                    window.parent.postMessage({ type: 'cta-use-case', useCaseId: useCaseId }, '*');
                   }, true);
                 </script>
                 ` : ''}
