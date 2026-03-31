@@ -166,7 +166,7 @@ export function useDemoUseCaseLinks(demoId: string | undefined) {
 export function useAddDemoUseCaseLink() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ demoId, useCaseId, displayOrder }: { demoId: string; useCaseId: string; displayOrder: number }) => {
+    mutationFn: async ({ demoId, useCaseId, displayOrder, showOnLandingPage = true }: { demoId: string; useCaseId: string; displayOrder: number; showOnLandingPage?: boolean }) => {
       const { data, error } = await supabase
         .from('demo_use_case_links')
         .insert([{
@@ -174,6 +174,7 @@ export function useAddDemoUseCaseLink() {
           use_case_id: useCaseId,
           display_order: displayOrder,
           is_enabled: true,
+          show_on_landing_page: showOnLandingPage,
         }])
         .select('*, global_use_cases(*)')
         .single();
