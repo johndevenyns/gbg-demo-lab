@@ -457,17 +457,34 @@ export default function DemoPreview() {
                 ${previewDocument.headerHtml}
                 ${ctaLinks.length > 0 ? `
                 <script>
-                  var ctaMappings = ${JSON.stringify(ctaLinks.map(l => ({ selector: l.cssSelector, useCaseId: l.useCaseId })))};
-                  document.addEventListener('click', function(e) {
+                  var ctaMappings = ${JSON.stringify(ctaLinks.map(l => ({ selector: l.cssSelector, useCaseId: l.useCaseId, label: l.elementLabel })))};
+                  // Pre-tag each matched element with its use case ID so duplicate selectors resolve correctly
+                  (function() {
+                    var selectorIndex = {};
                     for (var i = 0; i < ctaMappings.length; i++) {
                       var m = ctaMappings[i];
-                      var target = e.target.closest(m.selector);
-                      if (target) {
+                      var key = m.selector;
+                      if (!selectorIndex[key]) selectorIndex[key] = 0;
+                      var els = document.querySelectorAll(key);
+                      if (els.length > 0) {
+                        var idx = selectorIndex[key];
+                        var el = els[idx < els.length ? idx : els.length - 1];
+                        el.setAttribute('data-cta-uc', m.useCaseId);
+                        selectorIndex[key] = idx + 1;
+                      }
+                    }
+                  })();
+                  document.addEventListener('click', function(e) {
+                    // Walk up from click target to find the nearest element with a CTA tag
+                    var node = e.target;
+                    while (node && node !== document.body && node !== document.documentElement) {
+                      if (node.getAttribute && node.getAttribute('data-cta-uc')) {
                         e.preventDefault();
                         e.stopPropagation();
-                        window.parent.postMessage({ type: 'cta-use-case', useCaseId: m.useCaseId }, '*');
+                        window.parent.postMessage({ type: 'cta-use-case', useCaseId: node.getAttribute('data-cta-uc') }, '*');
                         return;
                       }
+                      node = node.parentElement;
                     }
                   }, true);
                 </script>
