@@ -295,7 +295,7 @@ function StyledFormFields({ fields, formData, onInputChange, style, fieldErrors 
             fontFamily: style.fontFamily,
             fontSize: '18px',
             fontWeight: 600,
-            color: style.titleColor || style.labelColor,
+            color: readableTitleColor,
             marginBottom: '4px',
           }}>
             {field.content || field.label}
