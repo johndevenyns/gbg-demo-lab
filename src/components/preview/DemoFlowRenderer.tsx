@@ -35,6 +35,30 @@ const getContrastTextColor = (hexColor: string): string => {
   // Return dark text for light backgrounds, white text for dark backgrounds
   return luminance > 0.5 ? '#1a1a1a' : '#ffffff';
 };
+
+// Helper to calculate luminance of a hex color (0 = black, 1 = white)
+const getLuminance = (hexColor: string): number => {
+  if (!hexColor || hexColor === 'transparent') return 1;
+  const hex = hexColor.replace('#', '');
+  if (hex.length < 6) return 1;
+  const r = parseInt(hex.substring(0, 2), 16);
+  const g = parseInt(hex.substring(2, 4), 16);
+  const b = parseInt(hex.substring(4, 6), 16);
+  return (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+};
+
+// Ensures text color has enough contrast against background.
+// If both are light (white-on-white) or both are dark, returns a safe fallback.
+const ensureReadableColor = (textColor: string, bgColor: string): string => {
+  const textLum = getLuminance(textColor);
+  const bgLum = getLuminance(bgColor);
+  const contrast = Math.abs(textLum - bgLum);
+  // If contrast ratio is too low, pick a readable color based on background
+  if (contrast < 0.3) {
+    return bgLum > 0.5 ? '#1a1a2e' : '#f1f5f9';
+  }
+  return textColor;
+};
 const SUPABASE_FUNCTIONS_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
 
 export interface SubmissionLogData {
@@ -146,6 +170,14 @@ interface StyledFormFieldsProps {
 }
 
 function StyledFormFields({ fields, formData, onInputChange, style, fieldErrors = {}, onNavigateToLogin }: StyledFormFieldsProps) {
+  // Pre-compute readable colors to avoid white-on-white or dark-on-dark issues
+  const formBg = style.formBgColor || '#ffffff';
+  const inputBg = style.inputBgColor;
+  const readableInputText = ensureReadableColor(style.inputTextColor, inputBg);
+  const readableLabelColor = ensureReadableColor(style.labelColor, formBg);
+  const readableTitleColor = ensureReadableColor(style.titleColor || style.labelColor, formBg);
+  const readableBodyColor = ensureReadableColor(style.bodyColor || style.labelColor, formBg);
+
   const borderRadiusMap = {
     none: '0px',
     sm: '4px',
@@ -182,7 +214,7 @@ function StyledFormFields({ fields, formData, onInputChange, style, fieldErrors 
     fontFamily: style.fontFamily,
     fontSize: fontSizeMap[style.fontSize],
     backgroundColor: style.inputBgColor,
-    color: style.inputTextColor,
+    color: readableInputText,
     border: `${style.borderWidth}px solid ${fieldErrors[fieldName] ? style.errorColor : style.inputBorderColor}`,
     borderRadius: borderRadiusMap[style.borderRadius],
     padding: paddingMap[style.inputPadding || 'md'],
@@ -199,7 +231,7 @@ function StyledFormFields({ fields, formData, onInputChange, style, fieldErrors 
     const baseStyle: React.CSSProperties = {
       fontFamily: style.fontFamily,
       fontSize: fontSizeMap[style.fontSize],
-      color: style.labelColor,
+      color: readableLabelColor,
       fontWeight: labelWeightMap[style.labelWeight || 'medium'],
     };
 
@@ -263,7 +295,7 @@ function StyledFormFields({ fields, formData, onInputChange, style, fieldErrors 
             fontFamily: style.fontFamily,
             fontSize: '18px',
             fontWeight: 600,
-            color: style.titleColor || style.labelColor,
+            color: readableTitleColor,
             marginBottom: '4px',
           }}>
             {field.content || field.label}
@@ -278,7 +310,7 @@ function StyledFormFields({ fields, formData, onInputChange, style, fieldErrors 
           <p style={{ 
             fontFamily: style.fontFamily,
             fontSize: fontSizeMap[style.fontSize],
-            color: style.bodyColor || style.labelColor,
+            color: readableBodyColor,
             lineHeight: 1.6,
           }}>
             {field.content || field.placeholder || 'Text content here...'}
@@ -332,7 +364,7 @@ function StyledFormFields({ fields, formData, onInputChange, style, fieldErrors 
               cursor: 'pointer',
               fontFamily: style.fontFamily,
               fontSize: fontSizeMap[style.fontSize],
-              color: style.labelColor,
+              color: readableLabelColor,
             }}
           >
             <input
@@ -386,7 +418,7 @@ function StyledFormFields({ fields, formData, onInputChange, style, fieldErrors 
                 cursor: 'pointer',
                 fontFamily: style.fontFamily,
                 fontSize: fontSizeMap[style.fontSize],
-                color: style.labelColor,
+                color: readableLabelColor,
               }}
             >
               <input
@@ -412,7 +444,7 @@ function StyledFormFields({ fields, formData, onInputChange, style, fieldErrors 
                 cursor: 'pointer',
                 fontFamily: style.fontFamily,
                 fontSize: fontSizeMap[style.fontSize],
-                color: style.labelColor,
+                color: readableLabelColor,
               }}
             >
               <input
@@ -452,7 +484,7 @@ function StyledFormFields({ fields, formData, onInputChange, style, fieldErrors 
               cursor: 'pointer',
               fontFamily: style.fontFamily,
               fontSize: fontSizeMap[style.fontSize],
-              color: style.labelColor,
+              color: readableLabelColor,
             }}
           >
             <input
@@ -703,6 +735,12 @@ export function DemoFlowRenderer({
   }, [currentStepIndex]);
 
   const style = formStyle || DEFAULT_FORM_STYLE;
+
+  // Pre-compute readable colors for the main component as well
+  const mainFormBg = style.formBgColor || '#ffffff';
+  const mainInputBg = style.inputBgColor;
+  const mainReadableLabelColor = ensureReadableColor(style.labelColor, mainFormBg);
+  const mainReadableInputText = ensureReadableColor(style.inputTextColor, mainInputBg);
 
   // Get effective button color (from style config or demo buttonColor prop)
   const effectiveButtonBgColor = style.buttonBgColor || buttonColor || '#6366f1';
@@ -2606,7 +2644,7 @@ export function DemoFlowRenderer({
                 {forgotPasswordSuccess ? (
                   <div style={{ textAlign: 'center' }}>
                     <CheckCircle2 style={{ width: 32, height: 32, color: style.successColor || '#22c55e', margin: '0 auto 8px' }} />
-                    <p style={{ fontSize: '14px', color: style.labelColor, fontWeight: 500 }}>
+                    <p style={{ fontSize: '14px', color: mainReadableLabelColor, fontWeight: 500 }}>
                       Password reset instructions sent
                     </p>
                     <p style={{ fontSize: '13px', color: '#6b7280', marginTop: '4px' }}>
@@ -2630,7 +2668,7 @@ export function DemoFlowRenderer({
                   </div>
                 ) : (
                   <>
-                    <p style={{ fontSize: '14px', color: style.labelColor, fontWeight: 500, marginBottom: '8px' }}>
+                    <p style={{ fontSize: '14px', color: mainReadableLabelColor, fontWeight: 500, marginBottom: '8px' }}>
                       Reset Password
                     </p>
                     <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '12px' }}>
@@ -2649,7 +2687,7 @@ export function DemoFlowRenderer({
                         borderRadius: '6px',
                         fontFamily: style.fontFamily,
                         backgroundColor: style.inputBgColor,
-                        color: style.inputTextColor,
+                        color: mainReadableInputText,
                         outline: 'none',
                         marginBottom: '12px',
                         boxSizing: 'border-box',
@@ -2665,7 +2703,7 @@ export function DemoFlowRenderer({
                           border: `1px solid ${style.inputBorderColor}`,
                           borderRadius: '6px',
                           background: 'transparent',
-                          color: style.labelColor,
+                          color: mainReadableLabelColor,
                           cursor: 'pointer',
                           fontFamily: style.fontFamily,
                         }}
