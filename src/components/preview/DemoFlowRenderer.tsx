@@ -2687,7 +2687,7 @@ export function DemoFlowRenderer({
                         borderRadius: '6px',
                         fontFamily: style.fontFamily,
                         backgroundColor: style.inputBgColor,
-                        color: style.inputTextColor,
+                        color: mainReadableInputText,
                         outline: 'none',
                         marginBottom: '12px',
                         boxSizing: 'border-box',
