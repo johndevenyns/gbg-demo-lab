@@ -2644,7 +2644,7 @@ export function DemoFlowRenderer({
                 {forgotPasswordSuccess ? (
                   <div style={{ textAlign: 'center' }}>
                     <CheckCircle2 style={{ width: 32, height: 32, color: style.successColor || '#22c55e', margin: '0 auto 8px' }} />
-                    <p style={{ fontSize: '14px', color: style.labelColor, fontWeight: 500 }}>
+                    <p style={{ fontSize: '14px', color: mainReadableLabelColor, fontWeight: 500 }}>
                       Password reset instructions sent
                     </p>
                     <p style={{ fontSize: '13px', color: '#6b7280', marginTop: '4px' }}>
