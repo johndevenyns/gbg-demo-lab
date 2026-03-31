@@ -697,6 +697,11 @@ export function DemoFlowRenderer({
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   // Use provided form style or default
+  // Scroll to top whenever the step changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [currentStepIndex]);
+
   const style = formStyle || DEFAULT_FORM_STYLE;
 
   // Get effective button color (from style config or demo buttonColor prop)
