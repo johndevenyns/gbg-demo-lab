@@ -2703,7 +2703,7 @@ export function DemoFlowRenderer({
                           border: `1px solid ${style.inputBorderColor}`,
                           borderRadius: '6px',
                           background: 'transparent',
-                          color: style.labelColor,
+                          color: mainReadableLabelColor,
                           cursor: 'pointer',
                           fontFamily: style.fontFamily,
                         }}
