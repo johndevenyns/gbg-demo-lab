@@ -2668,7 +2668,7 @@ export function DemoFlowRenderer({
                   </div>
                 ) : (
                   <>
-                    <p style={{ fontSize: '14px', color: style.labelColor, fontWeight: 500, marginBottom: '8px' }}>
+                    <p style={{ fontSize: '14px', color: mainReadableLabelColor, fontWeight: 500, marginBottom: '8px' }}>
                       Reset Password
                     </p>
                     <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '12px' }}>
