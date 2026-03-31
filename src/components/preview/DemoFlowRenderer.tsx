@@ -170,6 +170,14 @@ interface StyledFormFieldsProps {
 }
 
 function StyledFormFields({ fields, formData, onInputChange, style, fieldErrors = {}, onNavigateToLogin }: StyledFormFieldsProps) {
+  // Pre-compute readable colors to avoid white-on-white or dark-on-dark issues
+  const formBg = style.formBgColor || '#ffffff';
+  const inputBg = style.inputBgColor;
+  const readableInputText = ensureReadableColor(style.inputTextColor, inputBg);
+  const readableLabelColor = ensureReadableColor(style.labelColor, formBg);
+  const readableTitleColor = ensureReadableColor(style.titleColor || style.labelColor, formBg);
+  const readableBodyColor = ensureReadableColor(style.bodyColor || style.labelColor, formBg);
+
   const borderRadiusMap = {
     none: '0px',
     sm: '4px',
@@ -206,7 +214,7 @@ function StyledFormFields({ fields, formData, onInputChange, style, fieldErrors 
     fontFamily: style.fontFamily,
     fontSize: fontSizeMap[style.fontSize],
     backgroundColor: style.inputBgColor,
-    color: style.inputTextColor,
+    color: readableInputText,
     border: `${style.borderWidth}px solid ${fieldErrors[fieldName] ? style.errorColor : style.inputBorderColor}`,
     borderRadius: borderRadiusMap[style.borderRadius],
     padding: paddingMap[style.inputPadding || 'md'],
