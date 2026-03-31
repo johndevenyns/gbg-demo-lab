@@ -736,6 +736,12 @@ export function DemoFlowRenderer({
 
   const style = formStyle || DEFAULT_FORM_STYLE;
 
+  // Pre-compute readable colors for the main component as well
+  const mainFormBg = style.formBgColor || '#ffffff';
+  const mainInputBg = style.inputBgColor;
+  const mainReadableLabelColor = ensureReadableColor(style.labelColor, mainFormBg);
+  const mainReadableInputText = ensureReadableColor(style.inputTextColor, mainInputBg);
+
   // Get effective button color (from style config or demo buttonColor prop)
   const effectiveButtonBgColor = style.buttonBgColor || buttonColor || '#6366f1';
   const effectiveButtonTextColor = style.buttonTextColor || getContrastTextColor(effectiveButtonBgColor);
