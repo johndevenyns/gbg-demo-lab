@@ -125,7 +125,7 @@ export default function DemoPreview() {
         // Find the resolved use case matching the linked ID
         const target = resolvedUseCases.find(uc => uc.useCaseId === e.data.useCaseId);
         if (target) {
-          handleSelectUseCase(target);
+          handleSelectUseCase(target, true);
         }
       } else if (e.data?.type === 'scroll-to-form' && formRef.current) {
         formRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
