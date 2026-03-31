@@ -190,7 +190,7 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
       if (selectedUseCases.length > 0) {
         updateTaskStatus('use-cases', 'in_progress');
         for (let i = 0; i < selectedUseCases.length; i++) {
-          await addUseCaseLink.mutateAsync({ demoId: demo.id, useCaseId: selectedUseCases[i], displayOrder: i });
+          await addUseCaseLink.mutateAsync({ demoId: demo.id, useCaseId: selectedUseCases[i], displayOrder: i, showOnLandingPage: !hiddenFromLanding.has(selectedUseCases[i]) });
           const uc = globalUseCases.find(u => u.id === selectedUseCases[i]);
           if (uc?.showFillPass) shouldShowFillPass = true;
           if (uc?.showFillFail) shouldShowFillFail = true;
