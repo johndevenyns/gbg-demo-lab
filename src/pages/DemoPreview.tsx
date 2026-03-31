@@ -156,9 +156,11 @@ export default function DemoPreview() {
     setPortalUser(userData);
   }, []);
 
-  const handleSelectUseCase = useCallback((uc: ResolvedUseCase) => {
+  const handleSelectUseCase = useCallback((uc: ResolvedUseCase, skipScroll = false) => {
     setSelectedUseCase(uc);
-    setTimeout(() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+    if (!skipScroll) {
+      setTimeout(() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+    }
   }, []);
 
   const handleNavigateToLogin = useCallback(() => {
