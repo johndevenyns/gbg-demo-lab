@@ -231,7 +231,7 @@ function StyledFormFields({ fields, formData, onInputChange, style, fieldErrors 
     const baseStyle: React.CSSProperties = {
       fontFamily: style.fontFamily,
       fontSize: fontSizeMap[style.fontSize],
-      color: style.labelColor,
+      color: readableLabelColor,
       fontWeight: labelWeightMap[style.labelWeight || 'medium'],
     };
 
