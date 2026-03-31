@@ -464,13 +464,30 @@ export default function DemoPreview() {
                     for (var i = 0; i < ctaMappings.length; i++) {
                       var m = ctaMappings[i];
                       var key = m.selector;
-                      if (!selectorIndex[key]) selectorIndex[key] = 0;
                       var els = document.querySelectorAll(key);
                       if (els.length > 0) {
-                        var idx = selectorIndex[key];
-                        var el = els[idx < els.length ? idx : els.length - 1];
-                        el.setAttribute('data-cta-uc', m.useCaseId);
-                        selectorIndex[key] = idx + 1;
+                        var matched = false;
+                        // If we have a label, try to match by text content first
+                        if (m.label) {
+                          for (var j = 0; j < els.length; j++) {
+                            var txt = (els[j].textContent || '').trim().toLowerCase();
+                            if (txt === m.label.trim().toLowerCase() && !els[j].getAttribute('data-cta-uc')) {
+                              els[j].setAttribute('data-cta-uc', m.useCaseId);
+                              matched = true;
+                              break;
+                            }
+                          }
+                        }
+                        // Fallback to index-based assignment if label didn't match
+                        if (!matched) {
+                          if (!selectorIndex[key]) selectorIndex[key] = 0;
+                          var idx = selectorIndex[key];
+                          var el = els[idx < els.length ? idx : els.length - 1];
+                          if (!el.getAttribute('data-cta-uc')) {
+                            el.setAttribute('data-cta-uc', m.useCaseId);
+                          }
+                          selectorIndex[key] = idx + 1;
+                        }
                       }
                     }
                   })();
