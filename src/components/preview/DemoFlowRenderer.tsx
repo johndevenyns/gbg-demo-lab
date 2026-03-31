@@ -310,7 +310,7 @@ function StyledFormFields({ fields, formData, onInputChange, style, fieldErrors 
           <p style={{ 
             fontFamily: style.fontFamily,
             fontSize: fontSizeMap[style.fontSize],
-            color: style.bodyColor || style.labelColor,
+            color: readableBodyColor,
             lineHeight: 1.6,
           }}>
             {field.content || field.placeholder || 'Text content here...'}
