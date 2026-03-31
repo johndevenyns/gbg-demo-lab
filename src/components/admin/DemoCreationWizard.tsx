@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Check, Globe, ArrowRight, ArrowLeft, Loader2, Monitor } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { Check, Globe, ArrowRight, ArrowLeft, Loader2, Monitor, Eye, EyeOff } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -48,6 +48,7 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
   const [enableMirroring, setEnableMirroring] = useState(false);
   const [selectedIndustryId, setSelectedIndustryId] = useState<string | null>(null);
   const [selectedUseCases, setSelectedUseCases] = useState<string[]>([]);
+  const [hiddenFromLanding, setHiddenFromLanding] = useState<Set<string>>(new Set());
   const [useCasesInitialized, setUseCasesInitialized] = useState(false);
   
   // Portal step state
@@ -93,6 +94,7 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
     setEnableMirroring(false);
     setSelectedIndustryId(null);
     setSelectedUseCases([]);
+    setHiddenFromLanding(new Set());
     setUseCasesInitialized(false);
     setHasPortal(false);
     setSelectedPortalType('');
@@ -188,7 +190,7 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
       if (selectedUseCases.length > 0) {
         updateTaskStatus('use-cases', 'in_progress');
         for (let i = 0; i < selectedUseCases.length; i++) {
-          await addUseCaseLink.mutateAsync({ demoId: demo.id, useCaseId: selectedUseCases[i], displayOrder: i });
+          await addUseCaseLink.mutateAsync({ demoId: demo.id, useCaseId: selectedUseCases[i], displayOrder: i, showOnLandingPage: !hiddenFromLanding.has(selectedUseCases[i]) });
           const uc = globalUseCases.find(u => u.id === selectedUseCases[i]);
           if (uc?.showFillPass) shouldShowFillPass = true;
           if (uc?.showFillFail) shouldShowFillFail = true;
@@ -505,37 +507,66 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
                   const IconComp = icons[uc.iconName] || icons['Package'];
                   const isLoginUc = uc.title.toLowerCase().includes('login');
                   const isAutoAdded = hasPortal && isLoginUc;
+                  const isSelected = selectedUseCases.includes(uc.id);
+                  const isHiddenFromLanding = hiddenFromLanding.has(uc.id);
                   return (
-                    <button
-                      key={uc.id}
-                      onClick={() => !isAutoAdded && toggleUseCase(uc.id)}
-                      className={cn(
-                        "flex items-center gap-4 p-4 rounded-lg border text-left transition-all w-full",
-                        selectedUseCases.includes(uc.id)
-                          ? "border-primary bg-primary/5"
-                          : "border-border hover:border-muted-foreground/50",
-                        isAutoAdded && "cursor-default"
-                      )}
-                    >
-                      <div className={cn(
-                        "w-10 h-10 rounded-lg flex items-center justify-center",
-                        selectedUseCases.includes(uc.id)
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-muted text-muted-foreground"
-                      )}>
-                        {IconComp && <IconComp className="w-5 h-5" />}
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <h4 className="font-medium">{uc.title}</h4>
-                          {isAutoAdded && (
-                            <Badge variant="secondary" className="text-[10px]">Auto-added with portal</Badge>
-                          )}
+                    <div key={uc.id} className="flex items-center gap-2">
+                      <button
+                        onClick={() => !isAutoAdded && toggleUseCase(uc.id)}
+                        className={cn(
+                          "flex items-center gap-4 p-4 rounded-lg border text-left transition-all flex-1",
+                          isSelected
+                            ? "border-primary bg-primary/5"
+                            : "border-border hover:border-muted-foreground/50",
+                          isAutoAdded && "cursor-default"
+                        )}
+                      >
+                        <div className={cn(
+                          "w-10 h-10 rounded-lg flex items-center justify-center",
+                          isSelected
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted text-muted-foreground"
+                        )}>
+                          {IconComp && <IconComp className="w-5 h-5" />}
                         </div>
-                        {uc.description && <p className="text-sm text-muted-foreground">{uc.description}</p>}
-                      </div>
-                      {selectedUseCases.includes(uc.id) && <Check className="w-5 h-5 text-primary" />}
-                    </button>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-medium">{uc.title}</h4>
+                            {isAutoAdded && (
+                              <Badge variant="secondary" className="text-[10px]">Auto-added with portal</Badge>
+                            )}
+                            {isSelected && isHiddenFromLanding && (
+                              <Badge variant="outline" className="text-[10px]">Hidden from landing</Badge>
+                            )}
+                          </div>
+                          {uc.description && <p className="text-sm text-muted-foreground">{uc.description}</p>}
+                        </div>
+                        {isSelected && <Check className="w-5 h-5 text-primary" />}
+                      </button>
+                      {isSelected && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setHiddenFromLanding(prev => {
+                              const next = new Set(prev);
+                              if (next.has(uc.id)) next.delete(uc.id);
+                              else next.add(uc.id);
+                              return next;
+                            });
+                          }}
+                          className={cn(
+                            "p-2 rounded-md border transition-colors shrink-0",
+                            isHiddenFromLanding
+                              ? "border-destructive/30 text-destructive hover:bg-destructive/10"
+                              : "border-border text-muted-foreground hover:bg-muted"
+                          )}
+                          title={isHiddenFromLanding ? "Hidden from landing page — click to show" : "Visible on landing page — click to hide"}
+                        >
+                          {isHiddenFromLanding ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      )}
+                    </div>
                   );
                 })}
               </div>
