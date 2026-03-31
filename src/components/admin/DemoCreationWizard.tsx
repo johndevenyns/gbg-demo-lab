@@ -48,6 +48,7 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
   const [enableMirroring, setEnableMirroring] = useState(false);
   const [selectedIndustryId, setSelectedIndustryId] = useState<string | null>(null);
   const [selectedUseCases, setSelectedUseCases] = useState<string[]>([]);
+  const [hiddenFromLanding, setHiddenFromLanding] = useState<Set<string>>(new Set());
   const [useCasesInitialized, setUseCasesInitialized] = useState(false);
   
   // Portal step state
