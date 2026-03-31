@@ -484,7 +484,7 @@ function StyledFormFields({ fields, formData, onInputChange, style, fieldErrors 
               cursor: 'pointer',
               fontFamily: style.fontFamily,
               fontSize: fontSizeMap[style.fontSize],
-              color: style.labelColor,
+              color: readableLabelColor,
             }}
           >
             <input
