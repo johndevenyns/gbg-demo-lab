@@ -49,16 +49,15 @@ export function FormPreviewPanel({ demo }: FormPreviewPanelProps) {
     [useCaseLinks]
   );
 
-  // Merge use-case-level fill button overrides into storedTestData
+  // In the admin preview, always show fill buttons when test data exists
   const effectiveStoredTestData = useMemo(() => {
-    if (!activePreviewUseCase) return demo.storedTestData;
+    if (!demo.storedTestData) return undefined;
     return {
-      passData: demo.storedTestData?.passData || {},
-      failData: demo.storedTestData?.failData || {},
-      showFillPassButton: activePreviewUseCase.showFillPass ?? activePreviewUseCase.globalUseCase?.showFillPass ?? demo.storedTestData?.showFillPassButton,
-      showFillFailButton: activePreviewUseCase.showFillFail ?? activePreviewUseCase.globalUseCase?.showFillFail ?? demo.storedTestData?.showFillFailButton,
+      ...demo.storedTestData,
+      showFillPassButton: true,
+      showFillFailButton: true,
     };
-  }, [activePreviewUseCase, demo.storedTestData]);
+  }, [demo.storedTestData]);
 
   const previewSteps = useMemo<FormStep[]>(() => {
     if (!activePreviewUseCase) return demo.formSteps;
