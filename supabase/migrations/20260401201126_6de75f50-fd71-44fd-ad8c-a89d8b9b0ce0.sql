@@ -1,0 +1,3 @@
+UPDATE public.global_use_cases 
+SET default_form_steps = '[{"id": "login-step", "order": 1, "title": "Sign In", "fields": [{"id": "f-email", "name": "email", "type": "email", "label": "Email Address", "order": 1, "required": true, "placeholder": "Enter your email"}, {"id": "f-password", "name": "password", "type": "password", "label": "Password", "order": 2, "required": true, "placeholder": "Enter your password"}], "buttons": [{"id": "next", "label": "Sign In", "enabled": true}, {"id": "back", "label": "Back", "enabled": false}], "stepType": "form", "description": "", "submitAction": "login", "loginDestination": "portal", "titleAlignment": "center"}]'::jsonb
+WHERE id = 'cff9e699-0f2a-462f-b58d-914fe3343bdf';
