@@ -41,6 +41,7 @@ export function BankingPortalShell({
   bankName,
   portalConfig,
   branding,
+  isNewAccount,
   onTriggerVerification,
   navCommand,
   onNavCommandHandled,
