@@ -346,7 +346,7 @@ export default function DemoPreview() {
             pharmacyName={demo.customerName}
             portalConfig={demoIndustry?.portalConfig}
             branding={portalBranding}
-            onTriggerVerification={(action) => handlePortalVerification({ action, label: action, category: 'settings' })}
+            onTriggerVerification={(action) => handlePortalVerification({ action, label: action, category: 'settings_change' })}
             onLogout={handlePortalLogout}
           />
         ) : (
