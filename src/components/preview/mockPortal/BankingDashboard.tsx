@@ -5,13 +5,18 @@ interface BankingDashboardProps {
   userName: string;
   accentColor: string;
   portalConfig?: PortalConfig;
+  isNewAccount?: boolean;
   onQuickAction?: (actionLabel: string) => void;
 }
 
-export function BankingDashboard({ userName, accentColor, portalConfig, onQuickAction }: BankingDashboardProps) {
+export function BankingDashboard({ userName, accentColor, portalConfig, isNewAccount, onQuickAction }: BankingDashboardProps) {
   const config = { ...DEFAULT_BANKING_CONFIG, ...portalConfig };
-  const accounts = config.accounts || DEFAULT_BANKING_CONFIG.accounts!;
-  const transactions = config.transactions || DEFAULT_BANKING_CONFIG.transactions!;
+
+  // New accounts get zero balances and no transactions
+  const accounts = isNewAccount
+    ? (config.accounts || DEFAULT_BANKING_CONFIG.accounts!).map(acct => ({ ...acct, balance: 0 }))
+    : config.accounts || DEFAULT_BANKING_CONFIG.accounts!;
+  const transactions = isNewAccount ? [] : (config.transactions || DEFAULT_BANKING_CONFIG.transactions!);
   const quickActions = config.quickActions || DEFAULT_BANKING_CONFIG.quickActions!;
 
   // Determine if accent color is light → use dark text
