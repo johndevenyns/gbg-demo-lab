@@ -5,13 +5,18 @@ interface BankingDashboardProps {
   userName: string;
   accentColor: string;
   portalConfig?: PortalConfig;
+  isNewAccount?: boolean;
   onQuickAction?: (actionLabel: string) => void;
 }
 
-export function BankingDashboard({ userName, accentColor, portalConfig, onQuickAction }: BankingDashboardProps) {
+export function BankingDashboard({ userName, accentColor, portalConfig, isNewAccount, onQuickAction }: BankingDashboardProps) {
   const config = { ...DEFAULT_BANKING_CONFIG, ...portalConfig };
-  const accounts = config.accounts || DEFAULT_BANKING_CONFIG.accounts!;
-  const transactions = config.transactions || DEFAULT_BANKING_CONFIG.transactions!;
+
+  // New accounts get zero balances and no transactions
+  const accounts = isNewAccount
+    ? (config.accounts || DEFAULT_BANKING_CONFIG.accounts!).map(acct => ({ ...acct, balance: 0 }))
+    : config.accounts || DEFAULT_BANKING_CONFIG.accounts!;
+  const transactions = isNewAccount ? [] : (config.transactions || DEFAULT_BANKING_CONFIG.transactions!);
   const quickActions = config.quickActions || DEFAULT_BANKING_CONFIG.quickActions!;
 
   // Determine if accent color is light → use dark text
@@ -45,7 +50,7 @@ export function BankingDashboard({ userName, accentColor, portalConfig, onQuickA
           {greeting}, {firstName}
         </h1>
         <p style={{ fontSize: '14px', color: '#64748B', marginTop: '4px' }}>
-          Here's your financial overview
+          {isNewAccount ? 'Welcome to your new account' : "Here's your financial overview"}
         </p>
       </div>
 
@@ -131,7 +136,17 @@ export function BankingDashboard({ userName, accentColor, portalConfig, onQuickA
           </button>
         </div>
 
-        {transactions.map((tx, i) => (
+        {transactions.length === 0 ? (
+          <div style={{ padding: '40px 20px', textAlign: 'center' }}>
+            <p style={{ fontSize: '40px', marginBottom: '12px' }}>🎉</p>
+            <p style={{ fontSize: '16px', fontWeight: 600, color: '#0F172A', margin: '0 0 4px' }}>
+              Welcome to your new account!
+            </p>
+            <p style={{ fontSize: '13px', color: '#94A3B8', margin: 0 }}>
+              Your transaction history will appear here once you start using your account.
+            </p>
+          </div>
+        ) : transactions.map((tx, i) => (
           <div
             key={tx.merchant + i}
             style={{

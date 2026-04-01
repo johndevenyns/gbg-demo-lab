@@ -25,6 +25,7 @@ export interface BankingPortalShellProps {
   bankName: string;
   portalConfig?: PortalConfig;
   branding?: PortalBranding;
+  isNewAccount?: boolean;
   onTriggerVerification: (trigger: PortalVerificationTrigger, txContext?: { amount?: number; recipientName?: string; fromAccount?: string }) => void;
   /** Navigation command from parent (e.g. after verification completes) */
   navCommand?: 'dashboard' | 'repeat_transfer' | null;
@@ -40,6 +41,7 @@ export function BankingPortalShell({
   bankName,
   portalConfig,
   branding,
+  isNewAccount,
   onTriggerVerification,
   navCommand,
   onNavCommandHandled,
@@ -272,6 +274,7 @@ export function BankingPortalShell({
             userName={userName}
             accentColor={brandAccent}
             portalConfig={config}
+            isNewAccount={isNewAccount}
             onQuickAction={handleQuickAction}
           />
         )}

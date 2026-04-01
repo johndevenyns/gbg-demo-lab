@@ -65,7 +65,7 @@ export default function DemoPreview() {
   });
   const formRef = useRef<HTMLDivElement>(null);
   const [selectedUseCase, setSelectedUseCase] = useState<ResolvedUseCase | null>(null);
-  const [portalUser, setPortalUser] = useState<{ email: string; profileData?: Record<string, unknown> } | null>(null);
+  const [portalUser, setPortalUser] = useState<{ email: string; profileData?: Record<string, unknown>; isNewAccount?: boolean } | null>(null);
   const [showPortal, setShowPortal] = useState(false);
   const [portalVerificationAction, setPortalVerificationAction] = useState<string | null>(null);
   const [portalVerificationTrigger, setPortalVerificationTrigger] = useState<PortalVerificationTrigger | null>(null);
@@ -173,13 +173,13 @@ export default function DemoPreview() {
     }
   }, [resolvedUseCases]);
 
-  const handleNavigateToPortal = useCallback((loginUserData?: { email: string; profileData?: Record<string, unknown> }) => {
+  const handleNavigateToPortal = useCallback((loginUserData?: { email: string; profileData?: Record<string, unknown>; isNewAccount?: boolean }) => {
     // Navigate directly to the portal
     const activePortalType = selectedUseCase?.portalType || demoPortalType;
     if (activePortalType && activePortalType !== 'none') {
       // Use login user data if provided, existing portal user, or create guest
       if (loginUserData) {
-        setPortalUser({ email: loginUserData.email, profileData: loginUserData.profileData });
+        setPortalUser({ email: loginUserData.email, profileData: loginUserData.profileData, isNewAccount: loginUserData.isNewAccount });
       } else if (!portalUser) {
         setPortalUser({ email: 'guest@portal.demo', profileData: {} });
       }
@@ -343,6 +343,7 @@ export default function DemoPreview() {
           bankName={demo.customerName}
           portalConfig={demoIndustry?.portalConfig}
           branding={portalBranding}
+          isNewAccount={portalUser.isNewAccount}
           onTriggerVerification={handlePortalVerification}
           navCommand={portalNavCommand}
           onNavCommandHandled={() => setPortalNavCommand(null)}
