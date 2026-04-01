@@ -48,8 +48,8 @@ interface SessionResponse {
  */
 function buildPayload(req: CreateSessionRequest, referenceId: string) {
   const fd = req.formData || {};
-  const firstName = (fd.firstName || '').trim().toUpperCase();
-  const lastName = (fd.lastName || '').trim().toUpperCase();
+  const firstName = (fd.firstName || fd.first_name || '').trim().toUpperCase();
+  const lastName = (fd.lastName || fd.last_name || '').trim().toUpperCase();
 
   // Combine address components into a single string
   const addressParts: string[] = [];
@@ -99,7 +99,9 @@ function buildPayload(req: CreateSessionRequest, referenceId: string) {
 
     const customerData: Record<string, string> = {};
     const fieldMap: Record<string, string> = {
-      firstName: 'firstName', lastName: 'lastName', middleName: 'middleName',
+      firstName: 'firstName', first_name: 'firstName',
+      lastName: 'lastName', last_name: 'lastName',
+      middleName: 'middleName',
       email: 'email', phone: 'phone', dateOfBirth: 'dateOfBirth',
       streetAddress: 'address', city: 'city', state: 'state',
       zipCode: 'postalCode',
