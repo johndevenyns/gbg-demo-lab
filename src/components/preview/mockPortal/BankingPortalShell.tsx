@@ -25,6 +25,7 @@ export interface BankingPortalShellProps {
   bankName: string;
   portalConfig?: PortalConfig;
   branding?: PortalBranding;
+  isNewAccount?: boolean;
   onTriggerVerification: (trigger: PortalVerificationTrigger, txContext?: { amount?: number; recipientName?: string; fromAccount?: string }) => void;
   /** Navigation command from parent (e.g. after verification completes) */
   navCommand?: 'dashboard' | 'repeat_transfer' | null;
