@@ -13,6 +13,7 @@ import { useHeaderCtaLinks } from "@/hooks/useHeaderCtaLinks";
 import { useIndustries } from "@/hooks/useIndustries";
 import { UseCaseLandingPage } from "@/components/preview/UseCaseLandingPage";
 import { BankingPortalShell } from "@/components/preview/mockPortal/BankingPortalShell";
+import { PharmacyPortalShell } from "@/components/preview/mockPortal/PharmacyPortalShell";
 import { ResolvedUseCase } from "@/types/useCase";
 import { FormStep } from "@/types/demo";
 import { PortalBranding, PortalVerificationTrigger } from "@/types/portalConfig";
