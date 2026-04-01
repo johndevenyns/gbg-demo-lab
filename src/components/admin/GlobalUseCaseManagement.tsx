@@ -39,6 +39,27 @@ interface FormTemplateOption {
   show_fill_fail: boolean;
 }
 
+const normalizeTemplateValue = (value: unknown): unknown => {
+  if (Array.isArray(value)) {
+    return value.map(normalizeTemplateValue);
+  }
+
+  if (value && typeof value === 'object') {
+    return Object.keys(value as Record<string, unknown>)
+      .sort()
+      .reduce<Record<string, unknown>>((acc, key) => {
+        acc[key] = normalizeTemplateValue((value as Record<string, unknown>)[key]);
+        return acc;
+      }, {});
+  }
+
+  return value;
+};
+
+const areTemplateValuesEqual = (left: unknown, right: unknown) => (
+  JSON.stringify(normalizeTemplateValue(left)) === JSON.stringify(normalizeTemplateValue(right))
+);
+
 export function GlobalUseCaseManagement() {
   const { data: useCases = [], isLoading } = useGlobalUseCases();
   const createMutation = useCreateGlobalUseCase();
@@ -125,6 +146,14 @@ export function GlobalUseCaseManagement() {
     return Array.isArray(uc.defaultFormSteps) ? uc.defaultFormSteps.length : 0;
   };
 
+  const getAppliedTemplate = (uc: GlobalUseCase) => {
+    return templates.find((template) => (
+      areTemplateValuesEqual(template.form_steps, uc.defaultFormSteps)
+      && template.show_fill_pass === uc.showFillPass
+      && template.show_fill_fail === uc.showFillFail
+    ));
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -158,6 +187,7 @@ export function GlobalUseCaseManagement() {
             const IconComp = ICON_MAP[uc.iconName] ?? Package;
             const isExpanded = expandedId === uc.id;
             const stepCount = getFormStepCount(uc);
+            const appliedTemplate = getAppliedTemplate(uc);
 
             return (
               <Collapsible key={`${uc.id}-${uc.updatedAt}`} open={isExpanded} onOpenChange={(open) => setExpandedId(open ? uc.id : null)}>
@@ -250,12 +280,17 @@ export function GlobalUseCaseManagement() {
                           Default Form Template
                         </h4>
                         <div className="flex items-center gap-3">
-                          <Select onValueChange={(val) => handleApplyTemplate(uc.id, val)}>
+                          <Select
+                            key={`${uc.id}-${appliedTemplate?.id ?? 'custom'}-${uc.updatedAt}`}
+                            onValueChange={(val) => handleApplyTemplate(uc.id, val)}
+                          >
                             <SelectTrigger className="flex-1">
                               <SelectValue placeholder={
-                                stepCount > 0
-                                  ? `Current: ${stepCount} step${stepCount !== 1 ? 's' : ''} configured`
-                                  : 'Select a template...'
+                                appliedTemplate
+                                  ? `Current: ${appliedTemplate.name}`
+                                  : stepCount > 0
+                                    ? `Custom: ${stepCount} step${stepCount !== 1 ? 's' : ''} configured`
+                                    : 'Select a template...'
                               } />
                             </SelectTrigger>
                             <SelectContent>
