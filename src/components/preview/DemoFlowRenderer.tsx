@@ -1058,6 +1058,7 @@ export function DemoFlowRenderer({
 
       // Execute login_portal — navigate to portal and skip result page
       if (actions.some(a => a.type === 'login_portal')) {
+        const isNewAccount = actions.some(a => a.type === 'create_account');
         const email = (formData.email || '').trim().toLowerCase();
         const profileData: Record<string, unknown> = {};
         for (const [key, val] of Object.entries(formData)) {
@@ -1065,7 +1066,7 @@ export function DemoFlowRenderer({
             profileData[key] = val;
           }
         }
-        onNavigateToPortal?.({ email: email || 'verified@demo.portal', profileData });
+        onNavigateToPortal?.({ email: email || 'verified@demo.portal', profileData, isNewAccount });
         return; // Don't show result page
       }
 
