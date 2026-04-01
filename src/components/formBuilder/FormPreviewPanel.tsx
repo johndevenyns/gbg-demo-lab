@@ -49,6 +49,16 @@ export function FormPreviewPanel({ demo }: FormPreviewPanelProps) {
     [useCaseLinks]
   );
 
+  // In the admin preview, always show fill buttons when test data exists
+  const effectiveStoredTestData = useMemo(() => {
+    if (!demo.storedTestData) return undefined;
+    return {
+      ...demo.storedTestData,
+      showFillPassButton: true,
+      showFillFailButton: true,
+    };
+  }, [demo.storedTestData]);
+
   const previewSteps = useMemo<FormStep[]>(() => {
     if (!activePreviewUseCase) return demo.formSteps;
 
@@ -139,7 +149,7 @@ export function FormPreviewPanel({ demo }: FormPreviewPanelProps) {
                     returnUrl={demo.returnUrl}
                     includeQr={demo.includeQr}
                     referenceIdPrefix={demo.referenceIdPrefix}
-                    storedTestData={demo.storedTestData}
+                    storedTestData={effectiveStoredTestData}
                     showTestButtons={true}
                     logoUrl={demo.logoUrl}
                     headerBgColor={demo.headerBgColor}
