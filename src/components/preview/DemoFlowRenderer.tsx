@@ -992,7 +992,7 @@ export function DemoFlowRenderer({
       }
     }
 
-    const displayName = [formData.first_name, formData.last_name].filter(Boolean).join(' ') || null;
+    const displayName = [formData.firstName || formData.first_name, formData.lastName || formData.last_name].filter(Boolean).join(' ') || null;
     const verificationStatus = success ? 'verified' : 'failed';
 
     try {
