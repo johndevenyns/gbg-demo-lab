@@ -99,7 +99,9 @@ function buildPayload(req: CreateSessionRequest, referenceId: string) {
 
     const customerData: Record<string, string> = {};
     const fieldMap: Record<string, string> = {
-      firstName: 'firstName', lastName: 'lastName', middleName: 'middleName',
+      firstName: 'firstName', first_name: 'firstName',
+      lastName: 'lastName', last_name: 'lastName',
+      middleName: 'middleName',
       email: 'email', phone: 'phone', dateOfBirth: 'dateOfBirth',
       streetAddress: 'address', city: 'city', state: 'state',
       zipCode: 'postalCode',
