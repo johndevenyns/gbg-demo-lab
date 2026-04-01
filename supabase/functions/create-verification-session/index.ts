@@ -48,8 +48,8 @@ interface SessionResponse {
  */
 function buildPayload(req: CreateSessionRequest, referenceId: string) {
   const fd = req.formData || {};
-  const firstName = (fd.firstName || '').trim().toUpperCase();
-  const lastName = (fd.lastName || '').trim().toUpperCase();
+  const firstName = (fd.firstName || fd.first_name || '').trim().toUpperCase();
+  const lastName = (fd.lastName || fd.last_name || '').trim().toUpperCase();
 
   // Combine address components into a single string
   const addressParts: string[] = [];
