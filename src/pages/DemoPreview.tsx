@@ -343,6 +343,7 @@ export default function DemoPreview() {
           bankName={demo.customerName}
           portalConfig={demoIndustry?.portalConfig}
           branding={portalBranding}
+          isNewAccount={portalUser.isNewAccount}
           onTriggerVerification={handlePortalVerification}
           navCommand={portalNavCommand}
           onNavCommandHandled={() => setPortalNavCommand(null)}
