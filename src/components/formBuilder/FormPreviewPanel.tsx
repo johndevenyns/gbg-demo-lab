@@ -150,7 +150,7 @@ export function FormPreviewPanel({ demo }: FormPreviewPanelProps) {
                     returnUrl={demo.returnUrl}
                     includeQr={demo.includeQr}
                     referenceIdPrefix={demo.referenceIdPrefix}
-                    storedTestData={demo.storedTestData}
+                    storedTestData={effectiveStoredTestData}
                     showTestButtons={true}
                     logoUrl={demo.logoUrl}
                     headerBgColor={demo.headerBgColor}
