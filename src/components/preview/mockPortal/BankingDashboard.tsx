@@ -50,7 +50,7 @@ export function BankingDashboard({ userName, accentColor, portalConfig, isNewAcc
           {greeting}, {firstName}
         </h1>
         <p style={{ fontSize: '14px', color: '#64748B', marginTop: '4px' }}>
-          Here's your financial overview
+          {isNewAccount ? 'Welcome to your new account' : "Here's your financial overview"}
         </p>
       </div>
 
