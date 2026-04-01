@@ -65,7 +65,7 @@ export default function DemoPreview() {
   });
   const formRef = useRef<HTMLDivElement>(null);
   const [selectedUseCase, setSelectedUseCase] = useState<ResolvedUseCase | null>(null);
-  const [portalUser, setPortalUser] = useState<{ email: string; profileData?: Record<string, unknown> } | null>(null);
+  const [portalUser, setPortalUser] = useState<{ email: string; profileData?: Record<string, unknown>; isNewAccount?: boolean } | null>(null);
   const [showPortal, setShowPortal] = useState(false);
   const [portalVerificationAction, setPortalVerificationAction] = useState<string | null>(null);
   const [portalVerificationTrigger, setPortalVerificationTrigger] = useState<PortalVerificationTrigger | null>(null);
