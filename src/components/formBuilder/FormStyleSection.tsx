@@ -18,6 +18,7 @@ import {
 import { DemoEnvironment } from '@/types/demo';
 import { ScrapedBranding, scrapingApi, FormElementStyles } from '@/lib/api/scraping';
 import { useToast } from '@/hooks/use-toast';
+import { getReadableTextColor } from '@/lib/formStyleUtils';
 
 interface FormStyleSectionProps {
   demo: DemoEnvironment;
@@ -34,8 +35,8 @@ function formElementStylesToConfig(styles: FormElementStyles): Partial<FormStyle
   };
 
   // Map input colors
-  if (styles.inputBgColor) config.inputBgColor = styles.inputBgColor;
-  if (styles.inputTextColor) config.inputTextColor = styles.inputTextColor;
+  config.inputBgColor = styles.inputBgColor || DEFAULT_FORM_STYLE.inputBgColor;
+  config.inputTextColor = getReadableTextColor(styles.inputTextColor || DEFAULT_FORM_STYLE.inputTextColor, config.inputBgColor);
   if (styles.inputBorderColor) config.inputBorderColor = styles.inputBorderColor;
   if (styles.inputFocusBorderColor) config.inputFocusBorderColor = styles.inputFocusBorderColor;
   if (styles.inputPlaceholderColor) config.inputPlaceholderColor = styles.inputPlaceholderColor;
@@ -341,7 +342,7 @@ export function FormStyleSection({ demo, formStyle, onUpdateStyle, scrapedBrandi
                           className="h-10 rounded flex items-center px-3 text-sm"
                           style={{
                             backgroundColor: formStyle.inputBgColor,
-                            color: formStyle.inputTextColor,
+                            color: getReadableTextColor(formStyle.inputTextColor, formStyle.inputBgColor),
                             border: `${formStyle.borderWidth}px solid ${formStyle.inputBorderColor}`,
                             borderRadius: formStyle.borderRadius === 'none' ? '0px' : formStyle.borderRadius === 'sm' ? '4px' : formStyle.borderRadius === 'lg' ? '12px' : formStyle.borderRadius === 'full' ? '9999px' : '8px',
                             fontFamily: formStyle.fontFamily,
@@ -358,7 +359,7 @@ export function FormStyleSection({ demo, formStyle, onUpdateStyle, scrapedBrandi
                           className="h-10 rounded flex items-center px-3 text-sm"
                           style={{
                             backgroundColor: formStyle.inputBgColor,
-                            color: formStyle.inputTextColor,
+                            color: getReadableTextColor(formStyle.inputTextColor, formStyle.inputBgColor),
                             border: `2px solid ${formStyle.inputFocusBorderColor}`,
                             borderRadius: formStyle.borderRadius === 'none' ? '0px' : formStyle.borderRadius === 'sm' ? '4px' : formStyle.borderRadius === 'lg' ? '12px' : formStyle.borderRadius === 'full' ? '9999px' : '8px',
                             boxShadow: `0 0 0 3px ${formStyle.inputFocusBorderColor}20`,
@@ -442,7 +443,7 @@ export function FormStyleSection({ demo, formStyle, onUpdateStyle, scrapedBrandi
                           className="h-10 rounded flex items-center px-3 text-sm"
                           style={{
                             backgroundColor: extractedStyles.inputBgColor,
-                            color: extractedStyles.inputTextColor,
+                            color: getReadableTextColor(extractedStyles.inputTextColor || DEFAULT_FORM_STYLE.inputTextColor, extractedStyles.inputBgColor || DEFAULT_FORM_STYLE.inputBgColor),
                             border: `${extractedStyles.inputBorderWidth} solid ${extractedStyles.inputBorderColor}`,
                             borderRadius: extractedStyles.inputBorderRadius,
                             fontFamily: extractedStyles.inputFontFamily,
@@ -459,7 +460,7 @@ export function FormStyleSection({ demo, formStyle, onUpdateStyle, scrapedBrandi
                           className="h-10 rounded flex items-center px-3 text-sm"
                           style={{
                             backgroundColor: extractedStyles.inputBgColor,
-                            color: extractedStyles.inputTextColor,
+                            color: getReadableTextColor(extractedStyles.inputTextColor || DEFAULT_FORM_STYLE.inputTextColor, extractedStyles.inputBgColor || DEFAULT_FORM_STYLE.inputBgColor),
                             border: `2px solid ${extractedStyles.inputFocusBorderColor}`,
                             borderRadius: extractedStyles.inputBorderRadius,
                             boxShadow: extractedStyles.inputFocusBoxShadow,
