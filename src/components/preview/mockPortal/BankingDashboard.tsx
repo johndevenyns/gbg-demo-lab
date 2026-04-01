@@ -136,7 +136,17 @@ export function BankingDashboard({ userName, accentColor, portalConfig, isNewAcc
           </button>
         </div>
 
-        {transactions.map((tx, i) => (
+        {transactions.length === 0 ? (
+          <div style={{ padding: '40px 20px', textAlign: 'center' }}>
+            <p style={{ fontSize: '40px', marginBottom: '12px' }}>🎉</p>
+            <p style={{ fontSize: '16px', fontWeight: 600, color: '#0F172A', margin: '0 0 4px' }}>
+              Welcome to your new account!
+            </p>
+            <p style={{ fontSize: '13px', color: '#94A3B8', margin: 0 }}>
+              Your transaction history will appear here once you start using your account.
+            </p>
+          </div>
+        ) : transactions.map((tx, i) => (
           <div
             key={tx.merchant + i}
             style={{
