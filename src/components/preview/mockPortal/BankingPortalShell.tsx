@@ -274,6 +274,7 @@ export function BankingPortalShell({
             userName={userName}
             accentColor={brandAccent}
             portalConfig={config}
+            isNewAccount={isNewAccount}
             onQuickAction={handleQuickAction}
           />
         )}
