@@ -464,15 +464,31 @@ export function DemoUserManagement({ demoId, demoName, demoSlug }: DemoUserManag
                               onChange={(e) => setNewProfileData(prev => ({ ...prev, [field.key]: e.target.value }))}
                             />
                             {field.generate && (
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                className="shrink-0 text-xs"
-                                onClick={() => setNewProfileData(prev => ({ ...prev, [field.key]: generateCreditCardNumber() }))}
-                              >
-                                Generate
-                              </Button>
+                              <div className="flex gap-1 shrink-0">
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  className="text-xs"
+                                  onClick={() => setNewProfileData(prev => ({ ...prev, [field.key]: generateCreditCardNumber() }))}
+                                >
+                                  Generate
+                                </Button>
+                                {newProfileData[field.key] && (
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    className="text-xs px-2"
+                                    onClick={() => {
+                                      navigator.clipboard.writeText(newProfileData[field.key].replace(/\s/g, ''));
+                                      toast({ title: 'Copied', description: 'Card number copied without spaces' });
+                                    }}
+                                  >
+                                    <Copy className="w-3.5 h-3.5" />
+                                  </Button>
+                                )}
+                              </div>
                             )}
                           </div>
                         </div>
@@ -699,15 +715,31 @@ export function DemoUserManagement({ demoId, demoName, demoSlug }: DemoUserManag
                     onChange={(e) => setEditProfileData(prev => ({ ...prev, [field.key]: e.target.value }))}
                   />
                   {field.generate && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="shrink-0 text-xs"
-                      onClick={() => setEditProfileData(prev => ({ ...prev, [field.key]: generateCreditCardNumber() }))}
-                    >
-                      Generate
-                    </Button>
+                    <div className="flex gap-1 shrink-0">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="text-xs"
+                        onClick={() => setEditProfileData(prev => ({ ...prev, [field.key]: generateCreditCardNumber() }))}
+                      >
+                        Generate
+                      </Button>
+                      {editProfileData[field.key] && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="text-xs px-2"
+                          onClick={() => {
+                            navigator.clipboard.writeText(editProfileData[field.key].replace(/\s/g, ''));
+                            toast({ title: 'Copied', description: 'Card number copied without spaces' });
+                          }}
+                        >
+                          <Copy className="w-3.5 h-3.5" />
+                        </Button>
+                      )}
+                    </div>
                   )}
                 </div>
               </div>
@@ -808,15 +840,31 @@ export function DemoUserManagement({ demoId, demoName, demoSlug }: DemoUserManag
                             onChange={(e) => setInviteProfileData(prev => ({ ...prev, [field.key]: e.target.value }))}
                           />
                           {field.generate && (
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              className="shrink-0 text-xs"
-                              onClick={() => setInviteProfileData(prev => ({ ...prev, [field.key]: generateCreditCardNumber() }))}
-                            >
-                              Generate
-                            </Button>
+                            <div className="flex gap-1 shrink-0">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="text-xs"
+                                onClick={() => setInviteProfileData(prev => ({ ...prev, [field.key]: generateCreditCardNumber() }))}
+                              >
+                                Generate
+                              </Button>
+                              {inviteProfileData[field.key] && (
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  className="text-xs px-2"
+                                  onClick={() => {
+                                    navigator.clipboard.writeText(inviteProfileData[field.key].replace(/\s/g, ''));
+                                    toast({ title: 'Copied', description: 'Card number copied without spaces' });
+                                  }}
+                                >
+                                  <Copy className="w-3.5 h-3.5" />
+                                </Button>
+                              )}
+                            </div>
                           )}
                         </div>
                       </div>
