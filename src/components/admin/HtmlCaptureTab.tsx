@@ -10,7 +10,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
  import { useToast } from "@/hooks/use-toast";
  import { DemoEnvironment } from "@/types/demo";
  import { DEFAULT_FORM_STYLE, FormStyleConfig } from "@/types/formStyle";
- import { generateFormHtml, generatePreviewDocument, formElementStylesToConfig } from "@/lib/formStyleUtils";
+ import { generateFormHtml, generatePreviewDocument, formElementStylesToConfig, getReadableTextColor } from "@/lib/formStyleUtils";
  
  interface HtmlCaptureTabProps {
    demo: DemoEnvironment;
@@ -375,7 +375,7 @@ export function HtmlCaptureTab({ demo, url, onUrlChange, onApply, isConfigured }
                        <div className="h-8 rounded flex items-center px-2 text-xs"
                          style={{
                            backgroundColor: scrapedData.formStyles.inputBgColor,
-                           color: scrapedData.formStyles.inputTextColor,
+                            color: getReadableTextColor(scrapedData.formStyles.inputTextColor, scrapedData.formStyles.inputBgColor),
                            border: `${scrapedData.formStyles.inputBorderWidth} solid ${scrapedData.formStyles.inputBorderColor}`,
                            borderRadius: scrapedData.formStyles.inputBorderRadius,
                          }}>
@@ -387,6 +387,7 @@ export function HtmlCaptureTab({ demo, url, onUrlChange, onApply, isConfigured }
                        <div className="h-8 rounded flex items-center px-2 text-xs"
                          style={{
                            backgroundColor: scrapedData.formStyles.inputBgColor,
+                            color: getReadableTextColor(scrapedData.formStyles.inputTextColor, scrapedData.formStyles.inputBgColor),
                            border: `2px solid ${scrapedData.formStyles.inputFocusBorderColor}`,
                            borderRadius: scrapedData.formStyles.inputBorderRadius,
                          }}>

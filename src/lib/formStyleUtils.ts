@@ -1,5 +1,145 @@
- import { FormStyleConfig, DEFAULT_FORM_STYLE } from '@/types/formStyle';
- import type { FormElementStyles } from '@/lib/api/scraping';
+import { FormStyleConfig, DEFAULT_FORM_STYLE } from '@/types/formStyle';
+import type { FormElementStyles } from '@/lib/api/scraping';
+
+type ParsedColor = { r: number; g: number; b: number; a: number };
+
+const NAMED_COLOR_MAP: Record<string, string> = {
+  black: '#000000',
+  white: '#ffffff',
+  gray: '#808080',
+  grey: '#808080',
+  transparent: 'transparent',
+};
+
+const clampChannel = (value: number) => Math.max(0, Math.min(255, value));
+
+const parseRgbChannel = (value: string): number => {
+  const trimmed = value.trim();
+  if (trimmed.endsWith('%')) {
+    return clampChannel(Math.round((parseFloat(trimmed) / 100) * 255));
+  }
+  return clampChannel(parseFloat(trimmed));
+};
+
+const hslToRgb = (h: number, s: number, l: number): ParsedColor => {
+  const hue = ((h % 360) + 360) % 360;
+  const saturation = Math.max(0, Math.min(1, s / 100));
+  const lightness = Math.max(0, Math.min(1, l / 100));
+
+  if (saturation === 0) {
+    const channel = Math.round(lightness * 255);
+    return { r: channel, g: channel, b: channel, a: 1 };
+  }
+
+  const q = lightness < 0.5
+    ? lightness * (1 + saturation)
+    : lightness + saturation - lightness * saturation;
+  const p = 2 * lightness - q;
+  const toChannel = (t: number) => {
+    let temp = t;
+    if (temp < 0) temp += 1;
+    if (temp > 1) temp -= 1;
+    if (temp < 1 / 6) return p + (q - p) * 6 * temp;
+    if (temp < 1 / 2) return q;
+    if (temp < 2 / 3) return p + (q - p) * (2 / 3 - temp) * 6;
+    return p;
+  };
+
+  return {
+    r: Math.round(toChannel(hue / 360 + 1 / 3) * 255),
+    g: Math.round(toChannel(hue / 360) * 255),
+    b: Math.round(toChannel(hue / 360 - 1 / 3) * 255),
+    a: 1,
+  };
+};
+
+export function parseCssColor(color?: string | null): ParsedColor | null {
+  if (!color) return null;
+
+  const normalized = color.trim().toLowerCase();
+  if (!normalized || ['inherit', 'initial', 'unset', 'currentcolor'].includes(normalized)) {
+    return null;
+  }
+
+  if (normalized in NAMED_COLOR_MAP) {
+    if (normalized === 'transparent') {
+      return { r: 255, g: 255, b: 255, a: 0 };
+    }
+    return parseCssColor(NAMED_COLOR_MAP[normalized]);
+  }
+
+  if (normalized.startsWith('#')) {
+    let hex = normalized.slice(1);
+    if (hex.length === 3 || hex.length === 4) {
+      hex = hex.split('').map((char) => `${char}${char}`).join('');
+    }
+    if (hex.length === 6) {
+      hex += 'ff';
+    }
+    if (hex.length !== 8) return null;
+
+    const r = parseInt(hex.slice(0, 2), 16);
+    const g = parseInt(hex.slice(2, 4), 16);
+    const b = parseInt(hex.slice(4, 6), 16);
+    const a = parseInt(hex.slice(6, 8), 16) / 255;
+
+    if ([r, g, b, a].some((value) => Number.isNaN(value))) return null;
+    return { r, g, b, a };
+  }
+
+  const rgbMatch = normalized.match(/^rgba?\((.+)\)$/);
+  if (rgbMatch) {
+    const parts = rgbMatch[1].replace(/\//g, ' ').split(/[\s,]+/).filter(Boolean);
+    if (parts.length < 3) return null;
+    const alpha = parts[3] ? parseFloat(parts[3]) : 1;
+
+    return {
+      r: parseRgbChannel(parts[0]),
+      g: parseRgbChannel(parts[1]),
+      b: parseRgbChannel(parts[2]),
+      a: Number.isNaN(alpha) ? 1 : Math.max(0, Math.min(1, alpha)),
+    };
+  }
+
+  const hslMatch = normalized.match(/^hsla?\((.+)\)$/);
+  if (hslMatch) {
+    const parts = hslMatch[1].replace(/\//g, ' ').split(/[\s,]+/).filter(Boolean);
+    if (parts.length < 3) return null;
+    const alpha = parts[3] ? parseFloat(parts[3]) : 1;
+    const rgb = hslToRgb(parseFloat(parts[0]), parseFloat(parts[1]), parseFloat(parts[2]));
+    return {
+      ...rgb,
+      a: Number.isNaN(alpha) ? 1 : Math.max(0, Math.min(1, alpha)),
+    };
+  }
+
+  return null;
+}
+
+const getColorLuminance = (color?: string | null): number | null => {
+  const parsed = parseCssColor(color);
+  if (!parsed) return null;
+  return (0.299 * parsed.r + 0.587 * parsed.g + 0.114 * parsed.b) / 255;
+};
+
+export function getReadableTextColor(textColor?: string | null, bgColor?: string | null): string {
+  const fallbackDark = '#1a1a2e';
+  const fallbackLight = '#f1f5f9';
+  const backgroundLuminance = getColorLuminance(bgColor);
+
+  if (backgroundLuminance == null) {
+    return textColor?.trim() || fallbackDark;
+  }
+
+  const fallback = backgroundLuminance > 0.5 ? fallbackDark : fallbackLight;
+  const textLuminance = getColorLuminance(textColor);
+
+  if (textLuminance == null) {
+    return fallback;
+  }
+
+  return Math.abs(textLuminance - backgroundLuminance) < 0.3 ? fallback : textColor!.trim();
+}
  
  /**
   * Shared utility functions for form styling.
@@ -16,8 +156,8 @@
      source: 'mirrored',
    };
 
-   if (styles.inputBgColor) config.inputBgColor = styles.inputBgColor;
-   if (styles.inputTextColor) config.inputTextColor = styles.inputTextColor;
+   config.inputBgColor = styles.inputBgColor || config.inputBgColor;
+   config.inputTextColor = getReadableTextColor(styles.inputTextColor || config.inputTextColor, config.inputBgColor);
    if (styles.inputBorderColor) config.inputBorderColor = styles.inputBorderColor;
    if (styles.inputFocusBorderColor) config.inputFocusBorderColor = styles.inputFocusBorderColor;
    if (styles.inputPlaceholderColor) config.inputPlaceholderColor = styles.inputPlaceholderColor;
@@ -227,6 +367,7 @@ export function getButtonShadow(shadow: string = 'none'): string {
    const padding = getPadding(formStyle.inputPadding);
    const fontSize = getFontSize(formStyle.fontSize);
    const labelWeight = getLabelWeight(formStyle.labelWeight);
+  const readableInputTextColor = getReadableTextColor(formStyle.inputTextColor, formStyle.inputBgColor);
   
   // Form container styling
   const formBgColor = formStyle.formBgColor || '#ffffff';
@@ -245,7 +386,7 @@ export function getButtonShadow(shadow: string = 'none'): string {
     container: `max-width: 480px; margin: 0 auto; background: ${formBgColor}; border-radius: ${formBorderRadius}; box-shadow: ${formShadow}; padding: 32px; border: ${formBorderWidth}px solid ${formBorderColor};`,
     title: `margin: 0 0 24px 0; font-size: ${titleFontSize}; font-weight: ${titleFontWeight}; color: ${titleColor}; font-family: ${formStyle.fontFamily}; text-align: ${titleAlignment};`,
      label: `display: block; margin-bottom: 6px; font-weight: ${labelWeight}; color: ${formStyle.labelColor}; font-family: ${formStyle.fontFamily}; font-size: ${fontSize};`,
-     input: `width: 100%; padding: ${padding}; border: ${formStyle.borderWidth}px solid ${formStyle.inputBorderColor}; border-radius: ${borderRadius}; background: ${formStyle.inputBgColor}; color: ${formStyle.inputTextColor}; font-family: ${formStyle.fontFamily}; font-size: ${fontSize}; box-sizing: border-box; outline: none;`,
+      input: `width: 100%; padding: ${padding}; border: ${formStyle.borderWidth}px solid ${formStyle.inputBorderColor}; border-radius: ${borderRadius}; background: ${formStyle.inputBgColor}; color: ${readableInputTextColor}; font-family: ${formStyle.fontFamily}; font-size: ${fontSize}; box-sizing: border-box; outline: none;`,
      button: `width: 100%; padding: 12px 24px; background: ${buttonColor}; color: white; border: none; border-radius: ${borderRadius}; font-size: ${fontSize}; font-weight: 600; cursor: pointer; font-family: ${formStyle.fontFamily};`,
      errorText: `color: ${formStyle.errorColor}; margin-left: 4px;`,
    };

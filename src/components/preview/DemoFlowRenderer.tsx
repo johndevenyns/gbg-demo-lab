@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { FormStep, PageElement, StepApiResponse, MdlProvider, VerificationType, StoredTestData, FormField, VerificationFlowConfig as VerificationFlowConfigType, DecisionChoice } from '@/types/demo';
 import { FormStyleConfig, DEFAULT_FORM_STYLE } from '@/types/formStyle';
-import { getButtonPadding, getButtonBorderRadius, getButtonFontWeight, getButtonShadow } from '@/lib/formStyleUtils';
+import { getButtonPadding, getButtonBorderRadius, getButtonFontWeight, getButtonShadow, getReadableTextColor } from '@/lib/formStyleUtils';
 import { UnifiedVerificationConfig, MdlProvider as MdlProviderVerification, transformMdlProviderRow } from '@/types/verification';
 import { useMdlProviders } from '@/hooks/useVerificationAdmin';
 import { useResolvedResourceIds } from '@/hooks/useAdminResourceIds';
@@ -36,29 +36,7 @@ const getContrastTextColor = (hexColor: string): string => {
   return luminance > 0.5 ? '#1a1a1a' : '#ffffff';
 };
 
-// Helper to calculate luminance of a hex color (0 = black, 1 = white)
-const getLuminance = (hexColor: string): number => {
-  if (!hexColor || hexColor === 'transparent') return 1;
-  const hex = hexColor.replace('#', '');
-  if (hex.length < 6) return 1;
-  const r = parseInt(hex.substring(0, 2), 16);
-  const g = parseInt(hex.substring(2, 4), 16);
-  const b = parseInt(hex.substring(4, 6), 16);
-  return (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-};
-
-// Ensures text color has enough contrast against background.
-// If both are light (white-on-white) or both are dark, returns a safe fallback.
-const ensureReadableColor = (textColor: string, bgColor: string): string => {
-  const textLum = getLuminance(textColor);
-  const bgLum = getLuminance(bgColor);
-  const contrast = Math.abs(textLum - bgLum);
-  // If contrast ratio is too low, pick a readable color based on background
-  if (contrast < 0.3) {
-    return bgLum > 0.5 ? '#1a1a2e' : '#f1f5f9';
-  }
-  return textColor;
-};
+const ensureReadableColor = (textColor: string, bgColor: string): string => getReadableTextColor(textColor, bgColor);
 const SUPABASE_FUNCTIONS_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
 
 export interface SubmissionLogData {
