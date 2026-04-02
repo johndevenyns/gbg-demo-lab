@@ -81,6 +81,7 @@ function buildPayload(req: CreateSessionRequest, referenceId: string) {
   if (req.verificationType === 'dataBio') {
     // DataBio: flat fields + options object
     base.customerName = `${firstName} ${lastName}`;
+    if (fd.email) base.email = fd.email.trim();
     if (fd.ssn4) base.ssn4 = fd.ssn4;
     if (fd.phone) base.phone = fd.phone.replace(/\D/g, '');
     if (fd.dateOfBirth) base.birthday = fd.dateOfBirth;
