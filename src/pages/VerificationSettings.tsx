@@ -102,7 +102,10 @@ export default function VerificationSettings() {
                 Registration Codes
               </TabsTrigger>
             )}
-            {isGlobalAdmin && (
+            <TabsTrigger value="profiles" className="flex items-center gap-2">
+              <UserCheck className="w-4 h-4" />
+              Test Profiles
+            </TabsTrigger>
             <TabsTrigger value="users" className="flex items-center gap-2">
               <Users className="w-4 h-4" />
               Users
@@ -141,16 +144,12 @@ export default function VerificationSettings() {
             <GlobalRegistrationCodeManagement />
           </TabsContent>
 
-          <TabsContent value="portal-users" className="space-y-6">
-            <PortalUserManagement />
-          </TabsContent>
-
           <TabsContent value="profiles" className="space-y-6">
             <TestProfileManagement />
           </TabsContent>
 
           <TabsContent value="users" className="space-y-6">
-            <UserManagement />
+            <UnifiedUserManagement isGlobalAdmin={isGlobalAdmin} />
           </TabsContent>
         </Tabs>
       </main>
