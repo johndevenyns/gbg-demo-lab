@@ -37,6 +37,41 @@ export function UserManagement() {
   const [setPasswordValue, setSetPasswordValue] = useState('');
   const [setPasswordError, setSetPasswordError] = useState<string | null>(null);
   const [isSettingPassword, setIsSettingPassword] = useState(false);
+  const [introLetterOpen, setIntroLetterOpen] = useState(false);
+  const [introLetterText, setIntroLetterText] = useState('');
+  const [introLetterCopied, setIntroLetterCopied] = useState(false);
+
+  const publishedUrl = 'https://gbg-demo-lab.lovable.app';
+
+  const generateIntroLetter = (email: string, password: string, role: string) => {
+    return `Welcome to GBG Demo Lab!
+
+Your admin account has been created. Here are your login details:
+
+Username: ${email}
+Password: ${password}
+Role: ${role === 'global_admin' ? 'Global Admin' : 'Admin'}
+
+Login URL: ${publishedUrl}/auth
+
+Please log in and change your password at your earliest convenience.
+
+If you have any questions or need assistance, don't hesitate to reach out.
+
+Best regards,
+GBG Demo Lab Team`;
+  };
+
+  const handleCopyIntroLetter = async () => {
+    try {
+      await navigator.clipboard.writeText(introLetterText);
+      setIntroLetterCopied(true);
+      setTimeout(() => setIntroLetterCopied(false), 2000);
+      toast({ title: 'Copied!', description: 'Intro letter copied to clipboard.' });
+    } catch {
+      toast({ title: 'Error', description: 'Failed to copy to clipboard.', variant: 'destructive' });
+    }
+  };
 
   // Fetch admin users with emails via edge function
   const { data: adminUsers = [], isLoading } = useQuery({
