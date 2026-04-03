@@ -442,7 +442,7 @@ GBG Demo Lab Team`;
                         variant="ghost"
                         size="icon"
                         className="text-muted-foreground hover:text-primary hover:bg-primary/10"
-                        onClick={() => openIntroLetterForExisting(user.email || 'Unknown', user.role)}
+                        onClick={() => openIntroLetterForExisting(user.user_id, user.email || 'Unknown', user.role)}
                         title="Generate welcome letter"
                       >
                         <Mail className="w-4 h-4" />
