@@ -53,26 +53,38 @@ export function UserManagement({ isGlobalAdmin = true }: UserManagementProps) {
   const [existingUserPassword, setExistingUserPassword] = useState('');
   const [existingUserId, setExistingUserId] = useState<string | null>(null);
 
+  // Fetch the admin welcome letter template
+  const { data: welcomeTemplate } = useQuery({
+    queryKey: ['admin-welcome-template'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('invitation_templates')
+        .select('body_html')
+        .eq('category', 'admin')
+        .eq('name', 'Admin Welcome Letter')
+        .maybeSingle();
+      if (error) throw error;
+      return data?.body_html || null;
+    },
+  });
+
   const generateIntroLetter = (email: string, password: string | null, role: string) => {
-    const passwordLine = password
-      ? `Password: ${password}`
-      : `Password: (Please set a password for this user or ask them to use "Forgot Password")`;
-    return `Welcome to GBG Demo Lab!
+    const roleName = role === 'global_admin' ? 'Global Admin' : 'Admin';
+    const passwordValue = password
+      ? password
+      : '(Please set a password for this user or ask them to use "Forgot Password")';
+    const loginUrl = `${publishedUrl}/auth`;
 
-Your admin account has been created. Here are your login details:
+    if (welcomeTemplate) {
+      return welcomeTemplate
+        .replace(/\{\{email\}\}/g, email)
+        .replace(/\{\{password\}\}/g, passwordValue)
+        .replace(/\{\{role\}\}/g, roleName)
+        .replace(/\{\{login_url\}\}/g, loginUrl);
+    }
 
-Username: ${email}
-${passwordLine}
-Role: ${role === 'global_admin' ? 'Global Admin' : 'Admin'}
-
-Login URL: ${publishedUrl}/auth
-
-Please log in and change your password at your earliest convenience.
-
-If you have any questions or need assistance, don't hesitate to reach out.
-
-Best regards,
-GBG Demo Lab Team`;
+    // Fallback if no template exists
+    return `Welcome to GBG Demo Lab!\n\nYour admin account has been created. Here are your login details:\n\nUsername: ${email}\nPassword: ${passwordValue}\nRole: ${roleName}\n\nLogin URL: ${loginUrl}\n\nPlease log in and change your password at your earliest convenience.\n\nIf you have any questions or need assistance, don't hesitate to reach out.\n\nBest regards,\nGBG Demo Lab Team`;
   };
 
   const openIntroLetterForExisting = (userId: string, email: string, role: string) => {
