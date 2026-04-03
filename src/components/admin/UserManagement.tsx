@@ -310,83 +310,85 @@ GBG Demo Lab Team`;
               <CardDescription>Manage admin access to the demo manager</CardDescription>
             </div>
           </div>
-          <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="gradient-primary">
-                <UserPlus className="w-4 h-4 mr-2" />
-                Add Admin
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Add Admin User</DialogTitle>
-                <DialogDescription>
-                  Grant admin access to a registered user by their email address.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                {addError && (
-                  <Alert variant="destructive">
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertDescription>{addError}</AlertDescription>
-                  </Alert>
-                )}
-                <div className="space-y-2">
-                  <Label htmlFor="email">User Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="user@example.com"
-                    value={newUserEmail}
-                    onChange={(e) => setNewUserEmail(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="initial-password">Initial Password (optional)</Label>
-                  <Input
-                    id="initial-password"
-                    type="password"
-                    placeholder="Leave blank to send reset email"
-                    value={newUserPassword}
-                    onChange={(e) => setNewUserPassword(e.target.value)}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    If no account exists, one will be created. Leave password blank to send a reset email instead.
-                  </p>
-                </div>
-                <div className="space-y-2">
-                  <Label>Role</Label>
-                  <Select value={newUserRole} onValueChange={(v) => setNewUserRole(v as 'admin' | 'global_admin')}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="admin">Admin</SelectItem>
-                      <SelectItem value="global_admin">Global Admin</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-muted-foreground">
-                    Global Admins can manage users, verification types, field configs, and templates. Admins can manage demos and their own resource IDs.
-                  </p>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setAddDialogOpen(false)}>
-                  Cancel
+          {isGlobalAdmin && (
+            <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="gradient-primary">
+                  <UserPlus className="w-4 h-4 mr-2" />
+                  Add Admin
                 </Button>
-                <Button onClick={handleAddAdmin} disabled={isAddingUser}>
-                  {isAddingUser ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Adding...
-                    </>
-                  ) : (
-                    'Add Admin'
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Add Admin User</DialogTitle>
+                  <DialogDescription>
+                    Grant admin access to a registered user by their email address.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  {addError && (
+                    <Alert variant="destructive">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription>{addError}</AlertDescription>
+                    </Alert>
                   )}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+                  <div className="space-y-2">
+                    <Label htmlFor="email">User Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="user@example.com"
+                      value={newUserEmail}
+                      onChange={(e) => setNewUserEmail(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="initial-password">Initial Password (optional)</Label>
+                    <Input
+                      id="initial-password"
+                      type="password"
+                      placeholder="Leave blank to send reset email"
+                      value={newUserPassword}
+                      onChange={(e) => setNewUserPassword(e.target.value)}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      If no account exists, one will be created. Leave password blank to send a reset email instead.
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Role</Label>
+                    <Select value={newUserRole} onValueChange={(v) => setNewUserRole(v as 'admin' | 'global_admin')}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="admin">Admin</SelectItem>
+                        <SelectItem value="global_admin">Global Admin</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">
+                      Global Admins can manage users, verification types, field configs, and templates. Admins can manage demos and their own resource IDs.
+                    </p>
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setAddDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button onClick={handleAddAdmin} disabled={isAddingUser}>
+                    {isAddingUser ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Adding...
+                      </>
+                    ) : (
+                      'Add Admin'
+                    )}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          )}
         </div>
       </CardHeader>
       <CardContent>
