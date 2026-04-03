@@ -1,10 +1,8 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, LogOut, Settings, Users, UserCheck, LayoutTemplate, ListChecks, Briefcase, Monitor, Shield, FolderOpen, KeyRound, Mail, Globe } from "lucide-react";
+import { ArrowLeft, LogOut, Settings, Users, UserCheck, LayoutTemplate, ListChecks, Briefcase, Monitor, Shield, FolderOpen, KeyRound, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
-import { UserManagement } from "@/components/admin/UserManagement";
 import { TestProfileManagement } from "@/components/admin/TestProfileManagement";
 import { FormTemplateManagement } from "@/components/admin/FormTemplateManagement";
 import { GlobalFieldConfigManagement } from "@/components/admin/GlobalFieldConfigManagement";
@@ -14,7 +12,7 @@ import { UnifiedVerificationSettings } from "@/components/admin/UnifiedVerificat
 import { GlobalUseCaseManagement } from "@/components/admin/GlobalUseCaseManagement";
 import { GlobalRegistrationCodeManagement } from "@/components/admin/GlobalRegistrationCodeManagement";
 import { InvitationTemplateManagement } from "@/components/admin/InvitationTemplateManagement";
-import { PortalUserManagement } from "@/components/admin/PortalUserManagement";
+import { UnifiedUserManagement } from "@/components/admin/UnifiedUserManagement";
 
 export default function VerificationSettings() {
   const navigate = useNavigate();
@@ -102,22 +100,14 @@ export default function VerificationSettings() {
                 Registration Codes
               </TabsTrigger>
             )}
-            {isGlobalAdmin && (
-              <TabsTrigger value="portal-users" className="flex items-center gap-2">
-                <Globe className="w-4 h-4" />
-                Portal Users
-              </TabsTrigger>
-            )}
             <TabsTrigger value="profiles" className="flex items-center gap-2">
               <UserCheck className="w-4 h-4" />
               Test Profiles
             </TabsTrigger>
-            {isGlobalAdmin && (
-              <TabsTrigger value="users" className="flex items-center gap-2">
-                <Users className="w-4 h-4" />
-                User Management
-              </TabsTrigger>
-            )}
+            <TabsTrigger value="users" className="flex items-center gap-2">
+              <Users className="w-4 h-4" />
+              Users
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="industries" className="space-y-6">
@@ -152,16 +142,12 @@ export default function VerificationSettings() {
             <GlobalRegistrationCodeManagement />
           </TabsContent>
 
-          <TabsContent value="portal-users" className="space-y-6">
-            <PortalUserManagement />
-          </TabsContent>
-
           <TabsContent value="profiles" className="space-y-6">
             <TestProfileManagement />
           </TabsContent>
 
           <TabsContent value="users" className="space-y-6">
-            <UserManagement />
+            <UnifiedUserManagement isGlobalAdmin={isGlobalAdmin} />
           </TabsContent>
         </Tabs>
       </main>
