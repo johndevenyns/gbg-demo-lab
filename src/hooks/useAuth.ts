@@ -105,12 +105,12 @@ export function useAuth() {
 
   const signOut = async () => {
     const { error } = await supabase.auth.signOut();
-    if (!error) {
-      setUser(null);
-      setSession(null);
-      setIsAdmin(false);
-      setIsGlobalAdmin(false);
-    }
+    // Always clear local state, even if the API call fails (e.g. session already expired)
+    setUser(null);
+    setSession(null);
+    setIsAdmin(false);
+    setIsGlobalAdmin(false);
+    setRoleChecked(false);
     return { error };
   };
 
