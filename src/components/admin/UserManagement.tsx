@@ -22,7 +22,11 @@ interface UserRole {
   email?: string;
 }
 
-export function UserManagement() {
+interface UserManagementProps {
+  isGlobalAdmin?: boolean;
+}
+
+export function UserManagement({ isGlobalAdmin = true }: UserManagementProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [addDialogOpen, setAddDialogOpen] = useState(false);
@@ -306,83 +310,85 @@ GBG Demo Lab Team`;
               <CardDescription>Manage admin access to the demo manager</CardDescription>
             </div>
           </div>
-          <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="gradient-primary">
-                <UserPlus className="w-4 h-4 mr-2" />
-                Add Admin
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Add Admin User</DialogTitle>
-                <DialogDescription>
-                  Grant admin access to a registered user by their email address.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                {addError && (
-                  <Alert variant="destructive">
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertDescription>{addError}</AlertDescription>
-                  </Alert>
-                )}
-                <div className="space-y-2">
-                  <Label htmlFor="email">User Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="user@example.com"
-                    value={newUserEmail}
-                    onChange={(e) => setNewUserEmail(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="initial-password">Initial Password (optional)</Label>
-                  <Input
-                    id="initial-password"
-                    type="password"
-                    placeholder="Leave blank to send reset email"
-                    value={newUserPassword}
-                    onChange={(e) => setNewUserPassword(e.target.value)}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    If no account exists, one will be created. Leave password blank to send a reset email instead.
-                  </p>
-                </div>
-                <div className="space-y-2">
-                  <Label>Role</Label>
-                  <Select value={newUserRole} onValueChange={(v) => setNewUserRole(v as 'admin' | 'global_admin')}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="admin">Admin</SelectItem>
-                      <SelectItem value="global_admin">Global Admin</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-muted-foreground">
-                    Global Admins can manage users, verification types, field configs, and templates. Admins can manage demos and their own resource IDs.
-                  </p>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setAddDialogOpen(false)}>
-                  Cancel
+          {isGlobalAdmin && (
+            <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="gradient-primary">
+                  <UserPlus className="w-4 h-4 mr-2" />
+                  Add Admin
                 </Button>
-                <Button onClick={handleAddAdmin} disabled={isAddingUser}>
-                  {isAddingUser ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Adding...
-                    </>
-                  ) : (
-                    'Add Admin'
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Add Admin User</DialogTitle>
+                  <DialogDescription>
+                    Grant admin access to a registered user by their email address.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  {addError && (
+                    <Alert variant="destructive">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription>{addError}</AlertDescription>
+                    </Alert>
                   )}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+                  <div className="space-y-2">
+                    <Label htmlFor="email">User Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="user@example.com"
+                      value={newUserEmail}
+                      onChange={(e) => setNewUserEmail(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="initial-password">Initial Password (optional)</Label>
+                    <Input
+                      id="initial-password"
+                      type="password"
+                      placeholder="Leave blank to send reset email"
+                      value={newUserPassword}
+                      onChange={(e) => setNewUserPassword(e.target.value)}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      If no account exists, one will be created. Leave password blank to send a reset email instead.
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Role</Label>
+                    <Select value={newUserRole} onValueChange={(v) => setNewUserRole(v as 'admin' | 'global_admin')}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="admin">Admin</SelectItem>
+                        <SelectItem value="global_admin">Global Admin</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">
+                      Global Admins can manage users, verification types, field configs, and templates. Admins can manage demos and their own resource IDs.
+                    </p>
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setAddDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button onClick={handleAddAdmin} disabled={isAddingUser}>
+                    {isAddingUser ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Adding...
+                      </>
+                    ) : (
+                      'Add Admin'
+                    )}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          )}
         </div>
       </CardHeader>
       <CardContent>
@@ -403,7 +409,7 @@ GBG Demo Lab Team`;
                 <TableHead>Email</TableHead>
                 <TableHead>Role</TableHead>
                 <TableHead>Added</TableHead>
-                <TableHead className="w-[150px]">Actions</TableHead>
+                {isGlobalAdmin && <TableHead className="w-[150px]">Actions</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -413,61 +419,70 @@ GBG Demo Lab Team`;
                     {user.email || 'Unknown'}
                   </TableCell>
                   <TableCell>
-                    <Select
-                      value={user.role}
-                      onValueChange={(v) => updateRoleMutation.mutate({ userId: user.user_id, role: v as 'admin' | 'global_admin' })}
-                      disabled={updateRoleMutation.isPending}
-                    >
-                      <SelectTrigger className="w-[160px]">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="admin">
-                          <Badge variant="secondary" className="bg-primary/10 text-primary">Admin</Badge>
-                        </SelectItem>
-                        <SelectItem value="global_admin">
-                          <Badge variant="secondary" className="bg-amber-500/10 text-amber-600">
-                            <Crown className="w-3 h-3 mr-1" /> Global Admin
-                          </Badge>
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
+                    {isGlobalAdmin ? (
+                      <Select
+                        value={user.role}
+                        onValueChange={(v) => updateRoleMutation.mutate({ userId: user.user_id, role: v as 'admin' | 'global_admin' })}
+                        disabled={updateRoleMutation.isPending}
+                      >
+                        <SelectTrigger className="w-[160px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="admin">
+                            <Badge variant="secondary" className="bg-primary/10 text-primary">Admin</Badge>
+                          </SelectItem>
+                          <SelectItem value="global_admin">
+                            <Badge variant="secondary" className="bg-amber-500/10 text-amber-600">
+                              <Crown className="w-3 h-3 mr-1" /> Global Admin
+                            </Badge>
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <Badge variant="secondary" className={user.role === 'global_admin' ? 'bg-amber-500/10 text-amber-600' : 'bg-primary/10 text-primary'}>
+                        {user.role === 'global_admin' && <Crown className="w-3 h-3 mr-1" />}
+                        {user.role === 'global_admin' ? 'Global Admin' : 'Admin'}
+                      </Badge>
+                    )}
                   </TableCell>
                   <TableCell className="text-muted-foreground">
                     {new Date(user.created_at).toLocaleDateString()}
                   </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-muted-foreground hover:text-primary hover:bg-primary/10"
-                        onClick={() => openIntroLetterForExisting(user.user_id, user.email || 'Unknown', user.role)}
-                        title="Generate welcome letter"
-                      >
-                        <Mail className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-muted-foreground hover:text-primary hover:bg-primary/10"
-                        onClick={() => openSetPasswordDialog(user.user_id, user.email || 'Unknown')}
-                        title="Set password"
-                      >
-                        <KeyRound className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                        onClick={() => removeAdminMutation.mutate(user.user_id)}
-                        disabled={removeAdminMutation.isPending}
-                        title="Remove admin access"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
+                  {isGlobalAdmin && (
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-muted-foreground hover:text-primary hover:bg-primary/10"
+                          onClick={() => openIntroLetterForExisting(user.user_id, user.email || 'Unknown', user.role)}
+                          title="Generate welcome letter"
+                        >
+                          <Mail className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-muted-foreground hover:text-primary hover:bg-primary/10"
+                          onClick={() => openSetPasswordDialog(user.user_id, user.email || 'Unknown')}
+                          title="Set password"
+                        >
+                          <KeyRound className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                          onClick={() => removeAdminMutation.mutate(user.user_id)}
+                          disabled={removeAdminMutation.isPending}
+                          title="Remove admin access"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
             </TableBody>
