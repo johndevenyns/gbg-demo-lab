@@ -419,61 +419,70 @@ GBG Demo Lab Team`;
                     {user.email || 'Unknown'}
                   </TableCell>
                   <TableCell>
-                    <Select
-                      value={user.role}
-                      onValueChange={(v) => updateRoleMutation.mutate({ userId: user.user_id, role: v as 'admin' | 'global_admin' })}
-                      disabled={updateRoleMutation.isPending}
-                    >
-                      <SelectTrigger className="w-[160px]">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="admin">
-                          <Badge variant="secondary" className="bg-primary/10 text-primary">Admin</Badge>
-                        </SelectItem>
-                        <SelectItem value="global_admin">
-                          <Badge variant="secondary" className="bg-amber-500/10 text-amber-600">
-                            <Crown className="w-3 h-3 mr-1" /> Global Admin
-                          </Badge>
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
+                    {isGlobalAdmin ? (
+                      <Select
+                        value={user.role}
+                        onValueChange={(v) => updateRoleMutation.mutate({ userId: user.user_id, role: v as 'admin' | 'global_admin' })}
+                        disabled={updateRoleMutation.isPending}
+                      >
+                        <SelectTrigger className="w-[160px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="admin">
+                            <Badge variant="secondary" className="bg-primary/10 text-primary">Admin</Badge>
+                          </SelectItem>
+                          <SelectItem value="global_admin">
+                            <Badge variant="secondary" className="bg-amber-500/10 text-amber-600">
+                              <Crown className="w-3 h-3 mr-1" /> Global Admin
+                            </Badge>
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <Badge variant="secondary" className={user.role === 'global_admin' ? 'bg-amber-500/10 text-amber-600' : 'bg-primary/10 text-primary'}>
+                        {user.role === 'global_admin' && <Crown className="w-3 h-3 mr-1" />}
+                        {user.role === 'global_admin' ? 'Global Admin' : 'Admin'}
+                      </Badge>
+                    )}
                   </TableCell>
                   <TableCell className="text-muted-foreground">
                     {new Date(user.created_at).toLocaleDateString()}
                   </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-muted-foreground hover:text-primary hover:bg-primary/10"
-                        onClick={() => openIntroLetterForExisting(user.user_id, user.email || 'Unknown', user.role)}
-                        title="Generate welcome letter"
-                      >
-                        <Mail className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-muted-foreground hover:text-primary hover:bg-primary/10"
-                        onClick={() => openSetPasswordDialog(user.user_id, user.email || 'Unknown')}
-                        title="Set password"
-                      >
-                        <KeyRound className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                        onClick={() => removeAdminMutation.mutate(user.user_id)}
-                        disabled={removeAdminMutation.isPending}
-                        title="Remove admin access"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
+                  {isGlobalAdmin && (
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-muted-foreground hover:text-primary hover:bg-primary/10"
+                          onClick={() => openIntroLetterForExisting(user.user_id, user.email || 'Unknown', user.role)}
+                          title="Generate welcome letter"
+                        >
+                          <Mail className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-muted-foreground hover:text-primary hover:bg-primary/10"
+                          onClick={() => openSetPasswordDialog(user.user_id, user.email || 'Unknown')}
+                          title="Set password"
+                        >
+                          <KeyRound className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                          onClick={() => removeAdminMutation.mutate(user.user_id)}
+                          disabled={removeAdminMutation.isPending}
+                          title="Remove admin access"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
             </TableBody>
