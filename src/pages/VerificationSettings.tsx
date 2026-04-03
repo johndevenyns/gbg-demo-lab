@@ -103,21 +103,10 @@ export default function VerificationSettings() {
               </TabsTrigger>
             )}
             {isGlobalAdmin && (
-              <TabsTrigger value="portal-users" className="flex items-center gap-2">
-                <Globe className="w-4 h-4" />
-                Portal Users
-              </TabsTrigger>
-            )}
-            <TabsTrigger value="profiles" className="flex items-center gap-2">
-              <UserCheck className="w-4 h-4" />
-              Test Profiles
+            <TabsTrigger value="users" className="flex items-center gap-2">
+              <Users className="w-4 h-4" />
+              Users
             </TabsTrigger>
-            {isGlobalAdmin && (
-              <TabsTrigger value="users" className="flex items-center gap-2">
-                <Users className="w-4 h-4" />
-                User Management
-              </TabsTrigger>
-            )}
           </TabsList>
 
           <TabsContent value="industries" className="space-y-6">
