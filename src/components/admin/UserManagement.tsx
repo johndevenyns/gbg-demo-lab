@@ -409,7 +409,7 @@ GBG Demo Lab Team`;
                 <TableHead>Email</TableHead>
                 <TableHead>Role</TableHead>
                 <TableHead>Added</TableHead>
-                <TableHead className="w-[150px]">Actions</TableHead>
+                {isGlobalAdmin && <TableHead className="w-[150px]">Actions</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
