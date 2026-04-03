@@ -520,6 +520,40 @@ GBG Demo Lab Team`;
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Password Prompt for Existing User Welcome Letter */}
+      <Dialog open={introLetterForExistingOpen} onOpenChange={setIntroLetterForExistingOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Generate Welcome Letter</DialogTitle>
+            <DialogDescription>
+              Enter a password to include in the welcome letter for {existingUserEmail}. Leave blank to omit.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Password (optional)</Label>
+              <Input
+                type="text"
+                value={existingUserPassword}
+                onChange={(e) => setExistingUserPassword(e.target.value)}
+                placeholder="Enter password to include, or leave blank"
+              />
+              <p className="text-xs text-muted-foreground">
+                This does NOT change the user's password. It only includes it in the letter for your reference.
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIntroLetterForExistingOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={confirmExistingIntroLetter}>
+              Generate Letter
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
