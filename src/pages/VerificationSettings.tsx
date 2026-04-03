@@ -3,7 +3,6 @@ import { ArrowLeft, LogOut, Settings, Users, UserCheck, LayoutTemplate, ListChec
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
-import { UserManagement } from "@/components/admin/UserManagement";
 import { TestProfileManagement } from "@/components/admin/TestProfileManagement";
 import { FormTemplateManagement } from "@/components/admin/FormTemplateManagement";
 import { GlobalFieldConfigManagement } from "@/components/admin/GlobalFieldConfigManagement";
