@@ -14,7 +14,7 @@ import { UnifiedVerificationSettings } from "@/components/admin/UnifiedVerificat
 import { GlobalUseCaseManagement } from "@/components/admin/GlobalUseCaseManagement";
 import { GlobalRegistrationCodeManagement } from "@/components/admin/GlobalRegistrationCodeManagement";
 import { InvitationTemplateManagement } from "@/components/admin/InvitationTemplateManagement";
-import { PortalUserManagement } from "@/components/admin/PortalUserManagement";
+import { UnifiedUserManagement } from "@/components/admin/UnifiedUserManagement";
 
 export default function VerificationSettings() {
   const navigate = useNavigate();
