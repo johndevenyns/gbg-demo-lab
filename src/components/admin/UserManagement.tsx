@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -10,7 +10,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Trash2, UserPlus, Users, AlertCircle, Shield, KeyRound, Crown } from 'lucide-react';
+import { Loader2, Trash2, UserPlus, Users, AlertCircle, Shield, KeyRound, Crown, Copy, Check } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface UserRole {
@@ -36,6 +37,41 @@ export function UserManagement() {
   const [setPasswordValue, setSetPasswordValue] = useState('');
   const [setPasswordError, setSetPasswordError] = useState<string | null>(null);
   const [isSettingPassword, setIsSettingPassword] = useState(false);
+  const [introLetterOpen, setIntroLetterOpen] = useState(false);
+  const [introLetterText, setIntroLetterText] = useState('');
+  const [introLetterCopied, setIntroLetterCopied] = useState(false);
+
+  const publishedUrl = 'https://gbg-demo-lab.lovable.app';
+
+  const generateIntroLetter = (email: string, password: string, role: string) => {
+    return `Welcome to GBG Demo Lab!
+
+Your admin account has been created. Here are your login details:
+
+Username: ${email}
+Password: ${password}
+Role: ${role === 'global_admin' ? 'Global Admin' : 'Admin'}
+
+Login URL: ${publishedUrl}/auth
+
+Please log in and change your password at your earliest convenience.
+
+If you have any questions or need assistance, don't hesitate to reach out.
+
+Best regards,
+GBG Demo Lab Team`;
+  };
+
+  const handleCopyIntroLetter = async () => {
+    try {
+      await navigator.clipboard.writeText(introLetterText);
+      setIntroLetterCopied(true);
+      setTimeout(() => setIntroLetterCopied(false), 2000);
+      toast({ title: 'Copied!', description: 'Intro letter copied to clipboard.' });
+    } catch {
+      toast({ title: 'Error', description: 'Failed to copy to clipboard.', variant: 'destructive' });
+    }
+  };
 
   // Fetch admin users with emails via edge function
   const { data: adminUsers = [], isLoading } = useQuery({
@@ -180,6 +216,10 @@ export function UserManagement() {
       let msg: string;
       if (data?.created && data?.hadPassword) {
         msg = `Account created for ${newUserEmail} with admin access and the specified password.`;
+        // Show intro letter dialog
+        setIntroLetterText(generateIntroLetter(newUserEmail.trim(), newUserPassword.trim(), newUserRole));
+        setIntroLetterCopied(false);
+        setIntroLetterOpen(true);
       } else if (data?.created) {
         msg = `Account created for ${newUserEmail} with admin access. A password reset email has been sent.`;
       } else {
@@ -412,6 +452,38 @@ export function UserManagement() {
             <Button variant="outline" onClick={() => setSetPasswordDialogOpen(false)}>Cancel</Button>
             <Button onClick={handleSetPassword} disabled={isSettingPassword}>
               {isSettingPassword ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Setting...</> : 'Set Password'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Intro Letter Dialog */}
+      <Dialog open={introLetterOpen} onOpenChange={setIntroLetterOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Welcome Letter</DialogTitle>
+            <DialogDescription>
+              Copy this intro letter to share login details with the new admin user.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <Textarea
+              value={introLetterText}
+              onChange={(e) => setIntroLetterText(e.target.value)}
+              rows={14}
+              className="font-mono text-sm"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIntroLetterOpen(false)}>
+              Close
+            </Button>
+            <Button onClick={handleCopyIntroLetter}>
+              {introLetterCopied ? (
+                <><Check className="w-4 h-4 mr-2" />Copied!</>
+              ) : (
+                <><Copy className="w-4 h-4 mr-2" />Copy to Clipboard</>
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
