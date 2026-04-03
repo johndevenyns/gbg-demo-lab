@@ -43,13 +43,21 @@ export function UserManagement() {
 
   const publishedUrl = 'https://gbg-demo-lab.lovable.app';
 
-  const generateIntroLetter = (email: string, password: string, role: string) => {
+  const [introLetterForExistingOpen, setIntroLetterForExistingOpen] = useState(false);
+  const [existingUserEmail, setExistingUserEmail] = useState('');
+  const [existingUserRole, setExistingUserRole] = useState('');
+  const [existingUserPassword, setExistingUserPassword] = useState('');
+
+  const generateIntroLetter = (email: string, password: string | null, role: string) => {
+    const passwordLine = password
+      ? `Password: ${password}`
+      : `Password: (Please set a password for this user or ask them to use "Forgot Password")`;
     return `Welcome to GBG Demo Lab!
 
 Your admin account has been created. Here are your login details:
 
 Username: ${email}
-Password: ${password}
+${passwordLine}
 Role: ${role === 'global_admin' ? 'Global Admin' : 'Admin'}
 
 Login URL: ${publishedUrl}/auth
@@ -60,6 +68,21 @@ If you have any questions or need assistance, don't hesitate to reach out.
 
 Best regards,
 GBG Demo Lab Team`;
+  };
+
+  const openIntroLetterForExisting = (email: string, role: string) => {
+    setExistingUserEmail(email);
+    setExistingUserRole(role);
+    setExistingUserPassword('');
+    setIntroLetterForExistingOpen(true);
+  };
+
+  const confirmExistingIntroLetter = () => {
+    const pw = existingUserPassword.trim() || null;
+    setIntroLetterText(generateIntroLetter(existingUserEmail, pw, existingUserRole));
+    setIntroLetterCopied(false);
+    setIntroLetterForExistingOpen(false);
+    setIntroLetterOpen(true);
   };
 
   const handleCopyIntroLetter = async () => {
