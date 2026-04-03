@@ -47,6 +47,7 @@ export function UserManagement() {
   const [existingUserEmail, setExistingUserEmail] = useState('');
   const [existingUserRole, setExistingUserRole] = useState('');
   const [existingUserPassword, setExistingUserPassword] = useState('');
+  const [existingUserId, setExistingUserId] = useState<string | null>(null);
 
   const generateIntroLetter = (email: string, password: string | null, role: string) => {
     const passwordLine = password
