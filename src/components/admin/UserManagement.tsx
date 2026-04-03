@@ -22,7 +22,11 @@ interface UserRole {
   email?: string;
 }
 
-export function UserManagement() {
+interface UserManagementProps {
+  isGlobalAdmin?: boolean;
+}
+
+export function UserManagement({ isGlobalAdmin = true }: UserManagementProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [addDialogOpen, setAddDialogOpen] = useState(false);
