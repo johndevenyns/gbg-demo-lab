@@ -71,15 +71,36 @@ Best regards,
 GBG Demo Lab Team`;
   };
 
-  const openIntroLetterForExisting = (email: string, role: string) => {
+  const openIntroLetterForExisting = (userId: string, email: string, role: string) => {
+    setExistingUserId(userId);
     setExistingUserEmail(email);
     setExistingUserRole(role);
     setExistingUserPassword('');
     setIntroLetterForExistingOpen(true);
   };
 
-  const confirmExistingIntroLetter = () => {
+  const confirmExistingIntroLetter = async () => {
     const pw = existingUserPassword.trim() || null;
+    
+    // If a password was provided, actually set it on the account
+    if (pw && existingUserId) {
+      try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        const response = await supabase.functions.invoke('manage-admin-users', {
+          body: { action: 'resetPassword', userId: existingUserId, newPassword: pw },
+          headers: { Authorization: `Bearer ${sessionData.session?.access_token}` },
+        });
+        if (response.error || response.data?.error) {
+          toast({ title: 'Error', description: response.data?.error || 'Failed to set password', variant: 'destructive' });
+          return;
+        }
+        toast({ title: 'Password updated', description: 'The password has been set on the account.' });
+      } catch {
+        toast({ title: 'Error', description: 'Failed to set password on account.', variant: 'destructive' });
+        return;
+      }
+    }
+    
     setIntroLetterText(generateIntroLetter(existingUserEmail, pw, existingUserRole));
     setIntroLetterCopied(false);
     setIntroLetterForExistingOpen(false);
