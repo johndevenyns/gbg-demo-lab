@@ -104,8 +104,10 @@ export function useAuth() {
   };
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    // Always clear local state, even if the API call fails (e.g. session already expired)
+    // Use scope: 'local' to ensure the local session is always cleared,
+    // even if the server-side session is already expired/invalid.
+    // This also triggers onAuthStateChange with SIGNED_OUT event reliably.
+    const { error } = await supabase.auth.signOut({ scope: 'local' });
     setUser(null);
     setSession(null);
     setIsAdmin(false);
