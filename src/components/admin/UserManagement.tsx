@@ -216,6 +216,10 @@ GBG Demo Lab Team`;
       let msg: string;
       if (data?.created && data?.hadPassword) {
         msg = `Account created for ${newUserEmail} with admin access and the specified password.`;
+        // Show intro letter dialog
+        setIntroLetterText(generateIntroLetter(newUserEmail.trim(), newUserPassword.trim(), newUserRole));
+        setIntroLetterCopied(false);
+        setIntroLetterOpen(true);
       } else if (data?.created) {
         msg = `Account created for ${newUserEmail} with admin access. A password reset email has been sent.`;
       } else {
