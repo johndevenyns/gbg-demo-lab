@@ -456,6 +456,38 @@ GBG Demo Lab Team`;
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Intro Letter Dialog */}
+      <Dialog open={introLetterOpen} onOpenChange={setIntroLetterOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Welcome Letter</DialogTitle>
+            <DialogDescription>
+              Copy this intro letter to share login details with the new admin user.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <Textarea
+              value={introLetterText}
+              onChange={(e) => setIntroLetterText(e.target.value)}
+              rows={14}
+              className="font-mono text-sm"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIntroLetterOpen(false)}>
+              Close
+            </Button>
+            <Button onClick={handleCopyIntroLetter}>
+              {introLetterCopied ? (
+                <><Check className="w-4 h-4 mr-2" />Copied!</>
+              ) : (
+                <><Copy className="w-4 h-4 mr-2" />Copy to Clipboard</>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
