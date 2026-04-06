@@ -1,9 +1,47 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+async function sendEmailViaSMTP(to: string, subject: string, htmlBody: string): Promise<{ sent: boolean; error?: string }> {
+  const smtpUser = Deno.env.get("O365_SMTP_USER");
+  const smtpPass = Deno.env.get("O365_SMTP_PASSWORD");
+
+  if (!smtpUser || !smtpPass) {
+    return { sent: false, error: "SMTP credentials not configured. Set O365_SMTP_USER and O365_SMTP_PASSWORD." };
+  }
+
+  try {
+    const client = new SMTPClient({
+      connection: {
+        hostname: "smtp.office365.com",
+        port: 587,
+        tls: true,
+        auth: {
+          username: smtpUser,
+          password: smtpPass,
+        },
+      },
+    });
+
+    await client.send({
+      from: smtpUser,
+      to,
+      subject,
+      content: "Please view this email in an HTML-capable client.",
+      html: htmlBody,
+    });
+
+    await client.close();
+    return { sent: true };
+  } catch (err) {
+    console.error("SMTP send error:", err);
+    return { sent: false, error: err.message || "Failed to send email via SMTP" };
+  }
+}
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -140,16 +178,16 @@ Deno.serve(async (req) => {
     emailSubject = replacePlaceholders(emailSubject);
     emailBody = replacePlaceholders(emailBody);
 
-    let emailSent = false;
-    let emailError: string | null = "Email infrastructure not yet configured. The user has been created with a registration code. Share the code and demo link manually.";
+    // Send email via Office 365 SMTP
+    const smtpResult = await sendEmailViaSMTP(email.trim(), emailSubject, emailBody);
 
     return new Response(JSON.stringify({
       success: true,
       user: upsertedUser,
       registrationCode,
       demoLink,
-      emailSent,
-      emailError,
+      emailSent: smtpResult.sent,
+      emailError: smtpResult.error || null,
       emailSubject,
       emailBody,
     }), {
