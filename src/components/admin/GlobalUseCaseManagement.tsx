@@ -221,7 +221,8 @@ export function GlobalUseCaseManagement({ readOnly = false }: { readOnly?: boole
                   </CollapsibleTrigger>
 
                   <CollapsibleContent>
-                    <div className="border-t p-4 space-y-4">
+                    <div className={`border-t p-4 space-y-4 ${readOnly ? 'pointer-events-none opacity-80' : ''}`}>
+                      {readOnly && <div className="text-xs text-muted-foreground italic mb-2">Read-only view</div>}
                       {/* Basic Settings */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
