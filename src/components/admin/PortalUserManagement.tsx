@@ -248,6 +248,52 @@ export function PortalUserManagement({ demoId }: PortalUserManagementProps) {
   const getUserAssignedDemoIds = (userId: string) =>
     assignments.filter(a => a.portal_user_id === userId).map(a => a.demo_id);
 
+  const copyCode = (code: string) => {
+    navigator.clipboard.writeText(code);
+    setCopiedCode(code);
+    toast({ title: 'Copied!', description: 'Code copied to clipboard.' });
+    setTimeout(() => setCopiedCode(null), 2000);
+  };
+
+  const handleSendInvite = async () => {
+    setInviteError(null);
+    if (!inviteEmail.trim()) { setInviteError('Email is required'); return; }
+    if (!inviteDemoId) { setInviteError('Please select a demo environment'); return; }
+    setIsInviting(true);
+    setInviteResult(null);
+    try {
+      const { data, error } = await supabase.functions.invoke('send-demo-invite', {
+        body: {
+          demoId: inviteDemoId,
+          email: inviteEmail.trim(),
+          password: invitePassword.trim() || undefined,
+          templateId: inviteTemplateId !== 'default' ? inviteTemplateId : undefined,
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      queryClient.invalidateQueries({ queryKey: ['portal-users'] });
+      queryClient.invalidateQueries({ queryKey: ['portal-user-assignments'] });
+      setInviteResult({
+        registrationCode: data.registrationCode,
+        demoLink: data.demoLink,
+        emailSent: data.emailSent,
+        emailError: data.emailError,
+      });
+
+      if (data.emailSent) {
+        toast({ title: 'Invite sent!', description: `Invitation email sent to ${inviteEmail}.` });
+      } else {
+        toast({ title: 'User created', description: data.emailError || 'Share the code and link manually.' });
+      }
+    } catch (err: any) {
+      setInviteError(err.message || 'Failed to send invite');
+    } finally {
+      setIsInviting(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <Card className="glass-card">
