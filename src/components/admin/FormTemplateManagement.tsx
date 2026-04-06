@@ -519,11 +519,13 @@ export function FormTemplateManagement({ readOnly = false }: { readOnly?: boolea
                           )}
                         </div>
                       </div>
-                      <div className="flex items-center gap-1">
-                        <Button variant="ghost" size="icon" onClick={() => handleEditIndustry(key)} title="Edit Template">
-                          <Pencil className="w-4 h-4" />
-                        </Button>
-                      </div>
+                      {!readOnly && (
+                        <div className="flex items-center gap-1">
+                          <Button variant="ghost" size="icon" onClick={() => handleEditIndustry(key)} title="Edit Template">
+                            <Pencil className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
