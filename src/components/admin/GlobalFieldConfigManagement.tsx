@@ -138,9 +138,11 @@ export function GlobalFieldConfigManagement({ readOnly = false }: { readOnly?: b
                     <CardTitle className="text-base">{group.label}</CardTitle>
                     <CardDescription>{group.fields.length} field{group.fields.length !== 1 ? 's' : ''}</CardDescription>
                   </div>
-                  <Button variant="outline" size="sm" onClick={() => openAdd(group.value)} className="gap-1.5">
-                    <Plus className="w-3.5 h-3.5" /> Add
-                  </Button>
+                  {!readOnly && (
+                    <Button variant="outline" size="sm" onClick={() => openAdd(group.value)} className="gap-1.5">
+                      <Plus className="w-3.5 h-3.5" /> Add
+                    </Button>
+                  )}
                 </div>
               </CardHeader>
               <CardContent>

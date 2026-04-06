@@ -322,7 +322,7 @@ export function PortalTypeManagement({ readOnly = false }: { readOnly?: boolean 
           <h2 className="text-lg font-semibold">Portal Types</h2>
           <p className="text-sm text-muted-foreground">Manage the portal experiences available when creating demos</p>
         </div>
-        <Button onClick={() => setAddOpen(true)}><Plus className="w-4 h-4 mr-2" />Add Portal Type</Button>
+        {!readOnly && <Button onClick={() => setAddOpen(true)}><Plus className="w-4 h-4 mr-2" />Add Portal Type</Button>}
       </div>
 
       {isLoading ? (

@@ -401,10 +401,12 @@ export function FormTemplateManagement({ readOnly = false }: { readOnly?: boolea
           <h2 className="text-lg font-semibold">Form Templates</h2>
           <p className="text-sm text-muted-foreground">Create and manage reusable form templates for demo environments</p>
         </div>
-        <Button onClick={handleCreateNew}>
-          <Plus className="w-4 h-4 mr-2" />
-          New Template
-        </Button>
+        {!readOnly && (
+          <Button onClick={handleCreateNew}>
+            <Plus className="w-4 h-4 mr-2" />
+            New Template
+          </Button>
+        )}
       </div>
 
       <Tabs defaultValue="saved" className="w-full">
