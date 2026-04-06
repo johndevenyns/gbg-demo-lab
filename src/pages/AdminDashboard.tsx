@@ -279,6 +279,10 @@ export default function AdminDashboard() {
           <h2 className="text-lg font-semibold">Demo Environments</h2>
           <div className="flex items-center gap-2">
             <QrCodeGeneratorDialog />
+            <Button variant="outline" onClick={() => navigate('/admin/reporting')}>
+              <BarChart3 className="w-4 h-4 mr-2" />
+              Reporting
+            </Button>
             <Button variant="outline" onClick={() => navigate('/admin/global-settings')}>
               <Settings className="w-4 h-4 mr-2" />
               Global Settings
