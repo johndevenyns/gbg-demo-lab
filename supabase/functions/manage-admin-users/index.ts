@@ -47,14 +47,30 @@ serve(async (req) => {
     // Check if the requesting user is an admin (using service role to bypass RLS)
     const adminClient = createClient(supabaseUrl, supabaseServiceKey);
     
-    const { data: adminCheck, error: adminError } = await adminClient
+    // Check if user is at least an admin
+    const { data: roleCheck, error: roleError } = await adminClient
       .from("user_roles")
       .select("role")
       .eq("user_id", userId)
-      .eq("role", "global_admin")
+      .in("role", ["admin", "global_admin"])
       .maybeSingle();
 
-    if (adminError || !adminCheck) {
+    if (roleError || !roleCheck) {
+      return new Response(
+        JSON.stringify({ error: "You must be an admin to access this function" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const isGlobalAdmin = roleCheck.role === "global_admin";
+
+    // Parse request body
+    const body = await req.json();
+    const { action, email, userId: targetUserId, password: initialPassword, newPassword, role: requestedRole } = body;
+    const roleToAssign = requestedRole === 'global_admin' ? 'global_admin' : 'admin';
+
+    // Read-only actions are available to all admins; mutating actions require global_admin
+    if (action !== "list" && !isGlobalAdmin) {
       return new Response(
         JSON.stringify({ error: "You must be a global admin to manage users" }),
         { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
