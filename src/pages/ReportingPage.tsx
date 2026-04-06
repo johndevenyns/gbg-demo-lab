@@ -319,7 +319,8 @@ export default function ReportingPage() {
                             <TableCell className="text-sm">{log.entity_type || "—"}</TableCell>
                             <TableCell className="text-sm">{log.entity_label || log.entity_id || "—"}</TableCell>
                           </TableRow>
-                        ))}
+                          );
+                        })}
                       </TableBody>
                     </Table>
                   </div>
