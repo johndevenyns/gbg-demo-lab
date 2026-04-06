@@ -25,7 +25,7 @@ const ICON_MAP: Record<string, React.ElementType> = {
   Building2, Landmark, Car, ShoppingBag, Shield, Heart, Package,
 };
 
-export function IndustryManagement() {
+export function IndustryManagement({ readOnly = false }: { readOnly?: boolean }) {
   const { data: industries = [], isLoading } = useIndustries();
   const createIndustry = useCreateIndustry();
   const updateIndustry = useUpdateIndustry();
