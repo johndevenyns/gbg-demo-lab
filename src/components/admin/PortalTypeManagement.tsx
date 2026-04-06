@@ -344,6 +344,7 @@ export function PortalTypeManagement({ readOnly = false }: { readOnly?: boolean 
               onDelete={() => deleteMutation.mutate(pt.id)}
               onPreview={() => setPreviewType(pt.typeKey)}
               onConfigureContent={() => setConfigTypeId(pt.id)}
+              readOnly={readOnly}
             />
           ))}
         </div>
