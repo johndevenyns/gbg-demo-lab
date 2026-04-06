@@ -126,8 +126,9 @@ export function IndustryManagement({ readOnly = false }: { readOnly?: boolean })
                           <Label>Title</Label>
                           <Input
                             defaultValue={ind.title}
+                            readOnly={readOnly}
                             onBlur={(e) => {
-                              if (e.target.value !== ind.title) updateIndustry.mutate({ id: ind.id, updates: { title: e.target.value } });
+                              if (!readOnly && e.target.value !== ind.title) updateIndustry.mutate({ id: ind.id, updates: { title: e.target.value } });
                             }}
                           />
                         </div>
@@ -135,7 +136,8 @@ export function IndustryManagement({ readOnly = false }: { readOnly?: boolean })
                           <Label>Portal Type</Label>
                           <Select
                             value={ind.portalType}
-                            onValueChange={(val) => updateIndustry.mutate({ id: ind.id, updates: { portalType: val } })}
+                            onValueChange={(val) => !readOnly && updateIndustry.mutate({ id: ind.id, updates: { portalType: val } })}
+                            disabled={readOnly}
                           >
                             <SelectTrigger>
                               <SelectValue />
@@ -168,30 +170,33 @@ export function IndustryManagement({ readOnly = false }: { readOnly?: boolean })
                           <Label>Description</Label>
                           <Textarea
                             defaultValue={ind.description ?? ''}
-                            onBlur={(e) => updateIndustry.mutate({ id: ind.id, updates: { description: e.target.value } })}
+                            readOnly={readOnly}
+                            onBlur={(e) => !readOnly && updateIndustry.mutate({ id: ind.id, updates: { description: e.target.value } })}
                             rows={2}
                           />
                         </div>
                       </div>
 
                       {/* Industry Footer */}
-                      <div className="flex items-center justify-between border-t pt-4">
-                        <div className="flex items-center gap-2">
-                          <Switch
-                            checked={ind.isEnabled}
-                            onCheckedChange={(v) => updateIndustry.mutate({ id: ind.id, updates: { isEnabled: v } })}
-                          />
-                          <span className="text-sm text-muted-foreground">Enabled</span>
+                      {!readOnly && (
+                        <div className="flex items-center justify-between border-t pt-4">
+                          <div className="flex items-center gap-2">
+                            <Switch
+                              checked={ind.isEnabled}
+                              onCheckedChange={(v) => updateIndustry.mutate({ id: ind.id, updates: { isEnabled: v } })}
+                            />
+                            <span className="text-sm text-muted-foreground">Enabled</span>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-destructive hover:text-destructive"
+                            onClick={() => setDeleteId(ind.id)}
+                          >
+                            <Trash2 className="w-4 h-4 mr-1" /> Delete
+                          </Button>
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-destructive hover:text-destructive"
-                          onClick={() => setDeleteId(ind.id)}
-                        >
-                          <Trash2 className="w-4 h-4 mr-1" /> Delete
-                        </Button>
-                      </div>
+                      )}
                     </div>
                   </CollapsibleContent>
                 </Card>
