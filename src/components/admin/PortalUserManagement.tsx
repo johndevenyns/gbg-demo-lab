@@ -511,6 +511,94 @@ export function PortalUserManagement({ demoId }: PortalUserManagementProps) {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Invite User Dialog */}
+      <Dialog open={inviteDialogOpen} onOpenChange={(v) => { setInviteDialogOpen(v); if (!v) setInviteResult(null); }}>
+        <DialogContent className="max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Invite User</DialogTitle>
+            <DialogDescription>Send an invitation email with a registration code and demo link.</DialogDescription>
+          </DialogHeader>
+          {inviteResult ? (
+            <div className="space-y-4 py-4">
+              <Alert>
+                <AlertDescription>
+                  <p className="font-medium mb-2">
+                    {inviteResult.emailSent ? '✅ Invitation email sent!' : '⚠️ User created but email could not be sent.'}
+                  </p>
+                  {inviteResult.emailError && (
+                    <p className="text-sm text-muted-foreground mb-2">{inviteResult.emailError}</p>
+                  )}
+                  <div className="space-y-2 text-sm">
+                    <p><strong>Registration Code:</strong>{' '}
+                      <code className="bg-muted px-2 py-0.5 rounded">{inviteResult.registrationCode}</code>
+                      <Button variant="ghost" size="icon" className="h-6 w-6 ml-1" onClick={() => copyCode(inviteResult.registrationCode)}>
+                        {copiedCode === inviteResult.registrationCode ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3" />}
+                      </Button>
+                    </p>
+                    <p><strong>Demo Link:</strong>{' '}
+                      <a href={inviteResult.demoLink} target="_blank" rel="noopener noreferrer" className="text-primary underline break-all">{inviteResult.demoLink}</a>
+                    </p>
+                  </div>
+                </AlertDescription>
+              </Alert>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setInviteDialogOpen(false)}>Close</Button>
+              </DialogFooter>
+            </div>
+          ) : (
+            <div className="space-y-4 py-4">
+              {inviteError && (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{inviteError}</AlertDescription>
+                </Alert>
+              )}
+              <div className="space-y-2">
+                <Label>Recipient Email</Label>
+                <Input type="email" placeholder="user@example.com" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label>Password (optional, defaults to changeme123)</Label>
+                <Input type="password" placeholder="Leave blank for default" value={invitePassword} onChange={(e) => setInvitePassword(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label>Demo Environment</Label>
+                <Select value={inviteDemoId} onValueChange={setInviteDemoId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a demo..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {demos.map(d => (
+                      <SelectItem key={d.id} value={d.id}>{d.customer_name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Invitation Template</Label>
+                <Select value={inviteTemplateId} onValueChange={setInviteTemplateId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Default template" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="default">Default Template</SelectItem>
+                    {invitationTemplates.map((t: any) => (
+                      <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setInviteDialogOpen(false)}>Cancel</Button>
+                <Button onClick={handleSendInvite} disabled={isInviting}>
+                  {isInviting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Sending...</> : <><Send className="w-4 h-4 mr-2" />Send Invitation</>}
+                </Button>
+              </DialogFooter>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
