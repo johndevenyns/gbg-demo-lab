@@ -435,11 +435,13 @@ export function FormTemplateManagement({ readOnly = false }: { readOnly?: boolea
               <CardContent className="py-12 text-center">
                 <Bookmark className="w-12 h-12 mx-auto mb-4 text-muted-foreground opacity-50" />
                 <h3 className="font-semibold mb-2">No saved templates</h3>
-                <p className="text-sm text-muted-foreground mb-4">Create a new template or edit an industry template to get started.</p>
-                <Button onClick={handleCreateNew}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Create Template
-                </Button>
+                <p className="text-sm text-muted-foreground mb-4">{readOnly ? 'No saved templates yet.' : 'Create a new template or edit an industry template to get started.'}</p>
+                {!readOnly && (
+                  <Button onClick={handleCreateNew}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Create Template
+                  </Button>
+                )}
               </CardContent>
             </Card>
           ) : (
