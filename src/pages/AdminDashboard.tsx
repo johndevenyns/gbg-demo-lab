@@ -85,6 +85,7 @@ export default function AdminDashboard() {
   const [demoToDelete, setDemoToDelete] = useState<string | null>(null);
 
   const handleSignOut = async () => {
+    await logAdminAction({ action: "logout" });
     await signOut();
     navigate("/auth");
   };
