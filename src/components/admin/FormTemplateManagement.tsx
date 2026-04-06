@@ -240,7 +240,7 @@ function TemplateEditorDialog({
   );
 }
 
-export function FormTemplateManagement() {
+export function FormTemplateManagement({ readOnly = false }: { readOnly?: boolean }) {
   const [savedTemplates, setSavedTemplates] = useState<SavedTemplate[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [editorOpen, setEditorOpen] = useState(false);

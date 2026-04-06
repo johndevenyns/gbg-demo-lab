@@ -290,7 +290,7 @@ function PortalConfigEditorDialog({
   );
 }
 
-export function PortalTypeManagement() {
+export function PortalTypeManagement({ readOnly = false }: { readOnly?: boolean }) {
   const { data: portalTypes = [], isLoading } = usePortalTypes();
   const createMutation = useCreatePortalType();
   const updateMutation = useUpdatePortalType();

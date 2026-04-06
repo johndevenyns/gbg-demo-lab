@@ -166,10 +166,12 @@ export function GlobalUseCaseManagement({ readOnly = false }: { readOnly?: boole
             Define use cases available across all demo environments
           </p>
         </div>
-        <Button onClick={() => setCreateOpen(true)}>
-          <Plus className="w-4 h-4 mr-2" />
-          New Use Case
-        </Button>
+        {!readOnly && (
+          <Button onClick={() => setCreateOpen(true)}>
+            <Plus className="w-4 h-4 mr-2" />
+            New Use Case
+          </Button>
+        )}
       </div>
 
       {isLoading ? (

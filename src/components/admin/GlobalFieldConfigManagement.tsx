@@ -69,7 +69,7 @@ const emptyForm: GlobalFieldConfigInsert = {
   display_order: 100,
 };
 
-export function GlobalFieldConfigManagement() {
+export function GlobalFieldConfigManagement({ readOnly = false }: { readOnly?: boolean }) {
   const { data: fields = [], isLoading } = useGlobalFieldConfigs();
   const createField = useCreateGlobalFieldConfig();
   const updateField = useUpdateGlobalFieldConfig();
