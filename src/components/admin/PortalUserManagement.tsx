@@ -11,8 +11,9 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Trash2, UserPlus, Users, AlertCircle, Edit, Building2, Globe } from 'lucide-react';
+import { Loader2, Trash2, UserPlus, Users, AlertCircle, Edit, Building2, Globe, Send, Copy, Check } from 'lucide-react';
 
 interface PortalUser {
   id: string;
