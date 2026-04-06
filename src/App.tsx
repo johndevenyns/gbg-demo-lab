@@ -11,6 +11,7 @@ import DemoPreview from "./pages/DemoPreview";
 import DemoEmbed from "./pages/DemoEmbed";
 import GlobalSettingsPage from "./pages/GlobalSettingsPage";
 import Auth from "./pages/Auth";
+import ReportingPage from "./pages/ReportingPage";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 import QrCodePreview from "./pages/QrCodePreview";
