@@ -21,12 +21,13 @@ import { PortalPreviewDialog } from "./PortalPreviewDialog";
 import { PortalConfig, DEFAULT_BANKING_CONFIG } from "@/types/portalConfig";
 import * as LucideIcons from "lucide-react";
 
-function PortalTypeCard({ pt, onUpdate, onDelete, onPreview, onConfigureContent }: {
+function PortalTypeCard({ pt, onUpdate, onDelete, onPreview, onConfigureContent, readOnly }: {
   pt: PortalType;
   onUpdate: (updates: Partial<PortalType>) => void;
   onDelete: () => void;
   onPreview: () => void;
   onConfigureContent: () => void;
+  readOnly?: boolean;
 }) {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [editing, setEditing] = useState(false);
