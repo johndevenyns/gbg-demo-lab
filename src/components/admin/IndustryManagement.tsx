@@ -74,10 +74,12 @@ export function IndustryManagement({ readOnly = false }: { readOnly?: boolean })
             Manage industries and their portal types
           </p>
         </div>
-        <Button onClick={() => setCreateOpen(true)}>
-          <Plus className="w-4 h-4 mr-2" />
-          New Industry
-        </Button>
+        {!readOnly && (
+          <Button onClick={() => setCreateOpen(true)}>
+            <Plus className="w-4 h-4 mr-2" />
+            New Industry
+          </Button>
+        )}
       </div>
 
       {isLoading ? (
