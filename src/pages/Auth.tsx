@@ -31,6 +31,7 @@ export default function Auth() {
   useEffect(() => {
     if (!isLoading && user && roleChecked) {
       if (isAdmin) {
+        logAdminAction({ action: "login" });
         navigate('/admin');
       } else {
         setError('Your account does not have admin access. Please contact a global admin.');
