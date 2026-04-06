@@ -60,7 +60,7 @@ export async function logPortalActivity(params: {
       use_case_title: params.useCaseTitle ?? null,
       verification_type: params.verificationType ?? null,
       verification_result: params.verificationResult ?? null,
-      details: (params.details ?? {}) as Record<string, unknown>,
+      details: (params.details ?? {}) as Json,
     }]);
   } catch (err) {
     console.error("Failed to log portal activity:", err);
