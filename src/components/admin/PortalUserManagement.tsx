@@ -11,8 +11,9 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Trash2, UserPlus, Users, AlertCircle, Edit, Building2, Globe } from 'lucide-react';
+import { Loader2, Trash2, UserPlus, Users, AlertCircle, Edit, Building2, Globe, Send, Copy, Check } from 'lucide-react';
 
 interface PortalUser {
   id: string;
@@ -51,6 +52,31 @@ export function PortalUserManagement({ demoId }: PortalUserManagementProps) {
   const [formDisplayName, setFormDisplayName] = useState('');
   const [formIsDefault, setFormIsDefault] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+
+  // Invite state
+  const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [invitePassword, setInvitePassword] = useState('');
+  const [inviteDemoId, setInviteDemoId] = useState<string>('');
+  const [inviteTemplateId, setInviteTemplateId] = useState<string>('default');
+  const [inviteError, setInviteError] = useState<string | null>(null);
+  const [inviteResult, setInviteResult] = useState<{ registrationCode: string; demoLink: string; emailSent: boolean; emailError?: string } | null>(null);
+  const [isInviting, setIsInviting] = useState(false);
+  const [copiedCode, setCopiedCode] = useState<string | null>(null);
+
+  // Fetch invitation templates
+  const { data: invitationTemplates = [] } = useQuery({
+    queryKey: ['invitation-templates'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('invitation_templates')
+        .select('*')
+        .order('is_default', { ascending: false })
+        .order('name');
+      if (error) throw error;
+      return data || [];
+    },
+  });
 
   const isGlobalView = !demoId;
 
@@ -222,6 +248,52 @@ export function PortalUserManagement({ demoId }: PortalUserManagementProps) {
   const getUserAssignedDemoIds = (userId: string) =>
     assignments.filter(a => a.portal_user_id === userId).map(a => a.demo_id);
 
+  const copyCode = (code: string) => {
+    navigator.clipboard.writeText(code);
+    setCopiedCode(code);
+    toast({ title: 'Copied!', description: 'Code copied to clipboard.' });
+    setTimeout(() => setCopiedCode(null), 2000);
+  };
+
+  const handleSendInvite = async () => {
+    setInviteError(null);
+    if (!inviteEmail.trim()) { setInviteError('Email is required'); return; }
+    if (!inviteDemoId) { setInviteError('Please select a demo environment'); return; }
+    setIsInviting(true);
+    setInviteResult(null);
+    try {
+      const { data, error } = await supabase.functions.invoke('send-demo-invite', {
+        body: {
+          demoId: inviteDemoId,
+          email: inviteEmail.trim(),
+          password: invitePassword.trim() || undefined,
+          templateId: inviteTemplateId !== 'default' ? inviteTemplateId : undefined,
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      queryClient.invalidateQueries({ queryKey: ['portal-users'] });
+      queryClient.invalidateQueries({ queryKey: ['portal-user-assignments'] });
+      setInviteResult({
+        registrationCode: data.registrationCode,
+        demoLink: data.demoLink,
+        emailSent: data.emailSent,
+        emailError: data.emailError,
+      });
+
+      if (data.emailSent) {
+        toast({ title: 'Invite sent!', description: `Invitation email sent to ${inviteEmail}.` });
+      } else {
+        toast({ title: 'User created', description: data.emailError || 'Share the code and link manually.' });
+      }
+    } catch (err: any) {
+      setInviteError(err.message || 'Failed to send invite');
+    } finally {
+      setIsInviting(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <Card className="glass-card">
@@ -250,10 +322,24 @@ export function PortalUserManagement({ demoId }: PortalUserManagementProps) {
                 </CardDescription>
               </div>
             </div>
-            <Button className="gradient-primary" onClick={() => { closeDialog(); setAddDialogOpen(true); }}>
-              <UserPlus className="w-4 h-4 mr-2" />
-              Add Portal User
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" onClick={() => {
+                setInviteEmail('');
+                setInvitePassword('');
+                setInviteDemoId(demoId || '');
+                setInviteTemplateId('default');
+                setInviteError(null);
+                setInviteResult(null);
+                setInviteDialogOpen(true);
+              }}>
+                <Send className="w-4 h-4 mr-2" />
+                Invite User
+              </Button>
+              <Button className="gradient-primary" onClick={() => { closeDialog(); setAddDialogOpen(true); }}>
+                <UserPlus className="w-4 h-4 mr-2" />
+                Add Portal User
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -423,6 +509,94 @@ export function PortalUserManagement({ demoId }: PortalUserManagementProps) {
               <p className="text-sm text-muted-foreground text-center py-4">No demo environments found.</p>
             )}
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Invite User Dialog */}
+      <Dialog open={inviteDialogOpen} onOpenChange={(v) => { setInviteDialogOpen(v); if (!v) setInviteResult(null); }}>
+        <DialogContent className="max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Invite User</DialogTitle>
+            <DialogDescription>Send an invitation email with a registration code and demo link.</DialogDescription>
+          </DialogHeader>
+          {inviteResult ? (
+            <div className="space-y-4 py-4">
+              <Alert>
+                <AlertDescription>
+                  <p className="font-medium mb-2">
+                    {inviteResult.emailSent ? '✅ Invitation email sent!' : '⚠️ User created but email could not be sent.'}
+                  </p>
+                  {inviteResult.emailError && (
+                    <p className="text-sm text-muted-foreground mb-2">{inviteResult.emailError}</p>
+                  )}
+                  <div className="space-y-2 text-sm">
+                    <p><strong>Registration Code:</strong>{' '}
+                      <code className="bg-muted px-2 py-0.5 rounded">{inviteResult.registrationCode}</code>
+                      <Button variant="ghost" size="icon" className="h-6 w-6 ml-1" onClick={() => copyCode(inviteResult.registrationCode)}>
+                        {copiedCode === inviteResult.registrationCode ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3" />}
+                      </Button>
+                    </p>
+                    <p><strong>Demo Link:</strong>{' '}
+                      <a href={inviteResult.demoLink} target="_blank" rel="noopener noreferrer" className="text-primary underline break-all">{inviteResult.demoLink}</a>
+                    </p>
+                  </div>
+                </AlertDescription>
+              </Alert>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setInviteDialogOpen(false)}>Close</Button>
+              </DialogFooter>
+            </div>
+          ) : (
+            <div className="space-y-4 py-4">
+              {inviteError && (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{inviteError}</AlertDescription>
+                </Alert>
+              )}
+              <div className="space-y-2">
+                <Label>Recipient Email</Label>
+                <Input type="email" placeholder="user@example.com" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label>Password (optional, defaults to changeme123)</Label>
+                <Input type="password" placeholder="Leave blank for default" value={invitePassword} onChange={(e) => setInvitePassword(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label>Demo Environment</Label>
+                <Select value={inviteDemoId} onValueChange={setInviteDemoId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a demo..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {demos.map(d => (
+                      <SelectItem key={d.id} value={d.id}>{d.customer_name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Invitation Template</Label>
+                <Select value={inviteTemplateId} onValueChange={setInviteTemplateId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Default template" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="default">Default Template</SelectItem>
+                    {invitationTemplates.map((t: any) => (
+                      <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setInviteDialogOpen(false)}>Cancel</Button>
+                <Button onClick={handleSendInvite} disabled={isInviting}>
+                  {isInviting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Sending...</> : <><Send className="w-4 h-4 mr-2" />Send Invitation</>}
+                </Button>
+              </DialogFooter>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </>
