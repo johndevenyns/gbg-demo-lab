@@ -9,7 +9,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import DemoConfig from "./pages/DemoConfig";
 import DemoPreview from "./pages/DemoPreview";
 import DemoEmbed from "./pages/DemoEmbed";
-import VerificationSettings from "./pages/VerificationSettings";
+import GlobalSettingsPage from "./pages/GlobalSettingsPage";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
@@ -18,9 +18,8 @@ import QrCodePreview from "./pages/QrCodePreview";
 const queryClient = new QueryClient();
 
 function AppContent() {
-  // Initialize theme at root level
   useThemePreference();
-  
+
   return (
     <>
       <Toaster />
@@ -42,7 +41,7 @@ function AppContent() {
             path="/admin/global-settings"
             element={
               <ProtectedRoute>
-                <VerificationSettings />
+                <GlobalSettingsPage />
               </ProtectedRoute>
             }
           />
