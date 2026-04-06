@@ -64,26 +64,30 @@ function PortalTypeCard({ pt, onUpdate, onDelete, onPreview, onConfigureContent,
               )}
             </div>
             <div className="flex items-center gap-2">
-              <Switch checked={pt.isEnabled} onCheckedChange={checked => onUpdate({ isEnabled: checked } as any)} />
-              {editing ? (
+              {!readOnly && <Switch checked={pt.isEnabled} onCheckedChange={checked => onUpdate({ isEnabled: checked } as any)} />}
+              {!readOnly && editing ? (
                 <>
                   <Button variant="ghost" size="icon" onClick={handleSave}><Check className="w-4 h-4 text-green-500" /></Button>
                   <Button variant="ghost" size="icon" onClick={() => setEditing(false)}><X className="w-4 h-4 text-destructive" /></Button>
                 </>
               ) : (
                 <>
-                  <Button variant="ghost" size="icon" onClick={onConfigureContent} title="Configure content">
-                    <Settings className="w-4 h-4" />
-                  </Button>
                   <Button variant="ghost" size="icon" onClick={onPreview} title="Preview portal">
                     <Eye className="w-4 h-4" />
                   </Button>
-                  <Button variant="ghost" size="icon" onClick={() => { setEditVals({ displayName: pt.displayName, description: pt.description || '' }); setEditing(true); }}>
-                    <Pencil className="w-4 h-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" onClick={() => setDeleteOpen(true)}>
-                    <Trash2 className="w-4 h-4 text-destructive" />
-                  </Button>
+                  {!readOnly && (
+                    <>
+                      <Button variant="ghost" size="icon" onClick={onConfigureContent} title="Configure content">
+                        <Settings className="w-4 h-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => { setEditVals({ displayName: pt.displayName, description: pt.description || '' }); setEditing(true); }}>
+                        <Pencil className="w-4 h-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => setDeleteOpen(true)}>
+                        <Trash2 className="w-4 h-4 text-destructive" />
+                      </Button>
+                    </>
+                  )}
                 </>
               )}
             </div>
