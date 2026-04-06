@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { useDemos, useDeleteDemo } from "@/hooks/useDemos";
 import { useAuth } from "@/hooks/useAuth";
+import { logAdminAction } from "@/lib/auditLog";
 import { IndustryTemplate } from "@/types/demo";
 import { CreateDemoDialog } from "@/components/admin/CreateDemoDialog";
 import {
