@@ -104,16 +104,18 @@ export function useAuth() {
   };
 
   const signOut = async () => {
-    // Use scope: 'local' to ensure the local session is always cleared,
-    // even if the server-side session is already expired/invalid.
-    // This also triggers onAuthStateChange with SIGNED_OUT event reliably.
-    const { error } = await supabase.auth.signOut({ scope: 'local' });
+    // Clear state immediately
     setUser(null);
     setSession(null);
     setIsAdmin(false);
     setIsGlobalAdmin(false);
     setRoleChecked(false);
-    return { error };
+    
+    // Sign out locally (clears localStorage)
+    await supabase.auth.signOut({ scope: 'local' });
+    
+    // Force hard navigation to break any stale in-memory session state
+    window.location.href = '/auth';
   };
 
   return {
