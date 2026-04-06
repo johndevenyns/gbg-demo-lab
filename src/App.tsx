@@ -14,7 +14,29 @@ import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 import QrCodePreview from "./pages/QrCodePreview";
-...
+
+const queryClient = new QueryClient();
+
+function AppContent() {
+  useThemePreference();
+
+  return (
+    <>
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Navigate to="/admin" replace />} />
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute>
+                <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/admin/global-settings"
             element={
