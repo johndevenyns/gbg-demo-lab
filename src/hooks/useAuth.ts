@@ -75,8 +75,12 @@ export function useAuth() {
         setSession(session);
         setUser(session?.user ?? null);
         
-        // Defer admin check with setTimeout to avoid deadlock
         if (session?.user) {
+          // Reset roleChecked IMMEDIATELY so downstream consumers wait
+          setIsAdmin(false);
+          setIsGlobalAdmin(false);
+          setRoleChecked(false);
+          // Defer admin check with setTimeout to avoid deadlock
           setTimeout(() => {
             checkAdminRole(session.user.id);
           }, 0);
