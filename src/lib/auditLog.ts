@@ -30,7 +30,7 @@ export async function logAdminAction(params: {
       entity_type: params.entityType ?? null,
       entity_id: params.entityId ?? null,
       entity_label: params.entityLabel ?? null,
-      details: (params.details ?? {}) as Record<string, unknown>,
+      details: (params.details ?? {}) as Json,
     }]);
   } catch (err) {
     console.error("Failed to log admin action:", err);
