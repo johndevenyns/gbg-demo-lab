@@ -53,7 +53,7 @@ export default function VerificationSettings() {
       {/* Main Content */}
       <main className="admin-container py-8">
         <Tabs defaultValue="industries" className="space-y-6">
-          <TabsList>
+          <TabsList className="flex flex-wrap h-auto gap-1">
             <TabsTrigger value="industries" className="flex items-center gap-2">
               <Briefcase className="w-4 h-4" />
               Industries
