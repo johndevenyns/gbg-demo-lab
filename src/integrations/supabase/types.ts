@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_audit_logs: {
+        Row: {
+          action: string
+          created_at: string
+          details: Json | null
+          entity_id: string | null
+          entity_label: string | null
+          entity_type: string | null
+          id: string
+          ip_address: string | null
+          user_email: string | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          details?: Json | null
+          entity_id?: string | null
+          entity_label?: string | null
+          entity_type?: string | null
+          id?: string
+          ip_address?: string | null
+          user_email?: string | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          details?: Json | null
+          entity_id?: string | null
+          entity_label?: string | null
+          entity_type?: string | null
+          id?: string
+          ip_address?: string | null
+          user_email?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       admin_resource_ids: {
         Row: {
           admin_user_id: string
@@ -649,6 +688,51 @@ export type Database = {
           provider_key?: string
           scope?: string[] | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      portal_activity_logs: {
+        Row: {
+          action: string
+          created_at: string
+          demo_id: string | null
+          demo_name: string | null
+          details: Json | null
+          id: string
+          portal_user_email: string | null
+          portal_user_id: string | null
+          use_case_id: string | null
+          use_case_title: string | null
+          verification_result: string | null
+          verification_type: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          demo_id?: string | null
+          demo_name?: string | null
+          details?: Json | null
+          id?: string
+          portal_user_email?: string | null
+          portal_user_id?: string | null
+          use_case_id?: string | null
+          use_case_title?: string | null
+          verification_result?: string | null
+          verification_type?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          demo_id?: string | null
+          demo_name?: string | null
+          details?: Json | null
+          id?: string
+          portal_user_email?: string | null
+          portal_user_id?: string | null
+          use_case_id?: string | null
+          use_case_title?: string | null
+          verification_result?: string | null
+          verification_type?: string | null
         }
         Relationships: []
       }

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Search, Settings, ExternalLink, Trash2, Copy, Building2, Car, Gamepad2, Shield, Landmark, Layers, Heart, ShoppingBag, ImageOff, LogOut } from "lucide-react";
+import { Plus, Search, Settings, ExternalLink, Trash2, Copy, Building2, Car, Gamepad2, Shield, Landmark, Layers, Heart, ShoppingBag, ImageOff, LogOut, BarChart3 } from "lucide-react";
 import { ChangePasswordDialog } from "@/components/admin/ChangePasswordDialog";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { useDemos, useDeleteDemo } from "@/hooks/useDemos";
 import { useAuth } from "@/hooks/useAuth";
+import { logAdminAction } from "@/lib/auditLog";
 import { IndustryTemplate } from "@/types/demo";
 import { CreateDemoDialog } from "@/components/admin/CreateDemoDialog";
 import {
@@ -84,6 +85,7 @@ export default function AdminDashboard() {
   const [demoToDelete, setDemoToDelete] = useState<string | null>(null);
 
   const handleSignOut = async () => {
+    await logAdminAction({ action: "logout" });
     await signOut();
     navigate("/auth");
   };
@@ -98,8 +100,10 @@ export default function AdminDashboard() {
 
   const handleDelete = () => {
     if (demoToDelete) {
+      const demoLabel = demos.find(d => d.id === demoToDelete)?.customerName;
       deleteDemo.mutate(demoToDelete, {
         onSuccess: () => {
+          logAdminAction({ action: "delete", entityType: "demo", entityId: demoToDelete, entityLabel: demoLabel });
           setDemoToDelete(null);
           setDeleteDialogOpen(false);
         }
@@ -279,6 +283,10 @@ export default function AdminDashboard() {
           <h2 className="text-lg font-semibold">Demo Environments</h2>
           <div className="flex items-center gap-2">
             <QrCodeGeneratorDialog />
+            <Button variant="outline" onClick={() => navigate('/admin/reporting')}>
+              <BarChart3 className="w-4 h-4 mr-2" />
+              Reporting
+            </Button>
             <Button variant="outline" onClick={() => navigate('/admin/global-settings')}>
               <Settings className="w-4 h-4 mr-2" />
               Global Settings

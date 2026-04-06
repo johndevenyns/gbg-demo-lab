@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { logAdminAction } from '@/lib/auditLog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -30,6 +31,7 @@ export default function Auth() {
   useEffect(() => {
     if (!isLoading && user && roleChecked) {
       if (isAdmin) {
+        logAdminAction({ action: "login" });
         navigate('/admin');
       } else {
         setError('Your account does not have admin access. Please contact a global admin.');
