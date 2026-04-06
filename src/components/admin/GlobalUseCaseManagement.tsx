@@ -60,7 +60,7 @@ const areTemplateValuesEqual = (left: unknown, right: unknown) => (
   JSON.stringify(normalizeTemplateValue(left)) === JSON.stringify(normalizeTemplateValue(right))
 );
 
-export function GlobalUseCaseManagement() {
+export function GlobalUseCaseManagement({ readOnly = false }: { readOnly?: boolean }) {
   const { data: useCases = [], isLoading } = useGlobalUseCases();
   const createMutation = useCreateGlobalUseCase();
   const updateMutation = useUpdateGlobalUseCase();
