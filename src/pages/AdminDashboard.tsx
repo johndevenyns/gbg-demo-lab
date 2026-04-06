@@ -100,8 +100,10 @@ export default function AdminDashboard() {
 
   const handleDelete = () => {
     if (demoToDelete) {
+      const demoLabel = demos.find(d => d.id === demoToDelete)?.customerName;
       deleteDemo.mutate(demoToDelete, {
         onSuccess: () => {
+          logAdminAction({ action: "delete", entityType: "demo", entityId: demoToDelete, entityLabel: demoLabel });
           setDemoToDelete(null);
           setDeleteDialogOpen(false);
         }
