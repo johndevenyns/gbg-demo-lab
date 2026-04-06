@@ -52,38 +52,28 @@ export default function VerificationSettings() {
 
       {/* Main Content */}
       <main className="admin-container py-8">
-        <Tabs defaultValue={isGlobalAdmin ? "industries" : "verification"} className="space-y-6">
+        <Tabs defaultValue="industries" className="space-y-6">
           <TabsList>
-            {isGlobalAdmin && (
-              <TabsTrigger value="industries" className="flex items-center gap-2">
-                <Briefcase className="w-4 h-4" />
-                Industries
-              </TabsTrigger>
-            )}
-            {isGlobalAdmin && (
-              <TabsTrigger value="use-cases" className="flex items-center gap-2">
-                <FolderOpen className="w-4 h-4" />
-                Use Cases
-              </TabsTrigger>
-            )}
-            {isGlobalAdmin && (
-              <TabsTrigger value="templates" className="flex items-center gap-2">
-                <LayoutTemplate className="w-4 h-4" />
-                Form Templates
-              </TabsTrigger>
-            )}
-            {isGlobalAdmin && (
-              <TabsTrigger value="field-config" className="flex items-center gap-2">
-                <ListChecks className="w-4 h-4" />
-                Fields
-              </TabsTrigger>
-            )}
-            {isGlobalAdmin && (
-              <TabsTrigger value="portal-types" className="flex items-center gap-2">
-                <Monitor className="w-4 h-4" />
-                Portal Types
-              </TabsTrigger>
-            )}
+            <TabsTrigger value="industries" className="flex items-center gap-2">
+              <Briefcase className="w-4 h-4" />
+              Industries
+            </TabsTrigger>
+            <TabsTrigger value="use-cases" className="flex items-center gap-2">
+              <FolderOpen className="w-4 h-4" />
+              Use Cases
+            </TabsTrigger>
+            <TabsTrigger value="templates" className="flex items-center gap-2">
+              <LayoutTemplate className="w-4 h-4" />
+              Form Templates
+            </TabsTrigger>
+            <TabsTrigger value="field-config" className="flex items-center gap-2">
+              <ListChecks className="w-4 h-4" />
+              Fields
+            </TabsTrigger>
+            <TabsTrigger value="portal-types" className="flex items-center gap-2">
+              <Monitor className="w-4 h-4" />
+              Portal Types
+            </TabsTrigger>
             <TabsTrigger value="verification" className="flex items-center gap-2">
               <Shield className="w-4 h-4" />
               Verification
@@ -107,23 +97,23 @@ export default function VerificationSettings() {
           </TabsList>
 
           <TabsContent value="industries" className="space-y-6">
-            <IndustryManagement />
+            <IndustryManagement readOnly={!isGlobalAdmin} />
           </TabsContent>
 
           <TabsContent value="use-cases" className="space-y-6">
-            <GlobalUseCaseManagement />
+            <GlobalUseCaseManagement readOnly={!isGlobalAdmin} />
           </TabsContent>
 
           <TabsContent value="templates" className="space-y-6">
-            <FormTemplateManagement />
+            <FormTemplateManagement readOnly={!isGlobalAdmin} />
           </TabsContent>
 
           <TabsContent value="field-config" className="space-y-6">
-            <GlobalFieldConfigManagement />
+            <GlobalFieldConfigManagement readOnly={!isGlobalAdmin} />
           </TabsContent>
 
           <TabsContent value="portal-types" className="space-y-6">
-            <PortalTypeManagement />
+            <PortalTypeManagement readOnly={!isGlobalAdmin} />
           </TabsContent>
 
           <TabsContent value="verification" className="space-y-6">
