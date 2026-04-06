@@ -19,7 +19,7 @@ async function sendEmailViaSMTP(to: string, subject: string, htmlBody: string): 
       connection: {
         hostname: "smtp.office365.com",
         port: 587,
-        tls: true,
+        tls: false,
         auth: {
           username: smtpUser,
           password: smtpPass,
