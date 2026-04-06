@@ -322,10 +322,24 @@ export function PortalUserManagement({ demoId }: PortalUserManagementProps) {
                 </CardDescription>
               </div>
             </div>
-            <Button className="gradient-primary" onClick={() => { closeDialog(); setAddDialogOpen(true); }}>
-              <UserPlus className="w-4 h-4 mr-2" />
-              Add Portal User
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" onClick={() => {
+                setInviteEmail('');
+                setInvitePassword('');
+                setInviteDemoId(demoId || '');
+                setInviteTemplateId('default');
+                setInviteError(null);
+                setInviteResult(null);
+                setInviteDialogOpen(true);
+              }}>
+                <Send className="w-4 h-4 mr-2" />
+                Invite User
+              </Button>
+              <Button className="gradient-primary" onClick={() => { closeDialog(); setAddDialogOpen(true); }}>
+                <UserPlus className="w-4 h-4 mr-2" />
+                Add Portal User
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
