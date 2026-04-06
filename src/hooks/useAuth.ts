@@ -11,6 +11,28 @@ export interface AuthState {
   roleChecked: boolean;
 }
 
+const clearPersistedAuthSession = () => {
+  if (typeof window === 'undefined') return;
+
+  const keysToClear = new Set<string>(['supabase.auth.token']);
+
+  try {
+    const projectRef = new URL(import.meta.env.VITE_SUPABASE_URL).hostname.split('.')[0];
+    keysToClear.add(`sb-${projectRef}-auth-token`);
+    keysToClear.add(`sb-${projectRef}-auth-token-code-verifier`);
+  } catch {
+    // Ignore malformed URL envs and fall back to pattern-based cleanup below.
+  }
+
+  for (const storage of [window.localStorage, window.sessionStorage]) {
+    Object.keys(storage)
+      .filter((key) => key.startsWith('sb-') && key.includes('auth-token'))
+      .forEach((key) => keysToClear.add(key));
+
+    keysToClear.forEach((key) => storage.removeItem(key));
+  }
+};
+
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -49,7 +71,7 @@ export function useAuth() {
   useEffect(() => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      (_event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         
@@ -61,6 +83,7 @@ export function useAuth() {
         } else {
           setIsAdmin(false);
           setIsGlobalAdmin(false);
+          setRoleChecked(true);
         }
         
         setIsLoading(false);
@@ -74,6 +97,10 @@ export function useAuth() {
       
       if (session?.user) {
         checkAdminRole(session.user.id);
+      } else {
+        setIsAdmin(false);
+        setIsGlobalAdmin(false);
+        setRoleChecked(true);
       }
       
       setIsLoading(false);
@@ -104,18 +131,22 @@ export function useAuth() {
   };
 
   const signOut = async () => {
-    // Clear state immediately
+    setIsLoading(true);
     setUser(null);
     setSession(null);
     setIsAdmin(false);
     setIsGlobalAdmin(false);
-    setRoleChecked(false);
-    
-    // Sign out locally (clears localStorage)
-    await supabase.auth.signOut({ scope: 'local' });
-    
-    // Force hard navigation to break any stale in-memory session state
-    window.location.href = '/auth';
+    setRoleChecked(true);
+
+    try {
+      const { error } = await supabase.auth.signOut({ scope: 'local' });
+      if (error) {
+        console.warn('Sign out returned an error; clearing stored session manually.', error);
+      }
+    } finally {
+      clearPersistedAuthSession();
+      window.location.replace('/auth');
+    }
   };
 
   return {
