@@ -367,21 +367,25 @@ export function GlobalUseCaseManagement({ readOnly = false }: { readOnly?: boole
 
                       {/* Footer */}
                       <div className="flex items-center justify-between border-t pt-4">
-                        <div className="flex items-center gap-2">
-                          <Switch
-                            checked={uc.isEnabled}
-                            onCheckedChange={(v) => handleUpdate(uc.id, { isEnabled: v })}
-                          />
-                          <span className="text-sm text-muted-foreground">Enabled</span>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-destructive hover:text-destructive"
-                          onClick={() => setDeleteId(uc.id)}
-                        >
-                          <Trash2 className="w-4 h-4 mr-1" /> Delete
-                        </Button>
+                        {!readOnly && (
+                          <>
+                            <div className="flex items-center gap-2">
+                              <Switch
+                                checked={uc.isEnabled}
+                                onCheckedChange={(v) => handleUpdate(uc.id, { isEnabled: v })}
+                              />
+                              <span className="text-sm text-muted-foreground">Enabled</span>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-destructive hover:text-destructive"
+                              onClick={() => setDeleteId(uc.id)}
+                            >
+                              <Trash2 className="w-4 h-4 mr-1" /> Delete
+                            </Button>
+                          </>
+                        )}
                       </div>
                     </div>
                   </CollapsibleContent>
