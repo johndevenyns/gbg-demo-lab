@@ -23,6 +23,17 @@ export async function logAdminAction(params: {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
+    // Look up the admin's role
+    let role: string = "admin";
+    const { data: roleData } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    if (roleData?.role) role = roleData.role;
+
+    const details = { ...(params.details ?? {}), role } as Json;
+
     await supabase.from("admin_audit_logs").insert([{
       user_id: user.id,
       user_email: user.email ?? null,
@@ -30,7 +41,7 @@ export async function logAdminAction(params: {
       entity_type: params.entityType ?? null,
       entity_id: params.entityId ?? null,
       entity_label: params.entityLabel ?? null,
-      details: (params.details ?? {}) as Json,
+      details,
     }]);
   } catch (err) {
     console.error("Failed to log admin action:", err);

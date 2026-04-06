@@ -292,22 +292,30 @@ export default function ReportingPage() {
                   <div className="overflow-auto max-h-[600px]">
                     <Table>
                       <TableHeader>
-                        <TableRow>
+                         <TableRow>
                           <TableHead>Time</TableHead>
                           <TableHead>Action</TableHead>
                           <TableHead>Admin</TableHead>
+                          <TableHead>Role</TableHead>
                           <TableHead>Entity Type</TableHead>
                           <TableHead>Entity</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {adminLogs.map((log) => (
+                        {adminLogs.map((log) => {
+                          const role = (log.details as Record<string, unknown>)?.role as string | undefined;
+                          return (
                           <TableRow key={log.id}>
                             <TableCell className="text-xs whitespace-nowrap">
                               {format(new Date(log.created_at), "MMM d, HH:mm")}
                             </TableCell>
                             <TableCell><ActionBadge action={log.action} /></TableCell>
                             <TableCell className="text-sm">{log.user_email || "—"}</TableCell>
+                            <TableCell>
+                              <Badge variant="outline" className="text-xs">
+                                {role === "global_admin" ? "Global Admin" : role === "admin" ? "Admin" : role || "—"}
+                              </Badge>
+                            </TableCell>
                             <TableCell className="text-sm">{log.entity_type || "—"}</TableCell>
                             <TableCell className="text-sm">{log.entity_label || log.entity_id || "—"}</TableCell>
                           </TableRow>
