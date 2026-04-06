@@ -47,6 +47,14 @@ function AppContent() {
             }
           />
           <Route
+            path="/admin/reporting"
+            element={
+              <ProtectedRoute>
+                <ReportingPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/admin/demo/:id"
             element={
               <ProtectedRoute>
