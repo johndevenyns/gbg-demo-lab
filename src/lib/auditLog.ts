@@ -22,15 +22,15 @@ export async function logAdminAction(params: {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    await supabase.from("admin_audit_logs").insert({
+    await supabase.from("admin_audit_logs").insert([{
       user_id: user.id,
       user_email: user.email ?? null,
       action: params.action,
       entity_type: params.entityType ?? null,
       entity_id: params.entityId ?? null,
       entity_label: params.entityLabel ?? null,
-      details: params.details ?? {},
-    });
+      details: (params.details ?? {}) as Record<string, unknown>,
+    }]);
   } catch (err) {
     console.error("Failed to log admin action:", err);
   }
