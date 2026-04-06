@@ -77,10 +77,6 @@ serve(async (req) => {
       );
     }
 
-    // Parse request body
-    const body = await req.json();
-    const { action, email, userId: targetUserId, password: initialPassword, newPassword, role: requestedRole } = body;
-    const roleToAssign = requestedRole === 'global_admin' ? 'global_admin' : 'admin';
 
     // List all admin users with their emails
     if (action === "list") {
