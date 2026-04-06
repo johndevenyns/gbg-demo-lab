@@ -53,6 +53,17 @@ export function PortalUserManagement({ demoId }: PortalUserManagementProps) {
   const [formIsDefault, setFormIsDefault] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
+  // Invite state
+  const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [invitePassword, setInvitePassword] = useState('');
+  const [inviteDemoId, setInviteDemoId] = useState<string>('');
+  const [inviteTemplateId, setInviteTemplateId] = useState<string>('default');
+  const [inviteError, setInviteError] = useState<string | null>(null);
+  const [inviteResult, setInviteResult] = useState<{ registrationCode: string; demoLink: string; emailSent: boolean; emailError?: string } | null>(null);
+  const [isInviting, setIsInviting] = useState(false);
+  const [copiedCode, setCopiedCode] = useState<string | null>(null);
+
   const isGlobalView = !demoId;
 
   // Fetch portal users
