@@ -64,6 +64,20 @@ export function PortalUserManagement({ demoId }: PortalUserManagementProps) {
   const [isInviting, setIsInviting] = useState(false);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
+  // Fetch invitation templates
+  const { data: invitationTemplates = [] } = useQuery({
+    queryKey: ['invitation-templates'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('invitation_templates')
+        .select('*')
+        .order('is_default', { ascending: false })
+        .order('name');
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
   const isGlobalView = !demoId;
 
   // Fetch portal users
