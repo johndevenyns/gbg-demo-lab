@@ -53,7 +53,7 @@ export default function VerificationSettings() {
       {/* Main Content */}
       <main className="admin-container py-8">
         <Tabs defaultValue="industries" className="space-y-6">
-          <TabsList className="flex flex-wrap h-auto gap-1">
+          <TabsList>
             <TabsTrigger value="industries" className="flex items-center gap-2">
               <Briefcase className="w-4 h-4" />
               Industries
@@ -62,21 +62,9 @@ export default function VerificationSettings() {
               <FolderOpen className="w-4 h-4" />
               Use Cases
             </TabsTrigger>
-            <TabsTrigger value="templates" className="flex items-center gap-2">
-              <LayoutTemplate className="w-4 h-4" />
-              Form Templates
-            </TabsTrigger>
-            <TabsTrigger value="field-config" className="flex items-center gap-2">
-              <ListChecks className="w-4 h-4" />
-              Fields
-            </TabsTrigger>
             <TabsTrigger value="portal-types" className="flex items-center gap-2">
               <Monitor className="w-4 h-4" />
               Portal Types
-            </TabsTrigger>
-            <TabsTrigger value="verification" className="flex items-center gap-2">
-              <Shield className="w-4 h-4" />
-              Verification
             </TabsTrigger>
             <TabsTrigger value="invite-templates" className="flex items-center gap-2">
               <Mail className="w-4 h-4" />
@@ -101,23 +89,43 @@ export default function VerificationSettings() {
           </TabsContent>
 
           <TabsContent value="use-cases" className="space-y-6">
-            <GlobalUseCaseManagement readOnly={!isGlobalAdmin} />
-          </TabsContent>
+            <Tabs defaultValue="use-cases-main" className="space-y-4">
+              <TabsList>
+                <TabsTrigger value="use-cases-main" className="flex items-center gap-2">
+                  <FolderOpen className="w-4 h-4" />
+                  Use Cases
+                </TabsTrigger>
+                <TabsTrigger value="templates" className="flex items-center gap-2">
+                  <LayoutTemplate className="w-4 h-4" />
+                  Form Templates
+                </TabsTrigger>
+                <TabsTrigger value="field-config" className="flex items-center gap-2">
+                  <ListChecks className="w-4 h-4" />
+                  Fields
+                </TabsTrigger>
+                <TabsTrigger value="verification" className="flex items-center gap-2">
+                  <Shield className="w-4 h-4" />
+                  Verification
+                </TabsTrigger>
+              </TabsList>
 
-          <TabsContent value="templates" className="space-y-6">
-            <FormTemplateManagement readOnly={!isGlobalAdmin} />
-          </TabsContent>
-
-          <TabsContent value="field-config" className="space-y-6">
-            <GlobalFieldConfigManagement readOnly={!isGlobalAdmin} />
+              <TabsContent value="use-cases-main" className="space-y-6">
+                <GlobalUseCaseManagement readOnly={!isGlobalAdmin} />
+              </TabsContent>
+              <TabsContent value="templates" className="space-y-6">
+                <FormTemplateManagement readOnly={!isGlobalAdmin} />
+              </TabsContent>
+              <TabsContent value="field-config" className="space-y-6">
+                <GlobalFieldConfigManagement readOnly={!isGlobalAdmin} />
+              </TabsContent>
+              <TabsContent value="verification" className="space-y-6">
+                <UnifiedVerificationSettings isGlobalAdmin={isGlobalAdmin} />
+              </TabsContent>
+            </Tabs>
           </TabsContent>
 
           <TabsContent value="portal-types" className="space-y-6">
             <PortalTypeManagement readOnly={!isGlobalAdmin} />
-          </TabsContent>
-
-          <TabsContent value="verification" className="space-y-6">
-            <UnifiedVerificationSettings isGlobalAdmin={isGlobalAdmin} />
           </TabsContent>
 
           <TabsContent value="invite-templates" className="space-y-6">
