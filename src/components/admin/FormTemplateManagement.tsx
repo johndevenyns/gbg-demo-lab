@@ -240,7 +240,7 @@ function TemplateEditorDialog({
   );
 }
 
-export function FormTemplateManagement() {
+export function FormTemplateManagement({ readOnly = false }: { readOnly?: boolean }) {
   const [savedTemplates, setSavedTemplates] = useState<SavedTemplate[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [editorOpen, setEditorOpen] = useState(false);
@@ -401,10 +401,12 @@ export function FormTemplateManagement() {
           <h2 className="text-lg font-semibold">Form Templates</h2>
           <p className="text-sm text-muted-foreground">Create and manage reusable form templates for demo environments</p>
         </div>
-        <Button onClick={handleCreateNew}>
-          <Plus className="w-4 h-4 mr-2" />
-          New Template
-        </Button>
+        {!readOnly && (
+          <Button onClick={handleCreateNew}>
+            <Plus className="w-4 h-4 mr-2" />
+            New Template
+          </Button>
+        )}
       </div>
 
       <Tabs defaultValue="saved" className="w-full">
@@ -433,11 +435,13 @@ export function FormTemplateManagement() {
               <CardContent className="py-12 text-center">
                 <Bookmark className="w-12 h-12 mx-auto mb-4 text-muted-foreground opacity-50" />
                 <h3 className="font-semibold mb-2">No saved templates</h3>
-                <p className="text-sm text-muted-foreground mb-4">Create a new template or edit an industry template to get started.</p>
-                <Button onClick={handleCreateNew}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Create Template
-                </Button>
+                <p className="text-sm text-muted-foreground mb-4">{readOnly ? 'No saved templates yet.' : 'Create a new template or edit an industry template to get started.'}</p>
+                {!readOnly && (
+                  <Button onClick={handleCreateNew}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Create Template
+                  </Button>
+                )}
               </CardContent>
             </Card>
           ) : (
@@ -470,17 +474,19 @@ export function FormTemplateManagement() {
                         Updated {new Date(t.updated_at).toLocaleDateString()}
                       </p>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <Button variant="ghost" size="icon" onClick={() => handleEditSaved(t)} title="Edit">
-                        <Pencil className="w-4 h-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleDuplicateSaved(t)} title="Duplicate">
-                        <Copy className="w-4 h-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" onClick={() => setDeleteTarget(t)} title="Delete">
-                        <Trash2 className="w-4 h-4 text-destructive" />
-                      </Button>
-                    </div>
+                    {!readOnly && (
+                      <div className="flex items-center gap-1">
+                        <Button variant="ghost" size="icon" onClick={() => handleEditSaved(t)} title="Edit">
+                          <Pencil className="w-4 h-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => handleDuplicateSaved(t)} title="Duplicate">
+                          <Copy className="w-4 h-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => setDeleteTarget(t)} title="Delete">
+                          <Trash2 className="w-4 h-4 text-destructive" />
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -515,11 +521,13 @@ export function FormTemplateManagement() {
                           )}
                         </div>
                       </div>
-                      <div className="flex items-center gap-1">
-                        <Button variant="ghost" size="icon" onClick={() => handleEditIndustry(key)} title="Edit Template">
-                          <Pencil className="w-4 h-4" />
-                        </Button>
-                      </div>
+                      {!readOnly && (
+                        <div className="flex items-center gap-1">
+                          <Button variant="ghost" size="icon" onClick={() => handleEditIndustry(key)} title="Edit Template">
+                            <Pencil className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>

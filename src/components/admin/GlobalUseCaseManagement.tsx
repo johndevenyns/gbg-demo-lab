@@ -60,7 +60,7 @@ const areTemplateValuesEqual = (left: unknown, right: unknown) => (
   JSON.stringify(normalizeTemplateValue(left)) === JSON.stringify(normalizeTemplateValue(right))
 );
 
-export function GlobalUseCaseManagement() {
+export function GlobalUseCaseManagement({ readOnly = false }: { readOnly?: boolean }) {
   const { data: useCases = [], isLoading } = useGlobalUseCases();
   const createMutation = useCreateGlobalUseCase();
   const updateMutation = useUpdateGlobalUseCase();
@@ -166,10 +166,12 @@ export function GlobalUseCaseManagement() {
             Define use cases available across all demo environments
           </p>
         </div>
-        <Button onClick={() => setCreateOpen(true)}>
-          <Plus className="w-4 h-4 mr-2" />
-          New Use Case
-        </Button>
+        {!readOnly && (
+          <Button onClick={() => setCreateOpen(true)}>
+            <Plus className="w-4 h-4 mr-2" />
+            New Use Case
+          </Button>
+        )}
       </div>
 
       {isLoading ? (
@@ -219,7 +221,8 @@ export function GlobalUseCaseManagement() {
                   </CollapsibleTrigger>
 
                   <CollapsibleContent>
-                    <div className="border-t p-4 space-y-4">
+                    <div className={`border-t p-4 space-y-4 ${readOnly ? 'pointer-events-none opacity-80' : ''}`}>
+                      {readOnly && <div className="text-xs text-muted-foreground italic mb-2">Read-only view</div>}
                       {/* Basic Settings */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
@@ -365,21 +368,25 @@ export function GlobalUseCaseManagement() {
 
                       {/* Footer */}
                       <div className="flex items-center justify-between border-t pt-4">
-                        <div className="flex items-center gap-2">
-                          <Switch
-                            checked={uc.isEnabled}
-                            onCheckedChange={(v) => handleUpdate(uc.id, { isEnabled: v })}
-                          />
-                          <span className="text-sm text-muted-foreground">Enabled</span>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-destructive hover:text-destructive"
-                          onClick={() => setDeleteId(uc.id)}
-                        >
-                          <Trash2 className="w-4 h-4 mr-1" /> Delete
-                        </Button>
+                        {!readOnly && (
+                          <>
+                            <div className="flex items-center gap-2">
+                              <Switch
+                                checked={uc.isEnabled}
+                                onCheckedChange={(v) => handleUpdate(uc.id, { isEnabled: v })}
+                              />
+                              <span className="text-sm text-muted-foreground">Enabled</span>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-destructive hover:text-destructive"
+                              onClick={() => setDeleteId(uc.id)}
+                            >
+                              <Trash2 className="w-4 h-4 mr-1" /> Delete
+                            </Button>
+                          </>
+                        )}
                       </div>
                     </div>
                   </CollapsibleContent>

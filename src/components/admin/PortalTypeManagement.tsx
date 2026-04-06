@@ -21,12 +21,13 @@ import { PortalPreviewDialog } from "./PortalPreviewDialog";
 import { PortalConfig, DEFAULT_BANKING_CONFIG } from "@/types/portalConfig";
 import * as LucideIcons from "lucide-react";
 
-function PortalTypeCard({ pt, onUpdate, onDelete, onPreview, onConfigureContent }: {
+function PortalTypeCard({ pt, onUpdate, onDelete, onPreview, onConfigureContent, readOnly }: {
   pt: PortalType;
   onUpdate: (updates: Partial<PortalType>) => void;
   onDelete: () => void;
   onPreview: () => void;
   onConfigureContent: () => void;
+  readOnly?: boolean;
 }) {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -63,26 +64,30 @@ function PortalTypeCard({ pt, onUpdate, onDelete, onPreview, onConfigureContent 
               )}
             </div>
             <div className="flex items-center gap-2">
-              <Switch checked={pt.isEnabled} onCheckedChange={checked => onUpdate({ isEnabled: checked } as any)} />
-              {editing ? (
+              {!readOnly && <Switch checked={pt.isEnabled} onCheckedChange={checked => onUpdate({ isEnabled: checked } as any)} />}
+              {!readOnly && editing ? (
                 <>
                   <Button variant="ghost" size="icon" onClick={handleSave}><Check className="w-4 h-4 text-green-500" /></Button>
                   <Button variant="ghost" size="icon" onClick={() => setEditing(false)}><X className="w-4 h-4 text-destructive" /></Button>
                 </>
               ) : (
                 <>
-                  <Button variant="ghost" size="icon" onClick={onConfigureContent} title="Configure content">
-                    <Settings className="w-4 h-4" />
-                  </Button>
                   <Button variant="ghost" size="icon" onClick={onPreview} title="Preview portal">
                     <Eye className="w-4 h-4" />
                   </Button>
-                  <Button variant="ghost" size="icon" onClick={() => { setEditVals({ displayName: pt.displayName, description: pt.description || '' }); setEditing(true); }}>
-                    <Pencil className="w-4 h-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" onClick={() => setDeleteOpen(true)}>
-                    <Trash2 className="w-4 h-4 text-destructive" />
-                  </Button>
+                  {!readOnly && (
+                    <>
+                      <Button variant="ghost" size="icon" onClick={onConfigureContent} title="Configure content">
+                        <Settings className="w-4 h-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => { setEditVals({ displayName: pt.displayName, description: pt.description || '' }); setEditing(true); }}>
+                        <Pencil className="w-4 h-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => setDeleteOpen(true)}>
+                        <Trash2 className="w-4 h-4 text-destructive" />
+                      </Button>
+                    </>
+                  )}
                 </>
               )}
             </div>
@@ -290,7 +295,7 @@ function PortalConfigEditorDialog({
   );
 }
 
-export function PortalTypeManagement() {
+export function PortalTypeManagement({ readOnly = false }: { readOnly?: boolean }) {
   const { data: portalTypes = [], isLoading } = usePortalTypes();
   const createMutation = useCreatePortalType();
   const updateMutation = useUpdatePortalType();
@@ -322,7 +327,7 @@ export function PortalTypeManagement() {
           <h2 className="text-lg font-semibold">Portal Types</h2>
           <p className="text-sm text-muted-foreground">Manage the portal experiences available when creating demos</p>
         </div>
-        <Button onClick={() => setAddOpen(true)}><Plus className="w-4 h-4 mr-2" />Add Portal Type</Button>
+        {!readOnly && <Button onClick={() => setAddOpen(true)}><Plus className="w-4 h-4 mr-2" />Add Portal Type</Button>}
       </div>
 
       {isLoading ? (
@@ -339,6 +344,7 @@ export function PortalTypeManagement() {
               onDelete={() => deleteMutation.mutate(pt.id)}
               onPreview={() => setPreviewType(pt.typeKey)}
               onConfigureContent={() => setConfigTypeId(pt.id)}
+              readOnly={readOnly}
             />
           ))}
         </div>

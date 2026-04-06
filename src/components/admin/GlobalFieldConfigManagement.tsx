@@ -69,7 +69,7 @@ const emptyForm: GlobalFieldConfigInsert = {
   display_order: 100,
 };
 
-export function GlobalFieldConfigManagement() {
+export function GlobalFieldConfigManagement({ readOnly = false }: { readOnly?: boolean }) {
   const { data: fields = [], isLoading } = useGlobalFieldConfigs();
   const createField = useCreateGlobalFieldConfig();
   const updateField = useUpdateGlobalFieldConfig();
@@ -138,9 +138,11 @@ export function GlobalFieldConfigManagement() {
                     <CardTitle className="text-base">{group.label}</CardTitle>
                     <CardDescription>{group.fields.length} field{group.fields.length !== 1 ? 's' : ''}</CardDescription>
                   </div>
-                  <Button variant="outline" size="sm" onClick={() => openAdd(group.value)} className="gap-1.5">
-                    <Plus className="w-3.5 h-3.5" /> Add
-                  </Button>
+                  {!readOnly && (
+                    <Button variant="outline" size="sm" onClick={() => openAdd(group.value)} className="gap-1.5">
+                      <Plus className="w-3.5 h-3.5" /> Add
+                    </Button>
+                  )}
                 </div>
               </CardHeader>
               <CardContent>
@@ -178,14 +180,16 @@ export function GlobalFieldConfigManagement() {
                           )}
                         </div>
                       </div>
-                      <div className="flex items-center gap-1">
-                        <Button variant="ghost" size="icon" onClick={() => openEdit(field)}>
-                          <Pencil className="w-4 h-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" onClick={() => setDeleteTarget(field)}>
-                          <Trash2 className="w-4 h-4 text-destructive" />
-                        </Button>
-                      </div>
+                      {!readOnly && (
+                        <div className="flex items-center gap-1">
+                          <Button variant="ghost" size="icon" onClick={() => openEdit(field)}>
+                            <Pencil className="w-4 h-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => setDeleteTarget(field)}>
+                            <Trash2 className="w-4 h-4 text-destructive" />
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
