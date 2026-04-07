@@ -84,10 +84,58 @@ export interface PharmacyOrder {
   estimatedReady?: string;
 }
 
+// ── Retail-specific types ──
+
+export interface RetailProduct {
+  id: string;
+  name: string;
+  price: number;
+  image: string;        // emoji or URL
+  category: string;
+  rating: number;
+  reviewCount: number;
+  badge?: string;        // e.g. "Best Seller", "Sale"
+}
+
+export interface RetailOrderItem {
+  name: string;
+  qty: number;
+  price: number;
+  image: string;
+}
+
+export interface RetailOrder {
+  orderId: string;
+  items: RetailOrderItem[];
+  status: 'processing' | 'shipped' | 'delivered' | 'returned';
+  date: string;
+  total: number;
+  trackingNumber?: string;
+  estimatedDelivery?: string;
+}
+
+export interface RetailPaymentMethod {
+  type: 'visa' | 'mastercard' | 'amex';
+  lastFour: string;
+  expiryDate: string;
+  isDefault: boolean;
+}
+
+export interface RetailAddress {
+  label: string;
+  line1: string;
+  line2?: string;
+  city: string;
+  state: string;
+  zip: string;
+  isDefault: boolean;
+}
+
 export interface PortalConfig {
   // Branding (shared)
   bankName?: string;       // also used as generic "portal name"
   pharmacyName?: string;
+  retailStoreName?: string;
   accentColor?: string;
   userName?: string;
   userEmail?: string;
@@ -105,6 +153,13 @@ export interface PortalConfig {
   insuranceProvider?: string;
   insuranceMemberId?: string;
   preferredStore?: string;
+
+  // Retail dashboard content
+  retailProducts?: RetailProduct[];
+  retailOrders?: RetailOrder[];
+  retailPaymentMethods?: RetailPaymentMethod[];
+  retailAddresses?: RetailAddress[];
+  retailCategories?: string[];
 
   // Settings — which actions trigger IDV
   verificationTriggers?: PortalVerificationTrigger[];
