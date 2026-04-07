@@ -1,10 +1,12 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { RetailDashboard } from './RetailDashboard';
 import { RetailOrdersPage } from './RetailOrdersPage';
 import { RetailSettings } from './RetailSettings';
-import { PortalConfig, PortalBranding, DEFAULT_RETAIL_CONFIG } from '@/types/portalConfig';
+import { RetailCartPage, CartItem } from './RetailCartPage';
+import { PortalConfig, PortalBranding, DEFAULT_RETAIL_CONFIG, RetailProduct, PortalVerificationTrigger } from '@/types/portalConfig';
+import { toast } from 'sonner';
 
-type PortalPage = 'dashboard' | 'orders' | 'settings';
+type PortalPage = 'dashboard' | 'orders' | 'settings' | 'cart';
 
 export interface RetailPortalShellProps {
   userName: string;
@@ -15,7 +17,7 @@ export interface RetailPortalShellProps {
   portalConfig?: PortalConfig;
   branding?: PortalBranding;
   isNewAccount?: boolean;
-  onTriggerVerification: (action: string) => void;
+  onTriggerVerification: (trigger: PortalVerificationTrigger, txContext?: { amount?: number; recipientName?: string; fromAccount?: string }) => void;
   onLogout: () => void;
 }
 
@@ -25,10 +27,59 @@ export function RetailPortalShell({
 }: RetailPortalShellProps) {
   const config = { ...DEFAULT_RETAIL_CONFIG, ...portalConfig };
   const [activePage, setActivePage] = useState<PortalPage>('dashboard');
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
 
-  const handleTriggerVerification = useCallback((action: string) => {
-    onTriggerVerification(action);
+  const cartCount = cartItems.reduce((sum, i) => sum + i.qty, 0);
+
+  const handleAddToCart = useCallback((product: RetailProduct) => {
+    setCartItems(prev => {
+      const existing = prev.find(i => i.product.id === product.id);
+      if (existing) {
+        return prev.map(i => i.product.id === product.id ? { ...i, qty: i.qty + 1 } : i);
+      }
+      return [...prev, { product, qty: 1 }];
+    });
+    toast.success(`${product.name} added to cart`);
+  }, []);
+
+  const handleUpdateQty = useCallback((productId: string, qty: number) => {
+    if (qty <= 0) {
+      setCartItems(prev => prev.filter(i => i.product.id !== productId));
+    } else {
+      setCartItems(prev => prev.map(i => i.product.id === productId ? { ...i, qty } : i));
+    }
+  }, []);
+
+  const handleRemove = useCallback((productId: string) => {
+    setCartItems(prev => prev.filter(i => i.product.id !== productId));
+  }, []);
+
+  const handleCheckout = useCallback((total: number) => {
+    const triggers = config.verificationTriggers || DEFAULT_RETAIL_CONFIG.verificationTriggers!;
+    const purchaseTrigger = triggers.find(t => t.id === 'retail-purchase' && t.enabled);
+
+    if (purchaseTrigger && purchaseTrigger.condition === 'threshold' && purchaseTrigger.thresholdAmount && total >= purchaseTrigger.thresholdAmount) {
+      onTriggerVerification(purchaseTrigger, { amount: total });
+    } else {
+      // Under threshold — just show order confirmation
+      toast.success('Order placed successfully!');
+      setCartItems([]);
+      setActivePage('orders');
+    }
+  }, [config.verificationTriggers, onTriggerVerification]);
+
+  const handleTriggerVerification = useCallback((trigger: PortalVerificationTrigger, txContext?: { amount?: number }) => {
+    onTriggerVerification(trigger, txContext);
   }, [onTriggerVerification]);
+
+  // String-based handler for settings page
+  const handleSettingsTrigger = useCallback((action: string) => {
+    const triggers = config.verificationTriggers || DEFAULT_RETAIL_CONFIG.verificationTriggers!;
+    const trigger = triggers.find(t => t.action === action);
+    if (trigger) {
+      onTriggerVerification(trigger);
+    }
+  }, [config.verificationTriggers, onTriggerVerification]);
 
   const initials = userName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
   const brandAccent = branding?.accentColor || accentColor;
@@ -123,22 +174,27 @@ export function RetailPortalShell({
               }}>{initials}</div>
               <span style={{ fontSize: '13px', fontWeight: 600, color: headerText }}>{userName.split(' ')[0]}</span>
             </button>
-            <button style={{
-              position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              width: '40px', height: '40px', borderRadius: '10px', border: 'none',
-              background: 'transparent', cursor: 'pointer', fontSize: '20px',
-              transition: 'background 0.2s',
-            }}
+            <button
+              onClick={() => setActivePage('cart')}
+              style={{
+                position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                width: '40px', height: '40px', borderRadius: '10px', border: 'none',
+                background: activePage === 'cart' ? '#F1F5F9' : 'transparent', cursor: 'pointer', fontSize: '20px',
+                transition: 'background 0.2s',
+              }}
               onMouseEnter={(e) => { e.currentTarget.style.background = '#F1F5F9'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+              onMouseLeave={(e) => { if (activePage !== 'cart') e.currentTarget.style.background = 'transparent'; }}
             >
               🛒
-              <span style={{
-                position: 'absolute', top: '4px', right: '4px',
-                width: '18px', height: '18px', borderRadius: '50%',
-                background: '#EF4444', color: 'white', fontSize: '10px',
-                fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}>3</span>
+              {cartCount > 0 && (
+                <span style={{
+                  position: 'absolute', top: '4px', right: '4px',
+                  minWidth: '18px', height: '18px', borderRadius: '50%',
+                  background: '#EF4444', color: 'white', fontSize: '10px',
+                  fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  padding: '0 4px',
+                }}>{cartCount}</span>
+              )}
             </button>
             <button onClick={onLogout} title="Sign out" style={{
               background: 'none', border: 'none', color: '#94A3B8',
@@ -188,6 +244,7 @@ export function RetailPortalShell({
             accentColor={brandAccent}
             portalConfig={config}
             isNewAccount={isNewAccount}
+            onAddToCart={handleAddToCart}
             onNavigate={(page) => setActivePage(page as PortalPage)}
           />
         )}
@@ -197,6 +254,16 @@ export function RetailPortalShell({
             portalConfig={config}
           />
         )}
+        {activePage === 'cart' && (
+          <RetailCartPage
+            items={cartItems}
+            accentColor={brandAccent}
+            onUpdateQty={handleUpdateQty}
+            onRemove={handleRemove}
+            onCheckout={handleCheckout}
+            onContinueShopping={() => setActivePage('dashboard')}
+          />
+        )}
         {activePage === 'settings' && (
           <RetailSettings
             userName={userName}
@@ -204,7 +271,7 @@ export function RetailPortalShell({
             userPhone={config.userPhone || '(555) 867-5309'}
             accentColor={brandAccent}
             portalConfig={config}
-            onTriggerVerification={handleTriggerVerification}
+            onTriggerVerification={handleSettingsTrigger}
           />
         )}
       </main>

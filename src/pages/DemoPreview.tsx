@@ -361,7 +361,7 @@ export default function DemoPreview() {
             portalConfig={demoIndustry?.portalConfig}
             branding={portalBranding}
             isNewAccount={portalUser.isNewAccount}
-            onTriggerVerification={(action) => handlePortalVerification({ id: action, action, label: action, enabled: true, category: 'settings_change', condition: 'always' })}
+            onTriggerVerification={handlePortalVerification}
             onLogout={handlePortalLogout}
           />
         ) : (
