@@ -84,10 +84,58 @@ export interface PharmacyOrder {
   estimatedReady?: string;
 }
 
+// ── Retail-specific types ──
+
+export interface RetailProduct {
+  id: string;
+  name: string;
+  price: number;
+  image: string;        // emoji or URL
+  category: string;
+  rating: number;
+  reviewCount: number;
+  badge?: string;        // e.g. "Best Seller", "Sale"
+}
+
+export interface RetailOrderItem {
+  name: string;
+  qty: number;
+  price: number;
+  image: string;
+}
+
+export interface RetailOrder {
+  orderId: string;
+  items: RetailOrderItem[];
+  status: 'processing' | 'shipped' | 'delivered' | 'returned';
+  date: string;
+  total: number;
+  trackingNumber?: string;
+  estimatedDelivery?: string;
+}
+
+export interface RetailPaymentMethod {
+  type: 'visa' | 'mastercard' | 'amex';
+  lastFour: string;
+  expiryDate: string;
+  isDefault: boolean;
+}
+
+export interface RetailAddress {
+  label: string;
+  line1: string;
+  line2?: string;
+  city: string;
+  state: string;
+  zip: string;
+  isDefault: boolean;
+}
+
 export interface PortalConfig {
   // Branding (shared)
   bankName?: string;       // also used as generic "portal name"
   pharmacyName?: string;
+  retailStoreName?: string;
   accentColor?: string;
   userName?: string;
   userEmail?: string;
@@ -105,6 +153,13 @@ export interface PortalConfig {
   insuranceProvider?: string;
   insuranceMemberId?: string;
   preferredStore?: string;
+
+  // Retail dashboard content
+  retailProducts?: RetailProduct[];
+  retailOrders?: RetailOrder[];
+  retailPaymentMethods?: RetailPaymentMethod[];
+  retailAddresses?: RetailAddress[];
+  retailCategories?: string[];
 
   // Settings — which actions trigger IDV
   verificationTriggers?: PortalVerificationTrigger[];
@@ -193,5 +248,53 @@ export const DEFAULT_PHARMACY_CONFIG: PortalConfig = {
     { id: 'pharm-2fa', action: 'update two-factor authentication', label: 'Update 2FA', enabled: true, category: 'settings_change', condition: 'always', successMessage: 'Two-factor authentication updated.', postVerificationBehavior: 'return_with_toast' },
     { id: 'pharm-insurance', action: 'update your insurance information', label: 'Update Insurance', enabled: true, category: 'settings_change', condition: 'always', successMessage: 'Insurance information updated.', postVerificationBehavior: 'return_with_toast' },
     { id: 'pharm-pickup', action: 'add a new authorized pickup person', label: 'Add Pickup Person', enabled: true, category: 'account_action', condition: 'always', successMessage: 'Authorized pickup person added.', postVerificationBehavior: 'return_with_toast' },
+  ],
+};
+
+export const DEFAULT_RETAIL_CONFIG: PortalConfig = {
+  retailStoreName: 'Demo Store',
+  accentColor: '#6366F1',
+  userName: 'Jane Cooper',
+  userEmail: 'jane.cooper@email.com',
+  userPhone: '(555) 867-5309',
+
+  retailCategories: ['Electronics', 'Home & Kitchen', 'Clothing', 'Sports & Outdoors', 'Books', 'Beauty'],
+
+  retailProducts: [
+    { id: 'p1', name: 'Wireless Noise-Canceling Headphones', price: 249.99, image: '🎧', category: 'Electronics', rating: 4.7, reviewCount: 2341, badge: 'Best Seller' },
+    { id: 'p2', name: 'Smart Home Speaker', price: 89.99, image: '📻', category: 'Electronics', rating: 4.5, reviewCount: 1892 },
+    { id: 'p3', name: 'Ergonomic Office Chair', price: 399.00, image: '🪑', category: 'Home & Kitchen', rating: 4.6, reviewCount: 876, badge: 'Top Rated' },
+    { id: 'p4', name: 'Stainless Steel Water Bottle', price: 24.99, image: '🧴', category: 'Sports & Outdoors', rating: 4.8, reviewCount: 5421 },
+    { id: 'p5', name: 'Organic Cotton T-Shirt', price: 34.99, image: '👕', category: 'Clothing', rating: 4.3, reviewCount: 723 },
+    { id: 'p6', name: 'Portable Bluetooth Speaker', price: 59.99, image: '🔊', category: 'Electronics', rating: 4.4, reviewCount: 1456, badge: 'Sale' },
+    { id: 'p7', name: 'Cast Iron Skillet Set', price: 79.99, image: '🍳', category: 'Home & Kitchen', rating: 4.9, reviewCount: 3102 },
+    { id: 'p8', name: 'Running Shoes — Ultralight', price: 129.99, image: '👟', category: 'Sports & Outdoors', rating: 4.6, reviewCount: 2087, badge: 'New' },
+  ],
+
+  retailOrders: [
+    { orderId: 'ORD-90412', items: [{ name: 'Wireless Headphones', qty: 1, price: 249.99, image: '🎧' }], status: 'shipped', date: 'Apr 5', total: 249.99, trackingNumber: '1Z999AA10123456784', estimatedDelivery: 'Apr 9' },
+    { orderId: 'ORD-90398', items: [{ name: 'Ergonomic Chair', qty: 1, price: 399.00, image: '🪑' }, { name: 'Water Bottle', qty: 2, price: 24.99, image: '🧴' }], status: 'delivered', date: 'Mar 28', total: 448.98 },
+    { orderId: 'ORD-90287', items: [{ name: 'Bluetooth Speaker', qty: 1, price: 59.99, image: '🔊' }], status: 'delivered', date: 'Mar 15', total: 59.99 },
+    { orderId: 'ORD-90104', items: [{ name: 'Cotton T-Shirt', qty: 3, price: 34.99, image: '👕' }], status: 'delivered', date: 'Feb 22', total: 104.97 },
+  ],
+
+  retailPaymentMethods: [
+    { type: 'visa', lastFour: '4829', expiryDate: '09/27', isDefault: true },
+    { type: 'mastercard', lastFour: '7163', expiryDate: '03/26', isDefault: false },
+  ],
+
+  retailAddresses: [
+    { label: 'Home', line1: '742 Evergreen Terrace', city: 'Springfield', state: 'IL', zip: '62704', isDefault: true },
+    { label: 'Work', line1: '100 Industrial Way', line2: 'Suite 400', city: 'Springfield', state: 'IL', zip: '62701', isDefault: false },
+  ],
+
+  verificationTriggers: [
+    { id: 'retail-name', action: 'change your name', label: 'Change Name', enabled: true, category: 'settings_change', condition: 'always', successMessage: 'Your name has been updated.', postVerificationBehavior: 'return_with_toast' },
+    { id: 'retail-email', action: 'change your email address', label: 'Change Email', enabled: true, category: 'settings_change', condition: 'always', successMessage: 'Your email has been updated.', postVerificationBehavior: 'return_with_toast' },
+    { id: 'retail-phone', action: 'change your phone number', label: 'Change Phone', enabled: true, category: 'settings_change', condition: 'always', successMessage: 'Your phone number has been updated.', postVerificationBehavior: 'return_with_toast' },
+    { id: 'retail-password', action: 'change your password', label: 'Change Password', enabled: true, category: 'settings_change', condition: 'always', successMessage: 'Your password has been changed.', postVerificationBehavior: 'return_with_toast' },
+    { id: 'retail-payment', action: 'update your payment method', label: 'Update Payment', enabled: true, category: 'settings_change', condition: 'always', successMessage: 'Payment method updated.', postVerificationBehavior: 'return_with_toast' },
+    { id: 'retail-address', action: 'update your shipping address', label: 'Update Address', enabled: true, category: 'settings_change', condition: 'always', successMessage: 'Shipping address updated.', postVerificationBehavior: 'return_with_toast' },
+    { id: 'retail-purchase', action: 'complete a purchase', label: 'Complete Purchase', enabled: true, category: 'transaction', condition: 'threshold', thresholdAmount: 200, thresholdCurrency: 'USD', successMessage: 'Order placed successfully!', postVerificationBehavior: 'show_completion', completionTitle: 'Order Confirmed', completionActions: [{ label: 'Continue Shopping', action: 'return_to_dashboard', variant: 'primary' }] },
   ],
 };

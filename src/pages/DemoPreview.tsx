@@ -14,6 +14,7 @@ import { useIndustries } from "@/hooks/useIndustries";
 import { UseCaseLandingPage } from "@/components/preview/UseCaseLandingPage";
 import { BankingPortalShell } from "@/components/preview/mockPortal/BankingPortalShell";
 import { PharmacyPortalShell } from "@/components/preview/mockPortal/PharmacyPortalShell";
+import { RetailPortalShell } from "@/components/preview/mockPortal/RetailPortalShell";
 import { ResolvedUseCase } from "@/types/useCase";
 import { FormStep } from "@/types/demo";
 import { PortalBranding, PortalVerificationTrigger } from "@/types/portalConfig";
@@ -335,6 +336,7 @@ export default function DemoPreview() {
   // Show portal when login completes
   if (showPortal && portalUser && demo) {
     const isPharmacyPortal = demoPortalType === 'pharmacy';
+    const isRetailPortal = demoPortalType === 'retail';
     return (
       <div style={{ position: 'relative' }}>
         {isPharmacyPortal ? (
@@ -346,6 +348,19 @@ export default function DemoPreview() {
             pharmacyName={demo.customerName}
             portalConfig={demoIndustry?.portalConfig}
             branding={portalBranding}
+            onTriggerVerification={(action) => handlePortalVerification({ id: action, action, label: action, enabled: true, category: 'settings_change', condition: 'always' })}
+            onLogout={handlePortalLogout}
+          />
+        ) : isRetailPortal ? (
+          <RetailPortalShell
+            userName={portalUserName}
+            userEmail={portalUser.email}
+            accentColor={demo.buttonColor || '#6366F1'}
+            logoUrl={demo.useUploadedLogo ? demo.uploadedLogoUrl : demo.logoUrl}
+            storeName={demo.customerName}
+            portalConfig={demoIndustry?.portalConfig}
+            branding={portalBranding}
+            isNewAccount={portalUser.isNewAccount}
             onTriggerVerification={(action) => handlePortalVerification({ id: action, action, label: action, enabled: true, category: 'settings_change', condition: 'always' })}
             onLogout={handlePortalLogout}
           />
@@ -365,7 +380,6 @@ export default function DemoPreview() {
             onLogout={handlePortalLogout}
           />
         )}
-
         {/* Step-Up Verification Modal */}
         <StepUpVerificationModal
           open={!!portalVerificationTrigger}

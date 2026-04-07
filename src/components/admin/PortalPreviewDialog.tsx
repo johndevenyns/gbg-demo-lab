@@ -4,9 +4,10 @@ import {
 } from '@/components/ui/dialog';
 import { BankingPortalShell } from '@/components/preview/mockPortal/BankingPortalShell';
 import { PharmacyPortalShell } from '@/components/preview/mockPortal/PharmacyPortalShell';
-import { PortalConfig, DEFAULT_BANKING_CONFIG, DEFAULT_PHARMACY_CONFIG } from '@/types/portalConfig';
+import { RetailPortalShell } from '@/components/preview/mockPortal/RetailPortalShell';
+import { PortalConfig, DEFAULT_BANKING_CONFIG, DEFAULT_PHARMACY_CONFIG, DEFAULT_RETAIL_CONFIG } from '@/types/portalConfig';
 
-const SUPPORTED_PORTALS = ['banking', 'pharmacy'];
+const SUPPORTED_PORTALS = ['banking', 'pharmacy', 'retail'];
 
 interface PortalPreviewDialogProps {
   open: boolean;
@@ -23,13 +24,8 @@ interface PortalPreviewDialogProps {
 }
 
 export function PortalPreviewDialog({
-  open,
-  onOpenChange,
-  portalType,
-  portalConfig,
-  brandingOverrides,
-  userNameOverride,
-  userEmailOverride,
+  open, onOpenChange, portalType, portalConfig,
+  brandingOverrides, userNameOverride, userEmailOverride,
 }: PortalPreviewDialogProps) {
   const [verifyAction, setVerifyAction] = useState<string | null>(null);
 
@@ -49,12 +45,16 @@ export function PortalPreviewDialog({
   }
 
   const isPharmacy = portalType === 'pharmacy';
-  const defaultConfig = isPharmacy ? DEFAULT_PHARMACY_CONFIG : DEFAULT_BANKING_CONFIG;
+  const isRetail = portalType === 'retail';
+  const defaultConfig = isPharmacy ? DEFAULT_PHARMACY_CONFIG : isRetail ? DEFAULT_RETAIL_CONFIG : DEFAULT_BANKING_CONFIG;
   const config = { ...defaultConfig, ...portalConfig };
   const portalName = isPharmacy
     ? (brandingOverrides?.bankName || config.pharmacyName || 'Demo Pharmacy')
+    : isRetail
+    ? (brandingOverrides?.bankName || config.retailStoreName || 'Demo Store')
     : (brandingOverrides?.bankName || config.bankName || 'Demo Bank');
-  const accentColor = brandingOverrides?.accentColor || config.accentColor || (isPharmacy ? '#DC2626' : '#2563EB');
+  const defaultAccent = isPharmacy ? '#DC2626' : isRetail ? '#6366F1' : '#2563EB';
+  const accentColor = brandingOverrides?.accentColor || config.accentColor || defaultAccent;
   const logoUrl = brandingOverrides?.logoUrl;
 
   return (
@@ -68,6 +68,17 @@ export function PortalPreviewDialog({
               accentColor={accentColor}
               logoUrl={logoUrl}
               pharmacyName={portalName}
+              portalConfig={config}
+              onTriggerVerification={(action) => setVerifyAction(action)}
+              onLogout={() => onOpenChange(false)}
+            />
+          ) : isRetail ? (
+            <RetailPortalShell
+              userName={userNameOverride || config.userName || 'Jane Cooper'}
+              userEmail={userEmailOverride || config.userEmail || 'jane.cooper@email.com'}
+              accentColor={accentColor}
+              logoUrl={logoUrl}
+              storeName={portalName}
               portalConfig={config}
               onTriggerVerification={(action) => setVerifyAction(action)}
               onLogout={() => onOpenChange(false)}
