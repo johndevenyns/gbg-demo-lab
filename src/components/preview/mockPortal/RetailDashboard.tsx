@@ -6,7 +6,7 @@ interface RetailDashboardProps {
   accentColor: string;
   portalConfig?: PortalConfig;
   isNewAccount?: boolean;
-  onViewProduct?: (product: RetailProduct) => void;
+  onAddToCart?: (product: RetailProduct) => void;
   onNavigate?: (page: string) => void;
 }
 
@@ -23,7 +23,7 @@ function StarRating({ rating, count }: { rating: number; count: number }) {
   );
 }
 
-export function RetailDashboard({ userName, accentColor, portalConfig, isNewAccount, onNavigate }: RetailDashboardProps) {
+export function RetailDashboard({ userName, accentColor, portalConfig, isNewAccount, onAddToCart, onNavigate }: RetailDashboardProps) {
   const config = { ...DEFAULT_RETAIL_CONFIG, ...portalConfig };
   const products = isNewAccount ? [] : (config.retailProducts || DEFAULT_RETAIL_CONFIG.retailProducts!);
   const categories = config.retailCategories || DEFAULT_RETAIL_CONFIG.retailCategories!;
@@ -166,11 +166,13 @@ export function RetailDashboard({ userName, accentColor, portalConfig, isNewAcco
                     <span style={{ fontSize: '18px', fontWeight: 700, color: '#0F172A' }}>
                       ${product.price.toFixed(2)}
                     </span>
-                    <button style={{
-                      padding: '6px 14px', borderRadius: '8px', border: 'none',
-                      background: accentColor, color: 'white', fontSize: '12px',
-                      fontWeight: 600, cursor: 'pointer', transition: 'opacity 0.2s',
-                    }}
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onAddToCart?.(product); }}
+                      style={{
+                        padding: '6px 14px', borderRadius: '8px', border: 'none',
+                        background: accentColor, color: 'white', fontSize: '12px',
+                        fontWeight: 600, cursor: 'pointer', transition: 'opacity 0.2s',
+                      }}
                       onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.9'; }}
                       onMouseLeave={(e) => { e.currentTarget.style.opacity = '1'; }}
                     >
