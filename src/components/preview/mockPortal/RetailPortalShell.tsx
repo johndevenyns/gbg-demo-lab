@@ -258,9 +258,10 @@ export function RetailPortalShell({
           <RetailCartPage
             items={cartItems}
             accentColor={brandAccent}
+            portalConfig={config}
             onUpdateQty={handleUpdateQty}
             onRemove={handleRemove}
-            onCheckout={handleCheckout}
+            onPlaceOrder={handleCheckout}
             onContinueShopping={() => setActivePage('dashboard')}
           />
         )}
