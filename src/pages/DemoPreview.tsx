@@ -337,6 +337,7 @@ export default function DemoPreview() {
   if (showPortal && portalUser && demo) {
     const isPharmacyPortal = demoPortalType === 'pharmacy';
     const isRetailPortal = demoPortalType === 'retail';
+    const isGamingPortal = demoPortalType === 'gaming';
     return (
       <div style={{ position: 'relative' }}>
         {isPharmacyPortal ? (
