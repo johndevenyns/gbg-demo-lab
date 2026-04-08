@@ -126,6 +126,44 @@ export interface GamingPaymentMethod {
   isDefault: boolean;
 }
 
+// ── Rental Car-specific types ──
+
+export interface RentalCarVehicle {
+  id: string;
+  make: string;
+  model: string;
+  year: number;
+  category: 'economy' | 'compact' | 'midsize' | 'fullsize' | 'suv' | 'luxury' | 'minivan' | 'truck';
+  image: string;          // emoji
+  pricePerDay: number;
+  seats: number;
+  bags: number;
+  transmission: 'automatic' | 'manual';
+  features: string[];
+  badge?: string;         // e.g. "Best Value", "Popular"
+  provider: string;       // e.g. "Avis", "Hertz", "Dollar"
+}
+
+export interface RentalCarReservation {
+  confirmationId: string;
+  vehicle: { make: string; model: string; image: string; category: string };
+  provider: string;
+  pickupLocation: string;
+  dropoffLocation: string;
+  pickupDate: string;
+  dropoffDate: string;
+  status: 'upcoming' | 'active' | 'completed' | 'cancelled';
+  totalCost: number;
+  extras?: string[];
+}
+
+export interface RentalCarPaymentMethod {
+  type: 'visa' | 'mastercard' | 'amex';
+  lastFour: string;
+  expiryDate: string;
+  isDefault: boolean;
+}
+
 // ── Retail-specific types ──
 
 export interface RetailProduct {
