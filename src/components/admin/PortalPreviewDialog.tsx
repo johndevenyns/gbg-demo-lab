@@ -5,9 +5,10 @@ import {
 import { BankingPortalShell } from '@/components/preview/mockPortal/BankingPortalShell';
 import { PharmacyPortalShell } from '@/components/preview/mockPortal/PharmacyPortalShell';
 import { RetailPortalShell } from '@/components/preview/mockPortal/RetailPortalShell';
-import { PortalConfig, DEFAULT_BANKING_CONFIG, DEFAULT_PHARMACY_CONFIG, DEFAULT_RETAIL_CONFIG } from '@/types/portalConfig';
+import { GamingPortalShell } from '@/components/preview/mockPortal/GamingPortalShell';
+import { PortalConfig, DEFAULT_BANKING_CONFIG, DEFAULT_PHARMACY_CONFIG, DEFAULT_RETAIL_CONFIG, DEFAULT_GAMING_CONFIG } from '@/types/portalConfig';
 
-const SUPPORTED_PORTALS = ['banking', 'pharmacy', 'retail'];
+const SUPPORTED_PORTALS = ['banking', 'pharmacy', 'retail', 'gaming'];
 
 interface PortalPreviewDialogProps {
   open: boolean;
