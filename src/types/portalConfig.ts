@@ -84,6 +84,48 @@ export interface PharmacyOrder {
   estimatedReady?: string;
 }
 
+// ── Gaming-specific types ──
+
+export interface GamingEvent {
+  id: string;
+  league: string;
+  sportIcon: string;
+  teamA: string;
+  teamB: string;
+  oddsA: string;
+  oddsB: string;
+  oddsDraw?: string;
+  time: string;
+  isLive?: boolean;
+  scoreA?: number;
+  scoreB?: number;
+}
+
+export interface GamingBet {
+  event: string;
+  selection: string;
+  betType: string;
+  odds: string;
+  stake: number;
+  payout?: number;
+  status: 'pending' | 'won' | 'lost' | 'void';
+  date: string;
+}
+
+export interface GamingPromo {
+  tag: string;
+  title: string;
+  description: string;
+  bgColor?: string;
+}
+
+export interface GamingPaymentMethod {
+  type: string;
+  lastFour?: string;
+  detail: string;
+  isDefault: boolean;
+}
+
 // ── Retail-specific types ──
 
 export interface RetailProduct {
