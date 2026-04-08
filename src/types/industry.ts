@@ -20,7 +20,7 @@ export const PORTAL_TYPE_OPTIONS = [
   { value: 'rental_car', label: 'Rental Car', description: 'Car rental portal with vehicle browsing, reservations & checkout' },
   { value: 'retail', label: 'Online Retail', description: 'Online store with products, orders & account management' },
   { value: 'gaming', label: 'Gaming', description: 'Online sportsbook & casino portal with bets & responsible gaming' },
-  { value: 'insurance', label: 'Insurance', description: 'Insurance policy management portal (coming soon)' },
+  { value: 'insurance', label: 'Insurance', description: 'Insurance portal with policies, claims & coverage management' },
   { value: 'healthcare', label: 'Healthcare', description: 'Patient portal (coming soon)' },
 ] as const;
 
