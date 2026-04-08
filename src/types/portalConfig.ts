@@ -216,6 +216,7 @@ export interface PortalConfig {
   bankName?: string;       // also used as generic "portal name"
   pharmacyName?: string;
   retailStoreName?: string;
+  rentalCarCompanyName?: string;
   accentColor?: string;
   userName?: string;
   userEmail?: string;
@@ -248,6 +249,15 @@ export interface PortalConfig {
   gamingBets?: GamingBet[];
   gamingPromos?: GamingPromo[];
   gamingPaymentMethods?: GamingPaymentMethod[];
+
+  // Rental Car dashboard content
+  rentalCarVehicles?: RentalCarVehicle[];
+  rentalCarReservations?: RentalCarReservation[];
+  rentalCarPaymentMethods?: RentalCarPaymentMethod[];
+  rentalCarPickupLocations?: string[];
+  rentalCarDriverLicense?: string;
+  rentalCarLoyaltyNumber?: string;
+  rentalCarLoyaltyTier?: string;
 
   // Settings — which actions trigger IDV
   verificationTriggers?: PortalVerificationTrigger[];
