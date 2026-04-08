@@ -291,6 +291,10 @@ export default function AdminDashboard() {
               <BarChart3 className="w-4 h-4 mr-2" />
               Reporting
             </Button>
+            <Button variant="outline" onClick={() => window.open('https://ditto.gbg.com/', '_blank')}>
+              <ExternalLink className="w-4 h-4 mr-2" />
+              IVS Portal
+            </Button>
           </div>
         </div>
 
