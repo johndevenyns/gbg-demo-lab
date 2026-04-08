@@ -84,6 +84,48 @@ export interface PharmacyOrder {
   estimatedReady?: string;
 }
 
+// ── Gaming-specific types ──
+
+export interface GamingEvent {
+  id: string;
+  league: string;
+  sportIcon: string;
+  teamA: string;
+  teamB: string;
+  oddsA: string;
+  oddsB: string;
+  oddsDraw?: string;
+  time: string;
+  isLive?: boolean;
+  scoreA?: number;
+  scoreB?: number;
+}
+
+export interface GamingBet {
+  event: string;
+  selection: string;
+  betType: string;
+  odds: string;
+  stake: number;
+  payout?: number;
+  status: 'pending' | 'won' | 'lost' | 'void';
+  date: string;
+}
+
+export interface GamingPromo {
+  tag: string;
+  title: string;
+  description: string;
+  bgColor?: string;
+}
+
+export interface GamingPaymentMethod {
+  type: string;
+  lastFour?: string;
+  detail: string;
+  isDefault: boolean;
+}
+
 // ── Retail-specific types ──
 
 export interface RetailProduct {
@@ -160,6 +202,14 @@ export interface PortalConfig {
   retailPaymentMethods?: RetailPaymentMethod[];
   retailAddresses?: RetailAddress[];
   retailCategories?: string[];
+
+  // Gaming dashboard content
+  gamingSiteName?: string;
+  gamingBalance?: number;
+  gamingEvents?: GamingEvent[];
+  gamingBets?: GamingBet[];
+  gamingPromos?: GamingPromo[];
+  gamingPaymentMethods?: GamingPaymentMethod[];
 
   // Settings — which actions trigger IDV
   verificationTriggers?: PortalVerificationTrigger[];
@@ -296,5 +346,56 @@ export const DEFAULT_RETAIL_CONFIG: PortalConfig = {
     { id: 'retail-payment', action: 'update your payment method', label: 'Update Payment', enabled: true, category: 'settings_change', condition: 'always', successMessage: 'Payment method updated.', postVerificationBehavior: 'return_with_toast' },
     { id: 'retail-address', action: 'update your shipping address', label: 'Update Address', enabled: true, category: 'settings_change', condition: 'always', successMessage: 'Shipping address updated.', postVerificationBehavior: 'return_with_toast' },
     { id: 'retail-purchase', action: 'complete a purchase', label: 'Complete Purchase', enabled: true, category: 'transaction', condition: 'threshold', thresholdAmount: 200, thresholdCurrency: 'USD', successMessage: 'Order placed successfully!', postVerificationBehavior: 'show_completion', completionTitle: 'Order Confirmed', completionActions: [{ label: 'Continue Shopping', action: 'return_to_dashboard', variant: 'primary' }] },
+  ],
+};
+
+export const DEFAULT_GAMING_CONFIG: PortalConfig = {
+  gamingSiteName: 'Demo Sportsbook',
+  accentColor: '#22C55E',
+  userName: 'Jane Cooper',
+  userEmail: 'jane.cooper@email.com',
+  userPhone: '(555) 867-5309',
+  gamingBalance: 2487.50,
+
+  gamingPromos: [
+    { tag: 'Welcome Bonus', title: 'Get up to $1,000 in Bonus Bets', description: 'New users: deposit $10+, get bonus bets matched', bgColor: '#7C3AED' },
+    { tag: 'Profit Boost', title: '50% Profit Boost — NBA Playoffs', description: 'Opt in & place any NBA moneyline bet', bgColor: '#0891B2' },
+    { tag: 'Refer a Friend', title: 'Get $50 for each friend', description: 'Share your link & earn when they sign up', bgColor: '#DC2626' },
+  ],
+
+  gamingEvents: [
+    { id: 'g1', league: 'NBA', sportIcon: '🏀', teamA: 'Lakers', teamB: 'Celtics', oddsA: '+145', oddsB: '-170', time: 'Today 7:30 PM', isLive: true, scoreA: 54, scoreB: 61 },
+    { id: 'g2', league: 'NFL', sportIcon: '🏈', teamA: 'Chiefs', teamB: '49ers', oddsA: '-110', oddsB: '-110', time: 'Sun 6:30 PM' },
+    { id: 'g3', league: 'Premier League', sportIcon: '⚽', teamA: 'Arsenal', teamB: 'Man City', oddsA: '+220', oddsB: '+130', oddsDraw: '+240', time: 'Sat 12:30 PM' },
+    { id: 'g4', league: 'MLB', sportIcon: '⚾', teamA: 'Yankees', teamB: 'Dodgers', oddsA: '+135', oddsB: '-155', time: 'Tomorrow 4:05 PM' },
+    { id: 'g5', league: 'UFC 310', sportIcon: '🥊', teamA: 'Pantoja', teamB: 'Asakura', oddsA: '-250', oddsB: '+200', time: 'Sat 10:00 PM', isLive: false },
+  ],
+
+  gamingBets: [
+    { event: 'Lakers vs Celtics', selection: 'Celtics -4.5', betType: 'Spread', odds: '-110', stake: 50, status: 'pending', date: 'Today' },
+    { event: 'Chiefs vs 49ers', selection: 'Over 47.5', betType: 'Total', odds: '-105', stake: 100, status: 'pending', date: 'Today' },
+    { event: 'Arsenal vs Man City', selection: 'Arsenal ML', betType: 'Moneyline', odds: '+220', stake: 25, payout: 80, status: 'won', date: 'Yesterday' },
+    { event: 'Yankees vs Dodgers', selection: 'Yankees ML', betType: 'Moneyline', odds: '+150', stake: 40, status: 'lost', date: 'Mar 28' },
+    { event: 'UFC 309 Main Event', selection: 'Jones by KO/TKO', betType: 'Method of Victory', odds: '+175', stake: 75, payout: 206.25, status: 'won', date: 'Mar 15' },
+    { event: 'Lakers vs Warriors', selection: '3-Leg Parlay', betType: 'Parlay', odds: '+650', stake: 10, status: 'lost', date: 'Mar 10' },
+  ],
+
+  gamingPaymentMethods: [
+    { type: 'visa', lastFour: '4829', detail: 'Expires 09/27', isDefault: true },
+    { type: 'paypal', detail: 'jane.cooper@email.com', isDefault: false },
+    { type: 'bank', lastFour: '6721', detail: 'Chase Checking ••6721', isDefault: false },
+  ],
+
+  verificationTriggers: [
+    { id: 'gaming-name', action: 'change your name', label: 'Change Name', enabled: true, category: 'settings_change', condition: 'always', successMessage: 'Your name has been updated.', postVerificationBehavior: 'return_with_toast' },
+    { id: 'gaming-email', action: 'change your email address', label: 'Change Email', enabled: true, category: 'settings_change', condition: 'always', successMessage: 'Your email has been updated.', postVerificationBehavior: 'return_with_toast' },
+    { id: 'gaming-phone', action: 'change your phone number', label: 'Change Phone', enabled: true, category: 'settings_change', condition: 'always', successMessage: 'Your phone number has been updated.', postVerificationBehavior: 'return_with_toast' },
+    { id: 'gaming-password', action: 'change your password', label: 'Change Password', enabled: true, category: 'settings_change', condition: 'always', successMessage: 'Your password has been changed.', postVerificationBehavior: 'return_with_toast' },
+    { id: 'gaming-2fa', action: 'update two-factor authentication', label: 'Update 2FA', enabled: true, category: 'settings_change', condition: 'always', successMessage: 'Two-factor authentication updated.', postVerificationBehavior: 'return_with_toast' },
+    { id: 'gaming-payment', action: 'update your payment method', label: 'Update Payment', enabled: true, category: 'settings_change', condition: 'always', successMessage: 'Payment method updated.', postVerificationBehavior: 'return_with_toast' },
+    { id: 'gaming-deposit-limit', action: 'change your deposit limit', label: 'Change Deposit Limit', enabled: true, category: 'settings_change', condition: 'always', successMessage: 'Deposit limit updated.', postVerificationBehavior: 'return_with_toast' },
+    { id: 'gaming-loss-limit', action: 'change your loss limit', label: 'Change Loss Limit', enabled: true, category: 'settings_change', condition: 'always', successMessage: 'Loss limit updated.', postVerificationBehavior: 'return_with_toast' },
+    { id: 'gaming-withdraw', action: 'withdraw funds', label: 'Withdraw Funds', enabled: true, category: 'transaction', condition: 'threshold', thresholdAmount: 500, thresholdCurrency: 'USD', successMessage: 'Withdrawal initiated!', postVerificationBehavior: 'show_completion', completionTitle: 'Withdrawal Submitted', completionActions: [{ label: 'Return to Lobby', action: 'return_to_dashboard', variant: 'primary' }] },
+    { id: 'gaming-wager', action: 'place a high-value wager', label: 'Place Wager', enabled: true, category: 'transaction', condition: 'threshold', thresholdAmount: 1000, thresholdCurrency: 'USD', successMessage: 'Bet placed successfully!', postVerificationBehavior: 'show_completion', completionTitle: 'Bet Confirmed', completionActions: [{ label: 'Place Another Bet', action: 'repeat', variant: 'secondary' }, { label: 'Return to Lobby', action: 'return_to_dashboard', variant: 'primary' }] },
   ],
 };

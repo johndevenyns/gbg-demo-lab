@@ -5,9 +5,10 @@ import {
 import { BankingPortalShell } from '@/components/preview/mockPortal/BankingPortalShell';
 import { PharmacyPortalShell } from '@/components/preview/mockPortal/PharmacyPortalShell';
 import { RetailPortalShell } from '@/components/preview/mockPortal/RetailPortalShell';
-import { PortalConfig, DEFAULT_BANKING_CONFIG, DEFAULT_PHARMACY_CONFIG, DEFAULT_RETAIL_CONFIG } from '@/types/portalConfig';
+import { GamingPortalShell } from '@/components/preview/mockPortal/GamingPortalShell';
+import { PortalConfig, DEFAULT_BANKING_CONFIG, DEFAULT_PHARMACY_CONFIG, DEFAULT_RETAIL_CONFIG, DEFAULT_GAMING_CONFIG } from '@/types/portalConfig';
 
-const SUPPORTED_PORTALS = ['banking', 'pharmacy', 'retail'];
+const SUPPORTED_PORTALS = ['banking', 'pharmacy', 'retail', 'gaming'];
 
 interface PortalPreviewDialogProps {
   open: boolean;
@@ -46,14 +47,17 @@ export function PortalPreviewDialog({
 
   const isPharmacy = portalType === 'pharmacy';
   const isRetail = portalType === 'retail';
-  const defaultConfig = isPharmacy ? DEFAULT_PHARMACY_CONFIG : isRetail ? DEFAULT_RETAIL_CONFIG : DEFAULT_BANKING_CONFIG;
+  const isGaming = portalType === 'gaming';
+  const defaultConfig = isPharmacy ? DEFAULT_PHARMACY_CONFIG : isRetail ? DEFAULT_RETAIL_CONFIG : isGaming ? DEFAULT_GAMING_CONFIG : DEFAULT_BANKING_CONFIG;
   const config = { ...defaultConfig, ...portalConfig };
   const portalName = isPharmacy
     ? (brandingOverrides?.bankName || config.pharmacyName || 'Demo Pharmacy')
     : isRetail
     ? (brandingOverrides?.bankName || config.retailStoreName || 'Demo Store')
+    : isGaming
+    ? (brandingOverrides?.bankName || config.gamingSiteName || 'Demo Sportsbook')
     : (brandingOverrides?.bankName || config.bankName || 'Demo Bank');
-  const defaultAccent = isPharmacy ? '#DC2626' : isRetail ? '#6366F1' : '#2563EB';
+  const defaultAccent = isPharmacy ? '#DC2626' : isRetail ? '#6366F1' : isGaming ? '#22C55E' : '#2563EB';
   const accentColor = brandingOverrides?.accentColor || config.accentColor || defaultAccent;
   const logoUrl = brandingOverrides?.logoUrl;
 
@@ -79,6 +83,17 @@ export function PortalPreviewDialog({
               accentColor={accentColor}
               logoUrl={logoUrl}
               storeName={portalName}
+              portalConfig={config}
+              onTriggerVerification={(trigger) => setVerifyAction(trigger.action)}
+              onLogout={() => onOpenChange(false)}
+            />
+          ) : isGaming ? (
+            <GamingPortalShell
+              userName={userNameOverride || config.userName || 'Jane Cooper'}
+              userEmail={userEmailOverride || config.userEmail || 'jane.cooper@email.com'}
+              accentColor={accentColor}
+              logoUrl={logoUrl}
+              siteName={portalName}
               portalConfig={config}
               onTriggerVerification={(trigger) => setVerifyAction(trigger.action)}
               onLogout={() => onOpenChange(false)}
