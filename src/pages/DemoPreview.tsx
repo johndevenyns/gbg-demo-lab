@@ -17,6 +17,7 @@ import { PharmacyPortalShell } from "@/components/preview/mockPortal/PharmacyPor
 import { RetailPortalShell } from "@/components/preview/mockPortal/RetailPortalShell";
 import { GamingPortalShell } from "@/components/preview/mockPortal/GamingPortalShell";
 import { RentalCarPortalShell } from "@/components/preview/mockPortal/RentalCarPortalShell";
+import { InsurancePortalShell } from "@/components/preview/mockPortal/InsurancePortalShell";
 import { ResolvedUseCase } from "@/types/useCase";
 import { FormStep } from "@/types/demo";
 import { PortalBranding, PortalVerificationTrigger } from "@/types/portalConfig";
