@@ -48,6 +48,40 @@ export function BankingPortalShell({
   const [creditCards, setCreditCards] = useState<CreditCardData[]>(initialCreditCards || []);
   const savingRef = useRef(false);
 
+  // Persist credit cards to portal_users.profile_data whenever they change
+  useEffect(() => {
+    if (!demoId || !userEmail || savingRef.current) return;
+    if (creditCards.length === 0 && (!initialCreditCards || initialCreditCards.length === 0)) return;
+    const saveCards = async () => {
+      savingRef.current = true;
+      try {
+        const { data: users } = await supabase
+          .from('portal_users')
+          .select('id, profile_data')
+          .eq('email', userEmail.toLowerCase())
+          .eq('is_active', true)
+          .limit(1);
+        if (users && users.length > 0) {
+          const user = users[0];
+          const existingData = (user.profile_data && typeof user.profile_data === 'object' && !Array.isArray(user.profile_data))
+            ? user.profile_data as Record<string, unknown>
+            : {};
+          await supabase
+            .from('portal_users')
+            .update({
+              profile_data: { ...existingData, creditCards } as any,
+            })
+            .eq('id', user.id);
+        }
+      } catch (err) {
+        console.error('Failed to persist credit cards:', err);
+      } finally {
+        savingRef.current = false;
+      }
+    };
+    saveCards();
+  }, [creditCards, demoId, userEmail, initialCreditCards]);
+
   useEffect(() => {
     if (!navCommand) return;
     if (navCommand === 'dashboard') setActivePage('dashboard');
