@@ -39,13 +39,14 @@ export interface BankingPortalShellProps {
 
 export function BankingPortalShell({
   userName, userEmail, accentColor, logoUrl, bankName,
-  portalConfig, branding, isNewAccount,
+  portalConfig, branding, isNewAccount, demoId, initialCreditCards,
   onTriggerVerification, navCommand, onNavCommandHandled, onLogout,
 }: BankingPortalShellProps) {
   const config = { ...DEFAULT_BANKING_CONFIG, ...portalConfig };
   const [activePage, setActivePage] = useState<PortalPage>('dashboard');
   const [transferKey, setTransferKey] = useState(0);
-  const [creditCards, setCreditCards] = useState<CreditCardData[]>([]);
+  const [creditCards, setCreditCards] = useState<CreditCardData[]>(initialCreditCards || []);
+  const savingRef = useRef(false);
 
   useEffect(() => {
     if (!navCommand) return;
