@@ -68,8 +68,6 @@ export function PortalPreviewDialog({
   const defaultAccent = isPharmacy ? '#DC2626' : isRetail ? '#6366F1' : isGaming ? '#22C55E' : isRentalCar ? '#FF6B00' : isInsurance ? '#1D4ED8' : '#2563EB';
   const accentColor = brandingOverrides?.accentColor || config.accentColor || defaultAccent;
   const logoUrl = brandingOverrides?.logoUrl;
-  const accentColor = brandingOverrides?.accentColor || config.accentColor || defaultAccent;
-  const logoUrl = brandingOverrides?.logoUrl;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
