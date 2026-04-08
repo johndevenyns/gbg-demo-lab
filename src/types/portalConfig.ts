@@ -260,6 +260,7 @@ export interface PortalConfig {
   pharmacyName?: string;
   retailStoreName?: string;
   rentalCarCompanyName?: string;
+  insuranceCompanyName?: string;
   accentColor?: string;
   userName?: string;
   userEmail?: string;
@@ -301,6 +302,15 @@ export interface PortalConfig {
   rentalCarDriverLicense?: string;
   rentalCarLoyaltyNumber?: string;
   rentalCarLoyaltyTier?: string;
+
+  // Insurance dashboard content
+  insurancePolicies?: InsurancePolicy[];
+  insuranceClaims?: InsuranceClaim[];
+  insurancePaymentMethods?: InsurancePaymentMethod[];
+  insuranceDocuments?: InsuranceDocument[];
+  insuranceAgentName?: string;
+  insuranceAgentPhone?: string;
+  insurancePolicyHolderSince?: string;
 
   // Settings — which actions trigger IDV
   verificationTriggers?: PortalVerificationTrigger[];
