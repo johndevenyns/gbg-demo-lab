@@ -29,6 +29,8 @@ export interface BankingPortalShellProps {
   portalConfig?: PortalConfig;
   branding?: PortalBranding;
   isNewAccount?: boolean;
+  demoId?: string;
+  initialCreditCards?: CreditCardData[];
   onTriggerVerification: (trigger: PortalVerificationTrigger, txContext?: { amount?: number; recipientName?: string; fromAccount?: string }) => void;
   navCommand?: 'dashboard' | 'repeat_transfer' | null;
   onNavCommandHandled?: () => void;
