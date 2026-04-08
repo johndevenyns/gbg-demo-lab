@@ -340,6 +340,7 @@ export default function DemoPreview() {
     const isPharmacyPortal = demoPortalType === 'pharmacy';
     const isRetailPortal = demoPortalType === 'retail';
     const isGamingPortal = demoPortalType === 'gaming';
+    const isRentalCarPortal = demoPortalType === 'rental_car';
     return (
       <div style={{ position: 'relative' }}>
         {isPharmacyPortal ? (
