@@ -12,14 +12,25 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Trash2, UserPlus, Users, AlertCircle, Edit, Building2, Globe } from 'lucide-react';
+import { Loader2, Trash2, UserPlus, Users, AlertCircle, Edit, Building2, Globe, CreditCard, ChevronDown, ChevronUp } from 'lucide-react';
+
+interface CreditCardInfo {
+  cardNumber: string;
+  cardholderName: string;
+  expiryDate: string;
+  cardType: string;
+  creditLimit: number;
+  currentBalance: number;
+  isActive: boolean;
+  activatedAt?: string;
+}
 
 interface PortalUser {
   id: string;
   email: string;
   password: string;
   display_name: string | null;
-  profile_data: Record<string, string> | null;
+  profile_data: Record<string, unknown> | null;
   is_default: boolean;
   is_active: boolean;
   created_at: string;
@@ -44,6 +55,7 @@ export function PortalUserManagement({ demoId }: PortalUserManagementProps) {
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<PortalUser | null>(null);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
 
   // Form state
   const [formEmail, setFormEmail] = useState('');
@@ -279,54 +291,101 @@ export function PortalUserManagement({ demoId }: PortalUserManagementProps) {
               <TableBody>
                 {displayUsers.map(user => {
                   const assignedDemos = getUserAssignedDemoIds(user.id);
+                  const userCards: CreditCardInfo[] = Array.isArray((user.profile_data as any)?.creditCards)
+                    ? (user.profile_data as any).creditCards
+                    : [];
+                  const isExpanded = expandedUserId === user.id;
                   return (
-                    <TableRow key={user.id}>
-                      <TableCell className="font-medium">{user.email}</TableCell>
-                      <TableCell className="text-muted-foreground">{user.display_name || '—'}</TableCell>
-                      <TableCell>
-                        {user.is_default ? (
-                          <Badge variant="secondary" className="bg-amber-500/10 text-amber-600">All Demos</Badge>
-                        ) : (
-                          <span className="text-muted-foreground text-sm">No</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {isGlobalView ? (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => { setSelectedUserId(user.id); setAssignDialogOpen(true); }}
-                          >
-                            <Building2 className="w-3 h-3 mr-1" />
-                            {assignedDemos.length} assigned
-                          </Button>
-                        ) : (
-                          <Badge variant="outline">{user.is_default ? 'Default' : 'Assigned'}</Badge>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Switch
-                          checked={user.is_active}
-                          onCheckedChange={(v) => toggleActiveMutation.mutate({ id: user.id, is_active: v })}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1">
-                          <Button variant="ghost" size="icon" onClick={() => openEdit(user)} title="Edit">
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                            onClick={() => deleteMutation.mutate(user.id)}
-                            title="Delete"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
+                    <>
+                      <TableRow key={user.id}>
+                        <TableCell className="font-medium">
+                          <div className="flex items-center gap-2">
+                            {user.email}
+                            {userCards.length > 0 && (
+                              <Badge variant="outline" className="text-xs gap-1 cursor-pointer" onClick={() => setExpandedUserId(isExpanded ? null : user.id)}>
+                                <CreditCard className="w-3 h-3" />
+                                {userCards.length} card{userCards.length !== 1 ? 's' : ''}
+                                {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                              </Badge>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">{user.display_name || '—'}</TableCell>
+                        <TableCell>
+                          {user.is_default ? (
+                            <Badge variant="secondary" className="bg-amber-500/10 text-amber-600">All Demos</Badge>
+                          ) : (
+                            <span className="text-muted-foreground text-sm">No</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {isGlobalView ? (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => { setSelectedUserId(user.id); setAssignDialogOpen(true); }}
+                            >
+                              <Building2 className="w-3 h-3 mr-1" />
+                              {assignedDemos.length} assigned
+                            </Button>
+                          ) : (
+                            <Badge variant="outline">{user.is_default ? 'Default' : 'Assigned'}</Badge>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <Switch
+                            checked={user.is_active}
+                            onCheckedChange={(v) => toggleActiveMutation.mutate({ id: user.id, is_active: v })}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1">
+                            <Button variant="ghost" size="icon" onClick={() => openEdit(user)} title="Edit">
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                              onClick={() => deleteMutation.mutate(user.id)}
+                              title="Delete"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                      {isExpanded && userCards.length > 0 && (
+                        <TableRow key={`${user.id}-cards`}>
+                          <TableCell colSpan={6} className="bg-muted/30 px-6 py-3">
+                            <div className="space-y-2">
+                              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Credit Cards</p>
+                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                {userCards.map((card, i) => (
+                                  <div key={i} className="rounded-lg border bg-card p-3 space-y-1.5">
+                                    <div className="flex items-center justify-between">
+                                      <span className="text-xs font-semibold uppercase text-muted-foreground">{card.cardType}</span>
+                                      <Badge variant={card.isActive ? 'default' : 'secondary'} className="text-[10px]">
+                                        {card.isActive ? 'Active' : 'Pending'}
+                                      </Badge>
+                                    </div>
+                                    <p className="font-mono text-sm tracking-wider">{card.cardNumber}</p>
+                                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                                      <span>{card.cardholderName}</span>
+                                      <span>Exp {card.expiryDate}</span>
+                                    </div>
+                                    <div className="flex items-center justify-between text-xs">
+                                      <span className="text-muted-foreground">Limit: <strong className="text-foreground">${card.creditLimit.toLocaleString()}</strong></span>
+                                      <span className="text-muted-foreground">Balance: <strong className="text-foreground">${card.currentBalance.toLocaleString()}</strong></span>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </>
                   );
                 })}
               </TableBody>

@@ -1,4 +1,5 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { BankingDashboard, CreditCardData } from './BankingDashboard';
 import { BankingSettings } from './BankingSettings';
 import { BankingTransferFlow } from './BankingTransferFlow';
@@ -28,6 +29,8 @@ export interface BankingPortalShellProps {
   portalConfig?: PortalConfig;
   branding?: PortalBranding;
   isNewAccount?: boolean;
+  demoId?: string;
+  initialCreditCards?: CreditCardData[];
   onTriggerVerification: (trigger: PortalVerificationTrigger, txContext?: { amount?: number; recipientName?: string; fromAccount?: string }) => void;
   navCommand?: 'dashboard' | 'repeat_transfer' | null;
   onNavCommandHandled?: () => void;
@@ -36,13 +39,48 @@ export interface BankingPortalShellProps {
 
 export function BankingPortalShell({
   userName, userEmail, accentColor, logoUrl, bankName,
-  portalConfig, branding, isNewAccount,
+  portalConfig, branding, isNewAccount, demoId, initialCreditCards,
   onTriggerVerification, navCommand, onNavCommandHandled, onLogout,
 }: BankingPortalShellProps) {
   const config = { ...DEFAULT_BANKING_CONFIG, ...portalConfig };
   const [activePage, setActivePage] = useState<PortalPage>('dashboard');
   const [transferKey, setTransferKey] = useState(0);
-  const [creditCards, setCreditCards] = useState<CreditCardData[]>([]);
+  const [creditCards, setCreditCards] = useState<CreditCardData[]>(initialCreditCards || []);
+  const savingRef = useRef(false);
+
+  // Persist credit cards to portal_users.profile_data whenever they change
+  useEffect(() => {
+    if (!demoId || !userEmail || savingRef.current) return;
+    if (creditCards.length === 0 && (!initialCreditCards || initialCreditCards.length === 0)) return;
+    const saveCards = async () => {
+      savingRef.current = true;
+      try {
+        const { data: users } = await supabase
+          .from('portal_users')
+          .select('id, profile_data')
+          .eq('email', userEmail.toLowerCase())
+          .eq('is_active', true)
+          .limit(1);
+        if (users && users.length > 0) {
+          const user = users[0];
+          const existingData = (user.profile_data && typeof user.profile_data === 'object' && !Array.isArray(user.profile_data))
+            ? user.profile_data as Record<string, unknown>
+            : {};
+          await supabase
+            .from('portal_users')
+            .update({
+              profile_data: { ...existingData, creditCards } as any,
+            })
+            .eq('id', user.id);
+        }
+      } catch (err) {
+        console.error('Failed to persist credit cards:', err);
+      } finally {
+        savingRef.current = false;
+      }
+    };
+    saveCards();
+  }, [creditCards, demoId, userEmail, initialCreditCards]);
 
   useEffect(() => {
     if (!navCommand) return;
