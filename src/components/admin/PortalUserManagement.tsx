@@ -55,6 +55,7 @@ export function PortalUserManagement({ demoId }: PortalUserManagementProps) {
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<PortalUser | null>(null);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
 
   // Form state
   const [formEmail, setFormEmail] = useState('');
