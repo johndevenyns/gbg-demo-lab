@@ -14,12 +14,23 @@ import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Trash2, UserPlus, Users, AlertCircle, Edit, Building2, Globe, CreditCard, ChevronDown, ChevronUp } from 'lucide-react';
 
+interface CreditCardInfo {
+  cardNumber: string;
+  cardholderName: string;
+  expiryDate: string;
+  cardType: string;
+  creditLimit: number;
+  currentBalance: number;
+  isActive: boolean;
+  activatedAt?: string;
+}
+
 interface PortalUser {
   id: string;
   email: string;
   password: string;
   display_name: string | null;
-  profile_data: Record<string, string> | null;
+  profile_data: Record<string, unknown> | null;
   is_default: boolean;
   is_active: boolean;
   created_at: string;
