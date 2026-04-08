@@ -381,6 +381,19 @@ export default function DemoPreview() {
             onTriggerVerification={handlePortalVerification}
             onLogout={handlePortalLogout}
           />
+        ) : isRentalCarPortal ? (
+          <RentalCarPortalShell
+            userName={portalUserName}
+            userEmail={portalUser.email}
+            accentColor={demo.buttonColor || '#FF6B00'}
+            logoUrl={demo.useUploadedLogo ? demo.uploadedLogoUrl : demo.logoUrl}
+            companyName={demo.customerName}
+            portalConfig={demoIndustry?.portalConfig}
+            branding={portalBranding}
+            isNewAccount={portalUser.isNewAccount}
+            onTriggerVerification={handlePortalVerification}
+            onLogout={handlePortalLogout}
+          />
         ) : (
           <BankingPortalShell
             userName={portalUserName}
