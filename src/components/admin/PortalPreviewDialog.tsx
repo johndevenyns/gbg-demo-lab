@@ -7,9 +7,10 @@ import { PharmacyPortalShell } from '@/components/preview/mockPortal/PharmacyPor
 import { RetailPortalShell } from '@/components/preview/mockPortal/RetailPortalShell';
 import { GamingPortalShell } from '@/components/preview/mockPortal/GamingPortalShell';
 import { RentalCarPortalShell } from '@/components/preview/mockPortal/RentalCarPortalShell';
-import { PortalConfig, DEFAULT_BANKING_CONFIG, DEFAULT_PHARMACY_CONFIG, DEFAULT_RETAIL_CONFIG, DEFAULT_GAMING_CONFIG, DEFAULT_RENTAL_CAR_CONFIG } from '@/types/portalConfig';
+import { InsurancePortalShell } from '@/components/preview/mockPortal/InsurancePortalShell';
+import { PortalConfig, DEFAULT_BANKING_CONFIG, DEFAULT_PHARMACY_CONFIG, DEFAULT_RETAIL_CONFIG, DEFAULT_GAMING_CONFIG, DEFAULT_RENTAL_CAR_CONFIG, DEFAULT_INSURANCE_CONFIG } from '@/types/portalConfig';
 
-const SUPPORTED_PORTALS = ['banking', 'pharmacy', 'retail', 'gaming', 'rental_car'];
+const SUPPORTED_PORTALS = ['banking', 'pharmacy', 'retail', 'gaming', 'rental_car', 'insurance'];
 
 interface PortalPreviewDialogProps {
   open: boolean;
@@ -50,7 +51,8 @@ export function PortalPreviewDialog({
   const isRetail = portalType === 'retail';
   const isGaming = portalType === 'gaming';
   const isRentalCar = portalType === 'rental_car';
-  const defaultConfig = isPharmacy ? DEFAULT_PHARMACY_CONFIG : isRetail ? DEFAULT_RETAIL_CONFIG : isGaming ? DEFAULT_GAMING_CONFIG : isRentalCar ? DEFAULT_RENTAL_CAR_CONFIG : DEFAULT_BANKING_CONFIG;
+  const isInsurance = portalType === 'insurance';
+  const defaultConfig = isPharmacy ? DEFAULT_PHARMACY_CONFIG : isRetail ? DEFAULT_RETAIL_CONFIG : isGaming ? DEFAULT_GAMING_CONFIG : isRentalCar ? DEFAULT_RENTAL_CAR_CONFIG : isInsurance ? DEFAULT_INSURANCE_CONFIG : DEFAULT_BANKING_CONFIG;
   const config = { ...defaultConfig, ...portalConfig };
   const portalName = isPharmacy
     ? (brandingOverrides?.bankName || config.pharmacyName || 'Demo Pharmacy')
@@ -60,8 +62,12 @@ export function PortalPreviewDialog({
     ? (brandingOverrides?.bankName || config.gamingSiteName || 'Demo Sportsbook')
     : isRentalCar
     ? (brandingOverrides?.bankName || config.rentalCarCompanyName || 'Demo Rentals')
+    : isInsurance
+    ? (brandingOverrides?.bankName || config.insuranceCompanyName || 'Demo Insurance')
     : (brandingOverrides?.bankName || config.bankName || 'Demo Bank');
-  const defaultAccent = isPharmacy ? '#DC2626' : isRetail ? '#6366F1' : isGaming ? '#22C55E' : isRentalCar ? '#FF6B00' : '#2563EB';
+  const defaultAccent = isPharmacy ? '#DC2626' : isRetail ? '#6366F1' : isGaming ? '#22C55E' : isRentalCar ? '#FF6B00' : isInsurance ? '#1D4ED8' : '#2563EB';
+  const accentColor = brandingOverrides?.accentColor || config.accentColor || defaultAccent;
+  const logoUrl = brandingOverrides?.logoUrl;
   const accentColor = brandingOverrides?.accentColor || config.accentColor || defaultAccent;
   const logoUrl = brandingOverrides?.logoUrl;
 
@@ -104,6 +110,17 @@ export function PortalPreviewDialog({
             />
           ) : isRentalCar ? (
             <RentalCarPortalShell
+              userName={userNameOverride || config.userName || 'Jane Cooper'}
+              userEmail={userEmailOverride || config.userEmail || 'jane.cooper@email.com'}
+              accentColor={accentColor}
+              logoUrl={logoUrl}
+              companyName={portalName}
+              portalConfig={config}
+              onTriggerVerification={(trigger) => setVerifyAction(trigger.action)}
+              onLogout={() => onOpenChange(false)}
+            />
+          ) : isInsurance ? (
+            <InsurancePortalShell
               userName={userNameOverride || config.userName || 'Jane Cooper'}
               userEmail={userEmailOverride || config.userEmail || 'jane.cooper@email.com'}
               accentColor={accentColor}
