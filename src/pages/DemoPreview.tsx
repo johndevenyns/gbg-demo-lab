@@ -389,6 +389,12 @@ export default function DemoPreview() {
             portalConfig={demoIndustry?.portalConfig}
             branding={portalBranding}
             isNewAccount={portalUser.isNewAccount}
+            demoId={demo.id}
+            initialCreditCards={
+              Array.isArray((portalUser.profileData as any)?.creditCards)
+                ? (portalUser.profileData as any).creditCards
+                : []
+            }
             onTriggerVerification={handlePortalVerification}
             navCommand={portalNavCommand}
             onNavCommandHandled={() => setPortalNavCommand(null)}
