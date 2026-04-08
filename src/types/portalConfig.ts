@@ -164,6 +164,49 @@ export interface RentalCarPaymentMethod {
   isDefault: boolean;
 }
 
+// ── Insurance-specific types ──
+
+export interface InsurancePolicy {
+  id: string;
+  type: 'auto' | 'home' | 'life' | 'renters' | 'umbrella';
+  policyNumber: string;
+  provider: string;        // e.g. "Allstate", "Farmers", "Geico"
+  status: 'active' | 'pending' | 'expired' | 'cancelled';
+  premium: number;         // monthly
+  deductible: number;
+  coverageAmount: number;
+  nextPaymentDate: string;
+  renewalDate: string;
+  icon: string;
+  insuredItems?: string[];  // e.g. "2023 Toyota Camry", "742 Evergreen Terrace"
+}
+
+export interface InsuranceClaim {
+  claimId: string;
+  policyType: string;
+  description: string;
+  status: 'submitted' | 'under_review' | 'approved' | 'denied' | 'paid';
+  dateSubmitted: string;
+  amount: number;
+  adjuster?: string;
+  icon: string;
+}
+
+export interface InsurancePaymentMethod {
+  type: 'visa' | 'mastercard' | 'amex' | 'bank_account';
+  lastFour: string;
+  expiryDate?: string;
+  detail?: string;
+  isDefault: boolean;
+}
+
+export interface InsuranceDocument {
+  name: string;
+  type: 'policy' | 'id_card' | 'declaration' | 'claim';
+  date: string;
+  policyNumber?: string;
+}
+
 // ── Retail-specific types ──
 
 export interface RetailProduct {
