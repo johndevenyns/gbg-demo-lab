@@ -203,6 +203,14 @@ export interface PortalConfig {
   retailAddresses?: RetailAddress[];
   retailCategories?: string[];
 
+  // Gaming dashboard content
+  gamingSiteName?: string;
+  gamingBalance?: number;
+  gamingEvents?: GamingEvent[];
+  gamingBets?: GamingBet[];
+  gamingPromos?: GamingPromo[];
+  gamingPaymentMethods?: GamingPaymentMethod[];
+
   // Settings — which actions trigger IDV
   verificationTriggers?: PortalVerificationTrigger[];
 }
