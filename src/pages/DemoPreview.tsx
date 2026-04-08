@@ -342,6 +342,7 @@ export default function DemoPreview() {
     const isRetailPortal = demoPortalType === 'retail';
     const isGamingPortal = demoPortalType === 'gaming';
     const isRentalCarPortal = demoPortalType === 'rental_car';
+    const isInsurancePortal = demoPortalType === 'insurance';
     return (
       <div style={{ position: 'relative' }}>
         {isPharmacyPortal ? (
@@ -387,6 +388,19 @@ export default function DemoPreview() {
             userName={portalUserName}
             userEmail={portalUser.email}
             accentColor={demo.buttonColor || '#FF6B00'}
+            logoUrl={demo.useUploadedLogo ? demo.uploadedLogoUrl : demo.logoUrl}
+            companyName={demo.customerName}
+            portalConfig={demoIndustry?.portalConfig}
+            branding={portalBranding}
+            isNewAccount={portalUser.isNewAccount}
+            onTriggerVerification={handlePortalVerification}
+            onLogout={handlePortalLogout}
+          />
+        ) : isInsurancePortal ? (
+          <InsurancePortalShell
+            userName={portalUserName}
+            userEmail={portalUser.email}
+            accentColor={demo.buttonColor || '#1D4ED8'}
             logoUrl={demo.useUploadedLogo ? demo.uploadedLogoUrl : demo.logoUrl}
             companyName={demo.customerName}
             portalConfig={demoIndustry?.portalConfig}
