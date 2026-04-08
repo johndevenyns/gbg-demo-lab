@@ -553,3 +553,53 @@ export const DEFAULT_RENTAL_CAR_CONFIG: PortalConfig = {
     { id: 'rental-booking', action: 'complete a rental booking', label: 'Complete Booking', enabled: true, category: 'transaction', condition: 'threshold', thresholdAmount: 200, thresholdCurrency: 'USD', successMessage: 'Reservation confirmed!', postVerificationBehavior: 'show_completion', completionTitle: 'Reservation Confirmed', completionActions: [{ label: 'Browse More Vehicles', action: 'return_to_dashboard', variant: 'secondary' }, { label: 'View Reservations', action: 'return_to_previous', variant: 'primary' }] },
   ],
 };
+
+export const DEFAULT_INSURANCE_CONFIG: PortalConfig = {
+  insuranceCompanyName: 'Demo Insurance',
+  accentColor: '#1D4ED8',
+  userName: 'Jane Cooper',
+  userEmail: 'jane.cooper@email.com',
+  userPhone: '(555) 867-5309',
+  insuranceAgentName: 'Michael Torres',
+  insuranceAgentPhone: '(555) 234-5678',
+  insurancePolicyHolderSince: '2019',
+
+  insurancePolicies: [
+    { id: 'ip1', type: 'auto', policyNumber: 'AUT-9482731', provider: 'Allstate', status: 'active', premium: 142, deductible: 500, coverageAmount: 100000, nextPaymentDate: 'Apr 15', renewalDate: 'Sep 1, 2025', icon: '🚗', insuredItems: ['2023 Toyota Camry', '2021 Honda CR-V'] },
+    { id: 'ip2', type: 'home', policyNumber: 'HOM-6281049', provider: 'Farmers', status: 'active', premium: 189, deductible: 1000, coverageAmount: 450000, nextPaymentDate: 'Apr 20', renewalDate: 'Nov 15, 2025', icon: '🏠', insuredItems: ['742 Evergreen Terrace, Springfield, IL'] },
+    { id: 'ip3', type: 'life', policyNumber: 'LIF-3847291', provider: 'Allstate', status: 'active', premium: 65, deductible: 0, coverageAmount: 500000, nextPaymentDate: 'May 1', renewalDate: 'Jan 1, 2026', icon: '❤️' },
+    { id: 'ip4', type: 'umbrella', policyNumber: 'UMB-1029384', provider: 'Geico', status: 'active', premium: 32, deductible: 0, coverageAmount: 1000000, nextPaymentDate: 'Apr 15', renewalDate: 'Jul 1, 2025', icon: '☂️' },
+    { id: 'ip5', type: 'renters', policyNumber: 'RNT-5918274', provider: 'Geico', status: 'expired', premium: 18, deductible: 250, coverageAmount: 30000, nextPaymentDate: '—', renewalDate: 'Expired Feb 2025', icon: '🏢' },
+  ],
+
+  insuranceClaims: [
+    { claimId: 'CLM-48291', policyType: 'Auto', description: 'Rear-end collision — parking lot', status: 'under_review', dateSubmitted: 'Mar 28, 2025', amount: 3200, adjuster: 'Sarah Chen', icon: '🚗' },
+    { claimId: 'CLM-47102', policyType: 'Home', description: 'Water damage — burst pipe in basement', status: 'approved', dateSubmitted: 'Feb 14, 2025', amount: 8750, adjuster: 'James Park', icon: '🏠' },
+    { claimId: 'CLM-46503', policyType: 'Auto', description: 'Windshield replacement — rock chip', status: 'paid', dateSubmitted: 'Jan 5, 2025', amount: 450, icon: '🚗' },
+    { claimId: 'CLM-44291', policyType: 'Home', description: 'Roof damage — hail storm', status: 'denied', dateSubmitted: 'Oct 12, 2024', amount: 12400, icon: '🏠' },
+  ],
+
+  insurancePaymentMethods: [
+    { type: 'visa', lastFour: '4829', expiryDate: '09/27', isDefault: true },
+    { type: 'bank_account', lastFour: '6721', detail: 'Chase Checking ••6721', isDefault: false },
+  ],
+
+  insuranceDocuments: [
+    { name: 'Auto Policy Declaration', type: 'declaration', date: 'Sep 1, 2024', policyNumber: 'AUT-9482731' },
+    { name: 'Auto Insurance ID Card', type: 'id_card', date: 'Sep 1, 2024', policyNumber: 'AUT-9482731' },
+    { name: 'Homeowners Policy Declaration', type: 'declaration', date: 'Nov 15, 2024', policyNumber: 'HOM-6281049' },
+    { name: 'Life Insurance Certificate', type: 'policy', date: 'Jan 1, 2024', policyNumber: 'LIF-3847291' },
+    { name: 'Claim Report — CLM-48291', type: 'claim', date: 'Mar 28, 2025', policyNumber: 'AUT-9482731' },
+  ],
+
+  verificationTriggers: [
+    { id: 'ins-name', action: 'change your name', label: 'Change Name', enabled: true, category: 'settings_change', condition: 'always', successMessage: 'Your name has been updated.', postVerificationBehavior: 'return_with_toast' },
+    { id: 'ins-email', action: 'change your email address', label: 'Change Email', enabled: true, category: 'settings_change', condition: 'always', successMessage: 'Your email has been updated.', postVerificationBehavior: 'return_with_toast' },
+    { id: 'ins-phone', action: 'change your phone number', label: 'Change Phone', enabled: true, category: 'settings_change', condition: 'always', successMessage: 'Your phone number has been updated.', postVerificationBehavior: 'return_with_toast' },
+    { id: 'ins-password', action: 'change your password', label: 'Change Password', enabled: true, category: 'settings_change', condition: 'always', successMessage: 'Your password has been changed.', postVerificationBehavior: 'return_with_toast' },
+    { id: 'ins-beneficiary', action: 'update your beneficiary', label: 'Update Beneficiary', enabled: true, category: 'settings_change', condition: 'always', successMessage: 'Beneficiary information updated.', postVerificationBehavior: 'return_with_toast' },
+    { id: 'ins-payment', action: 'update your payment method', label: 'Update Payment', enabled: true, category: 'settings_change', condition: 'always', successMessage: 'Payment method updated.', postVerificationBehavior: 'return_with_toast' },
+    { id: 'ins-policy-change', action: 'modify a policy', label: 'Modify Policy', enabled: true, category: 'settings_change', condition: 'always', successMessage: 'Policy modification submitted.', postVerificationBehavior: 'return_with_toast' },
+    { id: 'ins-claim', action: 'file an insurance claim', label: 'File Claim', enabled: true, category: 'transaction', condition: 'threshold', thresholdAmount: 1000, thresholdCurrency: 'USD', successMessage: 'Claim submitted successfully!', postVerificationBehavior: 'show_completion', completionTitle: 'Claim Submitted', completionActions: [{ label: 'File Another Claim', action: 'repeat', variant: 'secondary' }, { label: 'View Claims', action: 'return_to_previous', variant: 'primary' }] },
+  ],
+};
