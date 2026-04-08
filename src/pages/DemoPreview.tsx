@@ -15,6 +15,7 @@ import { UseCaseLandingPage } from "@/components/preview/UseCaseLandingPage";
 import { BankingPortalShell } from "@/components/preview/mockPortal/BankingPortalShell";
 import { PharmacyPortalShell } from "@/components/preview/mockPortal/PharmacyPortalShell";
 import { RetailPortalShell } from "@/components/preview/mockPortal/RetailPortalShell";
+import { GamingPortalShell } from "@/components/preview/mockPortal/GamingPortalShell";
 import { ResolvedUseCase } from "@/types/useCase";
 import { FormStep } from "@/types/demo";
 import { PortalBranding, PortalVerificationTrigger } from "@/types/portalConfig";
