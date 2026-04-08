@@ -323,6 +323,66 @@ export function BankingDashboard({ userName, accentColor, portalConfig, isNewAcc
           </div>
         )}
       </div>
+
+      {/* Offers & Products */}
+      {!isNewAccount && (
+        <div style={{ marginTop: '28px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#0F172A', margin: 0 }}>Explore Products & Offers</h3>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px' }}>
+            {[
+              { icon: '🏠', title: 'Home Mortgage', desc: 'Rates as low as 6.25% APR', tag: 'Popular' },
+              { icon: '🔄', title: 'Refinance Mortgage', desc: 'Lower your monthly payment', tag: 'Save' },
+              { icon: '🚗', title: 'Auto Loan', desc: 'New & used, from 4.49% APR', tag: null },
+              { icon: '🎓', title: 'Student Loan Refi', desc: 'Consolidate & save', tag: null },
+              { icon: '💰', title: 'Personal Loan', desc: 'Up to $50K, fixed rates', tag: 'Fast' },
+              { icon: '🏦', title: 'Home Equity Line', desc: 'Tap into your equity', tag: null },
+              { icon: '📈', title: 'Investment Account', desc: 'Stocks, ETFs & more', tag: 'New' },
+              { icon: '🛡️', title: 'Life Insurance', desc: 'Protect what matters', tag: null },
+            ].map((offer) => (
+              <div
+                key={offer.title}
+                style={{
+                  background: 'white',
+                  borderRadius: '16px',
+                  border: '1px solid #E2E8F0',
+                  padding: '20px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  position: 'relative',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-3px)';
+                  e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.08)';
+                  e.currentTarget.style.borderColor = accentColor;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'none';
+                  e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.04)';
+                  e.currentTarget.style.borderColor = '#E2E8F0';
+                }}
+              >
+                {offer.tag && (
+                  <span style={{
+                    position: 'absolute', top: '12px', right: '12px',
+                    fontSize: '10px', fontWeight: 700, textTransform: 'uppercase',
+                    background: `${accentColor}15`, color: accentColor,
+                    padding: '2px 8px', borderRadius: '6px', letterSpacing: '0.5px',
+                  }}>{offer.tag}</span>
+                )}
+                <span style={{ fontSize: '28px', display: 'block', marginBottom: '12px' }}>{offer.icon}</span>
+                <p style={{ fontSize: '14px', fontWeight: 700, color: '#0F172A', margin: '0 0 4px' }}>{offer.title}</p>
+                <p style={{ fontSize: '12px', color: '#64748B', margin: '0 0 12px', lineHeight: 1.4 }}>{offer.desc}</p>
+                <span style={{
+                  fontSize: '12px', fontWeight: 600, color: accentColor, cursor: 'pointer',
+                }}>Learn More →</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
