@@ -126,6 +126,44 @@ export interface GamingPaymentMethod {
   isDefault: boolean;
 }
 
+// ── Rental Car-specific types ──
+
+export interface RentalCarVehicle {
+  id: string;
+  make: string;
+  model: string;
+  year: number;
+  category: 'economy' | 'compact' | 'midsize' | 'fullsize' | 'suv' | 'luxury' | 'minivan' | 'truck';
+  image: string;          // emoji
+  pricePerDay: number;
+  seats: number;
+  bags: number;
+  transmission: 'automatic' | 'manual';
+  features: string[];
+  badge?: string;         // e.g. "Best Value", "Popular"
+  provider: string;       // e.g. "Avis", "Hertz", "Dollar"
+}
+
+export interface RentalCarReservation {
+  confirmationId: string;
+  vehicle: { make: string; model: string; image: string; category: string };
+  provider: string;
+  pickupLocation: string;
+  dropoffLocation: string;
+  pickupDate: string;
+  dropoffDate: string;
+  status: 'upcoming' | 'active' | 'completed' | 'cancelled';
+  totalCost: number;
+  extras?: string[];
+}
+
+export interface RentalCarPaymentMethod {
+  type: 'visa' | 'mastercard' | 'amex';
+  lastFour: string;
+  expiryDate: string;
+  isDefault: boolean;
+}
+
 // ── Retail-specific types ──
 
 export interface RetailProduct {
@@ -178,6 +216,7 @@ export interface PortalConfig {
   bankName?: string;       // also used as generic "portal name"
   pharmacyName?: string;
   retailStoreName?: string;
+  rentalCarCompanyName?: string;
   accentColor?: string;
   userName?: string;
   userEmail?: string;
@@ -210,6 +249,15 @@ export interface PortalConfig {
   gamingBets?: GamingBet[];
   gamingPromos?: GamingPromo[];
   gamingPaymentMethods?: GamingPaymentMethod[];
+
+  // Rental Car dashboard content
+  rentalCarVehicles?: RentalCarVehicle[];
+  rentalCarReservations?: RentalCarReservation[];
+  rentalCarPaymentMethods?: RentalCarPaymentMethod[];
+  rentalCarPickupLocations?: string[];
+  rentalCarDriverLicense?: string;
+  rentalCarLoyaltyNumber?: string;
+  rentalCarLoyaltyTier?: string;
 
   // Settings — which actions trigger IDV
   verificationTriggers?: PortalVerificationTrigger[];
@@ -398,5 +446,57 @@ export const DEFAULT_GAMING_CONFIG: PortalConfig = {
     { id: 'gaming-loss-limit', action: 'change your loss limit', label: 'Change Loss Limit', enabled: true, category: 'settings_change', condition: 'always', successMessage: 'Loss limit updated.', postVerificationBehavior: 'return_with_toast' },
     { id: 'gaming-withdraw', action: 'withdraw funds', label: 'Withdraw Funds', enabled: true, category: 'transaction', condition: 'threshold', thresholdAmount: 500, thresholdCurrency: 'USD', successMessage: 'Withdrawal initiated!', postVerificationBehavior: 'show_completion', completionTitle: 'Withdrawal Submitted', completionActions: [{ label: 'Return to Lobby', action: 'return_to_dashboard', variant: 'primary' }] },
     { id: 'gaming-wager', action: 'place a high-value wager', label: 'Place Wager', enabled: true, category: 'transaction', condition: 'threshold', thresholdAmount: 1000, thresholdCurrency: 'USD', successMessage: 'Bet placed successfully!', postVerificationBehavior: 'show_completion', completionTitle: 'Bet Confirmed', completionActions: [{ label: 'Place Another Bet', action: 'repeat', variant: 'secondary' }, { label: 'Return to Lobby', action: 'return_to_dashboard', variant: 'primary' }] },
+  ],
+};
+
+export const DEFAULT_RENTAL_CAR_CONFIG: PortalConfig = {
+  rentalCarCompanyName: 'Demo Rentals',
+  accentColor: '#FF6B00',
+  userName: 'Jane Cooper',
+  userEmail: 'jane.cooper@email.com',
+  userPhone: '(555) 867-5309',
+  rentalCarDriverLicense: '••••4829',
+  rentalCarLoyaltyNumber: 'RC-9284751',
+  rentalCarLoyaltyTier: 'Gold',
+
+  rentalCarPickupLocations: [
+    'LAX Airport — Los Angeles, CA',
+    'SFO Airport — San Francisco, CA',
+    'JFK Airport — New York, NY',
+    'ORD Airport — Chicago, IL',
+    'DFW Airport — Dallas, TX',
+  ],
+
+  rentalCarVehicles: [
+    { id: 'rc1', make: 'Toyota', model: 'Corolla', year: 2025, category: 'economy', image: '🚗', pricePerDay: 39, seats: 5, bags: 2, transmission: 'automatic', features: ['Bluetooth', 'Backup Camera'], provider: 'Dollar', badge: 'Best Value' },
+    { id: 'rc2', make: 'Hyundai', model: 'Elantra', year: 2025, category: 'compact', image: '🚙', pricePerDay: 45, seats: 5, bags: 2, transmission: 'automatic', features: ['Apple CarPlay', 'Android Auto'], provider: 'Avis' },
+    { id: 'rc3', make: 'Toyota', model: 'Camry', year: 2025, category: 'midsize', image: '🚗', pricePerDay: 55, seats: 5, bags: 3, transmission: 'automatic', features: ['Leather Seats', 'Sunroof', 'Blind Spot Monitor'], provider: 'Hertz', badge: 'Popular' },
+    { id: 'rc4', make: 'Chevrolet', model: 'Malibu', year: 2025, category: 'fullsize', image: '🚘', pricePerDay: 65, seats: 5, bags: 4, transmission: 'automatic', features: ['Heated Seats', 'Wi-Fi Hotspot'], provider: 'Avis' },
+    { id: 'rc5', make: 'Toyota', model: 'RAV4', year: 2025, category: 'suv', image: '🚙', pricePerDay: 75, seats: 5, bags: 4, transmission: 'automatic', features: ['AWD', 'Roof Rack', 'Lane Assist'], provider: 'Hertz', badge: 'Top Rated' },
+    { id: 'rc6', make: 'BMW', model: '5 Series', year: 2025, category: 'luxury', image: '🏎️', pricePerDay: 149, seats: 5, bags: 3, transmission: 'automatic', features: ['Premium Audio', 'Heated Seats', 'Navigation', 'Parking Assist'], provider: 'Avis', badge: 'Premium' },
+    { id: 'rc7', make: 'Chrysler', model: 'Pacifica', year: 2025, category: 'minivan', image: '🚐', pricePerDay: 85, seats: 7, bags: 5, transmission: 'automatic', features: ['Stow \'n Go Seats', 'Rear Entertainment'], provider: 'Dollar' },
+    { id: 'rc8', make: 'Ford', model: 'F-150', year: 2025, category: 'truck', image: '🛻', pricePerDay: 95, seats: 5, bags: 3, transmission: 'automatic', features: ['4x4', 'Tow Package', 'Bed Liner'], provider: 'Hertz' },
+  ],
+
+  rentalCarReservations: [
+    { confirmationId: 'RES-48291', vehicle: { make: 'Toyota', model: 'Camry', image: '🚗', category: 'midsize' }, provider: 'Hertz', pickupLocation: 'LAX Airport', dropoffLocation: 'LAX Airport', pickupDate: 'Apr 15, 2:00 PM', dropoffDate: 'Apr 19, 2:00 PM', status: 'upcoming', totalCost: 220, extras: ['GPS Navigation', 'Roadside Assistance'] },
+    { confirmationId: 'RES-48102', vehicle: { make: 'BMW', model: '5 Series', image: '🏎️', category: 'luxury' }, provider: 'Avis', pickupLocation: 'SFO Airport', dropoffLocation: 'SFO Airport', pickupDate: 'Mar 20, 10:00 AM', dropoffDate: 'Mar 23, 10:00 AM', status: 'completed', totalCost: 447, extras: ['Premium Insurance'] },
+    { confirmationId: 'RES-47998', vehicle: { make: 'Toyota', model: 'RAV4', image: '🚙', category: 'suv' }, provider: 'Hertz', pickupLocation: 'JFK Airport', dropoffLocation: 'JFK Airport', pickupDate: 'Mar 5, 9:00 AM', dropoffDate: 'Mar 10, 9:00 AM', status: 'completed', totalCost: 375 },
+    { confirmationId: 'RES-47654', vehicle: { make: 'Hyundai', model: 'Elantra', image: '🚙', category: 'compact' }, provider: 'Avis', pickupLocation: 'ORD Airport', dropoffLocation: 'ORD Airport', pickupDate: 'Feb 14, 12:00 PM', dropoffDate: 'Feb 16, 12:00 PM', status: 'completed', totalCost: 90 },
+  ],
+
+  rentalCarPaymentMethods: [
+    { type: 'visa', lastFour: '4829', expiryDate: '09/27', isDefault: true },
+    { type: 'mastercard', lastFour: '7163', expiryDate: '03/26', isDefault: false },
+  ],
+
+  verificationTriggers: [
+    { id: 'rental-name', action: 'change your name', label: 'Change Name', enabled: true, category: 'settings_change', condition: 'always', successMessage: 'Your name has been updated.', postVerificationBehavior: 'return_with_toast' },
+    { id: 'rental-email', action: 'change your email address', label: 'Change Email', enabled: true, category: 'settings_change', condition: 'always', successMessage: 'Your email has been updated.', postVerificationBehavior: 'return_with_toast' },
+    { id: 'rental-phone', action: 'change your phone number', label: 'Change Phone', enabled: true, category: 'settings_change', condition: 'always', successMessage: 'Your phone number has been updated.', postVerificationBehavior: 'return_with_toast' },
+    { id: 'rental-password', action: 'change your password', label: 'Change Password', enabled: true, category: 'settings_change', condition: 'always', successMessage: 'Your password has been changed.', postVerificationBehavior: 'return_with_toast' },
+    { id: 'rental-license', action: 'update your driver license', label: 'Update License', enabled: true, category: 'settings_change', condition: 'always', successMessage: 'Driver license updated.', postVerificationBehavior: 'return_with_toast' },
+    { id: 'rental-payment', action: 'update your payment method', label: 'Update Payment', enabled: true, category: 'settings_change', condition: 'always', successMessage: 'Payment method updated.', postVerificationBehavior: 'return_with_toast' },
+    { id: 'rental-booking', action: 'complete a rental booking', label: 'Complete Booking', enabled: true, category: 'transaction', condition: 'threshold', thresholdAmount: 200, thresholdCurrency: 'USD', successMessage: 'Reservation confirmed!', postVerificationBehavior: 'show_completion', completionTitle: 'Reservation Confirmed', completionActions: [{ label: 'Browse More Vehicles', action: 'return_to_dashboard', variant: 'secondary' }, { label: 'View Reservations', action: 'return_to_previous', variant: 'primary' }] },
   ],
 };
