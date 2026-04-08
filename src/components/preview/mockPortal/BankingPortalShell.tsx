@@ -117,57 +117,148 @@ export function BankingPortalShell({
   }, []);
 
   const initials = userName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-  const sidebarBg = branding?.sidebarBg || '#0F172A';
-  const sidebarText = branding?.sidebarText || '#ffffff';
   const pageBg = branding?.pageBg || '#F8FAFC';
   const brandAccent = branding?.accentColor || accentColor;
+  const headerBg = branding?.sidebarBg || '#FFFFFF';
+  const headerText = branding?.sidebarText || '#1E293B';
   const fontFamily = branding?.fontFamily || '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-  const sidebarTextMuted = `${sidebarText}88`;
-  const sidebarTextFaint = `${sidebarText}40`;
-  const sidebarBorder = `${sidebarText}14`;
   const navActivePage = ['transfer', 'pay-bills'].includes(activePage) ? 'dashboard' : activePage;
 
+  const navItems: { key: PortalPage; label: string }[] = [
+    { key: 'dashboard', label: 'Home' },
+    { key: 'cards', label: 'Cards' },
+    { key: 'settings', label: 'Account' },
+  ];
+
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: pageBg, fontFamily }}>
-      {/* Sidebar */}
-      <aside style={{ width: '240px', background: sidebarBg, display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
-        <div style={{ padding: '20px 20px 24px', borderBottom: `1px solid ${sidebarBorder}`, display: 'flex', alignItems: 'center', gap: '12px' }}>
-          {logoUrl ? (
-            <img src={logoUrl} alt={bankName} style={{ height: '44px', maxWidth: '180px', objectFit: 'contain' }} />
-          ) : (
-            <>
-              <div style={{
-                width: '32px', height: '32px', borderRadius: '8px',
-                background: brandAccent, display: 'flex', alignItems: 'center',
-                justifyContent: 'center', color: 'white', fontSize: '14px', fontWeight: 700,
-              }}>{bankName[0]?.toUpperCase()}</div>
-              <span style={{ color: sidebarText, fontWeight: 600, fontSize: '15px' }}>{bankName}</span>
-            </>
-          )}
+    <div style={{ minHeight: '100vh', background: pageBg, fontFamily }}>
+      {/* Header */}
+      <header style={{
+        background: headerBg, borderBottom: '1px solid #E2E8F0',
+        position: 'sticky', top: 0, zIndex: 20,
+      }}>
+        {/* Top utility bar */}
+        <div style={{
+          background: '#0F172A', color: 'white', fontSize: '12px',
+          padding: '8px 24px', textAlign: 'center', fontWeight: 500,
+          letterSpacing: '0.3px',
+        }}>
+          Secure banking · FDIC insured · 24/7 customer support
         </div>
 
-        <nav style={{ padding: '12px 10px', flex: 1 }}>
-          {NAV_ITEMS.map((item) => {
+        {/* Main Header */}
+        <div style={{
+          padding: '14px 24px', display: 'flex', alignItems: 'center',
+          justifyContent: 'space-between', maxWidth: '1200px', margin: '0 auto',
+        }}>
+          {/* Logo */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}
+            onClick={() => setActivePage('dashboard')}
+          >
+            {logoUrl ? (
+              <img src={logoUrl} alt={bankName} style={{ height: '32px', maxWidth: '160px', objectFit: 'contain' }} />
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{
+                  width: '36px', height: '36px', borderRadius: '10px',
+                  background: `linear-gradient(135deg, ${brandAccent}, ${brandAccent}cc)`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: 'white', fontSize: '16px', fontWeight: 800,
+                }}>
+                  {bankName[0]?.toUpperCase()}
+                </div>
+                <span style={{ fontWeight: 700, fontSize: '20px', color: headerText, letterSpacing: '-0.5px' }}>{bankName}</span>
+              </div>
+            )}
+          </div>
+
+          {/* Search Bar */}
+          <div style={{ flex: 1, maxWidth: '400px', margin: '0 24px', position: 'relative' }}>
+            <input
+              type="text"
+              placeholder="Search accounts, transactions..."
+              style={{
+                width: '100%', padding: '8px 16px 8px 36px',
+                border: '1px solid #D1D5DB', borderRadius: '24px',
+                fontSize: '13px', outline: 'none', background: '#F9FAFB',
+              }}
+              readOnly
+            />
+            <span style={{
+              position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)',
+              fontSize: '14px', color: '#9CA3AF',
+            }}>🔍</span>
+          </div>
+
+          {/* User actions */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <button style={{
+              background: 'none', border: 'none', cursor: 'pointer',
+              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px',
+              color: headerText, fontSize: '11px',
+            }}>
+              <span style={{ fontSize: '20px' }}>🔔</span>
+              Alerts
+            </button>
+            <div
+              onClick={() => setActivePage('settings')}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer',
+                padding: '6px 12px', borderRadius: '8px', transition: 'background 0.2s',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = '#F1F5F9'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+            >
+              <div style={{
+                width: '32px', height: '32px', borderRadius: '50%',
+                background: `linear-gradient(135deg, ${brandAccent}, ${brandAccent}cc)`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: 'white', fontSize: '12px', fontWeight: 600,
+              }}>{initials}</div>
+              <div style={{ textAlign: 'left' }}>
+                <p style={{ fontSize: '13px', fontWeight: 600, color: headerText, margin: 0 }}>{userName.split(' ')[0]}</p>
+                <p style={{ fontSize: '10px', color: '#6B7280', margin: 0 }}>My Account</p>
+              </div>
+            </div>
+            <button onClick={onLogout} title="Sign out" style={{
+              background: 'none', border: 'none', color: '#9CA3AF',
+              cursor: 'pointer', fontSize: '18px', padding: '4px',
+            }}
+              onMouseEnter={(e) => { e.currentTarget.style.color = '#EF4444'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = '#9CA3AF'; }}
+            >
+              ↗
+            </button>
+          </div>
+        </div>
+
+        {/* Navigation tabs */}
+        <nav style={{
+          display: 'flex', gap: '0', maxWidth: '1200px', margin: '0 auto',
+          padding: '0 24px', borderTop: '1px solid #F3F4F6',
+        }}>
+          {navItems.map(item => {
             const isActive = navActivePage === item.key;
             return (
-              <button key={item.key} onClick={() => setActivePage(item.key)}
+              <button
+                key={item.key}
+                onClick={() => setActivePage(item.key)}
                 style={{
-                  display: 'flex', alignItems: 'center', gap: '12px',
-                  width: '100%', padding: '10px 14px', borderRadius: '10px',
-                  border: 'none', cursor: 'pointer',
-                  background: isActive ? `${sidebarText}18` : 'transparent',
-                  color: isActive ? sidebarText : sidebarTextMuted,
-                  fontSize: '14px', fontWeight: isActive ? 600 : 400,
-                  transition: 'all 0.2s', marginBottom: '4px', textAlign: 'left',
+                  padding: '10px 20px', border: 'none', cursor: 'pointer',
+                  background: 'transparent', fontSize: '14px',
+                  fontWeight: isActive ? 600 : 400,
+                  color: isActive ? brandAccent : '#6B7280',
+                  borderBottom: isActive ? `2px solid ${brandAccent}` : '2px solid transparent',
+                  transition: 'all 0.2s',
+                  display: 'flex', alignItems: 'center', gap: '6px',
                 }}
-                onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.background = `${sidebarText}0a`; }}
-                onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.background = 'transparent'; }}
+                onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.color = brandAccent; }}
+                onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.color = '#6B7280'; }}
               >
-                <span style={{ fontSize: '18px' }}>{item.icon}</span>
                 {item.label}
                 {item.key === 'cards' && creditCards.length > 0 && (
                   <span style={{
-                    marginLeft: 'auto', fontSize: '11px', fontWeight: 700,
+                    fontSize: '11px', fontWeight: 700,
                     background: brandAccent, color: 'white',
                     padding: '1px 7px', borderRadius: '10px',
                   }}>{creditCards.length}</span>
@@ -176,62 +267,10 @@ export function BankingPortalShell({
             );
           })}
         </nav>
+      </header>
 
-        <div style={{ padding: '16px 14px', borderTop: `1px solid ${sidebarBorder}`, display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{
-            width: '36px', height: '36px', borderRadius: '50%',
-            background: `linear-gradient(135deg, ${brandAccent}, ${brandAccent}bb)`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: 'white', fontSize: '13px', fontWeight: 600, flexShrink: 0,
-          }}>{initials}</div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <p style={{ fontSize: '13px', fontWeight: 600, color: sidebarText, margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{userName}</p>
-            <p style={{ fontSize: '11px', color: sidebarTextFaint, margin: '1px 0 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{userEmail}</p>
-          </div>
-          <button onClick={onLogout} title="Sign out"
-            style={{ background: 'none', border: 'none', color: sidebarTextMuted, cursor: 'pointer', padding: '6px 10px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px', borderRadius: '6px', transition: 'all 0.2s' }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(248,113,113,0.15)'; e.currentTarget.style.color = '#F87171'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = sidebarTextMuted; }}
-          >↗ Logout</button>
-        </div>
-      </aside>
-
-      {/* Main Content */}
-      <main style={{ flex: 1, overflowY: 'auto', minHeight: '100vh' }}>
-        {/* Top Bar */}
-        <div style={{
-          padding: '14px 24px', background: 'white', borderBottom: '1px solid #E2E8F0',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          position: 'sticky', top: 0, zIndex: 10,
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            {NAV_ITEMS.map(item => (
-              <button key={item.key} onClick={() => setActivePage(item.key)}
-                style={{
-                  padding: '6px 14px', borderRadius: '8px', border: 'none',
-                  background: navActivePage === item.key ? `${brandAccent}10` : 'transparent',
-                  color: navActivePage === item.key ? brandAccent : '#64748B',
-                  fontSize: '13px', fontWeight: navActivePage === item.key ? 600 : 400, cursor: 'pointer',
-                }}
-              >{item.label}</button>
-            ))}
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <button style={{
-              width: '36px', height: '36px', borderRadius: '50%',
-              background: '#F1F5F9', border: 'none', cursor: 'pointer',
-              fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>🔔</button>
-            <div style={{
-              width: '36px', height: '36px', borderRadius: '50%',
-              background: `linear-gradient(135deg, ${brandAccent}, ${brandAccent}bb)`,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: 'white', fontSize: '12px', fontWeight: 600,
-            }}>{initials}</div>
-          </div>
-        </div>
-
-        {/* Page Content */}
+      {/* Page Content */}
+      <main style={{ maxWidth: '1200px', margin: '0 auto' }}>
         {activePage === 'dashboard' && (
           <BankingDashboard userName={userName} accentColor={brandAccent} portalConfig={config} isNewAccount={isNewAccount} onQuickAction={handleQuickAction} creditCards={creditCards} />
         )}
