@@ -287,13 +287,13 @@ export default function AdminDashboard() {
               Global Settings
             </Button>
             <QrCodeGeneratorDialog />
-            <Button variant="outline" onClick={() => navigate('/admin/reporting')}>
-              <BarChart3 className="w-4 h-4 mr-2" />
-              Reporting
-            </Button>
             <Button variant="outline" onClick={() => window.open('https://ditto.gbg.com/', '_blank')}>
               <ExternalLink className="w-4 h-4 mr-2" />
               IVS Portal
+            </Button>
+            <Button variant="outline" onClick={() => navigate('/admin/reporting')}>
+              <BarChart3 className="w-4 h-4 mr-2" />
+              Reporting
             </Button>
           </div>
         </div>
