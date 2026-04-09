@@ -216,12 +216,36 @@ const INLINE_STYLES_SCRIPT = `
     '[id*="footer"]', '[role="contentinfo"]'
   ]);
 
+  // Extract actual header background color from computed style
+  var headerBgColor = '';
+  var headerTextColor = '';
+  var headerEl = document.querySelector('header') || document.querySelector('[role="banner"]') || document.querySelector('nav');
+  if (headerEl) {
+    var hcs = window.getComputedStyle(headerEl);
+    headerBgColor = hcs.backgroundColor || '';
+    headerTextColor = hcs.color || '';
+    // If transparent, walk up parents to find an opaque bg
+    if (headerBgColor === 'rgba(0, 0, 0, 0)' || headerBgColor === 'transparent') {
+      var parent = headerEl.parentElement;
+      while (parent && parent !== document.body) {
+        var pcs = window.getComputedStyle(parent);
+        if (pcs.backgroundColor && pcs.backgroundColor !== 'rgba(0, 0, 0, 0)' && pcs.backgroundColor !== 'transparent') {
+          headerBgColor = pcs.backgroundColor;
+          break;
+        }
+        parent = parent.parentElement;
+      }
+    }
+  }
+
   return JSON.stringify({
     headerHtml: (topBarHtml ? topBarHtml + '\\n' : '') + headerHtml,
     footerHtml: footerHtml,
     fontFaceRules: fontInfo,
     fontLinks: fontLinks,
-    origin: window.location.origin
+    origin: window.location.origin,
+    headerBgColor: headerBgColor,
+    headerTextColor: headerTextColor
   });
 })();
 `;
