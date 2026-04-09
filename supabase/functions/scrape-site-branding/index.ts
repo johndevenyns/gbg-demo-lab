@@ -131,7 +131,7 @@ const INLINE_STYLES_SCRIPT = `
     }
     
     // Convert SVG use[href] to absolute
-    var uses = clone.querySelectorAll('use[href], use[xlink\\\\:href]');
+    var uses = clone.querySelectorAll('use[href]');
     for (var u = 0; u < uses.length; u++) {
       var href = uses[u].getAttribute('href') || uses[u].getAttribute('xlink:href');
       if (href && href.startsWith('/')) {
