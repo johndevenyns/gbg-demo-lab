@@ -1,14 +1,18 @@
 import { useState, useRef, useCallback } from "react";
-import { Globe, Loader2, ExternalLink, X, Eye, Paintbrush, Check, Ban, Code, ChevronDown, ChevronRight, RotateCcw } from "lucide-react";
+import { Globe, Loader2, ExternalLink, X, Eye, Paintbrush, Check, Ban, Code, ChevronDown, ChevronRight, RotateCcw, Sparkles, Wand2 } from "lucide-react";
  import { Button } from "@/components/ui/button";
  import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
- import { scrapingApi, ScrapedBranding, FormElementStyles } from "@/lib/api/scraping";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+ import { scrapingApi, ScrapedBranding, FormElementStyles, headerRefinementApi } from "@/lib/api/scraping";
  import { useToast } from "@/hooks/use-toast";
  import { DemoEnvironment } from "@/types/demo";
+ import { DEFAULT_FORM_STYLE, FormStyleConfig } from "@/types/formStyle";
+ import { generateFormHtml, generatePreviewDocument, formElementStylesToConfig, getReadableTextColor } from "@/lib/formStyleUtils";
  import { DEFAULT_FORM_STYLE, FormStyleConfig } from "@/types/formStyle";
  import { generateFormHtml, generatePreviewDocument, formElementStylesToConfig, getReadableTextColor } from "@/lib/formStyleUtils";
  
