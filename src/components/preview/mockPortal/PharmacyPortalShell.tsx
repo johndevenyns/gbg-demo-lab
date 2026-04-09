@@ -4,6 +4,7 @@ import { PharmacyPrescriptionsPage } from './PharmacyPrescriptionsPage';
 import { PharmacyOrdersPage } from './PharmacyOrdersPage';
 import { PharmacySettings } from './PharmacySettings';
 import { PortalConfig, PortalBranding, DEFAULT_PHARMACY_CONFIG } from '@/types/portalConfig';
+import { getReadableTextColor } from '@/lib/formStyleUtils';
 
 type PortalPage = 'dashboard' | 'prescriptions' | 'orders' | 'settings';
 

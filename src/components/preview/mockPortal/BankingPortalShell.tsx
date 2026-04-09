@@ -5,6 +5,7 @@ import { BankingSettings } from './BankingSettings';
 import { BankingTransferFlow } from './BankingTransferFlow';
 import { BankingCardsPage } from './BankingCardsPage';
 import { PortalConfig, PortalBranding, DEFAULT_BANKING_CONFIG, PortalVerificationTrigger } from '@/types/portalConfig';
+import { getReadableTextColor } from '@/lib/formStyleUtils';
 
 type PortalPage = 'dashboard' | 'cards' | 'settings' | 'transfer' | 'pay-bills';
 

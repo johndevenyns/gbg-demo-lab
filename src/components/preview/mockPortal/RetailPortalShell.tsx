@@ -4,6 +4,7 @@ import { RetailOrdersPage } from './RetailOrdersPage';
 import { RetailSettings } from './RetailSettings';
 import { RetailCartPage, CartItem } from './RetailCartPage';
 import { PortalConfig, PortalBranding, DEFAULT_RETAIL_CONFIG, RetailProduct, PortalVerificationTrigger } from '@/types/portalConfig';
+import { getReadableTextColor } from '@/lib/formStyleUtils';
 import { toast } from 'sonner';
 
 type PortalPage = 'dashboard' | 'orders' | 'settings' | 'cart';

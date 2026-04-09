@@ -4,6 +4,7 @@ import { RentalCarReservationsPage } from './RentalCarReservationsPage';
 import { RentalCarSettings } from './RentalCarSettings';
 import { RentalCarCheckoutPage } from './RentalCarCheckoutPage';
 import { PortalConfig, PortalBranding, DEFAULT_RENTAL_CAR_CONFIG, RentalCarVehicle, PortalVerificationTrigger } from '@/types/portalConfig';
+import { getReadableTextColor } from '@/lib/formStyleUtils';
 import { toast } from 'sonner';
 
 type PortalPage = 'dashboard' | 'reservations' | 'settings' | 'checkout';
