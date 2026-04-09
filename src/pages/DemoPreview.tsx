@@ -701,9 +701,17 @@ export default function DemoPreview() {
                 <meta charset="utf-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1">
                 <style>
-                  body { margin: 0; padding: 0; overflow: hidden; }
+                  * { box-sizing: border-box; }
+                  body { margin: 0; padding: 0; overflow: hidden; width: 100%; }
                   html { overflow: hidden; }
                   a { pointer-events: none; }
+                  footer, [class*="footer"] {
+                    width: 100%;
+                    max-width: 100%;
+                  }
+                  /* Preserve common layout patterns */
+                  footer ul { list-style: none; margin: 0; padding: 0; }
+                  footer a { text-decoration: none; color: inherit; }
                 </style>
                 ${previewDocument.cssContent ? `<style>${previewDocument.cssContent}</style>` : ''}
               </head>
