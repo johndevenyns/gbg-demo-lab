@@ -30,13 +30,197 @@ interface FormElementStyles {
   errorColor: string;
 }
 
+/**
+ * JavaScript to execute ON the target page via Firecrawl's executeJavascript action.
+ * This script:
+ * 1. Finds header and footer elements
+ * 2. Deep-clones them
+ * 3. Inlines all computed styles on every element
+ * 4. Returns self-contained HTML that looks identical to the original
+ */
+const INLINE_STYLES_SCRIPT = `
+(function() {
+  // Default browser styles we skip to keep HTML lean
+  var skipProps = new Set([
+    'animation', 'animation-delay', 'animation-direction', 'animation-duration',
+    'animation-fill-mode', 'animation-iteration-count', 'animation-name',
+    'animation-play-state', 'animation-timing-function',
+    'transition', 'transition-delay', 'transition-duration', 'transition-property',
+    'transition-timing-function', 'will-change', 'perspective', 'perspective-origin',
+    'backface-visibility'
+  ]);
+
+  // Create a reference element to compare defaults
+  var refDiv = document.createElement('div');
+  document.body.appendChild(refDiv);
+  var defaultStyle = window.getComputedStyle(refDiv);
+  var defaultMap = {};
+  for (var i = 0; i < defaultStyle.length; i++) {
+    defaultMap[defaultStyle[i]] = defaultStyle.getPropertyValue(defaultStyle[i]);
+  }
+  document.body.removeChild(refDiv);
+
+  function extractWithInlinedStyles(selector, fallbackSelectors) {
+    var el = document.querySelector(selector);
+    if (!el && fallbackSelectors) {
+      for (var i = 0; i < fallbackSelectors.length; i++) {
+        el = document.querySelector(fallbackSelectors[i]);
+        if (el) break;
+      }
+    }
+    if (!el) return '';
+    
+    // Walk the original and build a map of styles per element index
+    var styleMap = [];
+    function collectStyles(origEl, idx) {
+      if (origEl.nodeType !== 1) return idx;
+      var cs = window.getComputedStyle(origEl);
+      var props = [];
+      for (var i = 0; i < cs.length; i++) {
+        var prop = cs[i];
+        if (skipProps.has(prop)) continue;
+        var val = cs.getPropertyValue(prop);
+        if (val && val !== defaultMap[prop]) {
+          props.push(prop + ':' + val);
+        }
+      }
+      styleMap[idx] = props.join(';');
+      var nextIdx = idx + 1;
+      var children = origEl.children;
+      for (var c = 0; c < children.length; c++) {
+        nextIdx = collectStyles(children[c], nextIdx);
+      }
+      return nextIdx;
+    }
+    collectStyles(el, 0);
+    
+    // Now apply collected styles to the clone
+    var clone = el.cloneNode(true);
+    var scripts = clone.querySelectorAll('script');
+    for (var s2 = 0; s2 < scripts.length; s2++) scripts[s2].remove();
+    
+    function applyStyles(cloneEl, idx) {
+      if (cloneEl.nodeType !== 1) return idx;
+      if (styleMap[idx]) {
+        cloneEl.setAttribute('style', styleMap[idx]);
+      }
+      var nextIdx = idx + 1;
+      var children = cloneEl.children;
+      for (var c = 0; c < children.length; c++) {
+        nextIdx = applyStyles(children[c], nextIdx);
+      }
+      return nextIdx;
+    }
+    applyStyles(clone, 0);
+    
+    // Make all links non-functional but keep href for CTA mapping
+    var links = clone.querySelectorAll('a');
+    for (var l = 0; l < links.length; l++) {
+      links[l].setAttribute('data-original-href', links[l].getAttribute('href') || '');
+    }
+    
+    // Convert images to absolute URLs
+    var imgs = clone.querySelectorAll('img');
+    for (var im = 0; im < imgs.length; im++) {
+      var src = imgs[im].getAttribute('src');
+      if (src && !src.startsWith('data:') && !src.startsWith('http')) {
+        try {
+          imgs[im].setAttribute('src', new URL(src, window.location.origin).href);
+        } catch(e) {}
+      }
+    }
+    
+    // Convert SVG use[href] to absolute
+    var uses = clone.querySelectorAll('use[href], use[xlink\\:href]');
+    for (var u = 0; u < uses.length; u++) {
+      var href = uses[u].getAttribute('href') || uses[u].getAttribute('xlink:href');
+      if (href && href.startsWith('/')) {
+        try {
+          var absHref = new URL(href, window.location.origin).href;
+          if (uses[u].hasAttribute('href')) uses[u].setAttribute('href', absHref);
+          if (uses[u].hasAttribute('xlink:href')) uses[u].setAttribute('xlink:href', absHref);
+        } catch(e) {}
+      }
+    }
+    
+    // Convert background-image urls to absolute
+    var allEls = clone.querySelectorAll('*');
+    for (var ae = 0; ae < allEls.length; ae++) {
+      var st = allEls[ae].getAttribute('style') || '';
+      if (st.includes('url(') && !st.includes('url(data:') && !st.includes('url(http')) {
+        st = st.replace(/url(["']?(\/[^"')]+)["']?)/g, function(m, p1) {
+          try { return 'url("' + new URL(p1, window.location.origin).href + '")'; }
+          catch(e) { return m; }
+        });
+        allEls[ae].setAttribute('style', st);
+      }
+    }
+    
+    return clone.outerHTML;
+  }
+
+  // Also grab any relevant font-face declarations and Google Font links
+  var fontInfo = [];
+  var sheets = document.styleSheets;
+  for (var si = 0; si < sheets.length; si++) {
+    try {
+      var rules = sheets[si].cssRules || sheets[si].rules;
+      if (!rules) continue;
+      for (var ri = 0; ri < rules.length; ri++) {
+        if (rules[ri].type === 5) { // CSSFontFaceRule
+          fontInfo.push(rules[ri].cssText);
+        }
+      }
+    } catch(e) { /* cross-origin */ }
+  }
+  
+  // Get Google Fonts links
+  var fontLinks = [];
+  var allLinks = document.querySelectorAll('link[href*="fonts.googleapis.com"], link[href*="fonts.gstatic.com"], link[href*="typekit"], link[href*="use.fontawesome"]');
+  for (var fl = 0; fl < allLinks.length; fl++) {
+    fontLinks.push(allLinks[fl].outerHTML);
+  }
+
+  var headerHtml = extractWithInlinedStyles('header', [
+    '[class*="site-header"]', '[class*="main-header"]', '[class*="page-header"]',
+    '[id*="header"]', '[role="banner"]', 'nav'
+  ]);
+  
+  // Check for announcement/top bar above header
+  var header = document.querySelector('header') || document.querySelector('[role="banner"]');
+  var topBarHtml = '';
+  if (header && header.previousElementSibling) {
+    var prev = header.previousElementSibling;
+    var prevText = (prev.className || '').toLowerCase() + (prev.id || '').toLowerCase();
+    if (prevText.match(/top-bar|announcement|promo|utility|alert|banner|ribbon/)) {
+      topBarHtml = extractWithInlinedStyles(
+        prev.tagName.toLowerCase() + (prev.id ? '#' + prev.id : '') + (prev.className ? '.' + prev.className.split(' ')[0] : ''),
+        []
+      );
+    }
+  }
+
+  var footerHtml = extractWithInlinedStyles('footer', [
+    '[class*="site-footer"]', '[class*="main-footer"]', '[class*="page-footer"]',
+    '[id*="footer"]', '[role="contentinfo"]'
+  ]);
+
+  return JSON.stringify({
+    headerHtml: (topBarHtml ? topBarHtml + '\\n' : '') + headerHtml,
+    footerHtml: footerHtml,
+    fontFaceRules: fontInfo,
+    fontLinks: fontLinks,
+    origin: window.location.origin
+  });
+})();
+`;
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // Require admin authentication
     const admin = await requireAdmin(req);
     if (!admin) return unauthorizedResponse(corsHeaders);
 
@@ -51,33 +235,26 @@ Deno.serve(async (req) => {
 
     const apiKey = Deno.env.get('FIRECRAWL_API_KEY');
     if (!apiKey) {
-      console.error('FIRECRAWL_API_KEY not configured');
       return new Response(
         JSON.stringify({ success: false, error: 'Firecrawl connector not configured' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Format URL
-    let formattedUrl = url.trim();
-    
-    // Fix common protocol typos
-    formattedUrl = formattedUrl
-      .replace(/^hhtps?:\/\//i, 'https://')  // hhtps -> https
-      .replace(/^htps:\/\//i, 'https://')    // htps -> https
-      .replace(/^htttp:\/\//i, 'http://')    // htttp -> http
-      .replace(/^hhtp:\/\//i, 'http://');    // hhtp -> http
+    let formattedUrl = url.trim()
+      .replace(/^hhtps?:\/\//i, 'https://')
+      .replace(/^htps:\/\//i, 'https://')
+      .replace(/^htttp:\/\//i, 'http://')
+      .replace(/^hhtp:\/\//i, 'http://');
     
     if (!formattedUrl.startsWith('http://') && !formattedUrl.startsWith('https://')) {
       formattedUrl = `https://${formattedUrl}`;
     }
 
-    // Validate URL before proceeding
     let baseUrl: URL;
     try {
       baseUrl = new URL(formattedUrl);
-    } catch (urlError) {
-      console.error('Invalid URL format:', formattedUrl);
+    } catch {
       return new Response(
         JSON.stringify({ success: false, error: `Invalid URL format: "${url}". Please enter a valid URL like "example.com" or "https://example.com"` }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -98,12 +275,10 @@ Deno.serve(async (req) => {
         });
       };
 
-      // Try request as-is first.
       let res = await doRequest(body);
       if (res.ok) return res;
 
-      // If Firecrawl rejects newer keys (e.g. screenshot options), retry without them.
-      // This preserves backwards compatibility while still allowing us to attempt enhanced options.
+      // Retry without unrecognized keys
       try {
         const cloned = res.clone();
         const data = await cloned.json();
@@ -123,55 +298,44 @@ Deno.serve(async (req) => {
           }
         }
       } catch {
-        // ignore parse errors
+        // ignore
       }
 
       return res;
     };
 
-    // Define viewport sizes for screenshots
-    const viewports = [
-      { name: 'desktop', width: 1440, height: 900 },
-      { name: 'tablet', width: 768, height: 1024 },
-      { name: 'mobile', width: 390, height: 844 },
-    ];
-
-    // Main request for HTML, branding, and desktop screenshot
+    // Main request: get branding, screenshot, AND run JS to extract header/footer with inlined styles
     const mainRequest = firecrawlScrape({
       url: formattedUrl,
       formats: ['html', 'rawHtml', 'screenshot', 'branding'],
       onlyMainContent: false,
-     waitFor: 4000,
-      // Attempt full-page screenshots, but fall back automatically if Firecrawl rejects the key.
-      screenshot: {
-        fullPage: true,
-      },
-     actions: [
-       // Scroll to bottom to ensure lazy-loaded footer content is captured
-       { type: 'scroll', direction: 'down', amount: 99999 },
-       { type: 'wait', milliseconds: 1500 },
-       // Scroll back to top for consistent header capture
-       { type: 'scroll', direction: 'up', amount: 99999 },
-       { type: 'wait', milliseconds: 500 },
-     ]
+      waitFor: 4000,
+      screenshot: { fullPage: true },
+      actions: [
+        // Scroll to load lazy content
+        { type: 'scroll', direction: 'down', amount: 99999 },
+        { type: 'wait', milliseconds: 1500 },
+        { type: 'scroll', direction: 'up', amount: 99999 },
+        { type: 'wait', milliseconds: 500 },
+        // Execute JS to extract header/footer with computed styles inlined
+        { type: 'executeJavascript', script: INLINE_STYLES_SCRIPT },
+      ],
     });
 
-    // Parallel requests for tablet and mobile screenshots
+    // Parallel screenshot requests for tablet/mobile
     const tabletRequest = firecrawlScrape({
       url: formattedUrl,
       formats: ['screenshot'],
       onlyMainContent: false,
       waitFor: 2000,
-      screenshot: {
-        fullPage: true,
-      },
+      screenshot: { fullPage: true },
       actions: [
-       { type: 'viewport', width: viewports[1].width, height: viewports[1].height },
-       { type: 'scroll', direction: 'down', amount: 99999 },
-       { type: 'wait', milliseconds: 1000 },
-       { type: 'scroll', direction: 'up', amount: 99999 },
-       { type: 'wait', milliseconds: 300 },
-      ]
+        { type: 'viewport', width: 768, height: 1024 },
+        { type: 'scroll', direction: 'down', amount: 99999 },
+        { type: 'wait', milliseconds: 1000 },
+        { type: 'scroll', direction: 'up', amount: 99999 },
+        { type: 'wait', milliseconds: 300 },
+      ],
     });
 
     const mobileRequest = firecrawlScrape({
@@ -179,21 +343,18 @@ Deno.serve(async (req) => {
       formats: ['screenshot'],
       onlyMainContent: false,
       waitFor: 2000,
-      screenshot: {
-        fullPage: true,
-      },
+      screenshot: { fullPage: true },
       actions: [
-       { type: 'viewport', width: viewports[2].width, height: viewports[2].height },
-       { type: 'scroll', direction: 'down', amount: 99999 },
-       { type: 'wait', milliseconds: 1000 },
-       { type: 'scroll', direction: 'up', amount: 99999 },
-       { type: 'wait', milliseconds: 300 },
-      ]
+        { type: 'viewport', width: 390, height: 844 },
+        { type: 'scroll', direction: 'down', amount: 99999 },
+        { type: 'wait', milliseconds: 1000 },
+        { type: 'scroll', direction: 'up', amount: 99999 },
+        { type: 'wait', milliseconds: 300 },
+      ],
     });
 
-    console.log('Fetching screenshots for desktop, tablet, and mobile viewports...');
+    console.log('Fetching with inline styles extraction + screenshots...');
 
-    // Execute all requests in parallel
     const [mainResponse, tabletResponse, mobileResponse] = await Promise.all([
       mainRequest,
       tabletRequest,
@@ -210,14 +371,12 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Parse tablet and mobile responses (don't fail if they error)
     let tabletScreenshot: string | null = null;
     let mobileScreenshot: string | null = null;
 
     try {
       const tabletData = await tabletResponse.json();
       tabletScreenshot = tabletData.data?.screenshot || tabletData.screenshot || null;
-      console.log('Tablet screenshot captured:', !!tabletScreenshot);
     } catch (e) {
       console.warn('Failed to get tablet screenshot:', e);
     }
@@ -225,58 +384,87 @@ Deno.serve(async (req) => {
     try {
       const mobileData = await mobileResponse.json();
       mobileScreenshot = mobileData.data?.screenshot || mobileData.screenshot || null;
-      console.log('Mobile screenshot captured:', !!mobileScreenshot);
     } catch (e) {
       console.warn('Failed to get mobile screenshot:', e);
     }
 
-    // Extract data from main response
     const html = mainData.data?.html || mainData.html || '';
     const rawHtml = mainData.data?.rawHtml || mainData.rawHtml || html;
     const branding = mainData.data?.branding || mainData.branding || null;
     const desktopScreenshot = mainData.data?.screenshot || mainData.screenshot || null;
     const metadata = mainData.data?.metadata || mainData.metadata || {};
 
-    console.log('Desktop screenshot captured:', !!desktopScreenshot);
+    // Extract the JS-returned header/footer with inlined styles
+    const jsReturns = mainData.data?.javascriptReturns || mainData.javascriptReturns || [];
+    let jsExtracted: { headerHtml: string; footerHtml: string; fontFaceRules: string[]; fontLinks: string[]; origin: string } | null = null;
+    
+    console.log('javascriptReturns count:', jsReturns.length);
+    
+    if (jsReturns.length > 0) {
+      try {
+        const lastReturn = jsReturns[jsReturns.length - 1];
+        const rawValue = typeof lastReturn === 'string' ? lastReturn : lastReturn?.value || lastReturn?.result || JSON.stringify(lastReturn);
+        jsExtracted = JSON.parse(rawValue);
+        console.log('JS extraction successful - header length:', jsExtracted?.headerHtml?.length || 0, 'footer length:', jsExtracted?.footerHtml?.length || 0);
+      } catch (e) {
+        console.warn('Failed to parse JS extraction result:', e, 'raw:', JSON.stringify(jsReturns).substring(0, 500));
+      }
+    }
 
-    // Parse header and footer from HTML
-    const headerHtml = convertRelativeUrls(extractHeader(html), baseUrl);
-    const footerHtml = convertRelativeUrls(extractFooter(html), baseUrl);
-    
-    // Extract and inline all CSS
-    console.log('Extracting and inlining CSS...');
-    const cssContent = await extractAndInlineCss(rawHtml, baseUrl);
-    console.log(`Extracted ${cssContent.length} characters of CSS`);
-    
-    // Extract form styles from the page
-    console.log('Extracting form styles...');
+    // Use JS-extracted header/footer (with inlined styles) if available, otherwise fall back to regex
+    let headerHtml = '';
+    let footerHtml = '';
+    let cssContent = '';
+    let usedInlineMethod = false;
+
+    if (jsExtracted && (jsExtracted.headerHtml || jsExtracted.footerHtml)) {
+      headerHtml = jsExtracted.headerHtml || '';
+      footerHtml = jsExtracted.footerHtml || '';
+      usedInlineMethod = true;
+      
+      // Build minimal CSS: font-face rules + @import for Google Fonts etc.
+      const fontParts: string[] = [];
+      // Convert <link> tags to @import rules
+      if (jsExtracted.fontLinks?.length) {
+        for (const linkTag of jsExtracted.fontLinks) {
+          const hrefMatch = linkTag.match(/href=["']([^"']+)["']/);
+          if (hrefMatch && hrefMatch[1] && !hrefMatch[1].endsWith('.js')) {
+            fontParts.push(`@import url("${hrefMatch[1]}");`);
+          }
+        }
+      }
+      if (jsExtracted.fontFaceRules?.length) {
+        fontParts.push(jsExtracted.fontFaceRules.join('\n'));
+      }
+      cssContent = fontParts.join('\n');
+      
+      console.log('Using JS inline-styles method for header/footer');
+    } else {
+      // Fallback: regex extraction + full CSS (old method)
+      console.log('Falling back to regex extraction method');
+      headerHtml = convertRelativeUrls(extractHeader(html), baseUrl);
+      footerHtml = convertRelativeUrls(extractFooter(html), baseUrl);
+      cssContent = await extractAndInlineCss(rawHtml, baseUrl);
+    }
+
+    // Extract form styles
     const formStyles = extractFormElementStyles(rawHtml, cssContent, branding);
-    console.log('Form styles extracted:', Object.keys(formStyles).filter(k => formStyles[k as keyof FormElementStyles]).length, 'properties');
-    
-    // Track which URLs were fetched
+
+    // Logo extraction
     const fetchedUrls: string[] = [formattedUrl];
     let logoFoundAt: string | null = null;
-
-    // Extract logo from branding or metadata
-    let logoUrl = branding?.images?.logo || 
-                  branding?.logo || 
-                  metadata.ogImage || 
-                  null;
+    let logoUrl = branding?.images?.logo || branding?.logo || metadata.ogImage || null;
 
     if (logoUrl) {
       logoFoundAt = formattedUrl;
-      console.log('Logo found on original URL:', logoUrl);
     }
 
-    // If no logo found and we're not already at root, try fetching from root domain
-    // Strip everything after the TLD (e.g., .com, .net, .org, etc.)
     const rootUrl = `${baseUrl.protocol}//${baseUrl.host}`;
     const isRootUrl = formattedUrl.replace(/\/$/, '') === rootUrl.replace(/\/$/, '');
     
     if (!logoUrl && !isRootUrl) {
-      console.log('No logo found on page, attempting to fetch from root domain:', rootUrl);
+      console.log('Trying root domain for logo:', rootUrl);
       fetchedUrls.push(rootUrl);
-      
       try {
         const rootResponse = await firecrawlScrape({
           url: rootUrl,
@@ -284,38 +472,20 @@ Deno.serve(async (req) => {
           onlyMainContent: false,
           waitFor: 2000,
         });
-        
         if (rootResponse.ok) {
           const rootData = await rootResponse.json();
           const rootBranding = rootData.data?.branding || rootData.branding || null;
-          const rootMetadata = rootData.data?.metadata || rootData.metadata || {};
-          
-          logoUrl = rootBranding?.images?.logo || 
-                    rootBranding?.logo || 
-                    rootMetadata.ogImage || 
-                    null;
-          
-          if (logoUrl) {
-            logoFoundAt = rootUrl;
-            console.log('Logo found on root domain:', logoUrl);
-          } else {
-            console.log('No logo found on root domain either');
-          }
+          logoUrl = rootBranding?.images?.logo || rootBranding?.logo || null;
+          if (logoUrl) logoFoundAt = rootUrl;
         }
       } catch (rootError) {
-        console.warn('Failed to fetch logo from root domain:', rootError);
+        console.warn('Failed to fetch logo from root:', rootError);
       }
     }
 
-    // Extract colors from branding
     const colors = branding?.colors || {};
-    const headerBgColor = colors.background || colors.primary || '#1a1a2e';
-    const headerTextColor = colors.textPrimary || '#ffffff';
-    const buttonColor = colors.primary || colors.accent || '#6366f1';
 
-    console.log('Scrape successful, extracted branding, CSS, and form styles');
-    console.log('URLs fetched:', fetchedUrls);
-    console.log('Logo found at:', logoFoundAt || 'Not found');
+    console.log('Scrape successful. Inline method:', usedInlineMethod);
 
     return new Response(
       JSON.stringify({
@@ -324,6 +494,8 @@ Deno.serve(async (req) => {
           headerHtml,
           footerHtml,
           cssContent,
+          fontLinks: jsExtracted?.fontLinks || [],
+          usedInlineMethod,
           logoUrl,
           logoFoundAt,
           fetchedUrls,
@@ -334,9 +506,9 @@ Deno.serve(async (req) => {
             mobile: mobileScreenshot,
           },
           colors: {
-            headerBgColor,
-            headerTextColor,
-            buttonColor,
+            headerBgColor: colors.background || colors.primary || '#1a1a2e',
+            headerTextColor: colors.textPrimary || '#ffffff',
+            buttonColor: colors.primary || colors.accent || '#6366f1',
           },
           branding,
           formStyles,
@@ -355,587 +527,9 @@ Deno.serve(async (req) => {
   }
 });
 
-// Extract form element styles from HTML and CSS
-function extractFormElementStyles(html: string, css: string, branding: { colors?: Record<string, string>; fonts?: Array<{ family: string }> } | null): FormElementStyles {
-  const styles: Partial<FormElementStyles> = {};
-  
-  // Parse CSS for common form selectors
-  const cssRules = parseCssRules(css);
-  
-  // Common input selectors to look for
-  const inputSelectors = [
-    'input[type="text"]',
-    'input[type="email"]',
-    'input[type="password"]',
-    'input',
-    '.form-control',
-    '.input',
-    '[class*="input"]',
-    '[class*="field"]',
-    '[class*="text-input"]',
-  ];
-  
-  // Find matching input styles
-  for (const inputSel of inputSelectors) {
-    const inputRules = findMatchingRules(cssRules, inputSel);
-    if (inputRules.length > 0) {
-      const merged = mergeRules(inputRules);
-      if (merged['background-color'] || merged['background']) {
-        styles.inputBgColor = merged['background-color'] || extractBgColor(merged['background']);
-      }
-      if (merged['color']) {
-        styles.inputTextColor = merged['color'];
-      }
-      if (merged['border-color']) {
-        styles.inputBorderColor = merged['border-color'];
-      }
-      if (merged['border']) {
-        const borderParts = parseBorderShorthand(merged['border']);
-        if (borderParts.color) styles.inputBorderColor = borderParts.color;
-        if (borderParts.width) styles.inputBorderWidth = borderParts.width;
-      }
-      if (merged['border-radius']) {
-        styles.inputBorderRadius = merged['border-radius'];
-      }
-      if (merged['padding']) {
-        styles.inputPadding = merged['padding'];
-      }
-      if (merged['font-size']) {
-        styles.inputFontSize = merged['font-size'];
-      }
-      if (merged['font-family']) {
-        styles.inputFontFamily = merged['font-family'];
-      }
-      break;
-    }
-  }
-  
-  // Find focus state styles
-  const focusSelectors = inputSelectors.map(s => `${s}:focus`);
-  for (const focusSel of focusSelectors) {
-    const focusRules = findMatchingRules(cssRules, focusSel);
-    if (focusRules.length > 0) {
-      const merged = mergeRules(focusRules);
-      if (merged['border-color']) {
-        styles.inputFocusBorderColor = merged['border-color'];
-      }
-      if (merged['box-shadow']) {
-        styles.inputFocusBoxShadow = merged['box-shadow'];
-        if (!styles.inputFocusBorderColor) {
-          const shadowColor = extractColorFromBoxShadow(merged['box-shadow']);
-          if (shadowColor) styles.inputFocusBorderColor = shadowColor;
-        }
-      }
-      if (merged['outline-color']) {
-        styles.inputFocusBorderColor = styles.inputFocusBorderColor || merged['outline-color'];
-      }
-      break;
-    }
-  }
-  
-  // Find label styles
-  const labelSelectors = ['label', '.label', '.form-label', '[class*="label"]'];
-  for (const labelSel of labelSelectors) {
-    const labelRules = findMatchingRules(cssRules, labelSel);
-    if (labelRules.length > 0) {
-      const merged = mergeRules(labelRules);
-      if (merged['color']) {
-        styles.labelColor = merged['color'];
-      }
-      if (merged['font-size']) {
-        styles.labelFontSize = merged['font-size'];
-      }
-      if (merged['font-weight']) {
-        styles.labelFontWeight = merged['font-weight'];
-      }
-      if (merged['font-family']) {
-        styles.labelFontFamily = merged['font-family'];
-      }
-      break;
-    }
-  }
-  
-  // Find button styles
-  const buttonSelectors = [
-    'button[type="submit"]',
-    '.btn-primary',
-    '.btn',
-    'button',
-    '[class*="button"]',
-    '[class*="submit"]',
-    '[class*="cta"]',
-  ];
-  
-  for (const btnSel of buttonSelectors) {
-    const btnRules = findMatchingRules(cssRules, btnSel);
-    if (btnRules.length > 0) {
-      const merged = mergeRules(btnRules);
-      if (merged['background-color'] || merged['background']) {
-        styles.buttonBgColor = merged['background-color'] || extractBgColor(merged['background']);
-      }
-      if (merged['color']) {
-        styles.buttonTextColor = merged['color'];
-      }
-      if (merged['border-radius']) {
-        styles.buttonBorderRadius = merged['border-radius'];
-      }
-      if (merged['font-weight']) {
-        styles.buttonFontWeight = merged['font-weight'];
-      }
-      break;
-    }
-  }
-  
-  // Find container/form styles
-  const containerSelectors = ['form', '.form', '[class*="form"]', '[class*="card"]'];
-  for (const containerSel of containerSelectors) {
-    const containerRules = findMatchingRules(cssRules, containerSel);
-    if (containerRules.length > 0) {
-      const merged = mergeRules(containerRules);
-      if (merged['background-color'] || merged['background']) {
-        styles.containerBgColor = merged['background-color'] || extractBgColor(merged['background']);
-      }
-      if (merged['padding']) {
-        styles.containerPadding = merged['padding'];
-      }
-      break;
-    }
-  }
-  
-  // Find error styles
-  const errorSelectors = ['.error', '.invalid', '[class*="error"]', '[class*="invalid"]', '.text-danger'];
-  for (const errorSel of errorSelectors) {
-    const errorRules = findMatchingRules(cssRules, errorSel);
-    if (errorRules.length > 0) {
-      const merged = mergeRules(errorRules);
-      if (merged['color']) {
-        styles.errorColor = merged['color'];
-      }
-      break;
-    }
-  }
-  
-  // Extract inline styles from form elements in HTML
-  extractInlineStyles(html, styles);
-  
-  // Merge with branding-based defaults
-  return mergeWithBrandingDefaults(styles, branding);
-}
-
-// Parse CSS into rules
-function parseCssRules(css: string): Array<{ selector: string; properties: Record<string, string> }> {
-  const rules: Array<{ selector: string; properties: Record<string, string> }> = [];
-  
-  // Remove comments
-  css = css.replace(/\/\*[\s\S]*?\*\//g, '');
-  
-  // Match CSS rules: selector { properties }
-  const ruleRegex = /([^{}]+)\{([^{}]+)\}/g;
-  let match;
-  
-  while ((match = ruleRegex.exec(css)) !== null) {
-    const selectors = match[1].split(',').map(s => s.trim()).filter(s => s);
-    const propsString = match[2];
-    
-    const properties: Record<string, string> = {};
-    const propPairs = propsString.split(';').filter(p => p.trim());
-    
-    for (const pair of propPairs) {
-      const colonIndex = pair.indexOf(':');
-      if (colonIndex > 0) {
-        const prop = pair.substring(0, colonIndex).trim().toLowerCase();
-        const value = pair.substring(colonIndex + 1).trim();
-        if (prop && value) {
-          properties[prop] = value;
-        }
-      }
-    }
-    
-    for (const selector of selectors) {
-      if (Object.keys(properties).length > 0) {
-        rules.push({ selector, properties });
-      }
-    }
-  }
-  
-  return rules;
-}
-
-// Find rules matching a selector pattern
-function findMatchingRules(rules: Array<{ selector: string; properties: Record<string, string> }>, targetSelector: string): Array<Record<string, string>> {
-  const matching: Array<Record<string, string>> = [];
-  const targetLower = targetSelector.toLowerCase();
-  
-  for (const rule of rules) {
-    const ruleSel = rule.selector.toLowerCase();
-    
-    if (ruleSel === targetLower || 
-        ruleSel.includes(targetLower) ||
-        targetLower.includes(ruleSel) ||
-        selectorMatches(ruleSel, targetLower)) {
-      matching.push(rule.properties);
-    }
-  }
-  
-  return matching;
-}
-
-// Check if selectors match
-function selectorMatches(ruleSelector: string, target: string): boolean {
-  const targetParts = target.split(/\s+/);
-  const ruleParts = ruleSelector.split(/\s+/);
-  
-  for (const tp of targetParts) {
-    for (const rp of ruleParts) {
-      if (tp === rp || rp.includes(tp) || tp.includes(rp)) {
-        return true;
-      }
-    }
-  }
-  
-  return false;
-}
-
-// Merge multiple rule objects
-function mergeRules(rules: Array<Record<string, string>>): Record<string, string> {
-  const merged: Record<string, string> = {};
-  for (const rule of rules) {
-    Object.assign(merged, rule);
-  }
-  return merged;
-}
-
-// Extract background color from background shorthand
-function extractBgColor(bg: string): string | undefined {
-  if (!bg) return undefined;
-  
-  const hexMatch = bg.match(/#[0-9a-fA-F]{3,8}/);
-  if (hexMatch) return hexMatch[0];
-  
-  const rgbMatch = bg.match(/rgba?\([^)]+\)/);
-  if (rgbMatch) return rgbMatch[0];
-  
-  const colorNames = ['white', 'black', 'red', 'blue', 'green', 'gray', 'grey', 'transparent'];
-  for (const name of colorNames) {
-    if (bg.includes(name)) return name;
-  }
-  
-  return undefined;
-}
-
-// Parse border shorthand
-function parseBorderShorthand(border: string): { width?: string; style?: string; color?: string } {
-  const parts: { width?: string; style?: string; color?: string } = {};
-  
-  const widthMatch = border.match(/(\d+(?:\.\d+)?(?:px|em|rem))/i);
-  if (widthMatch) parts.width = widthMatch[1];
-  
-  const styles = ['solid', 'dashed', 'dotted', 'double', 'none'];
-  for (const style of styles) {
-    if (border.includes(style)) {
-      parts.style = style;
-      break;
-    }
-  }
-  
-  const hexMatch = border.match(/#[0-9a-fA-F]{3,8}/);
-  if (hexMatch) {
-    parts.color = hexMatch[0];
-  } else {
-    const rgbMatch = border.match(/rgba?\([^)]+\)/);
-    if (rgbMatch) parts.color = rgbMatch[0];
-  }
-  
-  return parts;
-}
-
-// Extract color from box-shadow
-function extractColorFromBoxShadow(shadow: string): string | undefined {
-  const rgbMatch = shadow.match(/rgba?\([^)]+\)/);
-  if (rgbMatch) return rgbMatch[0];
-  
-  const hexMatch = shadow.match(/#[0-9a-fA-F]{3,8}/);
-  if (hexMatch) return hexMatch[0];
-  
-  return undefined;
-}
-
-// Extract inline styles from HTML elements
-function extractInlineStyles(html: string, styles: Partial<FormElementStyles>): void {
-  const inputStyleRegex = /<input[^>]*style=["']([^"']+)["'][^>]*>/gi;
-  let match;
-  
-  while ((match = inputStyleRegex.exec(html)) !== null) {
-    const inlineStyle = match[1];
-    parseInlineStyleToFormStyles(inlineStyle, styles, 'input');
-  }
-  
-  const labelStyleRegex = /<label[^>]*style=["']([^"']+)["'][^>]*>/gi;
-  while ((match = labelStyleRegex.exec(html)) !== null) {
-    const inlineStyle = match[1];
-    parseInlineStyleToFormStyles(inlineStyle, styles, 'label');
-  }
-  
-  const buttonStyleRegex = /<button[^>]*style=["']([^"']+)["'][^>]*>/gi;
-  while ((match = buttonStyleRegex.exec(html)) !== null) {
-    const inlineStyle = match[1];
-    parseInlineStyleToFormStyles(inlineStyle, styles, 'button');
-  }
-}
-
-// Parse inline style string to form styles
-function parseInlineStyleToFormStyles(inlineStyle: string, styles: Partial<FormElementStyles>, elementType: 'input' | 'label' | 'button'): void {
-  const props: Record<string, string> = {};
-  const pairs = inlineStyle.split(';').filter(p => p.trim());
-  
-  for (const pair of pairs) {
-    const colonIndex = pair.indexOf(':');
-    if (colonIndex > 0) {
-      const prop = pair.substring(0, colonIndex).trim().toLowerCase();
-      const value = pair.substring(colonIndex + 1).trim();
-      if (prop && value) {
-        props[prop] = value;
-      }
-    }
-  }
-  
-  if (elementType === 'input') {
-    if (props['background-color'] && !styles.inputBgColor) styles.inputBgColor = props['background-color'];
-    if (props['color'] && !styles.inputTextColor) styles.inputTextColor = props['color'];
-    if (props['border-color'] && !styles.inputBorderColor) styles.inputBorderColor = props['border-color'];
-    if (props['border-radius'] && !styles.inputBorderRadius) styles.inputBorderRadius = props['border-radius'];
-    if (props['font-family'] && !styles.inputFontFamily) styles.inputFontFamily = props['font-family'];
-  } else if (elementType === 'label') {
-    if (props['color'] && !styles.labelColor) styles.labelColor = props['color'];
-    if (props['font-weight'] && !styles.labelFontWeight) styles.labelFontWeight = props['font-weight'];
-    if (props['font-family'] && !styles.labelFontFamily) styles.labelFontFamily = props['font-family'];
-  } else if (elementType === 'button') {
-    if (props['background-color'] && !styles.buttonBgColor) styles.buttonBgColor = props['background-color'];
-    if (props['color'] && !styles.buttonTextColor) styles.buttonTextColor = props['color'];
-    if (props['border-radius'] && !styles.buttonBorderRadius) styles.buttonBorderRadius = props['border-radius'];
-  }
-}
-
-// Merge extracted styles with branding defaults
-function mergeWithBrandingDefaults(
-  styles: Partial<FormElementStyles>,
-  branding: { colors?: Record<string, string>; fonts?: Array<{ family: string }> } | null
-): FormElementStyles {
-  const defaults: FormElementStyles = {
-    inputBgColor: '#ffffff',
-    inputTextColor: '#1a1a2e',
-    inputBorderColor: '#e2e8f0',
-    inputBorderWidth: '1px',
-    inputBorderRadius: '6px',
-    inputPadding: '12px 16px',
-    inputFontSize: '16px',
-    inputFontFamily: 'system-ui, -apple-system, sans-serif',
-    inputPlaceholderColor: '#9ca3af',
-    inputFocusBorderColor: '#6366f1',
-    inputFocusBoxShadow: '0 0 0 3px rgba(99, 102, 241, 0.1)',
-    labelColor: '#374151',
-    labelFontSize: '14px',
-    labelFontWeight: '500',
-    labelFontFamily: 'system-ui, -apple-system, sans-serif',
-    buttonBgColor: '#6366f1',
-    buttonTextColor: '#ffffff',
-    buttonBorderRadius: '6px',
-    buttonFontWeight: '600',
-    containerBgColor: '#ffffff',
-    containerPadding: '24px',
-    errorColor: '#ef4444',
-  };
-  
-  // Apply branding colors as fallbacks
-  if (branding?.colors) {
-    if (branding.colors.primary && !styles.inputFocusBorderColor) {
-      defaults.inputFocusBorderColor = branding.colors.primary;
-    }
-    if (branding.colors.primary && !styles.buttonBgColor) {
-      defaults.buttonBgColor = branding.colors.primary;
-    }
-    if (branding.colors.textPrimary && !styles.inputTextColor) {
-      defaults.inputTextColor = branding.colors.textPrimary;
-    }
-    if (branding.colors.textPrimary && !styles.labelColor) {
-      defaults.labelColor = branding.colors.textPrimary;
-    }
-  }
-  
-  // Apply branding fonts as fallbacks
-  if (branding?.fonts && branding.fonts.length > 0) {
-    const fontFamily = branding.fonts.map(f => f.family).join(', ') + ', sans-serif';
-    if (!styles.inputFontFamily) {
-      defaults.inputFontFamily = fontFamily;
-    }
-    if (!styles.labelFontFamily) {
-      defaults.labelFontFamily = fontFamily;
-    }
-  }
-  
-  return {
-    ...defaults,
-    ...Object.fromEntries(Object.entries(styles).filter(([_, v]) => v !== undefined && v !== null)),
-  } as FormElementStyles;
-}
-
-// Convert relative URLs to absolute in HTML content
-function convertRelativeUrls(html: string, baseUrl: URL): string {
-  if (!html) return html;
-  
-  html = html.replace(/src=["']([^"']+)["']/gi, (match, url) => {
-    return `src="${makeAbsoluteUrl(url, baseUrl)}"`;
-  });
-  
-  html = html.replace(/href=["']([^"']+)["']/gi, (match, url) => {
-    if (url.startsWith('#') || url.startsWith('javascript:')) {
-      return match;
-    }
-    return `href="${makeAbsoluteUrl(url, baseUrl)}"`;
-  });
-  
-  html = html.replace(/url\(["']?([^"')]+)["']?\)/gi, (match, url) => {
-    return `url("${makeAbsoluteUrl(url, baseUrl)}")`;
-  });
-  
-  return html;
-}
-
-// Make a URL absolute
-function makeAbsoluteUrl(url: string, baseUrl: URL): string {
-  if (!url || url.startsWith('data:') || url.startsWith('blob:')) {
-    return url;
-  }
-  
-  if (url.startsWith('//')) {
-    return 'https:' + url;
-  }
-  
-  if (url.startsWith('http://') || url.startsWith('https://')) {
-    return url;
-  }
-  
-  if (url.startsWith('/')) {
-    return baseUrl.origin + url;
-  }
-  
-  return baseUrl.origin + '/' + url;
-}
-
-// Extract and inline all CSS from the page
-async function extractAndInlineCss(html: string, baseUrl: URL): Promise<string> {
-  const cssFragments: string[] = [];
-  
-  const styleTagRegex = /<style[^>]*>([\s\S]*?)<\/style>/gi;
-  let styleMatch;
-  while ((styleMatch = styleTagRegex.exec(html)) !== null) {
-    if (styleMatch[1]) {
-      const processedCss = convertCssUrls(styleMatch[1], baseUrl);
-      cssFragments.push(`/* Inline style */\n${processedCss}`);
-    }
-  }
-  
-  const stylesheetUrls = new Set<string>();
-  
-  const linkRegex1 = /<link[^>]*rel=["']stylesheet["'][^>]*href=["']([^"']+)["'][^>]*>/gi;
-  const linkRegex2 = /<link[^>]*href=["']([^"']+)["'][^>]*rel=["']stylesheet["'][^>]*>/gi;
-  const linkRegex3 = /<link[^>]*href=["']([^"']+\.css[^"']*)["'][^>]*>/gi;
-  
-  for (const regex of [linkRegex1, linkRegex2, linkRegex3]) {
-    let linkMatch;
-    while ((linkMatch = regex.exec(html)) !== null) {
-      if (linkMatch[1]) {
-        stylesheetUrls.add(linkMatch[1]);
-      }
-    }
-  }
-  
-  console.log(`Found ${stylesheetUrls.size} external stylesheets to fetch`);
-  
-  const fetchPromises = Array.from(stylesheetUrls).map(async (href) => {
-    try {
-      const absoluteUrl = makeAbsoluteUrl(href, baseUrl);
-      console.log(`Fetching stylesheet: ${absoluteUrl}`);
-      
-      const response = await fetch(absoluteUrl, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-          'Accept': 'text/css,*/*;q=0.1',
-        },
-      });
-      
-      if (response.ok) {
-        const cssText = await response.text();
-        const processedCss = convertCssUrls(cssText, new URL(absoluteUrl));
-        const withImports = await resolveImports(processedCss, new URL(absoluteUrl));
-        return `/* From: ${absoluteUrl} */\n${withImports}`;
-      } else {
-        console.warn(`Failed to fetch ${absoluteUrl}: ${response.status}`);
-        return `/* Failed to fetch: ${absoluteUrl} (${response.status}) */`;
-      }
-    } catch (error) {
-      console.warn(`Error fetching stylesheet ${href}:`, error);
-      return `/* Error fetching: ${href} */`;
-    }
-  });
-  
-  const fetchedStyles = await Promise.all(fetchPromises);
-  
-  return [...fetchedStyles, ...cssFragments].join('\n\n');
-}
-
-// Convert relative URLs within CSS to absolute
-function convertCssUrls(css: string, baseUrl: URL): string {
-  return css.replace(/url\(["']?([^"')]+)["']?\)/gi, (match, url) => {
-    const absoluteUrl = makeAbsoluteUrl(url.trim(), baseUrl);
-    return `url("${absoluteUrl}")`;
-  });
-}
-
-// Resolve @import rules in CSS (one level deep)
-async function resolveImports(css: string, baseUrl: URL): Promise<string> {
-  const importRegex = /@import\s+(?:url\()?["']?([^"'\)]+)["']?\)?[^;]*;/gi;
-  const imports: { match: string; url: string }[] = [];
-  
-  let importMatch;
-  while ((importMatch = importRegex.exec(css)) !== null) {
-    imports.push({ match: importMatch[0], url: importMatch[1] });
-  }
-  
-  if (imports.length === 0) {
-    return css;
-  }
-  
-  console.log(`Resolving ${imports.length} @import rules`);
-  
-  const importedCss: string[] = [];
-  for (const imp of imports) {
-    try {
-      const absoluteUrl = makeAbsoluteUrl(imp.url, baseUrl);
-      const response = await fetch(absoluteUrl, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-          'Accept': 'text/css,*/*;q=0.1',
-        },
-      });
-      
-      if (response.ok) {
-        const importedText = await response.text();
-        const processed = convertCssUrls(importedText, new URL(absoluteUrl));
-        importedCss.push(`/* @import from: ${absoluteUrl} */\n${processed}`);
-      }
-    } catch (error) {
-      console.warn(`Error resolving @import ${imp.url}:`, error);
-    }
-    
-    css = css.replace(imp.match, '');
-  }
-  
-  return importedCss.join('\n\n') + '\n\n' + css;
-}
+// ============== FALLBACK EXTRACTION (used when JS extraction fails) ==============
 
 function extractNestedTag(html: string, tagName: string, startIdx: number): string | null {
-  // Depth-tracking extraction for nested tags (handles <header> inside <header>, etc.)
   const tagPattern = new RegExp(`<\\/?${tagName}[\\s>]`, 'gi');
   tagPattern.lastIndex = startIdx;
   let depth = 0;
@@ -945,9 +539,7 @@ function extractNestedTag(html: string, tagName: string, startIdx: number): stri
       depth--;
       if (depth === 0) {
         const closeEnd = html.indexOf('>', m.index) + 1;
-        if (closeEnd > startIdx) {
-          return html.substring(startIdx, closeEnd);
-        }
+        if (closeEnd > startIdx) return html.substring(startIdx, closeEnd);
         return null;
       }
     } else {
@@ -958,83 +550,213 @@ function extractNestedTag(html: string, tagName: string, startIdx: number): stri
 }
 
 function extractHeader(html: string): string {
-  // Strategy 1: Find the <header> element with proper depth tracking
   const headerOpenIdx = html.search(/<header[\s>]/i);
   if (headerOpenIdx !== -1) {
     const extracted = extractNestedTag(html, 'header', headerOpenIdx);
-    if (extracted) {
-      // Also check if the header is wrapped in a parent container that includes
-      // announcement bars, top-bars, etc. — look backwards for a wrapping div
-      const precedingChunk = html.substring(Math.max(0, headerOpenIdx - 2000), headerOpenIdx);
-      
-      // Check for a top bar / announcement bar immediately before the header
-      const topBarPatterns = [
-        /<div[^>]*(?:class|id)=["'][^"']*(?:top-bar|announcement|promo-bar|utility-nav|alert-bar|banner-bar)[^"']*["'][^>]*>[\s\S]*$/i,
-      ];
-      let prefix = '';
-      for (const pattern of topBarPatterns) {
-        const match = precedingChunk.match(pattern);
-        if (match) {
-          // Extract this div properly
-          const fullIdx = Math.max(0, headerOpenIdx - 2000) + (precedingChunk.length - match[0].length);
-          const divExtracted = extractNestedTag(html, 'div', fullIdx);
-          if (divExtracted && !divExtracted.includes(extracted)) {
-            prefix = divExtracted + '\n';
-          }
-          break;
-        }
-      }
-      
-      return prefix + extracted;
-    }
+    if (extracted) return extracted;
   }
-  
-  // Strategy 2: Look for common header wrapper divs with depth tracking
-  const headerWrapperPatterns = [
-    /<div[^>]*(?:id|class)=["'][^"']*(?:site-header|main-header|page-header|masthead|top-header|global-header)[^"']*["'][^>]*>/i,
+  const patterns = [
+    /<div[^>]*(?:id|class)=["'][^"']*(?:site-header|main-header|page-header|masthead)[^"']*["'][^>]*>/i,
   ];
-  
-  for (const pattern of headerWrapperPatterns) {
+  for (const pattern of patterns) {
     const match = html.match(pattern);
     if (match && match.index !== undefined) {
       const extracted = extractNestedTag(html, 'div', match.index);
       if (extracted) return extracted;
     }
   }
-  
-  // Strategy 3: Fall back to navigation elements
-  const parts: string[] = [];
-  const navRegex = /<nav[\s>]/gi;
-  let navMatch;
-  while ((navMatch = navRegex.exec(html)) !== null) {
-    const extracted = extractNestedTag(html, 'nav', navMatch.index);
-    if (extracted) parts.push(extracted);
-  }
-  
-  return parts.join('\n');
+  return '';
 }
 
 function extractFooter(html: string): string {
-  // Use depth-tracking extraction for nested footer tags
   const footerOpenIdx = html.search(/<footer[\s>]/i);
   if (footerOpenIdx !== -1) {
     const extracted = extractNestedTag(html, 'footer', footerOpenIdx);
     if (extracted) return extracted;
   }
-
-  // Fallback: look for footer-like div wrappers with depth tracking
-  const footerWrapperPatterns = [
-    /<div[^>]*(?:id|class)=["'][^"']*(?:site-footer|main-footer|page-footer|global-footer)[^"']*["'][^>]*>/i,
-    /<div[^>]*(?:id|class)=["'][^"']*footer[^"']*["'][^>]*>/i,
+  const patterns = [
+    /<div[^>]*(?:id|class)=["'][^"']*(?:site-footer|main-footer|page-footer)[^"']*["'][^>]*>/i,
   ];
-
-  for (const pattern of footerWrapperPatterns) {
+  for (const pattern of patterns) {
     const match = html.match(pattern);
     if (match && match.index !== undefined) {
       const extracted = extractNestedTag(html, 'div', match.index);
       if (extracted) return extracted;
     }
   }
-
   return '';
+}
+
+function convertRelativeUrls(html: string, baseUrl: URL): string {
+  if (!html) return html;
+  html = html.replace(/src=["']([^"']+)["']/gi, (_match, url) => `src="${makeAbsoluteUrl(url, baseUrl)}"`);
+  html = html.replace(/href=["']([^"']+)["']/gi, (match, url) => {
+    if (url.startsWith('#') || url.startsWith('javascript:')) return match;
+    return `href="${makeAbsoluteUrl(url, baseUrl)}"`;
+  });
+  html = html.replace(/url\(["']?([^"')]+)["']?\)/gi, (_match, url) => `url("${makeAbsoluteUrl(url, baseUrl)}")`);
+  return html;
+}
+
+function makeAbsoluteUrl(url: string, baseUrl: URL): string {
+  if (!url || url.startsWith('data:') || url.startsWith('blob:')) return url;
+  if (url.startsWith('//')) return 'https:' + url;
+  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+  if (url.startsWith('/')) return baseUrl.origin + url;
+  return baseUrl.origin + '/' + url;
+}
+
+// ============== CSS EXTRACTION (fallback + form styles) ==============
+
+async function extractAndInlineCss(html: string, baseUrl: URL): Promise<string> {
+  const cssFragments: string[] = [];
+  const styleTagRegex = /<style[^>]*>([\s\S]*?)<\/style>/gi;
+  let styleMatch;
+  while ((styleMatch = styleTagRegex.exec(html)) !== null) {
+    if (styleMatch[1]) {
+      cssFragments.push(convertCssUrls(styleMatch[1], baseUrl));
+    }
+  }
+  
+  const stylesheetUrls = new Set<string>();
+  const linkRegexes = [
+    /<link[^>]*rel=["']stylesheet["'][^>]*href=["']([^"']+)["'][^>]*>/gi,
+    /<link[^>]*href=["']([^"']+)["'][^>]*rel=["']stylesheet["'][^>]*>/gi,
+    /<link[^>]*href=["']([^"']+\.css[^"']*)["'][^>]*>/gi,
+  ];
+  for (const regex of linkRegexes) {
+    let m;
+    while ((m = regex.exec(html)) !== null) {
+      if (m[1]) stylesheetUrls.add(m[1]);
+    }
+  }
+  
+  const fetched = await Promise.all(Array.from(stylesheetUrls).map(async (href) => {
+    try {
+      const abs = makeAbsoluteUrl(href, baseUrl);
+      const res = await fetch(abs, { headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'text/css,*/*' } });
+      if (res.ok) {
+        const text = await res.text();
+        return convertCssUrls(text, new URL(abs));
+      }
+    } catch {}
+    return '';
+  }));
+  
+  return [...fetched.filter(Boolean), ...cssFragments].join('\n\n');
+}
+
+function convertCssUrls(css: string, baseUrl: URL): string {
+  return css.replace(/url\(["']?([^"')]+)["']?\)/gi, (_m, url) => `url("${makeAbsoluteUrl(url.trim(), baseUrl)}")`);
+}
+
+// ============== FORM STYLE EXTRACTION ==============
+
+function extractFormElementStyles(html: string, css: string, branding: any): FormElementStyles {
+  const styles: Partial<FormElementStyles> = {};
+  const cssRules = parseCssRules(css);
+  
+  const inputSelectors = ['input[type="text"]', 'input[type="email"]', 'input', '.form-control', '.input'];
+  for (const sel of inputSelectors) {
+    const rules = findMatchingRules(cssRules, sel);
+    if (rules.length > 0) {
+      const m = mergeRules(rules);
+      if (m['background-color']) styles.inputBgColor = m['background-color'];
+      if (m['color']) styles.inputTextColor = m['color'];
+      if (m['border-color']) styles.inputBorderColor = m['border-color'];
+      if (m['border']) { const bp = parseBorderShorthand(m['border']); if (bp.color) styles.inputBorderColor = bp.color; if (bp.width) styles.inputBorderWidth = bp.width; }
+      if (m['border-radius']) styles.inputBorderRadius = m['border-radius'];
+      if (m['padding']) styles.inputPadding = m['padding'];
+      if (m['font-size']) styles.inputFontSize = m['font-size'];
+      if (m['font-family']) styles.inputFontFamily = m['font-family'];
+      break;
+    }
+  }
+  
+  const buttonSelectors = ['button[type="submit"]', '.btn-primary', '.btn', 'button'];
+  for (const sel of buttonSelectors) {
+    const rules = findMatchingRules(cssRules, sel);
+    if (rules.length > 0) {
+      const m = mergeRules(rules);
+      if (m['background-color']) styles.buttonBgColor = m['background-color'];
+      if (m['color']) styles.buttonTextColor = m['color'];
+      if (m['border-radius']) styles.buttonBorderRadius = m['border-radius'];
+      if (m['font-weight']) styles.buttonFontWeight = m['font-weight'];
+      break;
+    }
+  }
+
+  return mergeWithBrandingDefaults(styles, branding);
+}
+
+function parseCssRules(css: string): Array<{ selector: string; properties: Record<string, string> }> {
+  const rules: Array<{ selector: string; properties: Record<string, string> }> = [];
+  css = css.replace(/\/\*[\s\S]*?\*\//g, '');
+  const ruleRegex = /([^{}]+)\{([^{}]+)\}/g;
+  let match;
+  while ((match = ruleRegex.exec(css)) !== null) {
+    const selectors = match[1].split(',').map(s => s.trim()).filter(s => s);
+    const properties: Record<string, string> = {};
+    match[2].split(';').filter(p => p.trim()).forEach(pair => {
+      const ci = pair.indexOf(':');
+      if (ci > 0) {
+        const prop = pair.substring(0, ci).trim().toLowerCase();
+        const val = pair.substring(ci + 1).trim();
+        if (prop && val) properties[prop] = val;
+      }
+    });
+    for (const s of selectors) {
+      if (Object.keys(properties).length > 0) rules.push({ selector: s, properties });
+    }
+  }
+  return rules;
+}
+
+function findMatchingRules(rules: Array<{ selector: string; properties: Record<string, string> }>, target: string): Array<Record<string, string>> {
+  const tl = target.toLowerCase();
+  return rules.filter(r => {
+    const rl = r.selector.toLowerCase();
+    return rl === tl || rl.includes(tl) || tl.includes(rl);
+  }).map(r => r.properties);
+}
+
+function mergeRules(rules: Array<Record<string, string>>): Record<string, string> {
+  const merged: Record<string, string> = {};
+  for (const r of rules) Object.assign(merged, r);
+  return merged;
+}
+
+function parseBorderShorthand(border: string): { width?: string; color?: string } {
+  const parts: { width?: string; color?: string } = {};
+  const wm = border.match(/(\d+(?:\.\d+)?(?:px|em|rem))/i);
+  if (wm) parts.width = wm[1];
+  const hm = border.match(/#[0-9a-fA-F]{3,8}/);
+  if (hm) parts.color = hm[0];
+  else { const rm = border.match(/rgba?\([^)]+\)/); if (rm) parts.color = rm[0]; }
+  return parts;
+}
+
+function mergeWithBrandingDefaults(styles: Partial<FormElementStyles>, branding: any): FormElementStyles {
+  const defaults: FormElementStyles = {
+    inputBgColor: '#ffffff', inputTextColor: '#1a1a2e', inputBorderColor: '#e2e8f0',
+    inputBorderWidth: '1px', inputBorderRadius: '6px', inputPadding: '12px 16px',
+    inputFontSize: '16px', inputFontFamily: 'system-ui, -apple-system, sans-serif',
+    inputPlaceholderColor: '#9ca3af', inputFocusBorderColor: '#6366f1',
+    inputFocusBoxShadow: '0 0 0 3px rgba(99, 102, 241, 0.1)',
+    labelColor: '#374151', labelFontSize: '14px', labelFontWeight: '500',
+    labelFontFamily: 'system-ui, -apple-system, sans-serif',
+    buttonBgColor: '#6366f1', buttonTextColor: '#ffffff', buttonBorderRadius: '6px',
+    buttonFontWeight: '600', containerBgColor: '#ffffff', containerPadding: '24px',
+    errorColor: '#ef4444',
+  };
+  if (branding?.colors) {
+    if (branding.colors.primary && !styles.inputFocusBorderColor) defaults.inputFocusBorderColor = branding.colors.primary;
+    if (branding.colors.primary && !styles.buttonBgColor) defaults.buttonBgColor = branding.colors.primary;
+  }
+  if (branding?.fonts?.length > 0) {
+    const ff = branding.fonts.map((f: any) => f.family).join(', ') + ', sans-serif';
+    if (!styles.inputFontFamily) defaults.inputFontFamily = ff;
+    if (!styles.labelFontFamily) defaults.labelFontFamily = ff;
+  }
+  return { ...defaults, ...Object.fromEntries(Object.entries(styles).filter(([_, v]) => v != null)) } as FormElementStyles;
 }
