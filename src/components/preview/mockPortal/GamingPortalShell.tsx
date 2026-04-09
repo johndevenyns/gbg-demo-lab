@@ -46,7 +46,8 @@ export function GamingPortalShell({
 
   const initials = userName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
   const brandAccent = branding?.accentColor || accentColor;
-  const headerBg = '#0F172A';
+  const headerBg = branding?.sidebarBg || '#0F172A';
+  const headerText = branding?.sidebarText || '#ffffff';
   const pageBg = branding?.pageBg || '#F8FAFC';
   const fontFamily = branding?.fontFamily || '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
 
@@ -88,7 +89,7 @@ export function GamingPortalShell({
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   color: 'white', fontSize: '18px',
                 }}>🎲</div>
-                <span style={{ fontWeight: 800, fontSize: '20px', color: 'white', letterSpacing: '-0.5px' }}>{siteName}</span>
+                <span style={{ fontWeight: 800, fontSize: '20px', color: headerText, letterSpacing: '-0.5px' }}>{siteName}</span>
               </div>
             )}
           </div>
@@ -100,14 +101,14 @@ export function GamingPortalShell({
               return (
                 <button key={item.key} onClick={() => setActivePage(item.key)} style={{
                   padding: '8px 16px', borderRadius: '8px', border: 'none',
-                  background: isActive ? '#1E293B' : 'transparent',
-                  color: isActive ? 'white' : '#94A3B8',
+                  background: isActive ? `${headerText}15` : 'transparent',
+                  color: isActive ? headerText : `${headerText}99`,
                   fontSize: '13px', fontWeight: isActive ? 600 : 400,
                   cursor: 'pointer', transition: 'all 0.2s',
                   display: 'flex', alignItems: 'center', gap: '6px',
                 }}
-                  onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.color = 'white'; }}
-                  onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.color = '#94A3B8'; }}
+                  onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.color = headerText; }}
+                  onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.color = `${headerText}99`; }}
                 >
                   <span style={{ fontSize: '14px' }}>{item.icon}</span>
                   {item.label}
@@ -115,7 +116,7 @@ export function GamingPortalShell({
               );
             })}
 
-            <div style={{ width: '1px', height: '24px', background: '#334155', margin: '0 8px' }} />
+            <div style={{ width: '1px', height: '24px', background: `${headerText}30`, margin: '0 8px' }} />
 
             {/* User */}
             <button onClick={() => setActivePage('settings')} style={{
@@ -123,7 +124,7 @@ export function GamingPortalShell({
               padding: '6px 12px', borderRadius: '8px', border: 'none',
               background: 'transparent', cursor: 'pointer',
             }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = '#1E293B'; }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = `${headerText}15`; }}
               onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
             >
               <div style={{
@@ -132,7 +133,7 @@ export function GamingPortalShell({
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 color: 'white', fontSize: '11px', fontWeight: 700,
               }}>{initials}</div>
-              <span style={{ fontSize: '13px', fontWeight: 500, color: '#E2E8F0' }}>{userName.split(' ')[0]}</span>
+              <span style={{ fontSize: '13px', fontWeight: 500, color: headerText }}>{userName.split(' ')[0]}</span>
             </button>
 
             <button onClick={onLogout} title="Sign out" style={{
