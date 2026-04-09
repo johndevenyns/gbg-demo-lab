@@ -164,7 +164,7 @@ export function RetailPortalShell({
                 padding: '8px 14px', borderRadius: '10px', border: 'none',
                 background: 'transparent', cursor: 'pointer', transition: 'background 0.2s',
               }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = '#F1F5F9'; }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = `${headerText}15`; }}
               onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
             >
               <div style={{
