@@ -46,7 +46,8 @@ export function GamingPortalShell({
 
   const initials = userName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
   const brandAccent = branding?.accentColor || accentColor;
-  const headerBg = '#0F172A';
+  const headerBg = branding?.sidebarBg || '#0F172A';
+  const headerText = branding?.sidebarText || '#ffffff';
   const pageBg = branding?.pageBg || '#F8FAFC';
   const fontFamily = branding?.fontFamily || '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
 
