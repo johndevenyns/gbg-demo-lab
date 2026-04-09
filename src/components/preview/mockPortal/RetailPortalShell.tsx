@@ -164,7 +164,7 @@ export function RetailPortalShell({
                 padding: '8px 14px', borderRadius: '10px', border: 'none',
                 background: 'transparent', cursor: 'pointer', transition: 'background 0.2s',
               }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = '#F1F5F9'; }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = `${headerText}15`; }}
               onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
             >
               <div style={{
@@ -180,10 +180,10 @@ export function RetailPortalShell({
               style={{
                 position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center',
                 width: '40px', height: '40px', borderRadius: '10px', border: 'none',
-                background: activePage === 'cart' ? '#F1F5F9' : 'transparent', cursor: 'pointer', fontSize: '20px',
+                background: activePage === 'cart' ? `${headerText}15` : 'transparent', cursor: 'pointer', fontSize: '20px',
                 transition: 'background 0.2s',
               }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = '#F1F5F9'; }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = `${headerText}15`; }}
               onMouseLeave={(e) => { if (activePage !== 'cart') e.currentTarget.style.background = 'transparent'; }}
             >
               🛒
@@ -198,12 +198,12 @@ export function RetailPortalShell({
               )}
             </button>
             <button onClick={onLogout} title="Sign out" style={{
-              background: 'none', border: 'none', color: '#94A3B8',
+              background: 'none', border: 'none', color: `${headerText}66`,
               cursor: 'pointer', fontSize: '18px', padding: '8px',
               borderRadius: '8px', transition: 'all 0.2s',
             }}
               onMouseEnter={(e) => { e.currentTarget.style.color = '#EF4444'; e.currentTarget.style.background = '#FEF2F2'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.color = '#94A3B8'; e.currentTarget.style.background = 'none'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = `${headerText}66`; e.currentTarget.style.background = 'none'; }}
             >
               ↗
             </button>
@@ -222,13 +222,13 @@ export function RetailPortalShell({
                 padding: '10px 22px', border: 'none', cursor: 'pointer',
                 background: 'transparent', fontSize: '14px',
                 fontWeight: isActive ? 600 : 400,
-                color: isActive ? brandAccent : '#64748B',
+                color: isActive ? brandAccent : `${headerText}99`,
                 borderBottom: isActive ? `2px solid ${brandAccent}` : '2px solid transparent',
                 transition: 'all 0.2s',
                 display: 'flex', alignItems: 'center', gap: '6px',
               }}
-                onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.color = brandAccent; }}
-                onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.color = '#64748B'; }}
+                onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.color = headerText; }}
+                onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.color = `${headerText}99`; }}
               >
                 {item.label}
               </button>
