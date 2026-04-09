@@ -15,6 +15,7 @@ import { DemoEnvironment } from "@/types/demo";
 import { DemoUseCaseLink } from "@/types/useCase";
 import { DEFAULT_FORM_STYLE } from "@/types/formStyle";
 import { generatePreviewDocument } from "@/lib/formStyleUtils";
+import { enhanceHeaderPreviewIframe } from "@/lib/iframeContrast";
 import { cn } from "@/lib/utils";
 
 type PreviewViewport = 'desktop' | 'tablet' | 'phone';
@@ -210,15 +211,7 @@ interface SiteMirrorCardProps {
                         title="Live site header preview"
                         sandbox="allow-same-origin"
                         onLoad={(e) => {
-                          const iframe = e.target as HTMLIFrameElement;
-                          try {
-                            const body = iframe.contentDocument?.body;
-                            const firstChild = body?.firstElementChild as HTMLElement | null;
-                            const height = firstChild?.offsetHeight || body?.scrollHeight || 120;
-                            iframe.style.height = `${Math.max(height, 80)}px`;
-                          } catch {
-                            iframe.style.height = '120px';
-                          }
+                          enhanceHeaderPreviewIframe(e.currentTarget, 80);
                         }}
                       />
                     )}
