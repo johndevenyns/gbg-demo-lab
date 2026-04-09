@@ -779,7 +779,15 @@ export default function DemoPreview() {
       </main>
 
       {/* Mirrored Footer */}
-      {hasMirroredFooter && previewDocument && (
+      {hasMirroredFooter && previewDocument && (() => {
+        const siteUrl = demo.customerSiteUrl || '';
+        let footerBaseHref = '';
+        try {
+          const u = new URL(siteUrl.startsWith('http') ? siteUrl : `https://${siteUrl}`);
+          footerBaseHref = `<base href="${u.origin}/">`;
+        } catch { /* ignore */ }
+
+        return (
         <iframe
           srcDoc={`
             <!DOCTYPE html>
@@ -787,6 +795,7 @@ export default function DemoPreview() {
               <head>
                 <meta charset="utf-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1">
+                ${footerBaseHref}
                 <style>
                   * { box-sizing: border-box; }
                   body { margin: 0; padding: 0; overflow: hidden; width: 100%; }
