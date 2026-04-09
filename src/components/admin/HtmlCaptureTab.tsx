@@ -158,11 +158,13 @@ export function HtmlCaptureTab({ demo, url, onUrlChange, onApply, isConfigured, 
           // Notify parent about unified fetch data (screenshots, branding, etc.)
           onUnifiedFetchComplete?.(d);
 
-          if (!hasHeader && !hasFooter && !hasCss) {
+          const hasScreenshot = !!d.screenshot;
+
+          if (!hasHeader && !hasFooter && !hasCss && !hasScreenshot) {
             setScrapedData(null);
             toast({
               title: "No Content Extracted",
-              description: "The site was reached but no header, footer, or CSS could be extracted. The site may use JavaScript rendering, block automated access, or lack semantic HTML elements.",
+              description: "The site was reached but no header, footer, CSS, or screenshot could be extracted. The site may block automated access.",
               variant: "destructive",
             });
           } else {
