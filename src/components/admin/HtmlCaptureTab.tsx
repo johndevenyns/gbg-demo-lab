@@ -179,8 +179,8 @@ export function HtmlCaptureTab({ demo, url, onUrlChange, onApply, isConfigured, 
 
             toast({ title: "Site Fetched", description: `Extracted ${parts.join(", ")}. Running AI refinement...` });
 
-            // Auto-refine with AI if we have a screenshot
-            if (d.screenshot && hasHeader) {
+            // Auto-refine with AI if we have a screenshot (even if header is empty - AI can generate from screenshot)
+            if (d.screenshot) {
               setFetchProgress('Refining capture with AI vision...');
               setIsRefining(true);
               try {
