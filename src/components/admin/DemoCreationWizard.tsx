@@ -63,6 +63,7 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
   const { data: industries = [], isLoading: loadingIndustries } = useIndustries();
   const { data: globalUseCases = [], isLoading: loadingUseCases } = useGlobalUseCases();
   const { data: portalTypes = [] } = useEnabledPortalTypes();
+  const { data: globalProfiles = [] } = useTestProfiles();
   
   const [step, setStep] = useState<WizardStep>('details');
   const [customerName, setCustomerName] = useState("");
