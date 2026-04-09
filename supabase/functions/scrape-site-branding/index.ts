@@ -593,15 +593,28 @@ function extractHeader(html: string): string {
     const extracted = extractNestedTag(html, 'header', headerOpenIdx);
     if (extracted) return extracted;
   }
-  const patterns = [
-    /<div[^>]*(?:id|class)=["'][^"']*(?:site-header|main-header|page-header|masthead)[^"']*["'][^>]*>/i,
+  // Try common div-based header patterns
+  const divPatterns = [
+    /<div[^>]*(?:id|class)=["'][^"']*(?:site-header|main-header|page-header|masthead|top-header|global-header)[^"']*["'][^>]*>/i,
   ];
-  for (const pattern of patterns) {
+  for (const pattern of divPatterns) {
     const match = html.match(pattern);
     if (match && match.index !== undefined) {
       const extracted = extractNestedTag(html, 'div', match.index);
       if (extracted) return extracted;
     }
+  }
+  // Try nav element as last resort (common in SPAs like FanDuel)
+  const navIdx = html.search(/<nav[\s>]/i);
+  if (navIdx !== -1) {
+    const extracted = extractNestedTag(html, 'nav', navIdx);
+    if (extracted) return extracted;
+  }
+  // Try role="banner" div
+  const bannerMatch = html.match(/<div[^>]*role=["']banner["'][^>]*>/i);
+  if (bannerMatch && bannerMatch.index !== undefined) {
+    const extracted = extractNestedTag(html, 'div', bannerMatch.index);
+    if (extracted) return extracted;
   }
   return '';
 }
