@@ -16,6 +16,7 @@ import { useIndustries } from "@/hooks/useIndustries";
 import { useEnabledPortalTypes } from "@/hooks/usePortalTypes";
 import { IndustryTemplate, DemoEnvironment } from "@/types/demo";
 import { scrapingApi, ScrapedBranding, headerRefinementApi } from "@/lib/api/scraping";
+import { useTestProfiles } from "@/hooks/useTestProfiles";
 import { formElementStylesToConfig, generatePreviewDocument, generateFormHtml } from "@/lib/formStyleUtils";
 import { DEFAULT_FORM_STYLE } from "@/types/formStyle";
 import { cn } from "@/lib/utils";
@@ -62,6 +63,7 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
   const { data: industries = [], isLoading: loadingIndustries } = useIndustries();
   const { data: globalUseCases = [], isLoading: loadingUseCases } = useGlobalUseCases();
   const { data: portalTypes = [] } = useEnabledPortalTypes();
+  const { data: globalProfiles = [] } = useTestProfiles();
   
   const [step, setStep] = useState<WizardStep>('details');
   const [customerName, setCustomerName] = useState("");
@@ -342,12 +344,17 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
 
       updateTaskStatus('finalize', 'in_progress');
       if (shouldShowFillPass || shouldShowFillFail) {
+        const firstPass = globalProfiles.find((p) => p.profile_type === 'pass');
+        const firstFail = globalProfiles.find((p) => p.profile_type === 'fail');
+        const passData: Record<string, string> = shouldShowFillPass && firstPass ? (firstPass.field_data as Record<string, string>) : {};
+        const failData: Record<string, string> = shouldShowFillFail && firstFail ? (firstFail.field_data as Record<string, string>) : {};
+        
         await updateDemo.mutateAsync({
           id: demo.id,
           updates: {
             storedTestData: {
-              passData: {},
-              failData: {},
+              passData,
+              failData,
               showFillPassButton: shouldShowFillPass,
               showFillFailButton: shouldShowFillFail,
             },
