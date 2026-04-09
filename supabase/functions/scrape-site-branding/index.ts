@@ -985,20 +985,48 @@ function extractHeader(html: string): string {
 }
 
 function extractFooter(html: string): string {
-  const parts: string[] = [];
-  
-  const footerMatch = html.match(/<footer[^>]*>[\s\S]*?<\/footer>/i);
-  if (footerMatch) {
-    parts.push(footerMatch[0]);
-  }
-  
-  if (parts.length === 0) {
-    const footerDivRegex = /<div[^>]*class="[^"]*(?:footer|site-footer|main-footer|bottom-bar)[^"]*"[^>]*>[\s\S]*?<\/div>/gi;
-    let footerMatch;
-    while ((footerMatch = footerDivRegex.exec(html)) !== null) {
-      parts.push(footerMatch[0]);
+  // Use a greedy approach that properly handles nested footer tags
+  const footerOpenIdx = html.search(/<footer[\s>]/i);
+  if (footerOpenIdx !== -1) {
+    // Find the matching closing </footer> by counting nesting depth
+    let depth = 0;
+    let i = footerOpenIdx;
+    const openTag = /<footer[\s>]/gi;
+    const closeTag = /<\/footer>/gi;
+    openTag.lastIndex = footerOpenIdx;
+    closeTag.lastIndex = footerOpenIdx;
+
+    // Walk through and track nesting
+    let lastCloseEnd = -1;
+    const tagPattern = /<\/?footer[\s>]/gi;
+    tagPattern.lastIndex = footerOpenIdx;
+    let m;
+    while ((m = tagPattern.exec(html)) !== null) {
+      if (m[0].startsWith('</')) {
+        depth--;
+        if (depth === 0) {
+          // Find the full closing tag end
+          const closeEnd = html.indexOf('>', m.index) + 1;
+          lastCloseEnd = closeEnd;
+          break;
+        }
+      } else {
+        depth++;
+      }
+    }
+
+    if (lastCloseEnd > footerOpenIdx) {
+      return html.substring(footerOpenIdx, lastCloseEnd);
     }
   }
-  
+
+  // Fallback: look for footer-like div wrappers
+  const parts: string[] = [];
+  const footerDivRegex = /<div[^>]*(?:id|class)=["'][^"']*(?:footer|site-footer|main-footer|bottom-bar)[^"']*["'][^>]*>[\s\S]*?<\/div>/gi;
+  let footerMatch;
+  while ((footerMatch = footerDivRegex.exec(html)) !== null) {
+    parts.push(footerMatch[0]);
+  }
+
   return parts.join('\n');
 }
