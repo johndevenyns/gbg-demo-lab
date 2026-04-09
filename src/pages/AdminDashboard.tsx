@@ -156,6 +156,7 @@ export default function AdminDashboard() {
                     url={demo.logoUrl}
                     fallbackColor={demo.buttonColor}
                     fallbackIcon={industryIcons[demo.industryTemplate]}
+                    headerBgColor={demo.headerBgColor}
                   />
                   <div>
                     <CardTitle className="text-lg">{demo.customerName}</CardTitle>
