@@ -3,6 +3,7 @@ import { GamingDashboard } from './GamingDashboard';
 import { GamingBetsPage } from './GamingBetsPage';
 import { GamingSettings } from './GamingSettings';
 import { PortalConfig, PortalBranding, DEFAULT_GAMING_CONFIG, GamingEvent, PortalVerificationTrigger } from '@/types/portalConfig';
+import { getReadableTextColor } from '@/lib/formStyleUtils';
 import { toast } from 'sonner';
 
 type PortalPage = 'dashboard' | 'bets' | 'wallet' | 'settings';
