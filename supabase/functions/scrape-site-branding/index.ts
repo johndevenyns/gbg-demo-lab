@@ -148,11 +148,22 @@ const INLINE_STYLES_SCRIPT = `
     for (var ae = 0; ae < allEls.length; ae++) {
       var st = allEls[ae].getAttribute('style') || '';
       if (st.indexOf('url(') !== -1 && st.indexOf('url(data:') === -1 && st.indexOf('url(http') === -1) {
-        st = st.replace(/url\\(\\s*["']?(\\/[^"')\\s]+)["']?\\s*\\)/g, function(m, p1) {
-          try { return 'url("' + new URL(p1, window.location.origin).href + '")'; }
-          catch(e) { return m; }
-        });
-        allEls[ae].setAttribute('style', st);
+        // Use string manipulation instead of regex to avoid escaping issues
+        var parts = st.split('url(');
+        for (var pi = 1; pi < parts.length; pi++) {
+          var inner = parts[pi];
+          var closeIdx = inner.indexOf(')');
+          if (closeIdx === -1) continue;
+          var rawUrl = inner.substring(0, closeIdx).replace(/["']/g, '').trim();
+          if (rawUrl.startsWith('/') && !rawUrl.startsWith('//')) {
+            try {
+              var absUrl = new URL(rawUrl, window.location.origin).href;
+              parts[pi] = '"' + absUrl + '")' + inner.substring(closeIdx + 1);
+            } catch(e) {}
+          }
+        }
+        var newSt = parts.join('url(');
+        if (newSt !== st) allEls[ae].setAttribute('style', newSt);
       }
     }
     
