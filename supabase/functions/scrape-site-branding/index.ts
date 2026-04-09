@@ -410,14 +410,28 @@ Deno.serve(async (req) => {
     try {
       const jsData = await jsResponse.json();
       if (jsResponse.ok) {
+        // Firecrawl may return JS results under different keys depending on version
         const jsReturns = jsData.data?.javascriptReturns || jsData.javascriptReturns || [];
-        console.log('javascriptReturns count:', jsReturns.length);
+        const actionsResults = jsData.data?.actions?.results || jsData.actions?.results || [];
+        console.log('javascriptReturns count:', jsReturns.length, 'actionsResults count:', actionsResults.length);
+        // Log available top-level keys for debugging
+        console.log('jsData keys:', Object.keys(jsData.data || jsData).join(', '));
 
-        if (jsReturns.length > 0) {
-          const lastReturn = jsReturns[jsReturns.length - 1];
-          const rawValue = typeof lastReturn === 'string' ? lastReturn : lastReturn?.value || lastReturn?.result || JSON.stringify(lastReturn);
-          jsExtracted = JSON.parse(rawValue);
-          console.log('JS extraction successful - header length:', jsExtracted?.headerHtml?.length || 0, 'footer length:', jsExtracted?.footerHtml?.length || 0);
+        // Try javascriptReturns first, then actions results
+        const candidates = [...jsReturns, ...actionsResults];
+        for (const candidate of candidates) {
+          try {
+            const rawValue = typeof candidate === 'string' ? candidate : candidate?.value || candidate?.result || JSON.stringify(candidate);
+            if (rawValue && rawValue.includes('headerHtml')) {
+              jsExtracted = JSON.parse(rawValue);
+              console.log('JS extraction successful - header length:', jsExtracted?.headerHtml?.length || 0, 'footer length:', jsExtracted?.footerHtml?.length || 0);
+              break;
+            }
+          } catch { /* skip unparseable */ }
+        }
+
+        if (!jsExtracted) {
+          console.log('No parseable JS extraction result found in response');
         }
       } else {
         console.warn('JS extraction request failed:', jsData.error || jsData.code);
