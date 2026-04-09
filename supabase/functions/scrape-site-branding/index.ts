@@ -934,51 +934,81 @@ async function resolveImports(css: string, baseUrl: URL): Promise<string> {
   return importedCss.join('\n\n') + '\n\n' + css;
 }
 
+function extractNestedTag(html: string, tagName: string, startIdx: number): string | null {
+  // Depth-tracking extraction for nested tags (handles <header> inside <header>, etc.)
+  const tagPattern = new RegExp(`<\\/?${tagName}[\\s>]`, 'gi');
+  tagPattern.lastIndex = startIdx;
+  let depth = 0;
+  let m;
+  while ((m = tagPattern.exec(html)) !== null) {
+    if (m[0].startsWith('</')) {
+      depth--;
+      if (depth === 0) {
+        const closeEnd = html.indexOf('>', m.index) + 1;
+        if (closeEnd > startIdx) {
+          return html.substring(startIdx, closeEnd);
+        }
+        return null;
+      }
+    } else {
+      depth++;
+    }
+  }
+  return null;
+}
+
 function extractHeader(html: string): string {
-  const parts: string[] = [];
-  
-  // First, try to extract the entire <header> element if it exists
-  const headerMatch = html.match(/<header[^>]*>[\s\S]*?<\/header>/i);
-  if (headerMatch) {
-    return headerMatch[0];
+  // Strategy 1: Find the <header> element with proper depth tracking
+  const headerOpenIdx = html.search(/<header[\s>]/i);
+  if (headerOpenIdx !== -1) {
+    const extracted = extractNestedTag(html, 'header', headerOpenIdx);
+    if (extracted) {
+      // Also check if the header is wrapped in a parent container that includes
+      // announcement bars, top-bars, etc. — look backwards for a wrapping div
+      const precedingChunk = html.substring(Math.max(0, headerOpenIdx - 2000), headerOpenIdx);
+      
+      // Check for a top bar / announcement bar immediately before the header
+      const topBarPatterns = [
+        /<div[^>]*(?:class|id)=["'][^"']*(?:top-bar|announcement|promo-bar|utility-nav|alert-bar|banner-bar)[^"']*["'][^>]*>[\s\S]*$/i,
+      ];
+      let prefix = '';
+      for (const pattern of topBarPatterns) {
+        const match = precedingChunk.match(pattern);
+        if (match) {
+          // Extract this div properly
+          const fullIdx = Math.max(0, headerOpenIdx - 2000) + (precedingChunk.length - match[0].length);
+          const divExtracted = extractNestedTag(html, 'div', fullIdx);
+          if (divExtracted && !divExtracted.includes(extracted)) {
+            prefix = divExtracted + '\n';
+          }
+          break;
+        }
+      }
+      
+      return prefix + extracted;
+    }
   }
   
-  // Look for common header wrapper divs
-  const headerDivPatterns = [
-    /<div[^>]*(?:id|class)=["'][^"']*(?:header|site-header|main-header|page-header)[^"']*["'][^>]*>[\s\S]*?<\/div>/gi,
-    /<div[^>]*(?:id|class)=["'][^"']*(?:masthead|top-header|global-header)[^"']*["'][^>]*>[\s\S]*?<\/div>/gi,
+  // Strategy 2: Look for common header wrapper divs with depth tracking
+  const headerWrapperPatterns = [
+    /<div[^>]*(?:id|class)=["'][^"']*(?:site-header|main-header|page-header|masthead|top-header|global-header)[^"']*["'][^>]*>/i,
   ];
   
-  for (const pattern of headerDivPatterns) {
+  for (const pattern of headerWrapperPatterns) {
     const match = html.match(pattern);
-    if (match) {
-      return match[0];
+    if (match && match.index !== undefined) {
+      const extracted = extractNestedTag(html, 'div', match.index);
+      if (extracted) return extracted;
     }
   }
   
-  // Extract navigation elements
-  const navRegex = /<nav[^>]*>[\s\S]*?<\/nav>/gi;
+  // Strategy 3: Fall back to navigation elements
+  const parts: string[] = [];
+  const navRegex = /<nav[\s>]/gi;
   let navMatch;
   while ((navMatch = navRegex.exec(html)) !== null) {
-    parts.push(navMatch[0]);
-  }
-  
-  // Look for top bar / announcement bar
-  const topBarRegex = /<div[^>]*class="[^"]*(?:top-bar|announcement|promo-bar|utility-nav|secondary-menu)[^"]*"[^>]*>[\s\S]*?<\/div>/gi;
-  let topBarMatch: RegExpExecArray | null;
-  while ((topBarMatch = topBarRegex.exec(html)) !== null) {
-    if (!parts.some(p => p.includes(topBarMatch![0]))) {
-      parts.unshift(topBarMatch[0]); // Add at the beginning
-    }
-  }
-  
-  // Look for logo/branding section if not already captured
-  const logoRegex = /<(?:div|a)[^>]*class="[^"]*(?:logo|brand|site-branding)[^"]*"[^>]*>[\s\S]*?<\/(?:div|a)>/gi;
-  let logoMatch: RegExpExecArray | null;
-  while ((logoMatch = logoRegex.exec(html)) !== null) {
-    if (!parts.some(p => p.includes(logoMatch![0]))) {
-      parts.unshift(logoMatch[0]);
-    }
+    const extracted = extractNestedTag(html, 'nav', navMatch.index);
+    if (extracted) parts.push(extracted);
   }
   
   return parts.join('\n');
