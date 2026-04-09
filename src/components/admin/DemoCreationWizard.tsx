@@ -16,6 +16,7 @@ import { useIndustries } from "@/hooks/useIndustries";
 import { useEnabledPortalTypes } from "@/hooks/usePortalTypes";
 import { IndustryTemplate, DemoEnvironment } from "@/types/demo";
 import { scrapingApi, ScrapedBranding, headerRefinementApi } from "@/lib/api/scraping";
+import { useTestProfiles } from "@/hooks/useTestProfiles";
 import { formElementStylesToConfig, generatePreviewDocument, generateFormHtml } from "@/lib/formStyleUtils";
 import { DEFAULT_FORM_STYLE } from "@/types/formStyle";
 import { cn } from "@/lib/utils";
