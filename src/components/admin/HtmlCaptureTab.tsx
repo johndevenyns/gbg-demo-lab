@@ -49,10 +49,8 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
      </html>
    `;
  }
- 
- // Convert FormElementStyles to FormStyleConfig
- // formElementStylesToConfig is now imported from @/lib/formStyleUtils
- 
+
+
 export function HtmlCaptureTab({ demo, url, onUrlChange, onApply, isConfigured }: HtmlCaptureTabProps) {
     const { toast } = useToast();
     const [isLoading, setIsLoading] = useState(false);
