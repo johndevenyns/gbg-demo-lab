@@ -383,6 +383,7 @@ interface SiteMirrorCardProps {
                   onUrlChange={setUrl}
                   onApply={handleApplyBranding}
                   isConfigured={htmlConfigured}
+                  onUnifiedFetchComplete={handleUnifiedFetchComplete}
                 />
               }
               screenshotContent={
