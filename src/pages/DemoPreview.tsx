@@ -904,7 +904,8 @@ export default function DemoPreview() {
             }
           }}
         />
-      )}
+        );
+      })()}
 
       {/* Admin Exit Bar */}
       {!authLoading && isAdmin && (
