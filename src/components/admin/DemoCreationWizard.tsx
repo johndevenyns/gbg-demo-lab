@@ -284,7 +284,7 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
       if (!isOpen && step !== 'processing') resetForm();
       if (step !== 'processing') onOpenChange(isOpen);
     }}>
-      <DialogContent className="sm:max-w-2xl">
+      <DialogContent className="sm:max-w-2xl max-h-[85vh] flex flex-col overflow-hidden">
         <DialogHeader>
           <DialogTitle>
             {step === 'processing' ? 'Setting Up Demo' : 'Create Demo Environment'}
