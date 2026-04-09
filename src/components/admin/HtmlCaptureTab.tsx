@@ -340,11 +340,11 @@ export function HtmlCaptureTab({ demo, url, onUrlChange, onApply, isConfigured, 
            </div>
            
             <div className="flex items-center gap-2">
-              <Button onClick={handleFetch} disabled={isLoading || !url.trim()}>
+              <Button onClick={handleFetch} disabled={isLoading || isRefining || !url.trim()}>
                 {isLoading ? (
-                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Fetching...</>
+                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" />{isRefining ? 'AI Refining...' : 'Fetching...'}</>
                 ) : (
-                  <><Globe className="w-4 h-4 mr-2" />Fetch HTML/CSS</>
+                  <><Globe className="w-4 h-4 mr-2" />Fetch &amp; Auto-Refine</>
                 )}
               </Button>
               {isLoading && (
@@ -359,7 +359,25 @@ export function HtmlCaptureTab({ demo, url, onUrlChange, onApply, isConfigured, 
                 </Button>
               )}
             </div>
-         </CardContent>
+            {(isLoading || isRefining) && fetchProgress && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  {isRefining ? <Sparkles className="w-4 h-4 animate-pulse text-amber-500" /> : <Loader2 className="w-4 h-4 animate-spin" />}
+                  {fetchProgress}
+                </div>
+                <Progress value={isRefining ? 75 : 40} className="h-1" />
+              </div>
+            )}
+            {refinementScore !== null && !isLoading && (
+              <div className="flex items-center gap-2">
+                <Badge variant={refinementScore >= 80 ? "default" : refinementScore >= 60 ? "secondary" : "destructive"} className="gap-1">
+                  <Wand2 className="w-3 h-3" />
+                  AI Match: {refinementScore}%
+                </Badge>
+                <span className="text-xs text-muted-foreground">AI vision compared and refined the capture to match the original site</span>
+              </div>
+            )}
+          </CardContent>
        </Card>
  
        {/* Scraped Data Preview */}
