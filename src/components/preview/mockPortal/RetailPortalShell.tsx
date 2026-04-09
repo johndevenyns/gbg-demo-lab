@@ -180,10 +180,10 @@ export function RetailPortalShell({
               style={{
                 position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center',
                 width: '40px', height: '40px', borderRadius: '10px', border: 'none',
-                background: activePage === 'cart' ? '#F1F5F9' : 'transparent', cursor: 'pointer', fontSize: '20px',
+                background: activePage === 'cart' ? `${headerText}15` : 'transparent', cursor: 'pointer', fontSize: '20px',
                 transition: 'background 0.2s',
               }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = '#F1F5F9'; }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = `${headerText}15`; }}
               onMouseLeave={(e) => { if (activePage !== 'cart') e.currentTarget.style.background = 'transparent'; }}
             >
               🛒
