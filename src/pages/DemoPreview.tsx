@@ -780,7 +780,7 @@ export default function DemoPreview() {
           className="w-full border-0"
           style={{ height: 'auto', minHeight: '60px' }}
           title="Site footer"
-          sandbox="allow-same-origin"
+          sandbox="allow-same-origin allow-scripts"
           onLoad={(e) => {
             const iframe = e.target as HTMLIFrameElement;
             try {
