@@ -87,8 +87,7 @@ function mapBorderWidth(width: string | undefined): '0' | '1' | '2' {
   return '1';
 }
 
- // formElementStylesToConfig is now imported from @/lib/formStyleUtils
- 
+
  // Generate preview HTML with screenshot crops
  function generateScreenshotPreviewHtml(
    screenshotSrc: string,

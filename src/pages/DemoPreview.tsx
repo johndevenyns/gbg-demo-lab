@@ -24,30 +24,7 @@ import { PortalBranding, PortalVerificationTrigger } from "@/types/portalConfig"
 import { StepUpVerificationModal, PostVerificationAction } from "@/components/preview/mockPortal/StepUpVerificationModal";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-
-// Helper functions for form styling
-function getFormBorderRadius(radius?: string): string {
-  switch (radius) {
-    case 'none': return '0px';
-    case 'sm': return '6px';
-    case 'md': return '8px';
-    case 'lg': return '12px';
-    case 'xl': return '16px';
-    case '2xl': return '24px';
-    default: return '12px';
-  }
-}
-
-function getFormShadow(shadow?: string): string {
-  switch (shadow) {
-    case 'none': return 'none';
-    case 'sm': return '0 1px 2px rgba(0,0,0,0.05)';
-    case 'md': return '0 4px 6px -1px rgba(0,0,0,0.1)';
-    case 'lg': return '0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1)';
-    case 'xl': return '0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1)';
-    default: return '0 10px 15px -3px rgba(0,0,0,0.1)';
-  }
-}
+import { getFormBorderRadius, getFormShadow } from "@/lib/formStyleUtils";
 
 export default function DemoPreview() {
   const { slug } = useParams<{ slug: string }>();
