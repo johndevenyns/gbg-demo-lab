@@ -429,7 +429,7 @@ Deno.serve(async (req) => {
     const metadata = mainData.data?.metadata || mainData.metadata || {};
 
     // Extract the JS-returned header/footer with inlined styles from the separate request
-    let jsExtracted: { headerHtml: string; footerHtml: string; fontFaceRules: string[]; fontLinks: string[]; origin: string } | null = null;
+    let jsExtracted: { headerHtml: string; footerHtml: string; fontFaceRules: string[]; fontLinks: string[]; origin: string; headerBgColor?: string; headerTextColor?: string } | null = null;
 
     try {
       const jsData = await jsResponse.json();
