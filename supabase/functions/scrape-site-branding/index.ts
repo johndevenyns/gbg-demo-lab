@@ -422,12 +422,20 @@ Deno.serve(async (req) => {
       footerHtml = jsExtracted.footerHtml || '';
       usedInlineMethod = true;
       
-      // Build minimal CSS with just font-face rules and font links
+      // Build minimal CSS: font-face rules + @import for Google Fonts etc.
       const fontParts: string[] = [];
+      // Convert <link> tags to @import rules
+      if (jsExtracted.fontLinks?.length) {
+        for (const linkTag of jsExtracted.fontLinks) {
+          const hrefMatch = linkTag.match(/href=["']([^"']+)["']/);
+          if (hrefMatch && hrefMatch[1] && !hrefMatch[1].endsWith('.js')) {
+            fontParts.push(`@import url("${hrefMatch[1]}");`);
+          }
+        }
+      }
       if (jsExtracted.fontFaceRules?.length) {
         fontParts.push(jsExtracted.fontFaceRules.join('\n'));
       }
-      // fontLinks are full <link> tags - we'll pass them separately
       cssContent = fontParts.join('\n');
       
       console.log('Using JS inline-styles method for header/footer');
