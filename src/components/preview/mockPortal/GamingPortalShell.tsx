@@ -3,6 +3,7 @@ import { GamingDashboard } from './GamingDashboard';
 import { GamingBetsPage } from './GamingBetsPage';
 import { GamingSettings } from './GamingSettings';
 import { PortalConfig, PortalBranding, DEFAULT_GAMING_CONFIG, GamingEvent, PortalVerificationTrigger } from '@/types/portalConfig';
+import { getReadableTextColor } from '@/lib/formStyleUtils';
 import { toast } from 'sonner';
 
 type PortalPage = 'dashboard' | 'bets' | 'wallet' | 'settings';
@@ -47,7 +48,7 @@ export function GamingPortalShell({
   const initials = userName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
   const brandAccent = branding?.accentColor || accentColor;
   const headerBg = branding?.sidebarBg || '#0F172A';
-  const headerText = branding?.sidebarText || '#ffffff';
+  const headerText = getReadableTextColor(branding?.sidebarText || '#ffffff', headerBg);
   const pageBg = branding?.pageBg || '#F8FAFC';
   const fontFamily = branding?.fontFamily || '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
 

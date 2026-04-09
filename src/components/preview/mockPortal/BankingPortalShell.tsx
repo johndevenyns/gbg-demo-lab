@@ -5,6 +5,7 @@ import { BankingSettings } from './BankingSettings';
 import { BankingTransferFlow } from './BankingTransferFlow';
 import { BankingCardsPage } from './BankingCardsPage';
 import { PortalConfig, PortalBranding, DEFAULT_BANKING_CONFIG, PortalVerificationTrigger } from '@/types/portalConfig';
+import { getReadableTextColor } from '@/lib/formStyleUtils';
 
 type PortalPage = 'dashboard' | 'cards' | 'settings' | 'transfer' | 'pay-bills';
 
@@ -120,7 +121,7 @@ export function BankingPortalShell({
   const pageBg = branding?.pageBg || '#F8FAFC';
   const brandAccent = branding?.accentColor || accentColor;
   const headerBg = branding?.sidebarBg || '#FFFFFF';
-  const headerText = branding?.sidebarText || '#1E293B';
+  const headerText = getReadableTextColor(branding?.sidebarText || '#1E293B', headerBg);
   const fontFamily = branding?.fontFamily || '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
   const navActivePage = ['transfer', 'pay-bills'].includes(activePage) ? 'dashboard' : activePage;
 

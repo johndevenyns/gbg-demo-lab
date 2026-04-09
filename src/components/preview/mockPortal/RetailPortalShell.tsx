@@ -4,6 +4,7 @@ import { RetailOrdersPage } from './RetailOrdersPage';
 import { RetailSettings } from './RetailSettings';
 import { RetailCartPage, CartItem } from './RetailCartPage';
 import { PortalConfig, PortalBranding, DEFAULT_RETAIL_CONFIG, RetailProduct, PortalVerificationTrigger } from '@/types/portalConfig';
+import { getReadableTextColor } from '@/lib/formStyleUtils';
 import { toast } from 'sonner';
 
 type PortalPage = 'dashboard' | 'orders' | 'settings' | 'cart';
@@ -84,7 +85,7 @@ export function RetailPortalShell({
   const initials = userName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
   const brandAccent = branding?.accentColor || accentColor;
   const headerBg = branding?.sidebarBg || '#FFFFFF';
-  const headerText = branding?.sidebarText || '#0F172A';
+  const headerText = getReadableTextColor(branding?.sidebarText || '#0F172A', headerBg);
   const pageBg = branding?.pageBg || '#F8FAFC';
   const fontFamily = branding?.fontFamily || '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
 
