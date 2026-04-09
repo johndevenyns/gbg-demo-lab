@@ -1,12 +1,14 @@
 import { useState, useRef, useCallback } from "react";
-import { Globe, Loader2, ExternalLink, X, Eye, Paintbrush, Check, Ban, Code, ChevronDown, ChevronRight, RotateCcw } from "lucide-react";
+import { Globe, Loader2, ExternalLink, X, Eye, Paintbrush, Check, Ban, Code, ChevronDown, ChevronRight, RotateCcw, Sparkles, Wand2 } from "lucide-react";
  import { Button } from "@/components/ui/button";
  import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
- import { scrapingApi, ScrapedBranding, FormElementStyles } from "@/lib/api/scraping";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+ import { scrapingApi, ScrapedBranding, FormElementStyles, headerRefinementApi } from "@/lib/api/scraping";
  import { useToast } from "@/hooks/use-toast";
  import { DemoEnvironment } from "@/types/demo";
  import { DEFAULT_FORM_STYLE, FormStyleConfig } from "@/types/formStyle";
@@ -18,6 +20,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
    onUrlChange: (url: string) => void;
    onApply: (updates: Partial<DemoEnvironment>) => void;
    isConfigured: boolean;
+   onUnifiedFetchComplete?: (data: ScrapedBranding) => void;
  }
  
  // Helper to generate preview HTML
@@ -51,9 +54,12 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
  }
 
 
-export function HtmlCaptureTab({ demo, url, onUrlChange, onApply, isConfigured }: HtmlCaptureTabProps) {
+export function HtmlCaptureTab({ demo, url, onUrlChange, onApply, isConfigured, onUnifiedFetchComplete }: HtmlCaptureTabProps) {
     const { toast } = useToast();
     const [isLoading, setIsLoading] = useState(false);
+    const [isRefining, setIsRefining] = useState(false);
+    const [refinementScore, setRefinementScore] = useState<number | null>(null);
+    const [fetchProgress, setFetchProgress] = useState<string>('');
     const [scrapedData, setScrapedData] = useState<ScrapedBranding | null>(null);
     const abortControllerRef = useRef<AbortController | null>(null);
     
@@ -138,6 +144,8 @@ export function HtmlCaptureTab({ demo, url, onUrlChange, onApply, isConfigured }
       const controller = new AbortController();
       abortControllerRef.current = controller;
       setIsLoading(true);
+      setFetchProgress('Fetching site content...');
+      setRefinementScore(null);
       try {
       const response = await scrapingApi.scrapeSiteBranding(url, controller.signal);
         if (controller.signal.aborted) return;
@@ -147,8 +155,10 @@ export function HtmlCaptureTab({ demo, url, onUrlChange, onApply, isConfigured }
           const hasFooter = !!(d.footerHtml && d.footerHtml.trim().length > 0);
           const hasCss = !!(d.cssContent && d.cssContent.trim().length > 0);
 
+          // Notify parent about unified fetch data (screenshots, branding, etc.)
+          onUnifiedFetchComplete?.(d);
+
           if (!hasHeader && !hasFooter && !hasCss) {
-            // Got a response but nothing useful was extracted
             setScrapedData(null);
             toast({
               title: "No Content Extracted",
@@ -157,26 +167,77 @@ export function HtmlCaptureTab({ demo, url, onUrlChange, onApply, isConfigured }
             });
           } else {
             setScrapedData(d);
-            // Populate editors
             setEditedHeaderHtml(d.headerHtml || '');
             setEditedFooterHtml(d.footerHtml || '');
             setEditedCss(d.cssContent || '');
             setHasEdits(false);
+
             const parts: string[] = [];
             if (hasHeader) parts.push("header");
             if (hasFooter) parts.push("footer");
             if (hasCss) parts.push("CSS");
-            const missing: string[] = [];
-            if (!hasHeader) missing.push("header");
-            if (!hasFooter) missing.push("footer");
 
-            if (missing.length > 0) {
-              toast({
-                title: "Partial Extraction",
-                description: `Extracted ${parts.join(", ")} but could not find: ${missing.join(", ")}. The site may lack semantic <header>/<footer> tags.`,
-              });
-            } else {
-              toast({ title: "Site Fetched", description: `Header, footer, and CSS extracted successfully (${(d.cssContent?.length || 0).toLocaleString()} chars of CSS)` });
+            toast({ title: "Site Fetched", description: `Extracted ${parts.join(", ")}. Running AI refinement...` });
+
+            // Auto-refine with AI if we have a screenshot
+            if (d.screenshot && hasHeader) {
+              setFetchProgress('Refining capture with AI vision...');
+              setIsRefining(true);
+              try {
+                const refinement = await headerRefinementApi.refineCapture(
+                  d.screenshot,
+                  d.headerHtml || '',
+                  d.footerHtml || '',
+                  d.cssContent || '',
+                  url,
+                  controller.signal
+                );
+                if (controller.signal.aborted) return;
+                if (refinement.success && refinement.data) {
+                  const r = refinement.data;
+                  setRefinementScore(r.matchScore);
+                  
+                  // Apply refined HTML and CSS
+                  const refinedHeader = r.refinedHeaderHtml || d.headerHtml || '';
+                  const refinedFooter = r.refinedFooterHtml || d.footerHtml || '';
+                  const refinedCss = r.additionalCss 
+                    ? (d.cssContent || '') + '\n/* AI Refinement */\n' + r.additionalCss
+                    : d.cssContent || '';
+                  
+                  setEditedHeaderHtml(refinedHeader);
+                  setEditedFooterHtml(refinedFooter);
+                  setEditedCss(refinedCss);
+                  setHasEdits(true);
+
+                  // Update scraped data with refined content
+                  const refinedData = {
+                    ...d,
+                    headerHtml: refinedHeader,
+                    footerHtml: refinedFooter,
+                    cssContent: refinedCss,
+                  };
+                  // Also update colors if AI extracted better ones
+                  if (r.extractedColors) {
+                    if (r.extractedColors.headerBgColor) refinedData.colors.headerBgColor = r.extractedColors.headerBgColor;
+                    if (r.extractedColors.headerTextColor) refinedData.colors.headerTextColor = r.extractedColors.headerTextColor;
+                    if (r.extractedColors.buttonColor) refinedData.colors.buttonColor = r.extractedColors.buttonColor;
+                  }
+                  setScrapedData(refinedData);
+
+                  const changeCount = r.changes?.length || 0;
+                  toast({
+                    title: `AI Refined — ${r.matchScore}% Match`,
+                    description: `Applied ${changeCount} correction${changeCount !== 1 ? 's' : ''} to improve visual accuracy.`,
+                  });
+                } else {
+                  console.warn('AI refinement failed:', refinement.error);
+                  toast({ title: "Refinement Skipped", description: refinement.error || "AI could not refine the capture. Using raw extraction." });
+                }
+              } catch (refineErr) {
+                console.warn('AI refinement error:', refineErr);
+              } finally {
+                setIsRefining(false);
+              }
             }
           }
         } else {
@@ -204,7 +265,10 @@ export function HtmlCaptureTab({ demo, url, onUrlChange, onApply, isConfigured }
           variant: "destructive",
         });
       } finally {
-        if (!controller.signal.aborted) setIsLoading(false);
+        if (!controller.signal.aborted) {
+          setIsLoading(false);
+          setFetchProgress('');
+        }
         abortControllerRef.current = null;
       }
     };
@@ -276,11 +340,11 @@ export function HtmlCaptureTab({ demo, url, onUrlChange, onApply, isConfigured }
            </div>
            
             <div className="flex items-center gap-2">
-              <Button onClick={handleFetch} disabled={isLoading || !url.trim()}>
+              <Button onClick={handleFetch} disabled={isLoading || isRefining || !url.trim()}>
                 {isLoading ? (
-                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Fetching...</>
+                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" />{isRefining ? 'AI Refining...' : 'Fetching...'}</>
                 ) : (
-                  <><Globe className="w-4 h-4 mr-2" />Fetch HTML/CSS</>
+                  <><Globe className="w-4 h-4 mr-2" />Fetch &amp; Auto-Refine</>
                 )}
               </Button>
               {isLoading && (
@@ -295,7 +359,25 @@ export function HtmlCaptureTab({ demo, url, onUrlChange, onApply, isConfigured }
                 </Button>
               )}
             </div>
-         </CardContent>
+            {(isLoading || isRefining) && fetchProgress && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  {isRefining ? <Sparkles className="w-4 h-4 animate-pulse text-amber-500" /> : <Loader2 className="w-4 h-4 animate-spin" />}
+                  {fetchProgress}
+                </div>
+                <Progress value={isRefining ? 75 : 40} className="h-1" />
+              </div>
+            )}
+            {refinementScore !== null && !isLoading && (
+              <div className="flex items-center gap-2">
+                <Badge variant={refinementScore >= 80 ? "default" : refinementScore >= 60 ? "secondary" : "destructive"} className="gap-1">
+                  <Wand2 className="w-3 h-3" />
+                  AI Match: {refinementScore}%
+                </Badge>
+                <span className="text-xs text-muted-foreground">AI vision compared and refined the capture to match the original site</span>
+              </div>
+            )}
+          </CardContent>
        </Card>
  
        {/* Scraped Data Preview */}

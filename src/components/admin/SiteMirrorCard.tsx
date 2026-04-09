@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Globe, X, Eye, Monitor, Tablet, Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -9,6 +9,7 @@ import { HtmlCaptureTab } from "./HtmlCaptureTab";
 import { ScreenshotCaptureTab } from "./ScreenshotCaptureTab";
 import { EmbedFormSection } from "./EmbedFormSection";
 import { HeaderElementPicker } from "./HeaderElementPicker";
+import { ScrapedBranding } from "@/lib/api/scraping";
 import { useToast } from "@/hooks/use-toast";
 import { DemoEnvironment } from "@/types/demo";
 import { DemoUseCaseLink } from "@/types/useCase";
@@ -73,6 +74,44 @@ interface SiteMirrorCardProps {
    const handleApplyBranding = (updates: Partial<DemoEnvironment>) => {
      onApplyBranding(updates, true);
    };
+
+   // Unified fetch: when HTML capture completes, also populate screenshot + branding data
+   const handleUnifiedFetchComplete = useCallback((data: ScrapedBranding) => {
+     const updates: Partial<DemoEnvironment> = {
+       customerSiteUrl: url,
+     };
+
+     // Populate screenshot data if we got screenshots
+     if (data.screenshot || data.screenshots?.desktop) {
+       const desktopScreenshot = data.screenshots?.desktop || data.screenshot;
+       if (desktopScreenshot) {
+         // Build screenshot-based header/footer HTML (image-based)
+         const screenshotSrc = desktopScreenshot.startsWith('data:') || desktopScreenshot.startsWith('http')
+           ? desktopScreenshot
+           : `data:image/png;base64,${desktopScreenshot}`;
+         updates.mirrorScreenshotHeaderHtml = `<div style="width:100%;overflow:hidden;"><img src="${screenshotSrc}" style="width:100%;height:auto;display:block;object-fit:cover;object-position:top;max-height:200px;" alt="Site header" /></div>`;
+         updates.mirrorScreenshotCss = '';
+       }
+     }
+
+     // Populate branding colors
+     if (data.colors) {
+       updates.headerBgColor = data.colors.headerBgColor;
+       updates.headerTextColor = data.colors.headerTextColor;
+       updates.buttonColor = data.colors.buttonColor;
+     }
+
+     // Logo
+     if (data.logoUrl) {
+       updates.logoUrl = data.logoUrl;
+     }
+
+     onApplyBranding(updates, true);
+     toast({
+       title: "Unified Fetch Complete",
+       description: "HTML capture, screenshot, and branding data have all been populated.",
+     });
+   }, [url, onApplyBranding, toast]);
 
    // Generate live site preview content
    const getSitePreviewContent = () => {
@@ -344,6 +383,7 @@ interface SiteMirrorCardProps {
                   onUrlChange={setUrl}
                   onApply={handleApplyBranding}
                   isConfigured={htmlConfigured}
+                  onUnifiedFetchComplete={handleUnifiedFetchComplete}
                 />
               }
               screenshotContent={
