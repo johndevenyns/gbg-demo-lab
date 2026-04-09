@@ -735,86 +735,19 @@ export default function DemoPreview() {
                   body { margin: 0; padding: 0; overflow: hidden; width: 100%; }
                   html { overflow: hidden; }
                   a { pointer-events: none; }
-                  /* Ensure footer fills width without overriding internal layout */
                   body > footer, body > [class*="footer"], body > div {
                     width: 100%;
                     max-width: 100%;
                   }
                 </style>
                 ${previewDocument.cssContent ? `<style>${previewDocument.cssContent}</style>` : ''}
-                <style>
-                  /* Fallback multi-column layout for SPA footers where CSS modules don't apply */
-                  /* Only kicks in when the original CSS doesn't provide flex/grid layout */
-                  footer > div, body > footer > div, [class*="footer"] > div {
-                    /* Use display:flex as fallback only if not already set by site CSS */
-                  }
-                  /* Smart fallback: if the footer's direct container has many children stacked vertically,
-                     apply a flex-wrap layout to distribute them into columns */
-                </style>
                 <script>
-                  document.addEventListener('DOMContentLoaded', function() {
-                    // Find the innermost footer element
-                    var footers = document.querySelectorAll('footer');
-                    var footer = footers.length > 1 ? footers[footers.length - 1] : (footers[0] || document.body.firstElementChild);
-                    if (!footer) return;
-
-                    // Look for a container div that has 3+ children which look like footer columns
-                    var candidates = [footer];
-                    var divs = footer.querySelectorAll('div');
-                    for (var d = 0; d < divs.length; d++) candidates.push(divs[d]);
-
-                    for (var i = 0; i < candidates.length; i++) {
-                      var c = candidates[i];
-                      var children = c.children;
-                      if (children.length < 3) continue;
-
-                      var style = window.getComputedStyle(c);
-                      var isRow = style.display === 'flex' || style.display === 'grid' || style.display === 'inline-flex';
-                      if (isRow) continue;
-
-                      // Heuristic: children with class names suggesting columns/sections
-                      var sectionLikeChildren = 0;
-                      var hasListOrLinks = false;
-                      for (var j = 0; j < children.length; j++) {
-                        var child = children[j];
-                        var cn = (child.className || '').toLowerCase();
-                        if (cn.match(/section|column|col|link|group|category|nav/)) {
-                          sectionLikeChildren++;
-                        }
-                        // Also check if child has a list of links (typical footer column)
-                        var links = child.querySelectorAll ? child.querySelectorAll('a') : [];
-                        if (links.length >= 2) hasListOrLinks = true;
-                        // Check for heading-like elements
-                        if (child.querySelector && child.querySelector('h1,h2,h3,h4,h5,h6,strong,b,[class*="title"],[class*="heading"],[class*="name"]')) {
-                          sectionLikeChildren++;
-                        }
-                      }
-
-                      // If we found a likely column container
-                      if ((sectionLikeChildren >= 3) || (children.length >= 4 && hasListOrLinks)) {
-                        c.style.display = 'flex';
-                        c.style.flexWrap = 'wrap';
-                        c.style.gap = '2rem';
-                        c.style.justifyContent = 'space-between';
-                        c.style.width = '100%';
-                        if (!c.style.padding || c.style.padding === '0px') {
-                          c.style.padding = '1.5rem';
-                        }
-                        for (var k = 0; k < children.length; k++) {
-                          var ch = children[k];
-                          ch.style.minWidth = '140px';
-                          ch.style.flex = '1 1 auto';
-                          ch.style.maxWidth = '250px';
-                        }
-                        // Recalculate iframe height after layout fix
-                        try {
-                          var newHeight = document.body.scrollHeight;
-                          window.parent.postMessage({type:'footerHeight', height: newHeight}, '*');
-                        } catch(e) {}
-                        break;
-                      }
-                    }
-                  });
+                  setTimeout(function() {
+                    try {
+                      var h = document.body.scrollHeight || document.documentElement.scrollHeight;
+                      window.parent.postMessage({type:'footerHeight', height: h}, '*');
+                    } catch(e) {}
+                  }, 100);
                 </script>
               </head>
               <body>
@@ -832,7 +765,7 @@ export default function DemoPreview() {
               const body = iframe.contentDocument?.body;
               const firstChild = body?.firstElementChild as HTMLElement;
               const height = firstChild?.offsetHeight || body?.scrollHeight || 200;
-              iframe.style.height = `${height}px`;
+              iframe.style.height = \`\${height}px\`;
             } catch {
               iframe.style.height = '200px';
             }
