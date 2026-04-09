@@ -366,22 +366,3 @@ export interface CompareFormResponse {
     spacingFixes?: Record<string, string>;
   };
 }
-  success: boolean;
-  error?: string;
-  data?: {
-    matchScore: number;
-    differences: Array<{
-      element: string;
-      issue: string;
-      severity: 'critical' | 'major' | 'minor';
-    }>;
-    cssFixes: string;
-    fontFix?: {
-      fontFamily?: string;
-      googleFontsUrl?: string;
-    };
-    colorFixes?: Record<string, string>;
-    typographyFixes?: Record<string, string>;
-    spacingFixes?: Record<string, string>;
-  };
-}
