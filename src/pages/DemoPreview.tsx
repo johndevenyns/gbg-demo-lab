@@ -765,7 +765,7 @@ export default function DemoPreview() {
               const body = iframe.contentDocument?.body;
               const firstChild = body?.firstElementChild as HTMLElement;
               const height = firstChild?.offsetHeight || body?.scrollHeight || 200;
-              iframe.style.height = \`\${height}px\`;
+              iframe.style.height = `${height}px`;
             } catch {
               iframe.style.height = '200px';
             }
