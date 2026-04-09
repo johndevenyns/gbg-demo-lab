@@ -315,20 +315,24 @@ Deno.serve(async (req) => {
       return res;
     };
 
-    // Main request: get branding, screenshot, AND run JS to extract header/footer with inlined styles
+    // Request 1: Simple branding + HTML (no actions, no timeout risk)
     const mainRequest = firecrawlScrape({
       url: formattedUrl,
       formats: ['html', 'rawHtml', 'screenshot', 'branding'],
       onlyMainContent: false,
-      waitFor: 4000,
-      screenshot: { fullPage: true },
+      waitFor: 3000,
+      timeout: 30000,
+    });
+
+    // Request 2: Lightweight JS extraction for header/footer with inlined styles (separate to avoid timeout)
+    const jsRequest = firecrawlScrape({
+      url: formattedUrl,
+      formats: ['rawHtml'],
+      onlyMainContent: false,
+      waitFor: 2000,
+      timeout: 45000,
       actions: [
-        // Scroll to load lazy content
-        { type: 'scroll', direction: 'down', amount: 99999 },
         { type: 'wait', milliseconds: 1500 },
-        { type: 'scroll', direction: 'up', amount: 99999 },
-        { type: 'wait', milliseconds: 500 },
-        // Execute JS to extract header/footer with computed styles inlined
         { type: 'executeJavascript', script: INLINE_STYLES_SCRIPT },
       ],
     });
@@ -339,13 +343,10 @@ Deno.serve(async (req) => {
       formats: ['screenshot'],
       onlyMainContent: false,
       waitFor: 2000,
-      screenshot: { fullPage: true },
+      timeout: 30000,
       actions: [
         { type: 'viewport', width: 768, height: 1024 },
-        { type: 'scroll', direction: 'down', amount: 99999 },
         { type: 'wait', milliseconds: 1000 },
-        { type: 'scroll', direction: 'up', amount: 99999 },
-        { type: 'wait', milliseconds: 300 },
       ],
     });
 
@@ -354,20 +355,18 @@ Deno.serve(async (req) => {
       formats: ['screenshot'],
       onlyMainContent: false,
       waitFor: 2000,
-      screenshot: { fullPage: true },
+      timeout: 30000,
       actions: [
         { type: 'viewport', width: 390, height: 844 },
-        { type: 'scroll', direction: 'down', amount: 99999 },
         { type: 'wait', milliseconds: 1000 },
-        { type: 'scroll', direction: 'up', amount: 99999 },
-        { type: 'wait', milliseconds: 300 },
       ],
     });
 
-    console.log('Fetching with inline styles extraction + screenshots...');
+    console.log('Fetching branding + JS extraction + screenshots in parallel...');
 
-    const [mainResponse, tabletResponse, mobileResponse] = await Promise.all([
+    const [mainResponse, jsResponse, tabletResponse, mobileResponse] = await Promise.all([
       mainRequest,
+      jsRequest,
       tabletRequest,
       mobileRequest,
     ]);
@@ -405,21 +404,26 @@ Deno.serve(async (req) => {
     const desktopScreenshot = mainData.data?.screenshot || mainData.screenshot || null;
     const metadata = mainData.data?.metadata || mainData.metadata || {};
 
-    // Extract the JS-returned header/footer with inlined styles
-    const jsReturns = mainData.data?.javascriptReturns || mainData.javascriptReturns || [];
+    // Extract the JS-returned header/footer with inlined styles from the separate request
     let jsExtracted: { headerHtml: string; footerHtml: string; fontFaceRules: string[]; fontLinks: string[]; origin: string } | null = null;
-    
-    console.log('javascriptReturns count:', jsReturns.length);
-    
-    if (jsReturns.length > 0) {
-      try {
-        const lastReturn = jsReturns[jsReturns.length - 1];
-        const rawValue = typeof lastReturn === 'string' ? lastReturn : lastReturn?.value || lastReturn?.result || JSON.stringify(lastReturn);
-        jsExtracted = JSON.parse(rawValue);
-        console.log('JS extraction successful - header length:', jsExtracted?.headerHtml?.length || 0, 'footer length:', jsExtracted?.footerHtml?.length || 0);
-      } catch (e) {
-        console.warn('Failed to parse JS extraction result:', e, 'raw:', JSON.stringify(jsReturns).substring(0, 500));
+
+    try {
+      const jsData = await jsResponse.json();
+      if (jsResponse.ok) {
+        const jsReturns = jsData.data?.javascriptReturns || jsData.javascriptReturns || [];
+        console.log('javascriptReturns count:', jsReturns.length);
+
+        if (jsReturns.length > 0) {
+          const lastReturn = jsReturns[jsReturns.length - 1];
+          const rawValue = typeof lastReturn === 'string' ? lastReturn : lastReturn?.value || lastReturn?.result || JSON.stringify(lastReturn);
+          jsExtracted = JSON.parse(rawValue);
+          console.log('JS extraction successful - header length:', jsExtracted?.headerHtml?.length || 0, 'footer length:', jsExtracted?.footerHtml?.length || 0);
+        }
+      } else {
+        console.warn('JS extraction request failed:', jsData.error || jsData.code);
       }
+    } catch (e) {
+      console.warn('Failed to parse JS extraction result:', e);
     }
 
     // Use JS-extracted header/footer (with inlined styles) if available, otherwise fall back to regex
