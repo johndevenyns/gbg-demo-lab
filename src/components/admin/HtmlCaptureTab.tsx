@@ -13,8 +13,6 @@ import { Progress } from "@/components/ui/progress";
  import { DemoEnvironment } from "@/types/demo";
  import { DEFAULT_FORM_STYLE, FormStyleConfig } from "@/types/formStyle";
  import { generateFormHtml, generatePreviewDocument, formElementStylesToConfig, getReadableTextColor } from "@/lib/formStyleUtils";
- import { DEFAULT_FORM_STYLE, FormStyleConfig } from "@/types/formStyle";
- import { generateFormHtml, generatePreviewDocument, formElementStylesToConfig, getReadableTextColor } from "@/lib/formStyleUtils";
  
  interface HtmlCaptureTabProps {
    demo: DemoEnvironment;
