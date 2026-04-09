@@ -20,6 +20,7 @@ import { Progress } from "@/components/ui/progress";
    onUrlChange: (url: string) => void;
    onApply: (updates: Partial<DemoEnvironment>) => void;
    isConfigured: boolean;
+   onUnifiedFetchComplete?: (data: ScrapedBranding) => void;
  }
  
  // Helper to generate preview HTML
