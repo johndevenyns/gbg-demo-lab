@@ -145,9 +145,10 @@ interface StyledFormFieldsProps {
   style: FormStyleConfig;
   fieldErrors?: Record<string, string>;
   onNavigateToLogin?: () => void;
+  columns?: 1 | 2;
 }
 
-function StyledFormFields({ fields, formData, onInputChange, style, fieldErrors = {}, onNavigateToLogin }: StyledFormFieldsProps) {
+function StyledFormFields({ fields, formData, onInputChange, style, fieldErrors = {}, onNavigateToLogin, columns = 1 }: StyledFormFieldsProps) {
   // Pre-compute readable colors to avoid white-on-white or dark-on-dark issues
   const formBg = style.formBgColor || '#ffffff';
   const inputBg = style.inputBgColor;
@@ -617,8 +618,27 @@ function StyledFormFields({ fields, formData, onInputChange, style, fieldErrors 
     );
   };
 
+  // Content fields (headings, dividers, paragraphs) should span full width in 2-col layout
+  const contentFieldTypes2 = ['heading', 'paragraph', 'divider', 'account_login_link'];
+  const gap = spacingMap[style.fieldSpacing || 'normal'];
+
+  if (columns === 2) {
+    return (
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap }}>
+        {fields.map((field) => {
+          const isFullWidth = contentFieldTypes2.includes(field.type) || field.type === 'consent_checkbox' || field.type === 'yes_no' || field.type === 'textarea';
+          return (
+            <div key={field.id} style={isFullWidth ? { gridColumn: '1 / -1' } : undefined}>
+              {renderField(field)}
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: spacingMap[style.fieldSpacing || 'normal'] }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap }}>
       {fields.map(renderField)}
     </div>
   );
@@ -2564,6 +2584,7 @@ export function DemoFlowRenderer({
               style={style}
               fieldErrors={fieldErrors}
               onNavigateToLogin={onNavigateToLogin}
+              columns={currentStep.columns}
             />
             {/* Login / code validation error message */}
             {(currentStep.submitAction === 'login' || currentStep.submitAction === 'validate_code' || currentStep.submitAction === 'verify_cc') && loginError && (

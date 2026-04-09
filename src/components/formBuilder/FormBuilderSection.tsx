@@ -207,7 +207,7 @@ export function FormBuilderSection({ demo, onUpdate }: FormBuilderSectionProps) 
           <div>
             <CardTitle className="flex items-center gap-2">
               <LayoutGrid className="w-5 h-5" />
-              Application Form Builder
+              Workflow Builder
             </CardTitle>
             <CardDescription>
               Design your multi-step verification application flow
@@ -328,7 +328,7 @@ export function FormBuilderSection({ demo, onUpdate }: FormBuilderSectionProps) 
           <TabsList className="grid w-full grid-cols-4 mb-6">
             <TabsTrigger value="builder" className="flex items-center gap-2">
               <LayoutGrid className="w-4 h-4" />
-              <span className="hidden sm:inline">Form Builder</span>
+              <span className="hidden sm:inline">Workflow Builder</span>
             </TabsTrigger>
             <TabsTrigger value="paths" className="flex items-center gap-2">
               <Workflow className="w-4 h-4" />

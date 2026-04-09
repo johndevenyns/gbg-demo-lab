@@ -168,7 +168,7 @@ export function FormPreviewPanel({ demo }: FormPreviewPanelProps) {
                   <div className="text-center py-12 text-muted-foreground">
                     <Eye className="w-12 h-12 mx-auto mb-3 opacity-30" />
                     <p className="font-medium">No form steps configured</p>
-                    <p className="text-sm">Add steps in the Form Builder tab to see a preview.</p>
+                    <p className="text-sm">Add steps in the Workflow Builder tab to see a preview.</p>
                   </div>
                 )}
               </div>
