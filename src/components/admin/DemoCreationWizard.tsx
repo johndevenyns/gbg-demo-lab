@@ -344,12 +344,17 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
 
       updateTaskStatus('finalize', 'in_progress');
       if (shouldShowFillPass || shouldShowFillFail) {
+        const firstPass = globalProfiles.find((p) => p.profile_type === 'pass');
+        const firstFail = globalProfiles.find((p) => p.profile_type === 'fail');
+        const passData: Record<string, string> = shouldShowFillPass && firstPass ? (firstPass.field_data as Record<string, string>) : {};
+        const failData: Record<string, string> = shouldShowFillFail && firstFail ? (firstFail.field_data as Record<string, string>) : {};
+        
         await updateDemo.mutateAsync({
           id: demo.id,
           updates: {
             storedTestData: {
-              passData: {},
-              failData: {},
+              passData,
+              failData,
               showFillPassButton: shouldShowFillPass,
               showFillFailButton: shouldShowFillFail,
             },
