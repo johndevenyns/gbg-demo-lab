@@ -198,7 +198,7 @@ function LogoPreview({ url, size = 'lg', bgColor }: { url?: string | null; size?
              <div className="space-y-3">
                {demo.uploadedLogoUrl ? (
                  <div className="flex items-center gap-3">
-                   <LogoPreview url={demo.uploadedLogoUrl} size="md" />
+                   <LogoPreview url={demo.uploadedLogoUrl} size="md" bgColor={demo.headerBgColor} />
                    <Button 
                      variant="ghost" 
                      size="sm"
@@ -268,7 +268,7 @@ function LogoPreview({ url, size = 'lg', bgColor }: { url?: string | null; size?
              
              <div className="space-y-3">
                <div className="flex items-start gap-3">
-                 <LogoPreview url={demo.logoUrl} size="md" />
+                 <LogoPreview url={demo.logoUrl} size="md" bgColor={demo.headerBgColor} />
                  <div className="flex-1 min-w-0">
                    <Input 
                      value={demo.logoUrl || ""} 
