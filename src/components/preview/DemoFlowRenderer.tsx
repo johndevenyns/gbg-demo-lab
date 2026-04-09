@@ -2584,6 +2584,7 @@ export function DemoFlowRenderer({
               style={style}
               fieldErrors={fieldErrors}
               onNavigateToLogin={onNavigateToLogin}
+              columns={currentStep.columns}
             />
             {/* Login / code validation error message */}
             {(currentStep.submitAction === 'login' || currentStep.submitAction === 'validate_code' || currentStep.submitAction === 'verify_cc') && loginError && (
