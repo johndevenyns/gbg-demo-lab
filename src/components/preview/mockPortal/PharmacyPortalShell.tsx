@@ -33,7 +33,7 @@ export function PharmacyPortalShell({
   const initials = userName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
   const brandAccent = branding?.accentColor || accentColor;
   const headerBg = branding?.sidebarBg || '#FFFFFF';
-  const headerText = branding?.sidebarText || '#1E293B';
+  const headerText = getReadableTextColor(branding?.sidebarText || '#1E293B', headerBg);
   const pageBg = branding?.pageBg || '#F1F5F9';
   const fontFamily = branding?.fontFamily || '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
 

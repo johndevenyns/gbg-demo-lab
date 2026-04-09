@@ -120,7 +120,7 @@ export function BankingPortalShell({
   const pageBg = branding?.pageBg || '#F8FAFC';
   const brandAccent = branding?.accentColor || accentColor;
   const headerBg = branding?.sidebarBg || '#FFFFFF';
-  const headerText = branding?.sidebarText || '#1E293B';
+  const headerText = getReadableTextColor(branding?.sidebarText || '#1E293B', headerBg);
   const fontFamily = branding?.fontFamily || '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
   const navActivePage = ['transfer', 'pay-bills'].includes(activePage) ? 'dashboard' : activePage;
 
