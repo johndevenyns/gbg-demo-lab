@@ -13,35 +13,38 @@
    onUpdate: (updates: Partial<DemoEnvironment>) => void;
  }
  
- function LogoPreview({ url, size = 'lg' }: { url?: string | null; size?: 'sm' | 'md' | 'lg' }) {
-   const [hasError, setHasError] = useState(false);
-   
-   const sizeClasses = {
-     sm: 'w-10 h-10',
-     md: 'w-16 h-16',
-     lg: 'w-24 h-24'
-   };
-   
-   if (!url || hasError) {
-     return (
-       <div className={`${sizeClasses[size]} rounded-lg border border-dashed border-border bg-muted/30 flex flex-col items-center justify-center`}>
-         <ImageOff className="w-6 h-6 text-muted-foreground" />
-         <span className="text-[10px] text-muted-foreground mt-1">No logo</span>
-       </div>
-     );
-   }
-   
-   return (
-     <div className={`${sizeClasses[size]} rounded-lg border border-border bg-muted/30 flex items-center justify-center overflow-hidden p-2`}>
-       <img 
-         src={url} 
-         alt="Logo preview" 
-         className="max-w-full max-h-full object-contain"
-         onError={() => setHasError(true)}
-       />
-     </div>
-   );
- }
+function LogoPreview({ url, size = 'lg', bgColor }: { url?: string | null; size?: 'sm' | 'md' | 'lg'; bgColor?: string }) {
+    const [hasError, setHasError] = useState(false);
+    
+    const sizeClasses = {
+      sm: 'w-10 h-10',
+      md: 'w-16 h-16',
+      lg: 'w-24 h-24'
+    };
+    
+    if (!url || hasError) {
+      return (
+        <div className={`${sizeClasses[size]} rounded-lg border border-dashed border-border bg-muted/30 flex flex-col items-center justify-center`}>
+          <ImageOff className="w-6 h-6 text-muted-foreground" />
+          <span className="text-[10px] text-muted-foreground mt-1">No logo</span>
+        </div>
+      );
+    }
+    
+    return (
+      <div 
+        className={`${sizeClasses[size]} rounded-lg border border-border flex items-center justify-center overflow-hidden p-2`}
+        style={{ backgroundColor: bgColor || undefined }}
+      >
+        <img 
+          src={url} 
+          alt="Logo preview" 
+          className="max-w-full max-h-full object-contain"
+          onError={() => setHasError(true)}
+        />
+      </div>
+    );
+  }
  
  export function LogoUploadSection({ demo, onUpdate }: LogoUploadSectionProps) {
    const [isUploading, setIsUploading] = useState(false);
@@ -152,7 +155,7 @@
      <div className="space-y-6">
        {/* Active Logo Preview */}
        <div className="flex items-start gap-4 p-4 rounded-lg bg-muted/30 border border-border">
-         <LogoPreview url={activeLogoUrl} size="lg" />
+         <LogoPreview url={activeLogoUrl} size="lg" bgColor={demo.headerBgColor} />
          <div className="flex-1 min-w-0">
            <Label className="text-sm font-medium">Active Logo</Label>
            <p className="text-sm text-muted-foreground mt-1">
@@ -195,7 +198,7 @@
              <div className="space-y-3">
                {demo.uploadedLogoUrl ? (
                  <div className="flex items-center gap-3">
-                   <LogoPreview url={demo.uploadedLogoUrl} size="md" />
+                   <LogoPreview url={demo.uploadedLogoUrl} size="md" bgColor={demo.headerBgColor} />
                    <Button 
                      variant="ghost" 
                      size="sm"
@@ -265,7 +268,7 @@
              
              <div className="space-y-3">
                <div className="flex items-start gap-3">
-                 <LogoPreview url={demo.logoUrl} size="md" />
+                 <LogoPreview url={demo.logoUrl} size="md" bgColor={demo.headerBgColor} />
                  <div className="flex-1 min-w-0">
                    <Input 
                      value={demo.logoUrl || ""} 
