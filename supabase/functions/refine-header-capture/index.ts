@@ -162,7 +162,7 @@ Generate clean header and footer HTML with inline styles that matches the screen
               { type: 'text', text: userContent },
               {
                 type: 'image_url',
-                image_url: { url: originalScreenshot.startsWith('data:') ? originalScreenshot : `data:image/png;base64,${originalScreenshot}` },
+                image_url: { url: screenshotDataUrl },
               },
             ],
           },
