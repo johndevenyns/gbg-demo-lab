@@ -148,7 +148,7 @@ interface StyledFormFieldsProps {
   columns?: 1 | 2;
 }
 
-function StyledFormFields({ fields, formData, onInputChange, style, fieldErrors = {}, onNavigateToLogin }: StyledFormFieldsProps) {
+function StyledFormFields({ fields, formData, onInputChange, style, fieldErrors = {}, onNavigateToLogin, columns = 1 }: StyledFormFieldsProps) {
   // Pre-compute readable colors to avoid white-on-white or dark-on-dark issues
   const formBg = style.formBgColor || '#ffffff';
   const inputBg = style.inputBgColor;
