@@ -301,7 +301,71 @@ export const formAnalysisApi = {
   },
 };
 
+export interface RefineHeaderResponse {
+  success: boolean;
+  error?: string;
+  data?: {
+    refinedHeaderHtml: string;
+    refinedFooterHtml?: string;
+    additionalCss: string;
+    matchScore: number;
+    changes: Array<{
+      element: string;
+      change: string;
+      severity: 'critical' | 'major' | 'minor';
+    }>;
+    extractedColors?: {
+      headerBgColor?: string;
+      headerTextColor?: string;
+      buttonColor?: string;
+      logoUrl?: string;
+    };
+  };
+}
+
+export const headerRefinementApi = {
+  async refineCapture(
+    originalScreenshot: string,
+    capturedHeaderHtml: string,
+    capturedFooterHtml: string,
+    capturedCss: string,
+    sourceUrl: string,
+    signal?: AbortSignal
+  ): Promise<RefineHeaderResponse> {
+    const { data, error } = await supabase.functions.invoke('refine-header-capture', {
+      body: { originalScreenshot, capturedHeaderHtml, capturedFooterHtml, capturedCss, sourceUrl },
+      ...(signal ? { signal } : {}),
+    });
+
+    if (error) {
+      if (signal?.aborted) return { success: false, error: 'Cancelled' };
+      return { success: false, error: error.message };
+    }
+
+    return data;
+  },
+};
+
 export interface CompareFormResponse {
+  success: boolean;
+  error?: string;
+  data?: {
+    matchScore: number;
+    differences: Array<{
+      element: string;
+      issue: string;
+      severity: 'critical' | 'major' | 'minor';
+    }>;
+    cssFixes: string;
+    fontFix?: {
+      fontFamily?: string;
+      googleFontsUrl?: string;
+    };
+    colorFixes?: Record<string, string>;
+    typographyFixes?: Record<string, string>;
+    spacingFixes?: Record<string, string>;
+  };
+}
   success: boolean;
   error?: string;
   data?: {
