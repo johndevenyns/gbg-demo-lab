@@ -47,7 +47,7 @@ const industryLabels: Record<IndustryTemplate, string> = {
 };
 
 // Logo thumbnail for demo cards
-function DemoLogo({ url, fallbackColor, fallbackIcon }: { url?: string | null; fallbackColor: string; fallbackIcon: React.ReactNode }) {
+function DemoLogo({ url, fallbackColor, fallbackIcon, headerBgColor }: { url?: string | null; fallbackColor: string; fallbackIcon: React.ReactNode; headerBgColor?: string }) {
   const [hasError, setHasError] = useState(false);
   
   if (!url || hasError) {
@@ -62,11 +62,14 @@ function DemoLogo({ url, fallbackColor, fallbackIcon }: { url?: string | null; f
   }
   
   return (
-    <div className="w-10 h-10 rounded-lg border border-border bg-white flex items-center justify-center overflow-hidden">
+    <div 
+      className="w-10 h-10 rounded-lg border border-border flex items-center justify-center overflow-hidden"
+      style={{ backgroundColor: headerBgColor || '#ffffff' }}
+    >
       <img 
         src={url} 
         alt="Customer logo" 
-        className="max-w-full max-h-full object-contain"
+        className="max-w-full max-h-full object-contain p-1"
         onError={() => setHasError(true)}
       />
     </div>
