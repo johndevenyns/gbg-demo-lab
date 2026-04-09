@@ -544,7 +544,6 @@ export default function DemoPreview() {
                   body { margin: 0; padding: 0; overflow: hidden; width: 100%; }
                   html { overflow: hidden; }
                   a { pointer-events: none; }
-                  /* Ensure header fills width */
                   body > header, body > [class*="header"], body > nav, body > div {
                     width: 100%;
                     max-width: 100%;
@@ -552,77 +551,6 @@ export default function DemoPreview() {
                   ${ctaLinks.map(l => `${l.cssSelector} { pointer-events: auto !important; cursor: pointer !important; }`).join('\n')}
                 </style>
                 ${previewDocument.cssContent ? `<style>${previewDocument.cssContent}</style>` : ''}
-                <script>
-                  document.addEventListener('DOMContentLoaded', function() {
-                    // Smart layout fallback for headers where original CSS doesn't apply
-                    var header = document.querySelector('header') || document.body.firstElementChild;
-                    if (!header) return;
-
-                    // Find nav containers that should be horizontal
-                    var navs = header.querySelectorAll('nav, [class*="nav"], [class*="menu"]');
-                    for (var n = 0; n < navs.length; n++) {
-                      var nav = navs[n];
-                      var style = window.getComputedStyle(nav);
-                      // If a nav with multiple links is stacking vertically, fix it
-                      var links = nav.querySelectorAll('a, button');
-                      if (links.length >= 3 && style.display !== 'flex' && style.display !== 'grid' && style.display !== 'inline-flex') {
-                        // Check if children are stacked (total height > 2x single item)
-                        var firstLink = links[0];
-                        var lastLink = links[links.length - 1];
-                        var firstRect = firstLink.getBoundingClientRect();
-                        var lastRect = lastLink.getBoundingClientRect();
-                        if (lastRect.top > firstRect.bottom + 10) {
-                          // Links are stacked — apply horizontal layout
-                          nav.style.display = 'flex';
-                          nav.style.flexWrap = 'wrap';
-                          nav.style.alignItems = 'center';
-                          nav.style.gap = '0.5rem';
-                        }
-                      }
-                    }
-
-                    // Fix the main header container if logo + nav are stacked
-                    var candidates = [header];
-                    var directDivs = header.children;
-                    for (var d = 0; d < directDivs.length; d++) candidates.push(directDivs[d]);
-
-                    for (var i = 0; i < candidates.length; i++) {
-                      var c = candidates[i];
-                      var children = c.children;
-                      if (children.length < 2 || children.length > 8) continue;
-
-                      var cStyle = window.getComputedStyle(c);
-                      if (cStyle.display === 'flex' || cStyle.display === 'grid' || cStyle.display === 'inline-flex') continue;
-
-                      // Check if children contain both logo-like and nav-like elements
-                      var hasLogo = false;
-                      var hasNav = false;
-                      for (var j = 0; j < children.length; j++) {
-                        var child = children[j];
-                        var cn = (child.className || '').toLowerCase() + ' ' + (child.tagName || '').toLowerCase();
-                        if (cn.match(/logo|brand|site-name|identity/) || child.querySelector('img[src*="logo"], svg')) hasLogo = true;
-                        if (cn.match(/nav|menu|links/) || child.tagName === 'NAV' || child.querySelectorAll('a').length >= 3) hasNav = true;
-                      }
-
-                      if (hasLogo && hasNav) {
-                        c.style.display = 'flex';
-                        c.style.alignItems = 'center';
-                        c.style.justifyContent = 'space-between';
-                        c.style.width = '100%';
-                        if (!c.style.padding || c.style.padding === '0px') {
-                          c.style.padding = '0.75rem 1.5rem';
-                        }
-                        break;
-                      }
-                    }
-
-                    // Recalculate height
-                    try {
-                      var h = document.body.scrollHeight || document.documentElement.scrollHeight;
-                      window.parent.postMessage({type:'headerHeight', height: h}, '*');
-                    } catch(e) {}
-                  });
-                </script>
               </head>
               <body>
                 ${previewDocument.headerHtml}
@@ -675,7 +603,6 @@ export default function DemoPreview() {
                       var key = m.selector;
                       var els = document.querySelectorAll(key);
                       if (els.length === 0) continue;
-
                       var matchingEls = [];
                       if (m.label) {
                         for (var j = 0; j < els.length; j++) {
@@ -684,14 +611,12 @@ export default function DemoPreview() {
                           }
                         }
                       }
-
                       if (matchingEls.length > 0) {
                         for (var k = 0; k < matchingEls.length; k++) {
                           matchingEls[k].setAttribute('data-cta-uc', m.useCaseId);
                         }
                         continue;
                       }
-
                       if (!selectorIndex[key]) selectorIndex[key] = 0;
                       var idx = selectorIndex[key];
                       while (idx < els.length && els[idx].getAttribute('data-cta-uc')) {
@@ -713,6 +638,15 @@ export default function DemoPreview() {
                   }, true);
                 </script>
                 ` : ''}
+                <script>
+                  // Report height to parent
+                  setTimeout(function() {
+                    try {
+                      var h = document.body.scrollHeight || document.documentElement.scrollHeight;
+                      window.parent.postMessage({type:'headerHeight', height: h}, '*');
+                    } catch(e) {}
+                  }, 100);
+                </script>
               </body>
             </html>
           `}
