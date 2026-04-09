@@ -113,6 +113,39 @@ ${footerHtml ? `Partial captured footer:\n\`\`\`html\n${footerHtml}\n\`\`\`` : '
 
 Generate clean header and footer HTML with inline styles that matches the screenshot.`;
 
+    // Ensure screenshot is base64 data, not a URL
+    let screenshotDataUrl = originalScreenshot;
+    if (originalScreenshot.startsWith('http://') || originalScreenshot.startsWith('https://')) {
+      try {
+        console.log('Screenshot is a URL, fetching and converting to base64...');
+        const imgResp = await fetch(originalScreenshot);
+        if (!imgResp.ok) {
+          console.error('Failed to fetch screenshot URL:', imgResp.status);
+          return new Response(
+            JSON.stringify({ success: false, error: 'Failed to fetch screenshot image from URL', fallback: true }),
+            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+        const imgBuffer = await imgResp.arrayBuffer();
+        const uint8 = new Uint8Array(imgBuffer);
+        let binary = '';
+        for (let i = 0; i < uint8.length; i++) {
+          binary += String.fromCharCode(uint8[i]);
+        }
+        const base64 = btoa(binary);
+        const contentType = imgResp.headers.get('content-type') || 'image/png';
+        screenshotDataUrl = `data:${contentType};base64,${base64}`;
+      } catch (fetchErr) {
+        console.error('Error fetching screenshot URL:', fetchErr);
+        return new Response(
+          JSON.stringify({ success: false, error: 'Could not download screenshot image', fallback: true }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    } else if (!originalScreenshot.startsWith('data:')) {
+      screenshotDataUrl = `data:image/png;base64,${originalScreenshot}`;
+    }
+
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -129,7 +162,7 @@ Generate clean header and footer HTML with inline styles that matches the screen
               { type: 'text', text: userContent },
               {
                 type: 'image_url',
-                image_url: { url: originalScreenshot.startsWith('data:') ? originalScreenshot : `data:image/png;base64,${originalScreenshot}` },
+                image_url: { url: screenshotDataUrl },
               },
             ],
           },
