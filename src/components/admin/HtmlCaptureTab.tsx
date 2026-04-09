@@ -178,12 +178,17 @@ export function HtmlCaptureTab({ demo, url, onUrlChange, onApply, isConfigured, 
             if (hasHeader) parts.push("header");
             if (hasFooter) parts.push("footer");
             if (hasCss) parts.push("CSS");
+            if (hasScreenshot && !hasHeader) parts.push("screenshot");
 
-            toast({ title: "Site Fetched", description: `Extracted ${parts.join(", ")}. Running AI refinement...` });
+            const willRefine = hasScreenshot;
+            toast({ title: "Site Fetched", description: willRefine 
+              ? `Extracted ${parts.join(", ")}. Running AI refinement...` 
+              : `Extracted ${parts.join(", ")}.` 
+            });
 
             // Auto-refine with AI if we have a screenshot (even if header is empty - AI can generate from screenshot)
-            if (d.screenshot) {
-              setFetchProgress('Refining capture with AI vision...');
+            if (willRefine) {
+              setFetchProgress(hasHeader ? 'Comparing capture to screenshot...' : 'Generating header from screenshot with AI...');
               setIsRefining(true);
               try {
                 const refinement = await headerRefinementApi.refineCapture(
