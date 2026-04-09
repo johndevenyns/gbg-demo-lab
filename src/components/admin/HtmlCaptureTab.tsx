@@ -144,6 +144,8 @@ export function HtmlCaptureTab({ demo, url, onUrlChange, onApply, isConfigured, 
       const controller = new AbortController();
       abortControllerRef.current = controller;
       setIsLoading(true);
+      setFetchProgress('Fetching site content...');
+      setRefinementScore(null);
       try {
       const response = await scrapingApi.scrapeSiteBranding(url, controller.signal);
         if (controller.signal.aborted) return;
@@ -153,8 +155,10 @@ export function HtmlCaptureTab({ demo, url, onUrlChange, onApply, isConfigured, 
           const hasFooter = !!(d.footerHtml && d.footerHtml.trim().length > 0);
           const hasCss = !!(d.cssContent && d.cssContent.trim().length > 0);
 
+          // Notify parent about unified fetch data (screenshots, branding, etc.)
+          onUnifiedFetchComplete?.(d);
+
           if (!hasHeader && !hasFooter && !hasCss) {
-            // Got a response but nothing useful was extracted
             setScrapedData(null);
             toast({
               title: "No Content Extracted",
@@ -163,26 +167,77 @@ export function HtmlCaptureTab({ demo, url, onUrlChange, onApply, isConfigured, 
             });
           } else {
             setScrapedData(d);
-            // Populate editors
             setEditedHeaderHtml(d.headerHtml || '');
             setEditedFooterHtml(d.footerHtml || '');
             setEditedCss(d.cssContent || '');
             setHasEdits(false);
+
             const parts: string[] = [];
             if (hasHeader) parts.push("header");
             if (hasFooter) parts.push("footer");
             if (hasCss) parts.push("CSS");
-            const missing: string[] = [];
-            if (!hasHeader) missing.push("header");
-            if (!hasFooter) missing.push("footer");
 
-            if (missing.length > 0) {
-              toast({
-                title: "Partial Extraction",
-                description: `Extracted ${parts.join(", ")} but could not find: ${missing.join(", ")}. The site may lack semantic <header>/<footer> tags.`,
-              });
-            } else {
-              toast({ title: "Site Fetched", description: `Header, footer, and CSS extracted successfully (${(d.cssContent?.length || 0).toLocaleString()} chars of CSS)` });
+            toast({ title: "Site Fetched", description: `Extracted ${parts.join(", ")}. Running AI refinement...` });
+
+            // Auto-refine with AI if we have a screenshot
+            if (d.screenshot && hasHeader) {
+              setFetchProgress('Refining capture with AI vision...');
+              setIsRefining(true);
+              try {
+                const refinement = await headerRefinementApi.refineCapture(
+                  d.screenshot,
+                  d.headerHtml || '',
+                  d.footerHtml || '',
+                  d.cssContent || '',
+                  url,
+                  controller.signal
+                );
+                if (controller.signal.aborted) return;
+                if (refinement.success && refinement.data) {
+                  const r = refinement.data;
+                  setRefinementScore(r.matchScore);
+                  
+                  // Apply refined HTML and CSS
+                  const refinedHeader = r.refinedHeaderHtml || d.headerHtml || '';
+                  const refinedFooter = r.refinedFooterHtml || d.footerHtml || '';
+                  const refinedCss = r.additionalCss 
+                    ? (d.cssContent || '') + '\n/* AI Refinement */\n' + r.additionalCss
+                    : d.cssContent || '';
+                  
+                  setEditedHeaderHtml(refinedHeader);
+                  setEditedFooterHtml(refinedFooter);
+                  setEditedCss(refinedCss);
+                  setHasEdits(true);
+
+                  // Update scraped data with refined content
+                  const refinedData = {
+                    ...d,
+                    headerHtml: refinedHeader,
+                    footerHtml: refinedFooter,
+                    cssContent: refinedCss,
+                  };
+                  // Also update colors if AI extracted better ones
+                  if (r.extractedColors) {
+                    if (r.extractedColors.headerBgColor) refinedData.colors.headerBgColor = r.extractedColors.headerBgColor;
+                    if (r.extractedColors.headerTextColor) refinedData.colors.headerTextColor = r.extractedColors.headerTextColor;
+                    if (r.extractedColors.buttonColor) refinedData.colors.buttonColor = r.extractedColors.buttonColor;
+                  }
+                  setScrapedData(refinedData);
+
+                  const changeCount = r.changes?.length || 0;
+                  toast({
+                    title: `AI Refined — ${r.matchScore}% Match`,
+                    description: `Applied ${changeCount} correction${changeCount !== 1 ? 's' : ''} to improve visual accuracy.`,
+                  });
+                } else {
+                  console.warn('AI refinement failed:', refinement.error);
+                  toast({ title: "Refinement Skipped", description: refinement.error || "AI could not refine the capture. Using raw extraction." });
+                }
+              } catch (refineErr) {
+                console.warn('AI refinement error:', refineErr);
+              } finally {
+                setIsRefining(false);
+              }
             }
           }
         } else {
@@ -210,7 +265,10 @@ export function HtmlCaptureTab({ demo, url, onUrlChange, onApply, isConfigured, 
           variant: "destructive",
         });
       } finally {
-        if (!controller.signal.aborted) setIsLoading(false);
+        if (!controller.signal.aborted) {
+          setIsLoading(false);
+          setFetchProgress('');
+        }
         abortControllerRef.current = null;
       }
     };
