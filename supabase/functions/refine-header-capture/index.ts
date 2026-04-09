@@ -31,33 +31,26 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log('Refining header capture with AI vision...');
-    console.log('Header HTML length:', capturedHeaderHtml?.length || 0);
-    console.log('Footer HTML length:', capturedFooterHtml?.length || 0);
+    const hasHeader = capturedHeaderHtml && capturedHeaderHtml.trim().length > 50;
+    const hasFooter = capturedFooterHtml && capturedFooterHtml.trim().length > 50;
 
-    // Truncate HTML to fit context - keep the most important parts
+    console.log('Refining header capture with AI vision...');
+    console.log('Header HTML length:', capturedHeaderHtml?.length || 0, 'has substantial header:', hasHeader);
+    console.log('Footer HTML length:', capturedFooterHtml?.length || 0, 'has substantial footer:', hasFooter);
+
     const maxHtmlLen = 15000;
     const headerHtml = (capturedHeaderHtml || '').substring(0, maxHtmlLen);
     const footerHtml = (capturedFooterHtml || '').substring(0, maxHtmlLen);
     const css = (capturedCss || '').substring(0, 5000);
 
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          {
-            role: 'system',
-            content: `You are an expert at HTML/CSS header and footer reproduction. You will be shown a screenshot of the ORIGINAL website. Your job is to analyze the captured HTML and CSS, compare it to the screenshot, and provide corrected HTML and CSS that makes the captured version look identical to the original.
+    // Different prompts depending on whether we have existing HTML or need to generate from scratch
+    const systemPrompt = hasHeader
+      ? `You are an expert at HTML/CSS header and footer reproduction. You will be shown a screenshot of the ORIGINAL website and the captured HTML/CSS. Your job is to compare them and provide corrected HTML and CSS that makes the captured version look identical to the original.
 
 Key focus areas:
 - Background colors must match exactly (use the screenshot to determine exact colors)
 - Logo positioning and sizing
-- Navigation link colors, fonts, and spacing  
+- Navigation link colors, fonts, and spacing
 - Overall layout structure (flex, grid, alignment)
 - Font families, sizes, and weights
 - Padding and margins
@@ -71,15 +64,30 @@ IMPORTANT RULES:
 - Keep data-original-href attributes on links
 - The HTML will be rendered in an iframe - make it self-contained
 - Focus on the HEADER (top navigation area) and FOOTER only
-- If the header background should be a specific color (e.g., blue for FanDuel), ensure that color is applied
+- If the header background should be a specific color, ensure that color is applied
 - Add any missing font imports as @import rules in CSS`
-          },
-          {
-            role: 'user',
-            content: [
-              {
-                type: 'text',
-                text: `Here is a screenshot of the original website (${sourceUrl || 'unknown URL'}). Compare it to the captured HTML below and provide corrected versions that match the screenshot exactly.
+      : `You are an expert at HTML/CSS header and footer reproduction. You will be shown a screenshot of the ORIGINAL website. Since the automated HTML capture failed or produced minimal content, your job is to GENERATE clean, accurate header and footer HTML from the screenshot.
+
+Your task:
+1. Look at the screenshot carefully and identify the header/navigation area and footer area
+2. Generate semantic HTML that visually reproduces what you see
+3. Include inline styles for colors, fonts, layout, spacing
+4. Use flexbox for layout
+5. For logos, use an <img> tag with the site's likely logo URL (based on the source URL domain)
+6. For navigation links, create <a> tags with the visible text
+7. Match colors, backgrounds, fonts as closely as possible to the screenshot
+
+IMPORTANT RULES:
+- Generate self-contained HTML with inline styles
+- Use absolute positioning/flexbox for layout matching
+- Include @import for Google Fonts if you can identify the font from the screenshot
+- Set exact background colors you see in the screenshot
+- The HTML will be rendered in an iframe
+- Make links non-functional (add data-original-href instead of href)
+- If the site URL is known, use it to construct likely logo/asset URLs`;
+
+    const userContent = hasHeader
+      ? `Here is a screenshot of the original website (${sourceUrl || 'unknown URL'}). Compare it to the captured HTML below and provide corrected versions that match the screenshot exactly.
 
 CAPTURED HEADER HTML:
 \`\`\`html
@@ -96,8 +104,29 @@ CAPTURED CSS:
 ${css}
 \`\`\`
 
-Analyze the screenshot and fix the HTML/CSS so the rendered result matches the original site's appearance. Return corrected header HTML, footer HTML, and additional CSS.`
-              },
+Analyze the screenshot and fix the HTML/CSS so the rendered result matches the original site's appearance.`
+      : `Here is a screenshot of the original website (${sourceUrl || 'unknown URL'}). The automated HTML capture failed to extract meaningful header/footer content. Please GENERATE header and footer HTML from the screenshot that reproduces what you see.
+
+${headerHtml ? `Partial captured header (may be incomplete/broken):\n\`\`\`html\n${headerHtml}\n\`\`\`` : 'No header HTML was captured.'}
+
+${footerHtml ? `Partial captured footer:\n\`\`\`html\n${footerHtml}\n\`\`\`` : 'No footer HTML was captured.'}
+
+Generate clean header and footer HTML with inline styles that matches the screenshot.`;
+
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          {
+            role: 'user',
+            content: [
+              { type: 'text', text: userContent },
               {
                 type: 'image_url',
                 image_url: { url: originalScreenshot.startsWith('data:') ? originalScreenshot : `data:image/png;base64,${originalScreenshot}` },
@@ -110,21 +139,21 @@ Analyze the screenshot and fix the HTML/CSS so the rendered result matches the o
             type: 'function',
             function: {
               name: 'report_refined_capture',
-              description: 'Report the refined header/footer HTML and CSS corrections',
+              description: 'Report the refined/generated header/footer HTML and CSS',
               parameters: {
                 type: 'object',
                 properties: {
                   refinedHeaderHtml: {
                     type: 'string',
-                    description: 'The corrected header HTML. Keep existing inline styles but wrap in a container if needed. If no changes needed, return the original.',
+                    description: 'The corrected or generated header HTML with inline styles. Must be self-contained and renderable in an iframe.',
                   },
                   refinedFooterHtml: {
                     type: 'string',
-                    description: 'The corrected footer HTML. If no changes needed, return the original.',
+                    description: 'The corrected or generated footer HTML. If no footer visible in screenshot, return empty string.',
                   },
                   additionalCss: {
                     type: 'string',
-                    description: 'Additional CSS rules to add/override for correct appearance. Include @import for fonts if needed. Use specific selectors that target header/footer elements.',
+                    description: 'Additional CSS rules including @import for fonts. Use specific selectors.',
                   },
                   matchScore: {
                     type: 'number',
@@ -141,7 +170,7 @@ Analyze the screenshot and fix the HTML/CSS so the rendered result matches the o
                       },
                       required: ['element', 'change', 'severity'],
                     },
-                    description: 'List of changes made to improve accuracy',
+                    description: 'List of changes made or elements generated',
                   },
                   extractedColors: {
                     type: 'object',
@@ -194,7 +223,7 @@ Analyze the screenshot and fix the HTML/CSS so the rendered result matches the o
       );
     }
 
-    console.log(`Refinement complete: ${result.matchScore}% match, ${result.changes?.length || 0} changes applied`);
+    console.log(`Refinement complete: ${result.matchScore}% match, ${result.changes?.length || 0} changes, mode: ${hasHeader ? 'refine' : 'generate'}`);
 
     return new Response(
       JSON.stringify({ success: true, data: result }),

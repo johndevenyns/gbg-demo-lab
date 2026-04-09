@@ -158,11 +158,13 @@ export function HtmlCaptureTab({ demo, url, onUrlChange, onApply, isConfigured, 
           // Notify parent about unified fetch data (screenshots, branding, etc.)
           onUnifiedFetchComplete?.(d);
 
-          if (!hasHeader && !hasFooter && !hasCss) {
+          const hasScreenshot = !!d.screenshot;
+
+          if (!hasHeader && !hasFooter && !hasCss && !hasScreenshot) {
             setScrapedData(null);
             toast({
               title: "No Content Extracted",
-              description: "The site was reached but no header, footer, or CSS could be extracted. The site may use JavaScript rendering, block automated access, or lack semantic HTML elements.",
+              description: "The site was reached but no header, footer, CSS, or screenshot could be extracted. The site may block automated access.",
               variant: "destructive",
             });
           } else {
@@ -176,12 +178,17 @@ export function HtmlCaptureTab({ demo, url, onUrlChange, onApply, isConfigured, 
             if (hasHeader) parts.push("header");
             if (hasFooter) parts.push("footer");
             if (hasCss) parts.push("CSS");
+            if (hasScreenshot && !hasHeader) parts.push("screenshot");
 
-            toast({ title: "Site Fetched", description: `Extracted ${parts.join(", ")}. Running AI refinement...` });
+            const willRefine = hasScreenshot;
+            toast({ title: "Site Fetched", description: willRefine 
+              ? `Extracted ${parts.join(", ")}. Running AI refinement...` 
+              : `Extracted ${parts.join(", ")}.` 
+            });
 
-            // Auto-refine with AI if we have a screenshot
-            if (d.screenshot && hasHeader) {
-              setFetchProgress('Refining capture with AI vision...');
+            // Auto-refine with AI if we have a screenshot (even if header is empty - AI can generate from screenshot)
+            if (willRefine) {
+              setFetchProgress(hasHeader ? 'Comparing capture to screenshot...' : 'Generating header from screenshot with AI...');
               setIsRefining(true);
               try {
                 const refinement = await headerRefinementApi.refineCapture(
