@@ -705,13 +705,11 @@ export default function DemoPreview() {
                   body { margin: 0; padding: 0; overflow: hidden; width: 100%; }
                   html { overflow: hidden; }
                   a { pointer-events: none; }
-                  footer, [class*="footer"] {
+                  /* Ensure footer fills width without overriding internal layout */
+                  body > footer, body > [class*="footer"], body > div {
                     width: 100%;
                     max-width: 100%;
                   }
-                  /* Preserve common layout patterns */
-                  footer ul { list-style: none; margin: 0; padding: 0; }
-                  footer a { text-decoration: none; color: inherit; }
                 </style>
                 ${previewDocument.cssContent ? `<style>${previewDocument.cssContent}</style>` : ''}
               </head>
