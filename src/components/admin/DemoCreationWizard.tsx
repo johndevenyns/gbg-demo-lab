@@ -235,6 +235,21 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
                 footerHtml: refineResult.data.refinedFooterHtml || refinedHtml?.footerHtml || '',
                 css: (refinedHtml?.css || '') + '\n' + (refineResult.data.additionalCss || ''),
               };
+              // Override colors with AI-extracted ones if available
+              if (refineResult.data.extractedColors && scrapedData) {
+                if (refineResult.data.extractedColors.headerBgColor) {
+                  scrapedData.colors.headerBgColor = refineResult.data.extractedColors.headerBgColor;
+                }
+                if (refineResult.data.extractedColors.headerTextColor) {
+                  scrapedData.colors.headerTextColor = refineResult.data.extractedColors.headerTextColor;
+                }
+                if (refineResult.data.extractedColors.buttonColor) {
+                  scrapedData.colors.buttonColor = refineResult.data.extractedColors.buttonColor;
+                }
+                if (refineResult.data.extractedColors.logoUrl) {
+                  scrapedData.logoUrl = refineResult.data.extractedColors.logoUrl;
+                }
+              }
             }
             updateTaskStatus('refine-html', 'complete');
           } catch (e) {
