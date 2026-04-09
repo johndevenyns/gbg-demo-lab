@@ -568,8 +568,8 @@ Deno.serve(async (req) => {
             mobile: mobileScreenshot,
           },
           colors: {
-            headerBgColor: colors.background || colors.primary || '#1a1a2e',
-            headerTextColor: colors.textPrimary || '#ffffff',
+            headerBgColor: jsExtracted?.headerBgColor || colors.background || colors.primary || '#1a1a2e',
+            headerTextColor: jsExtracted?.headerTextColor || colors.textPrimary || '#ffffff',
             buttonColor: colors.primary || colors.accent || '#6366f1',
           },
           branding,
