@@ -37,7 +37,7 @@ const sections: { id: ConfigSection; label: string; icon: React.ElementType; des
   { id: 'settings', label: 'Site Settings', icon: Settings, description: 'Core configuration' },
   { id: 'mirror', label: 'Appearance', icon: Globe, description: 'Site & form styling' },
   { id: 'branding', label: 'Mobile Branding', icon: Palette, description: 'Colors & logo' },
-  { id: 'use-cases', label: 'Use Cases', icon: Briefcase, description: 'Journeys & form builder' },
+  { id: 'use-cases', label: 'Use Cases', icon: Briefcase, description: 'Journeys & workflow builder' },
   { id: 'users', label: 'Demo Users', icon: Users, description: 'Manage demo user accounts' },
 ];
 

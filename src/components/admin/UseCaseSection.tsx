@@ -344,7 +344,7 @@ export function UseCaseSection({ demoId, demo, onUpdateDemo }: UseCaseSectionPro
                               }}
                             >
                               <Layout className="w-3.5 h-3.5" />
-                              {isBuilderActive ? 'Close Form Builder' : 'Edit Form Steps'}
+                              {isBuilderActive ? 'Close Workflow Builder' : 'Edit Form Steps'}
                               {link.formStepsOverride && (
                                 <Badge variant="outline" className="text-[9px] ml-1">Overridden</Badge>
                               )}
