@@ -467,6 +467,8 @@ export interface FormStep {
   titleAlignment?: 'left' | 'center' | 'right'; // Horizontal alignment of step title
   description?: string;
   order: number;
+  // Layout columns for form fields (1 = single column, 2 = two columns side-by-side)
+  columns?: 1 | 2;
   // Step type - determines rendering behavior
   stepType?: FormStepType;
   // Submit action - special behavior on step submission
