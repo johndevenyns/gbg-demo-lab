@@ -723,15 +723,18 @@ export default function DemoPreview() {
                 </style>
                 <script>
                   document.addEventListener('DOMContentLoaded', function() {
-                    // Find the main footer container
-                    var footer = document.querySelector('footer') || document.querySelector('[class*="footer"]') || document.body.firstElementChild;
+                    // Find the innermost footer element
+                    var footers = document.querySelectorAll('footer');
+                    var footer = footers.length > 1 ? footers[footers.length - 1] : (footers[0] || document.body.firstElementChild);
                     if (!footer) return;
 
-                    // Check all container divs inside footer for ones that have many block children
-                    // and appear to be single-column when they should be multi-column
-                    var containers = footer.querySelectorAll('div');
-                    for (var i = 0; i < containers.length; i++) {
-                      var c = containers[i];
+                    // Look for a container div that has 3+ children which look like footer columns
+                    var candidates = [footer];
+                    var divs = footer.querySelectorAll('div');
+                    for (var d = 0; d < divs.length; d++) candidates.push(divs[d]);
+
+                    for (var i = 0; i < candidates.length; i++) {
+                      var c = candidates[i];
                       var children = c.children;
                       if (children.length < 3) continue;
 
@@ -739,34 +742,46 @@ export default function DemoPreview() {
                       var isRow = style.display === 'flex' || style.display === 'grid' || style.display === 'inline-flex';
                       if (isRow) continue;
 
-                      // Count how many children are block-level divs/sections with text content
-                      var blockChildren = 0;
-                      var hasHeading = false;
+                      // Heuristic: children with class names suggesting columns/sections
+                      var sectionLikeChildren = 0;
+                      var hasListOrLinks = false;
                       for (var j = 0; j < children.length; j++) {
                         var child = children[j];
-                        var cs = window.getComputedStyle(child);
-                        if (cs.display === 'block' || cs.display === 'list-item') {
-                          blockChildren++;
+                        var cn = (child.className || '').toLowerCase();
+                        if (cn.match(/section|column|col|link|group|category|nav/)) {
+                          sectionLikeChildren++;
                         }
-                        if (child.querySelector && child.querySelector('h2,h3,h4,h5,h6,strong,b')) {
-                          hasHeading = true;
+                        // Also check if child has a list of links (typical footer column)
+                        var links = child.querySelectorAll ? child.querySelectorAll('a') : [];
+                        if (links.length >= 2) hasListOrLinks = true;
+                        // Check for heading-like elements
+                        if (child.querySelector && child.querySelector('h1,h2,h3,h4,h5,h6,strong,b,[class*="title"],[class*="heading"],[class*="name"]')) {
+                          sectionLikeChildren++;
                         }
                       }
 
-                      // If we have 3+ block children with headings, this looks like a footer column container
-                      if (blockChildren >= 3 && hasHeading) {
+                      // If we found a likely column container
+                      if ((sectionLikeChildren >= 3) || (children.length >= 4 && hasListOrLinks)) {
                         c.style.display = 'flex';
                         c.style.flexWrap = 'wrap';
                         c.style.gap = '2rem';
                         c.style.justifyContent = 'space-between';
                         c.style.width = '100%';
-                        c.style.padding = c.style.padding || '1.5rem';
-                        // Give each child a min-width for columns
-                        for (var k = 0; k < children.length; k++) {
-                          children[k].style.minWidth = '150px';
-                          children[k].style.flex = '1 1 auto';
+                        if (!c.style.padding || c.style.padding === '0px') {
+                          c.style.padding = '1.5rem';
                         }
-                        break; // Only fix the first matching container
+                        for (var k = 0; k < children.length; k++) {
+                          var ch = children[k];
+                          ch.style.minWidth = '140px';
+                          ch.style.flex = '1 1 auto';
+                          ch.style.maxWidth = '250px';
+                        }
+                        // Recalculate iframe height after layout fix
+                        try {
+                          var newHeight = document.body.scrollHeight;
+                          window.parent.postMessage({type:'footerHeight', height: newHeight}, '*');
+                        } catch(e) {}
+                        break;
                       }
                     }
                   });
