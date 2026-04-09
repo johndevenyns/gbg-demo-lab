@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DemoUseCaseLink } from "@/types/useCase";
 import { HeaderCtaLink, useHeaderCtaLinks, useAddHeaderCtaLink, useDeleteHeaderCtaLink } from "@/hooks/useHeaderCtaLinks";
+import { enhanceHeaderPreviewIframe } from "@/lib/iframeContrast";
 
 interface HeaderElementPickerProps {
   demoId: string;
@@ -248,13 +249,7 @@ export function HeaderElementPicker({
           title="Header element picker"
           sandbox="allow-same-origin"
           onLoad={(e) => {
-            const iframe = e.target as HTMLIFrameElement;
-            try {
-              const height = iframe.contentDocument?.body?.scrollHeight || 120;
-              iframe.style.height = `${height}px`;
-            } catch {
-              iframe.style.height = "80px";
-            }
+            enhanceHeaderPreviewIframe(e.currentTarget, 80);
             handleIframeLoad();
           }}
         />
