@@ -155,7 +155,7 @@ function LogoPreview({ url, size = 'lg', bgColor }: { url?: string | null; size?
      <div className="space-y-6">
        {/* Active Logo Preview */}
        <div className="flex items-start gap-4 p-4 rounded-lg bg-muted/30 border border-border">
-         <LogoPreview url={activeLogoUrl} size="lg" />
+         <LogoPreview url={activeLogoUrl} size="lg" bgColor={demo.headerBgColor} />
          <div className="flex-1 min-w-0">
            <Label className="text-sm font-medium">Active Logo</Label>
            <p className="text-sm text-muted-foreground mt-1">
