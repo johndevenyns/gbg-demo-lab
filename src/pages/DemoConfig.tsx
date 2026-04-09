@@ -19,8 +19,7 @@ import { UseCaseSection } from "@/components/admin/UseCaseSection";
 import { useDemoUseCaseLinks } from "@/hooks/useUseCases";
 import { useEnabledPortalTypes } from "@/hooks/usePortalTypes";
 
- // Lazy import FormStyleCard to pass into SiteMirrorCard
- import { FormStyleCard } from "@/components/admin/FormStyleCard";
+import { FormStyleCard } from "@/components/admin/FormStyleCard";
 
 import { LogoUploadSection } from "@/components/admin/LogoUploadSection";
 import { BrandingScrapeSection } from "@/components/admin/BrandingScrapeSection";
