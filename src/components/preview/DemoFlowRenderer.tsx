@@ -145,6 +145,7 @@ interface StyledFormFieldsProps {
   style: FormStyleConfig;
   fieldErrors?: Record<string, string>;
   onNavigateToLogin?: () => void;
+  columns?: 1 | 2;
 }
 
 function StyledFormFields({ fields, formData, onInputChange, style, fieldErrors = {}, onNavigateToLogin }: StyledFormFieldsProps) {

@@ -689,6 +689,35 @@ export function FormStepCard({
           ) : (
             <>
               {/* Regular Form Step */}
+              {/* Layout toggle */}
+              <div className="flex items-center gap-3 mb-3">
+                <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Layout</Label>
+                <div className="flex items-center border border-border rounded-md overflow-hidden">
+                  <button
+                    type="button"
+                    className={`px-3 py-1 text-xs font-medium transition-colors ${
+                      (step.columns || 1) === 1
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-background text-muted-foreground hover:bg-accent'
+                    }`}
+                    onClick={() => onUpdateStep({ columns: 1 })}
+                  >
+                    1 Column
+                  </button>
+                  <button
+                    type="button"
+                    className={`px-3 py-1 text-xs font-medium transition-colors ${
+                      step.columns === 2
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-background text-muted-foreground hover:bg-accent'
+                    }`}
+                    onClick={() => onUpdateStep({ columns: 2 })}
+                  >
+                    2 Columns
+                  </button>
+                </div>
+              </div>
+
               {step.fields.length === 0 ? (
                 <div className="border-2 border-dashed border-border rounded-lg p-6 text-center text-muted-foreground">
                   <Type className="w-8 h-8 mx-auto mb-2 opacity-50" />
@@ -699,18 +728,20 @@ export function FormStepCard({
                   items={step.fields.map(f => f.id)}
                   strategy={verticalListSortingStrategy}
                 >
-                  {step.fields.map((field) => (
-                    <SortableField
-                      key={field.id}
-                      field={field}
-                      stepId={step.id}
-                      isAddressValidated={step.addressValidationEnabled}
-                      onRemove={() => onRemoveField(field.id)}
-                      onToggleRequired={() => onToggleFieldRequired(field.id)}
-                      onUpdateLabel={(label) => onUpdateFieldLabel(field.id, label)}
-                      onUpdateContent={(content) => onUpdateFieldContent(field.id, content)}
-                    />
-                  ))}
+                  <div className={step.columns === 2 ? 'grid grid-cols-2 gap-2' : 'space-y-2'}>
+                    {step.fields.map((field) => (
+                      <SortableField
+                        key={field.id}
+                        field={field}
+                        stepId={step.id}
+                        isAddressValidated={step.addressValidationEnabled}
+                        onRemove={() => onRemoveField(field.id)}
+                        onToggleRequired={() => onToggleFieldRequired(field.id)}
+                        onUpdateLabel={(label) => onUpdateFieldLabel(field.id, label)}
+                        onUpdateContent={(content) => onUpdateFieldContent(field.id, content)}
+                      />
+                    ))}
+                  </div>
                 </SortableContext>
               )}
               
