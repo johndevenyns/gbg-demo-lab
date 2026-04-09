@@ -54,9 +54,12 @@ import { Progress } from "@/components/ui/progress";
  }
 
 
-export function HtmlCaptureTab({ demo, url, onUrlChange, onApply, isConfigured }: HtmlCaptureTabProps) {
+export function HtmlCaptureTab({ demo, url, onUrlChange, onApply, isConfigured, onUnifiedFetchComplete }: HtmlCaptureTabProps) {
     const { toast } = useToast();
     const [isLoading, setIsLoading] = useState(false);
+    const [isRefining, setIsRefining] = useState(false);
+    const [refinementScore, setRefinementScore] = useState<number | null>(null);
+    const [fetchProgress, setFetchProgress] = useState<string>('');
     const [scrapedData, setScrapedData] = useState<ScrapedBranding | null>(null);
     const abortControllerRef = useRef<AbortController | null>(null);
     
