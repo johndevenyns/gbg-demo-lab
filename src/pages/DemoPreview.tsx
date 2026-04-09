@@ -712,6 +712,65 @@ export default function DemoPreview() {
                   }
                 </style>
                 ${previewDocument.cssContent ? `<style>${previewDocument.cssContent}</style>` : ''}
+                <style>
+                  /* Fallback multi-column layout for SPA footers where CSS modules don't apply */
+                  /* Only kicks in when the original CSS doesn't provide flex/grid layout */
+                  footer > div, body > footer > div, [class*="footer"] > div {
+                    /* Use display:flex as fallback only if not already set by site CSS */
+                  }
+                  /* Smart fallback: if the footer's direct container has many children stacked vertically,
+                     apply a flex-wrap layout to distribute them into columns */
+                </style>
+                <script>
+                  document.addEventListener('DOMContentLoaded', function() {
+                    // Find the main footer container
+                    var footer = document.querySelector('footer') || document.querySelector('[class*="footer"]') || document.body.firstElementChild;
+                    if (!footer) return;
+
+                    // Check all container divs inside footer for ones that have many block children
+                    // and appear to be single-column when they should be multi-column
+                    var containers = footer.querySelectorAll('div');
+                    for (var i = 0; i < containers.length; i++) {
+                      var c = containers[i];
+                      var children = c.children;
+                      if (children.length < 3) continue;
+
+                      var style = window.getComputedStyle(c);
+                      var isRow = style.display === 'flex' || style.display === 'grid' || style.display === 'inline-flex';
+                      if (isRow) continue;
+
+                      // Count how many children are block-level divs/sections with text content
+                      var blockChildren = 0;
+                      var hasHeading = false;
+                      for (var j = 0; j < children.length; j++) {
+                        var child = children[j];
+                        var cs = window.getComputedStyle(child);
+                        if (cs.display === 'block' || cs.display === 'list-item') {
+                          blockChildren++;
+                        }
+                        if (child.querySelector && child.querySelector('h2,h3,h4,h5,h6,strong,b')) {
+                          hasHeading = true;
+                        }
+                      }
+
+                      // If we have 3+ block children with headings, this looks like a footer column container
+                      if (blockChildren >= 3 && hasHeading) {
+                        c.style.display = 'flex';
+                        c.style.flexWrap = 'wrap';
+                        c.style.gap = '2rem';
+                        c.style.justifyContent = 'space-between';
+                        c.style.width = '100%';
+                        c.style.padding = c.style.padding || '1.5rem';
+                        // Give each child a min-width for columns
+                        for (var k = 0; k < children.length; k++) {
+                          children[k].style.minWidth = '150px';
+                          children[k].style.flex = '1 1 auto';
+                        }
+                        break; // Only fix the first matching container
+                      }
+                    }
+                  });
+                </script>
               </head>
               <body>
                 ${previewDocument.footerHtml}
