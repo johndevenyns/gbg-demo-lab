@@ -131,7 +131,7 @@ const INLINE_STYLES_SCRIPT = `
     }
     
     // Convert SVG use[href] to absolute
-    var uses = clone.querySelectorAll('use[href], use[xlink\\:href]');
+    var uses = clone.querySelectorAll('use[href], use[xlink\\\\:href]');
     for (var u = 0; u < uses.length; u++) {
       var href = uses[u].getAttribute('href') || uses[u].getAttribute('xlink:href');
       if (href && href.startsWith('/')) {
@@ -147,8 +147,8 @@ const INLINE_STYLES_SCRIPT = `
     var allEls = clone.querySelectorAll('*');
     for (var ae = 0; ae < allEls.length; ae++) {
       var st = allEls[ae].getAttribute('style') || '';
-      if (st.includes('url(') && !st.includes('url(data:') && !st.includes('url(http')) {
-        st = st.replace(/url(["']?(\/[^"')]+)["']?)/g, function(m, p1) {
+      if (st.indexOf('url(') !== -1 && st.indexOf('url(data:') === -1 && st.indexOf('url(http') === -1) {
+        st = st.replace(/url\\(\\s*["']?(\\/[^"')\\s]+)["']?\\s*\\)/g, function(m, p1) {
           try { return 'url("' + new URL(p1, window.location.origin).href + '")'; }
           catch(e) { return m; }
         });
