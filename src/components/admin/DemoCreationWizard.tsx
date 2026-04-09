@@ -301,6 +301,7 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
           </div>
         )}
 
+        <div className="flex-1 overflow-y-auto min-h-0">
         {/* Step 1: Customer Details */}
         {step === 'details' && (
           <div className="py-4 space-y-6">
@@ -613,6 +614,7 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
             )}
           </div>
         )}
+        </div>
 
         {/* Navigation */}
         {step !== 'processing' && (
