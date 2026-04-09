@@ -471,8 +471,17 @@ Deno.serve(async (req) => {
     } else {
       // Fallback: regex extraction + full CSS (old method)
       console.log('Falling back to regex extraction method');
+      // Try processed html first, then rawHtml (SPAs may only have header in rawHtml)
       headerHtml = convertRelativeUrls(extractHeader(html), baseUrl);
+      if (!headerHtml && rawHtml !== html) {
+        console.log('No header in processed HTML, trying rawHtml...');
+        headerHtml = convertRelativeUrls(extractHeader(rawHtml), baseUrl);
+      }
       footerHtml = convertRelativeUrls(extractFooter(html), baseUrl);
+      if (!footerHtml && rawHtml !== html) {
+        console.log('No footer in processed HTML, trying rawHtml...');
+        footerHtml = convertRelativeUrls(extractFooter(rawHtml), baseUrl);
+      }
       cssContent = await extractAndInlineCss(rawHtml, baseUrl);
     }
 
