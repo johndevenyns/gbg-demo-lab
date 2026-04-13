@@ -1119,7 +1119,7 @@ export function DemoFlowRenderer({
 
     // Default: show result page
     setFlowComplete(success ? 'success' : 'failure');
-  }, [onComplete, currentStep, executeCreateAccount, formData, onNavigateToPortal, isLastStep]);
+  }, [onComplete, currentStep, executeCreateAccount, formData, onNavigateToPortal, isLastStep, demoId, customerName]);
 
   // Handle address validation dialog proceed
   const handleAddressValidationProceed = useCallback((useOriginal: boolean) => {
