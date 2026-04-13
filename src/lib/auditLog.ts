@@ -63,7 +63,7 @@ export async function logPortalActivity(params: {
   details?: Record<string, unknown>;
 }) {
   try {
-    await supabase.from("portal_activity_logs").insert([{
+    const { error } = await supabase.from("portal_activity_logs").insert([{
       portal_user_id: params.portalUserId ?? null,
       portal_user_email: params.portalUserEmail ?? null,
       demo_id: params.demoId ?? null,
@@ -75,6 +75,9 @@ export async function logPortalActivity(params: {
       verification_result: params.verificationResult ?? null,
       details: (params.details ?? {}) as Json,
     }]);
+    if (error) {
+      console.error("Failed to log portal activity (DB error):", error.message, error.details);
+    }
   } catch (err) {
     console.error("Failed to log portal activity:", err);
   }
