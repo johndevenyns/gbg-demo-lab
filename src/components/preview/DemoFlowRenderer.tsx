@@ -1714,6 +1714,15 @@ export function DemoFlowRenderer({
     
     try {
       console.log('Creating verification session:', { verificationType, customerName, formData, branding: requestBody.branding });
+
+      // Log verification started
+      logPortalActivity({
+        action: 'verification_started',
+        demoId,
+        demoName: customerName,
+        portalUserEmail: formData.email || undefined,
+        verificationType,
+      });
       
       const { data, error: invokeError } = await supabase.functions.invoke('create-verification-session', {
         body: requestBody,
