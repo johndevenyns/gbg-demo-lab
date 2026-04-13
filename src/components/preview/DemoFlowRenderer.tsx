@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { FormStep, PageElement, StepApiResponse, MdlProvider, VerificationType, StoredTestData, FormField, VerificationFlowConfig as VerificationFlowConfigType, DecisionChoice } from '@/types/demo';
+import { logPortalActivity } from '@/lib/auditLog';
 import { FormStyleConfig, DEFAULT_FORM_STYLE } from '@/types/formStyle';
 import { getButtonPadding, getButtonBorderRadius, getButtonFontWeight, getButtonShadow, getReadableTextColor } from '@/lib/formStyleUtils';
 import { UnifiedVerificationConfig, MdlProvider as MdlProviderVerification, transformMdlProviderRow } from '@/types/verification';
@@ -1065,6 +1066,16 @@ export function DemoFlowRenderer({
     if (refId) setReferenceId(refId);
     onComplete?.(success, refId);
 
+    // Log verification completion
+    logPortalActivity({
+      action: success ? 'verification_completed' : 'verification_failed',
+      demoId,
+      demoName: customerName,
+      portalUserEmail: formData.email || undefined,
+      verificationResult: success ? 'pass' : 'fail',
+      details: { referenceId: refId },
+    });
+
     // Process completion actions in order
     const actions = success
       ? currentStep?.stepCompletionConfig?.onSuccess
@@ -1108,7 +1119,7 @@ export function DemoFlowRenderer({
 
     // Default: show result page
     setFlowComplete(success ? 'success' : 'failure');
-  }, [onComplete, currentStep, executeCreateAccount, formData, onNavigateToPortal, isLastStep]);
+  }, [onComplete, currentStep, executeCreateAccount, formData, onNavigateToPortal, isLastStep, demoId, customerName]);
 
   // Handle address validation dialog proceed
   const handleAddressValidationProceed = useCallback((useOriginal: boolean) => {
@@ -1215,6 +1226,15 @@ export function DemoFlowRenderer({
       lastLoginUserData.current = profileData;
       onLoginSuccess?.({ email: portalUser.email, profileData });
 
+      // Log portal login activity
+      logPortalActivity({
+        action: 'login',
+        portalUserId: portalUser.id,
+        portalUserEmail: portalUser.email,
+        demoId,
+        demoName: customerName,
+      });
+
       setIsLoading(false);
       return true;
     } catch (err) {
@@ -1223,7 +1243,7 @@ export function DemoFlowRenderer({
       setIsLoading(false);
       return false;
     }
-  }, [demoId, formData, onLoginSuccess]);
+  }, [demoId, formData, onLoginSuccess, customerName]);
 
   // Validate registration code against portal_users table
   const validateRegistrationCode = useCallback(async (): Promise<boolean> => {
@@ -1694,6 +1714,15 @@ export function DemoFlowRenderer({
     
     try {
       console.log('Creating verification session:', { verificationType, customerName, formData, branding: requestBody.branding });
+
+      // Log verification started
+      logPortalActivity({
+        action: 'verification_started',
+        demoId,
+        demoName: customerName,
+        portalUserEmail: formData.email || undefined,
+        verificationType,
+      });
       
       const { data, error: invokeError } = await supabase.functions.invoke('create-verification-session', {
         body: requestBody,
