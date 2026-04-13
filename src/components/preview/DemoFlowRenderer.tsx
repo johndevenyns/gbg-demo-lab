@@ -152,7 +152,10 @@ interface StyledFormFieldsProps {
 function StyledFormFields({ fields, formData, onInputChange, style, fieldErrors = {}, onNavigateToLogin, columns = 1 }: StyledFormFieldsProps) {
   // Pre-compute readable colors to avoid white-on-white or dark-on-dark issues
   const formBg = style.formBgColor || '#ffffff';
-  const inputBg = style.inputBgColor;
+  // Normalize inputBgColor: CSS keywords like "initial"/"inherit"/"transparent" can't be parsed
+  // for contrast calculation, so fall back to the form background color
+  const rawInputBg = style.inputBgColor;
+  const inputBg = (!rawInputBg || rawInputBg === 'initial' || rawInputBg === 'inherit' || rawInputBg === 'transparent') ? formBg : rawInputBg;
   const readableInputText = ensureReadableColor(style.inputTextColor, inputBg);
   const readableLabelColor = ensureReadableColor(style.labelColor, formBg);
   const readableTitleColor = ensureReadableColor(style.titleColor || style.labelColor, formBg);
