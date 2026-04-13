@@ -148,9 +148,10 @@ export function PortalUserManagement({ demoId }: PortalUserManagementProps) {
         }
       }
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['portal-users'] });
       queryClient.invalidateQueries({ queryKey: ['portal-user-assignments'] });
+      logAdminAction({ action: variables.id ? "update" : "create", entityType: "portal_user", entityLabel: variables.email });
       toast({ title: editingUser ? 'User updated' : 'User created' });
       closeDialog();
     },
