@@ -238,6 +238,7 @@ export default function ReportingPage() {
                       )}
                     </CardContent>
                   </Card>
+                </div>
               </>
             ) : null}
           </TabsContent>
