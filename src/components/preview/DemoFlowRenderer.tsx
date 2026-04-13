@@ -1243,7 +1243,7 @@ export function DemoFlowRenderer({
       setIsLoading(false);
       return false;
     }
-  }, [demoId, formData, onLoginSuccess]);
+  }, [demoId, formData, onLoginSuccess, customerName]);
 
   // Validate registration code against portal_users table
   const validateRegistrationCode = useCallback(async (): Promise<boolean> => {
