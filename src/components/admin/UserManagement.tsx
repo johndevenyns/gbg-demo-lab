@@ -160,8 +160,9 @@ export function UserManagement({ isGlobalAdmin = true }: UserManagementProps) {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
     },
-    onSuccess: () => {
+    onSuccess: (_, deletedUserId) => {
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      logAdminAction({ action: "delete", entityType: "admin_user", entityId: deletedUserId });
       toast({ title: 'Admin removed', description: 'User no longer has admin access.' });
     },
     onError: (error: Error) => {
@@ -182,8 +183,9 @@ export function UserManagement({ isGlobalAdmin = true }: UserManagementProps) {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      logAdminAction({ action: "role_change", entityType: "admin_user", entityId: variables.userId, details: { newRole: variables.role } });
       toast({ title: 'Role updated', description: 'User role has been changed.' });
     },
     onError: (error: Error) => {
