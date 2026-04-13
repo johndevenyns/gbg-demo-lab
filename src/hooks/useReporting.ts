@@ -12,7 +12,9 @@ export function useAdminAuditLogs(limit = 200) {
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "admin_audit_logs" },
         () => {
-          queryClient.invalidateQueries({ queryKey: ["admin-audit-logs"] });
+          setTimeout(() => {
+            queryClient.invalidateQueries({ queryKey: ["admin-audit-logs"] });
+          }, 0);
         }
       )
       .subscribe();
@@ -43,8 +45,10 @@ export function usePortalActivityLogs(limit = 200) {
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "portal_activity_logs" },
         () => {
-          queryClient.invalidateQueries({ queryKey: ["portal-activity-logs"] });
-          queryClient.invalidateQueries({ queryKey: ["portal-user-stats"] });
+          setTimeout(() => {
+            queryClient.invalidateQueries({ queryKey: ["portal-activity-logs"] });
+            queryClient.invalidateQueries({ queryKey: ["portal-user-stats"] });
+          }, 0);
         }
       )
       .subscribe();
