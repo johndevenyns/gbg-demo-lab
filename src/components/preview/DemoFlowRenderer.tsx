@@ -1066,6 +1066,16 @@ export function DemoFlowRenderer({
     if (refId) setReferenceId(refId);
     onComplete?.(success, refId);
 
+    // Log verification completion
+    logPortalActivity({
+      action: success ? 'verification_completed' : 'verification_failed',
+      demoId,
+      demoName: customerName,
+      portalUserEmail: formData.email || undefined,
+      verificationResult: success ? 'pass' : 'fail',
+      details: { referenceId: refId },
+    });
+
     // Process completion actions in order
     const actions = success
       ? currentStep?.stepCompletionConfig?.onSuccess
