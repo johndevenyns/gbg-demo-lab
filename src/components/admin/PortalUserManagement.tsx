@@ -166,9 +166,10 @@ export function PortalUserManagement({ demoId }: PortalUserManagementProps) {
       const { error } = await supabase.from('portal_users').delete().eq('id', id);
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: (_, deletedId) => {
       queryClient.invalidateQueries({ queryKey: ['portal-users'] });
       queryClient.invalidateQueries({ queryKey: ['portal-user-assignments'] });
+      logAdminAction({ action: "delete", entityType: "portal_user", entityId: deletedId });
       toast({ title: 'Portal user deleted' });
     },
   });
