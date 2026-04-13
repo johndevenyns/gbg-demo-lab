@@ -277,6 +277,7 @@ export function UserManagement({ isGlobalAdmin = true }: UserManagementProps) {
       if (data?.error) throw new Error(data.error);
 
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      logAdminAction({ action: "create", entityType: "admin_user", entityLabel: newUserEmail.trim(), details: { role: newUserRole } });
       let msg: string;
       if (data?.created && data?.hadPassword) {
         msg = `Account created for ${newUserEmail} with admin access and the specified password.`;
