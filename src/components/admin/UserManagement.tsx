@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { logAdminAction } from '@/lib/auditLog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -159,8 +160,9 @@ export function UserManagement({ isGlobalAdmin = true }: UserManagementProps) {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
     },
-    onSuccess: () => {
+    onSuccess: (_, deletedUserId) => {
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      logAdminAction({ action: "delete", entityType: "admin_user", entityId: deletedUserId });
       toast({ title: 'Admin removed', description: 'User no longer has admin access.' });
     },
     onError: (error: Error) => {
@@ -181,8 +183,9 @@ export function UserManagement({ isGlobalAdmin = true }: UserManagementProps) {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      logAdminAction({ action: "role_change", entityType: "admin_user", entityId: variables.userId, details: { newRole: variables.role } });
       toast({ title: 'Role updated', description: 'User role has been changed.' });
     },
     onError: (error: Error) => {
@@ -274,6 +277,7 @@ export function UserManagement({ isGlobalAdmin = true }: UserManagementProps) {
       if (data?.error) throw new Error(data.error);
 
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      logAdminAction({ action: "create", entityType: "admin_user", entityLabel: newUserEmail.trim(), details: { role: newUserRole } });
       let msg: string;
       if (data?.created && data?.hadPassword) {
         msg = `Account created for ${newUserEmail} with admin access and the specified password.`;

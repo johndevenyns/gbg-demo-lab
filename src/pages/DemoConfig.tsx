@@ -1,4 +1,5 @@
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
+import { logAdminAction } from "@/lib/auditLog";
 import { ArrowLeft, Save, Eye, Loader2, Settings, Globe, Palette, Calendar, User, PanelLeftClose, PanelLeft, Copy, ExternalLink, Briefcase, Users, MoreVertical, Archive, CopyPlus, Factory } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -256,6 +257,7 @@ export default function DemoConfig() {
     setArchiving(true);
     try {
       await updateDemoMutation.mutateAsync({ id: localDemo.id, updates: { isActive: false } });
+      logAdminAction({ action: "archive", entityType: "demo", entityId: localDemo.id, entityLabel: localDemo.customerName });
       toast({ title: "Demo archived", description: `${localDemo.customerName} has been archived.` });
       setShowArchiveDialog(false);
       navigate('/admin');

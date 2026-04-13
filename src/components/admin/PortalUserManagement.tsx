@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { logAdminAction } from '@/lib/auditLog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -147,9 +148,10 @@ export function PortalUserManagement({ demoId }: PortalUserManagementProps) {
         }
       }
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['portal-users'] });
       queryClient.invalidateQueries({ queryKey: ['portal-user-assignments'] });
+      logAdminAction({ action: variables.id ? "update" : "create", entityType: "portal_user", entityLabel: variables.email });
       toast({ title: editingUser ? 'User updated' : 'User created' });
       closeDialog();
     },
@@ -164,9 +166,10 @@ export function PortalUserManagement({ demoId }: PortalUserManagementProps) {
       const { error } = await supabase.from('portal_users').delete().eq('id', id);
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: (_, deletedId) => {
       queryClient.invalidateQueries({ queryKey: ['portal-users'] });
       queryClient.invalidateQueries({ queryKey: ['portal-user-assignments'] });
+      logAdminAction({ action: "delete", entityType: "portal_user", entityId: deletedId });
       toast({ title: 'Portal user deleted' });
     },
   });
