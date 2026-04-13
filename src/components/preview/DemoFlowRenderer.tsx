@@ -1216,6 +1216,15 @@ export function DemoFlowRenderer({
       lastLoginUserData.current = profileData;
       onLoginSuccess?.({ email: portalUser.email, profileData });
 
+      // Log portal login activity
+      logPortalActivity({
+        action: 'login',
+        portalUserId: portalUser.id,
+        portalUserEmail: portalUser.email,
+        demoId,
+        demoName: customerName,
+      });
+
       setIsLoading(false);
       return true;
     } catch (err) {
