@@ -3,6 +3,7 @@ import { demosApi } from "@/lib/api/demos";
 import { DemoEnvironment, IndustryTemplate } from "@/types/demo";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { logAdminAction } from "@/lib/auditLog";
 
 export function useDemos() {
   return useQuery({
