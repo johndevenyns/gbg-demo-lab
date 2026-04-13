@@ -4,7 +4,9 @@ import type { Json } from "@/integrations/supabase/types";
 export type AdminAction = 
   | "login" | "logout" 
   | "create" | "update" | "delete" 
-  | "password_reset" | "role_change";
+  | "password_reset" | "role_change"
+  | "archive" | "clone" | "promote"
+  | "settings_update";
 
 export type PortalAction =
   | "login" | "registration"
