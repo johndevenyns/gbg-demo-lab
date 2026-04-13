@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { FormStep, PageElement, StepApiResponse, MdlProvider, VerificationType, StoredTestData, FormField, VerificationFlowConfig as VerificationFlowConfigType, DecisionChoice } from '@/types/demo';
+import { logPortalActivity } from '@/lib/auditLog';
 import { FormStyleConfig, DEFAULT_FORM_STYLE } from '@/types/formStyle';
 import { getButtonPadding, getButtonBorderRadius, getButtonFontWeight, getButtonShadow, getReadableTextColor } from '@/lib/formStyleUtils';
 import { UnifiedVerificationConfig, MdlProvider as MdlProviderVerification, transformMdlProviderRow } from '@/types/verification';
