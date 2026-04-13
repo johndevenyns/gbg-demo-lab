@@ -740,7 +740,8 @@ export function DemoFlowRenderer({
 
   // Pre-compute readable colors for the main component as well
   const mainFormBg = style.formBgColor || '#ffffff';
-  const mainInputBg = style.inputBgColor;
+  const rawMainInputBg = style.inputBgColor;
+  const mainInputBg = (!rawMainInputBg || rawMainInputBg === 'initial' || rawMainInputBg === 'inherit' || rawMainInputBg === 'transparent') ? mainFormBg : rawMainInputBg;
   const mainReadableLabelColor = ensureReadableColor(style.labelColor, mainFormBg);
   const mainReadableInputText = ensureReadableColor(style.inputTextColor, mainInputBg);
 
