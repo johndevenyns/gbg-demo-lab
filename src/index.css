@@ -43,8 +43,8 @@
     --destructive-foreground: 0 0% 100%;
 
     /* UI elements */
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
+    --border: 220 13% 78%;
+    --input: 220 13% 78%;
     --ring: 251 91% 60%;
     --radius: 0.75rem;
 
@@ -140,7 +140,7 @@
 
 @layer components {
   .glass-card {
-    @apply bg-card/80 backdrop-blur-xl border border-border/50 shadow-lg;
+    @apply bg-card/80 backdrop-blur-xl border border-border shadow-lg;
   }
 
   .gradient-primary {
