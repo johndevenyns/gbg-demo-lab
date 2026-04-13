@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { Check, Globe, ArrowRight, ArrowLeft, Loader2, Monitor, Eye, EyeOff, Image, Code } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -343,24 +344,32 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
       }
 
       updateTaskStatus('finalize', 'in_progress');
-      if (shouldShowFillPass || shouldShowFillFail) {
-        const firstPass = globalProfiles.find((p) => p.profile_type === 'pass');
-        const firstFail = globalProfiles.find((p) => p.profile_type === 'fail');
-        const passData: Record<string, string> = shouldShowFillPass && firstPass ? (firstPass.field_data as Record<string, string>) : {};
-        const failData: Record<string, string> = shouldShowFillFail && firstFail ? (firstFail.field_data as Record<string, string>) : {};
-        
-        await updateDemo.mutateAsync({
-          id: demo.id,
-          updates: {
-            storedTestData: {
-              passData,
-              failData,
-              showFillPassButton: shouldShowFillPass,
-              showFillFailButton: shouldShowFillFail,
-            },
-          },
-        });
+      // Always populate test data from global profiles so Fill Pass/Fail works
+      // Fetch profiles directly if the cached query hasn't resolved yet
+      let profiles = globalProfiles;
+      if (!profiles || profiles.length === 0) {
+        const { data: freshProfiles } = await supabase
+          .from('test_user_profiles')
+          .select('*')
+          .order('profile_type', { ascending: true });
+        profiles = (freshProfiles || []) as typeof globalProfiles;
       }
+      const firstPass = profiles.find((p) => p.profile_type === 'pass');
+      const firstFail = profiles.find((p) => p.profile_type === 'fail');
+      const passData: Record<string, string> = firstPass ? (firstPass.field_data as Record<string, string>) : {};
+      const failData: Record<string, string> = firstFail ? (firstFail.field_data as Record<string, string>) : {};
+      
+      await updateDemo.mutateAsync({
+        id: demo.id,
+        updates: {
+          storedTestData: {
+            passData,
+            failData,
+            showFillPassButton: shouldShowFillPass || Object.keys(passData).length > 0,
+            showFillFailButton: shouldShowFillFail || Object.keys(failData).length > 0,
+          },
+        },
+      });
       updateTaskStatus('finalize', 'complete');
 
       // If mirroring was enabled and we have captures, go to review step
