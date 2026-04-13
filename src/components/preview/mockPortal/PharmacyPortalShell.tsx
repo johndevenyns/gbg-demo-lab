@@ -141,13 +141,15 @@ export function PharmacyPortalShell({
               </div>
             </div>
             <button onClick={onLogout} title="Sign out" style={{
-              background: 'none', border: 'none', color: '#9CA3AF',
-              cursor: 'pointer', fontSize: '18px', padding: '4px',
+              background: 'none', border: '1px solid #E5E7EB', color: '#9CA3AF',
+              cursor: 'pointer', fontSize: '12px', padding: '6px 12px',
+              borderRadius: '6px', transition: 'all 0.2s', fontWeight: 500,
+              display: 'flex', alignItems: 'center', gap: '4px',
             }}
-              onMouseEnter={(e) => { e.currentTarget.style.color = '#EF4444'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.color = '#9CA3AF'; }}
+              onMouseEnter={(e) => { e.currentTarget.style.color = '#EF4444'; e.currentTarget.style.borderColor = '#FECACA'; e.currentTarget.style.background = '#FEF2F2'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = '#9CA3AF'; e.currentTarget.style.borderColor = '#E5E7EB'; e.currentTarget.style.background = 'none'; }}
             >
-              ↗
+              Sign Out
             </button>
           </div>
         </div>

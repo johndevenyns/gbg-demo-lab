@@ -138,14 +138,15 @@ export function GamingPortalShell({
             </button>
 
             <button onClick={onLogout} title="Sign out" style={{
-              background: 'none', border: 'none', color: '#64748B',
-              cursor: 'pointer', fontSize: '16px', padding: '6px',
-              borderRadius: '6px', transition: 'all 0.2s',
+              background: 'none', border: '1px solid #334155', color: '#94A3B8',
+              cursor: 'pointer', fontSize: '12px', padding: '6px 12px',
+              borderRadius: '6px', transition: 'all 0.2s', fontWeight: 500,
+              display: 'flex', alignItems: 'center', gap: '4px',
             }}
-              onMouseEnter={(e) => { e.currentTarget.style.color = '#EF4444'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.color = '#64748B'; }}
+              onMouseEnter={(e) => { e.currentTarget.style.color = '#EF4444'; e.currentTarget.style.borderColor = '#7F1D1D'; e.currentTarget.style.background = '#1C1917'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = '#94A3B8'; e.currentTarget.style.borderColor = '#334155'; e.currentTarget.style.background = 'none'; }}
             >
-              ↗
+              Sign Out
             </button>
           </div>
         </div>

@@ -140,14 +140,15 @@ export function InsurancePortalShell({
               <span style={{ fontSize: '13px', fontWeight: 600, color: headerText }}>{userName.split(' ')[0]}</span>
             </button>
             <button onClick={onLogout} title="Sign out" style={{
-              background: 'none', border: 'none', color: '#94A3B8',
-              cursor: 'pointer', fontSize: '18px', padding: '8px',
-              borderRadius: '8px', transition: 'all 0.2s',
+              background: 'none', border: '1px solid #E5E7EB', color: '#94A3B8',
+              cursor: 'pointer', fontSize: '12px', padding: '6px 12px',
+              borderRadius: '8px', transition: 'all 0.2s', fontWeight: 500,
+              display: 'flex', alignItems: 'center', gap: '4px',
             }}
-              onMouseEnter={(e) => { e.currentTarget.style.color = '#EF4444'; e.currentTarget.style.background = '#FEF2F2'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.color = '#94A3B8'; e.currentTarget.style.background = 'none'; }}
+              onMouseEnter={(e) => { e.currentTarget.style.color = '#EF4444'; e.currentTarget.style.borderColor = '#FECACA'; e.currentTarget.style.background = '#FEF2F2'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = '#94A3B8'; e.currentTarget.style.borderColor = '#E5E7EB'; e.currentTarget.style.background = 'none'; }}
             >
-              ↗
+              Sign Out
             </button>
           </div>
         </div>
