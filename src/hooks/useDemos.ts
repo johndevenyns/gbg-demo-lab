@@ -38,8 +38,9 @@ export function useCreateDemo() {
       const { data: { user } } = await supabase.auth.getUser();
       return demosApi.create(customerName, template, user?.id, user?.email ?? undefined);
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['demos'] });
+      logAdminAction({ action: "create", entityType: "demo", entityId: data.id, entityLabel: data.customerName });
       toast.success("Demo environment created successfully");
     },
     onError: (error) => {
