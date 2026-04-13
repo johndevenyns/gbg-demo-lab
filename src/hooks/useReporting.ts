@@ -1,7 +1,24 @@
-import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 export function useAdminAuditLogs(limit = 200) {
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    const channel = supabase
+      .channel("admin-audit-realtime")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "admin_audit_logs" },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["admin-audit-logs"] });
+        }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [queryClient]);
+
   return useQuery({
     queryKey: ["admin-audit-logs", limit],
     queryFn: async () => {
@@ -17,6 +34,23 @@ export function useAdminAuditLogs(limit = 200) {
 }
 
 export function usePortalActivityLogs(limit = 200) {
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    const channel = supabase
+      .channel("portal-activity-realtime")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "portal_activity_logs" },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["portal-activity-logs"] });
+          queryClient.invalidateQueries({ queryKey: ["portal-user-stats"] });
+        }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [queryClient]);
+
   return useQuery({
     queryKey: ["portal-activity-logs", limit],
     queryFn: async () => {
@@ -37,7 +71,7 @@ export function usePortalUserStats() {
     queryFn: async () => {
       const [usersRes, activityRes] = await Promise.all([
         supabase.from("portal_users").select("id, created_at, is_active, verification_status"),
-        supabase.from("portal_activity_logs").select("action, created_at, verification_result"),
+        supabase.from("portal_activity_logs").select("action, created_at, verification_result, demo_name"),
       ]);
       if (usersRes.error) throw usersRes.error;
       if (activityRes.error) throw activityRes.error;
@@ -57,9 +91,9 @@ export function usePortalUserStats() {
         useCasesCompleted: activities.filter((a) => a.action === "use_case_completed").length,
         logins: activities.filter((a) => a.action === "login").length,
         registrations: activities.filter((a) => a.action === "registration").length,
-        // Activity by day for charts
         activityByDay: getActivityByDay(activities),
         actionBreakdown: getActionBreakdown(activities),
+        activityByDemo: getActivityByDemo(activities),
       };
     },
   });
@@ -83,4 +117,15 @@ function getActionBreakdown(activities: Array<{ action: string }>) {
     counts[a.action] = (counts[a.action] || 0) + 1;
   });
   return Object.entries(counts).map(([action, count]) => ({ action, count }));
+}
+
+function getActivityByDemo(activities: Array<{ demo_name: string | null }>) {
+  const counts: Record<string, number> = {};
+  activities.forEach((a) => {
+    const name = a.demo_name || "Unknown";
+    counts[name] = (counts[name] || 0) + 1;
+  });
+  return Object.entries(counts)
+    .map(([demo, count]) => ({ demo, count }))
+    .sort((a, b) => b.count - a.count);
 }
