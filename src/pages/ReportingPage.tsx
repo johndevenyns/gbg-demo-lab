@@ -215,7 +215,29 @@ export default function ReportingPage() {
                       )}
                     </CardContent>
                   </Card>
-                </div>
+
+                  {/* Activity by Demo */}
+                  <Card className="lg:col-span-2">
+                    <CardHeader>
+                      <CardTitle className="text-base">Activity by Demo Environment</CardTitle>
+                      <CardDescription>Which demo environments are generating the most activity</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      {stats.activityByDemo && stats.activityByDemo.length > 0 ? (
+                        <ChartContainer config={barChartConfig} className="h-[250px] w-full">
+                          <BarChart data={stats.activityByDemo} layout="vertical">
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis type="number" allowDecimals={false} fontSize={11} />
+                            <YAxis type="category" dataKey="demo" fontSize={11} width={120} />
+                            <ChartTooltip content={<ChartTooltipContent />} />
+                            <Bar dataKey="count" fill="var(--color-count)" radius={[0, 4, 4, 0]} />
+                          </BarChart>
+                        </ChartContainer>
+                      ) : (
+                        <p className="text-center text-muted-foreground py-12">No demo activity data yet</p>
+                      )}
+                    </CardContent>
+                  </Card>
               </>
             ) : null}
           </TabsContent>
