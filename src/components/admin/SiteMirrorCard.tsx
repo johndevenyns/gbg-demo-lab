@@ -396,7 +396,7 @@ interface SiteMirrorCardProps {
                   </div>
                 </CollapsibleContent>
               </Collapsible>
-            )
+            )}
             {/* Header CTA Element Picker */}
             {hasAnyContent && headerHtml && (
               <div className="mt-4">
