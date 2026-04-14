@@ -1,5 +1,5 @@
-import { useState, useCallback } from "react";
-import { Globe, X, Eye, Monitor, Tablet, Smartphone, SlidersHorizontal } from "lucide-react";
+import { useState, useCallback, useRef } from "react";
+import { Globe, X, Eye, Monitor, Tablet, Smartphone, SlidersHorizontal, MousePointerClick } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -10,11 +10,12 @@ import { SiteMirrorTabs, CaptureTab, CaptureMode } from "./SiteMirrorTabs";
 import { HtmlCaptureTab } from "./HtmlCaptureTab";
 import { ScreenshotCaptureTab } from "./ScreenshotCaptureTab";
 import { EmbedFormSection } from "./EmbedFormSection";
-import { HeaderElementPicker } from "./HeaderElementPicker";
-import { HeaderHotspotPicker } from "./HeaderHotspotPicker";
+import { HeaderLinkPanel } from "./HeaderLinkPanel";
+import { parseHotspotSelector, HotspotRect, toHotspotSelector } from "./HeaderHotspotPicker";
 import { ContentLayoutEditor, useContentLayoutDraft } from "./ContentLayoutEditor";
 import { ScrapedBranding } from "@/lib/api/scraping";
 import { useToast } from "@/hooks/use-toast";
+import { useHeaderCtaLinks } from "@/hooks/useHeaderCtaLinks";
 import { DemoEnvironment } from "@/types/demo";
 import { DemoUseCaseLink } from "@/types/useCase";
 import { DEFAULT_FORM_STYLE, FormStyleConfig } from "@/types/formStyle";
@@ -30,6 +31,32 @@ const viewportConfig: Record<PreviewViewport, { width: string; iframeWidth: numb
   phone: { width: '390px', iframeWidth: null, label: 'Phone', icon: Smartphone },
 };
 
+
+function generateSelectorFromElement(el: Element): string {
+  if (el.id) return `#${el.id}`;
+  const tag = el.tagName.toLowerCase();
+  if (el.classList.length > 0) {
+    const classSelector = `${tag}.${Array.from(el.classList).join(".")}`;
+    const parent = el.parentElement;
+    if (parent && parent.querySelectorAll(classSelector).length === 1) return classSelector;
+  }
+  const parts: string[] = [];
+  let current: Element | null = el;
+  while (current && current.tagName.toLowerCase() !== "body" && current.tagName.toLowerCase() !== "html") {
+    let segment = current.tagName.toLowerCase();
+    if (current.id) { parts.unshift(`#${current.id}`); break; }
+    if (current.classList.length > 0) segment += `.${Array.from(current.classList).slice(0, 2).join(".")}`;
+    const parent = current.parentElement;
+    if (parent) {
+      const siblings = Array.from(parent.children).filter(c => c.tagName === current!.tagName);
+      if (siblings.length > 1) segment += `:nth-child(${siblings.indexOf(current) + 1})`;
+    }
+    parts.unshift(segment);
+    current = current.parentElement;
+  }
+  return parts.join(" > ");
+}
+
 export type { CaptureMode } from "./SiteMirrorTabs";
  
 interface SiteMirrorCardProps {
@@ -44,6 +71,18 @@ interface SiteMirrorCardProps {
     const [url, setUrl] = useState(demo.customerSiteUrl || "");
     const [previewViewport, setPreviewViewport] = useState<PreviewViewport>('desktop');
     const [layoutEditMode, setLayoutEditMode] = useState(false);
+    const [linkHeaderMode, setLinkHeaderMode] = useState(false);
+    const headerIframeRef = useRef<HTMLIFrameElement>(null);
+    const headerOverlayRef = useRef<HTMLDivElement>(null);
+    // HTML mode picking state
+    const [pendingSelector, setPendingSelector] = useState("");
+    const [pendingLabel, setPendingLabel] = useState("");
+    // Screenshot mode hotspot drawing state
+    const [hotspotDrawing, setHotspotDrawing] = useState(false);
+    const [hotspotStart, setHotspotStart] = useState<{ x: number; y: number } | null>(null);
+    const [hotspotCurrent, setHotspotCurrent] = useState<{ x: number; y: number } | null>(null);
+    const [pendingRect, setPendingRect] = useState<HotspotRect | null>(null);
+    const { data: ctaLinks = [] } = useHeaderCtaLinks(demo.id);
     const { draft, setDraft, resetDraft, containerRef } = useContentLayoutDraft(demo);
    // Track which method is active for the demo (persisted) AND which tab user is viewing
    const [activeMethod, setActiveMethod] = useState<CaptureMode>(demo.mirrorActiveMethod || 'html');
@@ -169,18 +208,45 @@ interface SiteMirrorCardProps {
               <div className="flex items-center gap-2">
                 {/* Adjust Spacing toggle */}
                 {hasContentForMethod && (
-                  <Button
-                    variant={layoutEditMode ? "default" : "outline"}
-                    size="sm"
-                    className="gap-1.5"
-                    onClick={() => {
-                      if (!layoutEditMode) resetDraft();
-                      setLayoutEditMode(!layoutEditMode);
-                    }}
-                  >
-                    <SlidersHorizontal className="w-4 h-4" />
-                    <span className="text-xs">Adjust Spacing</span>
-                  </Button>
+                  <>
+                    <Button
+                      variant={layoutEditMode ? "default" : "outline"}
+                      size="sm"
+                      className="gap-1.5"
+                      onClick={() => {
+                        if (!layoutEditMode) resetDraft();
+                        setLayoutEditMode(!layoutEditMode);
+                        if (!layoutEditMode) setLinkHeaderMode(false);
+                      }}
+                    >
+                      <SlidersHorizontal className="w-4 h-4" />
+                      <span className="text-xs">Adjust Spacing</span>
+                    </Button>
+                    {headerHtml && (
+                      <Button
+                        variant={linkHeaderMode ? "default" : "outline"}
+                        size="sm"
+                        className="gap-1.5"
+                        onClick={() => {
+                          setLinkHeaderMode(!linkHeaderMode);
+                          if (!linkHeaderMode) {
+                            setLayoutEditMode(false);
+                            setPendingSelector("");
+                            setPendingLabel("");
+                            setPendingRect(null);
+                          }
+                        }}
+                      >
+                        <MousePointerClick className="w-4 h-4" />
+                        <span className="text-xs">Link Header</span>
+                        {ctaLinks.length > 0 && (
+                          <Badge variant="secondary" className="text-[10px] ml-0.5 px-1.5 py-0">
+                            {ctaLinks.length}
+                          </Badge>
+                        )}
+                      </Button>
+                    )}
+                  </>
                 )}
                 {/* Viewport Size Selector */}
                 {hasContentForMethod && (
@@ -225,38 +291,183 @@ interface SiteMirrorCardProps {
                     onDraftChange={setDraft}
                   />
 
+                  {/* Floating header link panel */}
+                  <HeaderLinkPanel
+                    active={linkHeaderMode}
+                    onClose={() => setLinkHeaderMode(false)}
+                    demoId={demo.id}
+                    useCaseLinks={useCaseLinks}
+                    pendingSelector={pendingSelector}
+                    pendingLabel={pendingLabel}
+                    onClearPending={() => { setPendingSelector(""); setPendingLabel(""); }}
+                    pendingRect={pendingRect}
+                    onClearPendingRect={() => setPendingRect(null)}
+                    isScreenshotMode={activeMethod === 'screenshot'}
+                  />
+
                   <div
                     className="overflow-hidden rounded-lg border bg-background shadow-sm"
                     style={{ width: previewViewport === 'desktop' ? '1280px' : vpConfig.width }}
                   >
                     {headerHtml && (
-                      <iframe
-                        srcDoc={`
-                          <!DOCTYPE html>
-                          <html>
-                            <head>
-                              <meta charset="utf-8">
-                              <meta name="viewport" content="width=device-width, initial-scale=1">
-                              <style>
-                                html, body { margin: 0; padding: 0; overflow: hidden; background: transparent; }
-                                * { box-sizing: border-box; }
-                                a { pointer-events: none; }
-                              </style>
-                              ${cssContent ? `<style>${cssContent}</style>` : ''}
-                            </head>
-                            <body>
-                              ${headerHtml}
-                            </body>
-                          </html>
-                        `}
-                        className="block w-full border-0"
-                        style={{ height: `${headerHeight}px` }}
-                        title="Live site header preview"
-                        sandbox="allow-same-origin"
-                        onLoad={(e) => {
-                          enhanceHeaderPreviewIframe(e.currentTarget, 80);
-                        }}
-                      />
+                      <div className="relative" style={{ height: `${headerHeight}px`, overflow: 'hidden' }}>
+                        <iframe
+                          ref={headerIframeRef}
+                          srcDoc={`
+                            <!DOCTYPE html>
+                            <html>
+                              <head>
+                                <meta charset="utf-8">
+                                <meta name="viewport" content="width=device-width, initial-scale=1">
+                                <style>
+                                  html, body { margin: 0; padding: 0; overflow: hidden; background: transparent; }
+                                  * { box-sizing: border-box; }
+                                  ${linkHeaderMode && activeMethod === 'html'
+                                    ? `a { pointer-events: auto !important; cursor: crosshair !important; }
+                                       [data-cta-hover] { outline: 3px solid hsl(262, 83%, 58%) !important; outline-offset: 2px !important; cursor: pointer !important; }
+                                       [data-cta-selected] { outline: 3px solid hsl(142, 71%, 45%) !important; outline-offset: 2px !important; }`
+                                    : `a { pointer-events: none; }`
+                                  }
+                                </style>
+                                ${cssContent ? `<style>${cssContent}</style>` : ''}
+                              </head>
+                              <body>
+                                ${headerHtml}
+                              </body>
+                            </html>
+                          `}
+                          className="block w-full border-0"
+                          style={{ height: `${headerHeight}px` }}
+                          title="Live site header preview"
+                          sandbox="allow-same-origin"
+                          onLoad={(e) => {
+                            const iframe = e.currentTarget;
+                            enhanceHeaderPreviewIframe(iframe, 80);
+                            // Set up click handler for HTML link mode
+                            if (linkHeaderMode && activeMethod === 'html') {
+                              try {
+                                const doc = iframe.contentDocument;
+                                if (!doc) return;
+                                // Highlight existing links
+                                ctaLinks.forEach((link) => {
+                                  try { doc.querySelector(link.cssSelector)?.setAttribute("data-cta-selected", "true"); } catch {}
+                                });
+                                const handleClick = (ev: Event) => {
+                                  ev.preventDefault();
+                                  ev.stopPropagation();
+                                  const target = ev.target as Element;
+                                  const clickable = target.closest("a, button, [role='button'], [onclick]") || target;
+                                  const sel = generateSelectorFromElement(clickable);
+                                  const label = clickable.textContent?.trim().substring(0, 50) || clickable.tagName.toLowerCase();
+                                  setPendingSelector(sel);
+                                  setPendingLabel(label);
+                                };
+                                const handleMouseOver = (ev: Event) => {
+                                  const target = ev.target as Element;
+                                  if (!target || target === doc.body || target === doc.documentElement) return;
+                                  const clickable = target.closest("a, button, [role='button'], [onclick]") || target;
+                                  doc.querySelectorAll("[data-cta-hover]").forEach(el => el.removeAttribute("data-cta-hover"));
+                                  clickable.setAttribute("data-cta-hover", "true");
+                                };
+                                doc.addEventListener("click", handleClick, true);
+                                doc.addEventListener("mouseover", handleMouseOver);
+                              } catch {}
+                            }
+                          }}
+                        />
+                        {/* Screenshot mode: overlay for hotspot drawing */}
+                        {linkHeaderMode && activeMethod === 'screenshot' && (
+                          <div
+                            ref={headerOverlayRef}
+                            className="absolute inset-0 z-10"
+                            style={{ cursor: 'crosshair' }}
+                            onMouseDown={(e) => {
+                              e.preventDefault();
+                              const rect = headerOverlayRef.current?.getBoundingClientRect();
+                              if (!rect) return;
+                              const coords = {
+                                x: ((e.clientX - rect.left) / rect.width) * 100,
+                                y: ((e.clientY - rect.top) / rect.height) * 100,
+                              };
+                              setHotspotStart(coords);
+                              setHotspotCurrent(coords);
+                              setHotspotDrawing(true);
+                            }}
+                            onMouseMove={(e) => {
+                              if (!hotspotDrawing) return;
+                              const rect = headerOverlayRef.current?.getBoundingClientRect();
+                              if (!rect) return;
+                              setHotspotCurrent({
+                                x: ((e.clientX - rect.left) / rect.width) * 100,
+                                y: ((e.clientY - rect.top) / rect.height) * 100,
+                              });
+                            }}
+                            onMouseUp={() => {
+                              if (!hotspotDrawing || !hotspotStart || !hotspotCurrent) return;
+                              setHotspotDrawing(false);
+                              const x = Math.min(hotspotStart.x, hotspotCurrent.x);
+                              const y = Math.min(hotspotStart.y, hotspotCurrent.y);
+                              const w = Math.abs(hotspotCurrent.x - hotspotStart.x);
+                              const h = Math.abs(hotspotCurrent.y - hotspotStart.y);
+                              if (w >= 2 || h >= 2) {
+                                setPendingRect({ x, y, w, h });
+                              }
+                              setHotspotStart(null);
+                              setHotspotCurrent(null);
+                            }}
+                            onMouseLeave={() => {
+                              if (hotspotDrawing) {
+                                setHotspotDrawing(false);
+                                setHotspotStart(null);
+                                setHotspotCurrent(null);
+                              }
+                            }}
+                          >
+                            {/* Existing hotspot overlays */}
+                            {ctaLinks.map((link) => {
+                              const hs = parseHotspotSelector(link.cssSelector);
+                              if (!hs) return null;
+                              return (
+                                <div
+                                  key={link.id}
+                                  className="absolute border-2 border-green-500 bg-green-500/15 rounded-sm pointer-events-none"
+                                  style={{ left: `${hs.x}%`, top: `${hs.y}%`, width: `${hs.w}%`, height: `${hs.h}%` }}
+                                />
+                              );
+                            })}
+                            {/* Pending rect */}
+                            {pendingRect && (
+                              <div
+                                className="absolute border-2 border-primary bg-primary/20 rounded-sm pointer-events-none animate-pulse"
+                                style={{ left: `${pendingRect.x}%`, top: `${pendingRect.y}%`, width: `${pendingRect.w}%`, height: `${pendingRect.h}%` }}
+                              />
+                            )}
+                            {/* Active drawing rect */}
+                            {hotspotDrawing && hotspotStart && hotspotCurrent && (() => {
+                              const dr = {
+                                x: Math.min(hotspotStart.x, hotspotCurrent.x),
+                                y: Math.min(hotspotStart.y, hotspotCurrent.y),
+                                w: Math.abs(hotspotCurrent.x - hotspotStart.x),
+                                h: Math.abs(hotspotCurrent.y - hotspotStart.y),
+                              };
+                              return (
+                                <div
+                                  className="absolute border-2 border-primary bg-primary/20 rounded-sm pointer-events-none"
+                                  style={{ left: `${dr.x}%`, top: `${dr.y}%`, width: `${dr.w}%`, height: `${dr.h}%` }}
+                                />
+                              );
+                            })()}
+                          </div>
+                        )}
+                        {/* Link mode indicator border */}
+                        {linkHeaderMode && (
+                          <div className="absolute inset-0 border-2 border-primary/40 rounded-sm pointer-events-none z-20">
+                            <Badge className="absolute top-1 left-1 bg-primary text-primary-foreground text-[9px] animate-pulse">
+                              {activeMethod === 'screenshot' ? 'Draw region' : 'Click element'}
+                            </Badge>
+                          </div>
+                        )}
+                      </div>
                     )}
 
                     {/* Content area */}
@@ -383,25 +594,6 @@ interface SiteMirrorCardProps {
                  )}
                </div>
              </div>
-            )}
-            {/* Header CTA Element Picker — hotspot for screenshots, CSS picker for HTML */}
-            {hasAnyContent && headerHtml && (
-              <div className="mt-4">
-                {activeMethod === 'screenshot' ? (
-                  <HeaderHotspotPicker
-                    demoId={demo.id}
-                    headerHtml={headerHtml}
-                    useCaseLinks={useCaseLinks}
-                  />
-                ) : (
-                  <HeaderElementPicker
-                    demoId={demo.id}
-                    headerHtml={headerHtml}
-                    cssContent={cssContent || undefined}
-                    useCaseLinks={useCaseLinks}
-                  />
-                )}
-              </div>
             )}
           </CardContent>
         </Card>
