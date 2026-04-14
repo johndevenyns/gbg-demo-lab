@@ -13,6 +13,8 @@ export interface LayoutDraft {
   justify: 'start' | 'center' | 'end';
   maxWidth: number;
   bgColor: string;
+  headerHeight: number;
+  footerHeight: number;
 }
 
 function draftFromStyle(fs: FormStyleConfig): LayoutDraft {
@@ -22,6 +24,8 @@ function draftFromStyle(fs: FormStyleConfig): LayoutDraft {
     justify: fs.contentAreaJustify || 'start',
     maxWidth: fs.contentAreaMaxWidth ?? 0,
     bgColor: fs.contentAreaBgColor || '#f5f5f5',
+    headerHeight: fs.headerHeight ?? 120,
+    footerHeight: fs.footerHeight ?? 160,
   };
 }
 
@@ -87,6 +91,8 @@ export function ContentLayoutEditor({
       contentAreaJustify: draft.justify,
       contentAreaMaxWidth: draft.maxWidth,
       contentAreaBgColor: draft.bgColor,
+      headerHeight: draft.headerHeight,
+      footerHeight: draft.footerHeight,
     };
     onApplyBranding({ formStyle: updatedStyle }, true);
     onClose();
@@ -112,13 +118,19 @@ export function ContentLayoutEditor({
       </div>
 
       <div className="space-y-1.5">
-        <Label className="text-[10px] font-medium">Min Height</Label>
+        <Label className="text-[10px] font-medium">Header Height</Label>
+        <NumericStepper value={draft.headerHeight} min={40} max={500} step={10}
+          onChange={(v) => onDraftChange({ ...draft, headerHeight: v })} />
+      </div>
+
+      <div className="space-y-1.5">
+        <Label className="text-[10px] font-medium">Content Min Height</Label>
         <NumericStepper value={draft.minHeight} min={100} max={1500} step={10}
           onChange={(v) => onDraftChange({ ...draft, minHeight: v })} />
       </div>
 
       <div className="space-y-1.5">
-        <Label className="text-[10px] font-medium">Vertical Padding</Label>
+        <Label className="text-[10px] font-medium">Content Padding</Label>
         <NumericStepper value={draft.paddingY} min={0} max={200} step={4}
           onChange={(v) => onDraftChange({ ...draft, paddingY: v })} />
       </div>
@@ -141,6 +153,12 @@ export function ContentLayoutEditor({
         <Label className="text-[10px] font-medium">Form Width</Label>
         <NumericStepper value={draft.maxWidth || 576} min={200} max={1600} step={10}
           onChange={(v) => onDraftChange({ ...draft, maxWidth: v })} />
+      </div>
+
+      <div className="space-y-1.5">
+        <Label className="text-[10px] font-medium">Footer Height</Label>
+        <NumericStepper value={draft.footerHeight} min={40} max={500} step={10}
+          onChange={(v) => onDraftChange({ ...draft, footerHeight: v })} />
       </div>
 
       <div className="space-y-1.5">
@@ -169,74 +187,18 @@ export function ContentLayoutEditor({
   );
 }
 
-/** Hook: manages draft state + drag handlers that only update local draft (no auto-save) */
+/** Hook: manages draft state (no drag handlers needed anymore) */
 export function useContentLayoutDraft(demo: DemoEnvironment) {
   const formStyle = demo.formStyle || DEFAULT_FORM_STYLE;
   const [draft, setDraft] = useState<LayoutDraft>(draftFromStyle(formStyle));
 
-  // Reset draft when entering edit mode (called externally)
   const resetDraft = useCallback(() => {
     setDraft(draftFromStyle(demo.formStyle || DEFAULT_FORM_STYLE));
   }, [demo.formStyle]);
 
-  const onTopPaddingMouseDown = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    const startY = e.clientY;
-    const startVal = draft.paddingY;
-
-    const onMove = (ev: MouseEvent) => {
-      const delta = ev.clientY - startY;
-      const newVal = Math.max(0, Math.min(200, startVal + delta));
-      setDraft(prev => ({ ...prev, paddingY: newVal }));
-    };
-    const onUp = () => {
-      document.removeEventListener("mousemove", onMove);
-      document.removeEventListener("mouseup", onUp);
-    };
-    document.addEventListener("mousemove", onMove);
-    document.addEventListener("mouseup", onUp);
-  }, [draft.paddingY]);
-
-  const onHeightMouseDown = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    const startY = e.clientY;
-    const startVal = draft.minHeight;
-
-    const onMove = (ev: MouseEvent) => {
-      const delta = ev.clientY - startY;
-      const newVal = Math.max(100, Math.min(1500, startVal + delta));
-      setDraft(prev => ({ ...prev, minHeight: newVal }));
-    };
-    const onUp = () => {
-      document.removeEventListener("mousemove", onMove);
-      document.removeEventListener("mouseup", onUp);
-    };
-    document.addEventListener("mousemove", onMove);
-    document.addEventListener("mouseup", onUp);
-  }, [draft.minHeight]);
-
   const containerRef = useRef<HTMLDivElement | null>(null);
 
-  const onWidthMouseDown = useCallback((e: React.MouseEvent, side: 'left' | 'right') => {
-    e.preventDefault();
-    const startX = e.clientX;
-    const startVal = draft.maxWidth || 576;
-
-    const onMove = (ev: MouseEvent) => {
-      // Dragging either side changes width symmetrically (double the delta)
-      const rawDelta = side === 'right' ? ev.clientX - startX : startX - ev.clientX;
-      const newVal = Math.max(200, Math.min(1600, startVal + rawDelta * 2));
-      setDraft(prev => ({ ...prev, maxWidth: Math.round(newVal) }));
-    };
-    const onUp = () => {
-      document.removeEventListener("mousemove", onMove);
-      document.removeEventListener("mouseup", onUp);
-    };
-    document.addEventListener("mousemove", onMove);
-    document.addEventListener("mouseup", onUp);
-  }, [draft.maxWidth]);
-
-  return { draft, setDraft, resetDraft, onTopPaddingMouseDown, onHeightMouseDown, onWidthMouseDown, containerRef };
+  return { draft, setDraft, resetDraft, containerRef };
 }
 
 export { draftFromStyle };
