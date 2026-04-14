@@ -320,6 +320,7 @@ interface SiteMirrorCardProps {
                               headerHtml: '',
                               footerHtml: '',
                               contentBgColor: 'transparent',
+                              skipLayoutWrapper: true,
                             })}
                             className="block w-full border-0"
                             style={{ height: '400px' }}
