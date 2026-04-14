@@ -43,7 +43,7 @@ interface SiteMirrorCardProps {
    const { toast } = useToast();
     const [url, setUrl] = useState(demo.customerSiteUrl || "");
     const [previewViewport, setPreviewViewport] = useState<PreviewViewport>('desktop');
-    
+    const [layoutEditMode, setLayoutEditMode] = useState(false);
    // Track which method is active for the demo (persisted) AND which tab user is viewing
    const [activeMethod, setActiveMethod] = useState<CaptureMode>(demo.mirrorActiveMethod || 'html');
    const [currentTab, setCurrentTab] = useState<CaptureTab>('html');
