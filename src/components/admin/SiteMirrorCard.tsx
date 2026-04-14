@@ -250,7 +250,7 @@ interface SiteMirrorCardProps {
                           </html>
                         `}
                         className="block w-full border-0"
-                        style={{ height: '120px' }}
+                        style={{ height: `${headerHeight}px` }}
                         title="Live site header preview"
                         sandbox="allow-same-origin"
                         onLoad={(e) => {
@@ -259,22 +259,8 @@ interface SiteMirrorCardProps {
                       />
                     )}
 
-                    {/* Content area — with optional drag handles */}
+                    {/* Content area */}
                     <div className="relative" style={{ backgroundColor: contentBgColor }}>
-                      {/* Top padding drag handle */}
-                      {layoutEditMode && (
-                        <div
-                          className="absolute top-0 left-0 right-0 flex items-center justify-center cursor-ns-resize z-10 group"
-                          style={{ height: `${Math.max(paddingY, 12)}px` }}
-                          onMouseDown={onTopPaddingMouseDown}
-                        >
-                          <div className="flex items-center gap-1 px-2 py-0.5 rounded bg-primary/80 text-primary-foreground text-[10px] opacity-60 group-hover:opacity-100 transition-opacity pointer-events-none">
-                            <GripHorizontal className="w-3 h-3" />
-                            Padding: {paddingY}px
-                          </div>
-                          <div className="absolute bottom-0 left-[10%] right-[10%] h-px border-b border-dashed border-primary/40 opacity-60 group-hover:opacity-100 transition-opacity" />
-                        </div>
-                      )}
 
                       <div
                         style={{
