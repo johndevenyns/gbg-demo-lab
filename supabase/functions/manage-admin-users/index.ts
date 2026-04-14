@@ -167,20 +167,22 @@ serve(async (req) => {
         );
       }
 
-      const { error: resetError } = await adminClient.auth.admin.generateLink({
+      const { data: linkData, error: resetError } = await adminClient.auth.admin.generateLink({
         type: 'recovery',
         email: targetUser.email,
       });
 
       if (resetError) {
         return new Response(
-          JSON.stringify({ error: "Failed to send password reset: " + resetError.message }),
+          JSON.stringify({ error: "Failed to generate password setup link: " + resetError.message }),
           { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
 
+      const setupLink = linkData?.properties?.action_link || null;
+
       return new Response(
-        JSON.stringify({ success: true, message: `Password reset email sent to ${targetUser.email}` }),
+        JSON.stringify({ success: true, message: `Password setup link generated for ${targetUser.email}`, setupLink }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
