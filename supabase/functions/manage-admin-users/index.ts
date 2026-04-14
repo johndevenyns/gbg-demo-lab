@@ -167,20 +167,22 @@ serve(async (req) => {
         );
       }
 
-      const { error: resetError } = await adminClient.auth.admin.generateLink({
+      const { data: linkData, error: resetError } = await adminClient.auth.admin.generateLink({
         type: 'recovery',
         email: targetUser.email,
       });
 
       if (resetError) {
         return new Response(
-          JSON.stringify({ error: "Failed to send password reset: " + resetError.message }),
+          JSON.stringify({ error: "Failed to generate password setup link: " + resetError.message }),
           { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
 
+      const setupLink = linkData?.properties?.action_link || null;
+
       return new Response(
-        JSON.stringify({ success: true, message: `Password reset email sent to ${targetUser.email}` }),
+        JSON.stringify({ success: true, message: `Password setup link generated for ${targetUser.email}`, setupLink }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -192,8 +194,6 @@ serve(async (req) => {
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-
-      // initialPassword is already parsed from body above
 
       // Look up user by email using admin client
       const { data: users, error: lookupError } = await adminClient.auth.admin.listUsers();
@@ -208,12 +208,12 @@ serve(async (req) => {
       let targetUser = users.users.find(u => u.email?.toLowerCase() === email.toLowerCase());
       let wasCreated = false;
       
-      // If user doesn't exist, create them
+      // If user doesn't exist, create them with a random password (they'll set their own via link)
       if (!targetUser) {
-        const passwordToUse = initialPassword || (crypto.randomUUID() + "Aa1!");
+        const randomPassword = crypto.randomUUID() + "Aa1!";
         const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
           email: email.toLowerCase(),
-          password: passwordToUse,
+          password: randomPassword,
           email_confirm: true,
         });
 
@@ -226,14 +226,6 @@ serve(async (req) => {
 
         targetUser = newUser.user;
         wasCreated = true;
-
-        // If no initial password was set, send password reset so user can set their own
-        if (!initialPassword) {
-          await adminClient.auth.admin.generateLink({
-            type: 'recovery',
-            email: email.toLowerCase(),
-          });
-        }
       }
 
       // Check if already has this role
@@ -270,8 +262,19 @@ serve(async (req) => {
         );
       }
 
+      // Generate a password setup link for the user
+      let setupLink: string | null = null;
+      const { data: linkData, error: linkError } = await adminClient.auth.admin.generateLink({
+        type: 'recovery',
+        email: email.toLowerCase(),
+      });
+
+      if (!linkError && linkData?.properties?.action_link) {
+        setupLink = linkData.properties.action_link;
+      }
+
       return new Response(
-        JSON.stringify({ success: true, userId: targetUser.id, created: wasCreated, hadPassword: !!initialPassword, role: roleToAssign }),
+        JSON.stringify({ success: true, userId: targetUser.id, created: wasCreated, role: roleToAssign, setupLink }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }

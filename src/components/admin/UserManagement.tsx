@@ -32,7 +32,6 @@ export function UserManagement({ isGlobalAdmin = true }: UserManagementProps) {
   const queryClient = useQueryClient();
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [newUserEmail, setNewUserEmail] = useState('');
-  const [newUserPassword, setNewUserPassword] = useState('');
   const [newUserRole, setNewUserRole] = useState<'admin' | 'global_admin'>('admin');
   const [isAddingUser, setIsAddingUser] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
@@ -47,12 +46,6 @@ export function UserManagement({ isGlobalAdmin = true }: UserManagementProps) {
   const [introLetterCopied, setIntroLetterCopied] = useState(false);
 
   const publishedUrl = 'https://gbg-demo-lab.lovable.app';
-
-  const [introLetterForExistingOpen, setIntroLetterForExistingOpen] = useState(false);
-  const [existingUserEmail, setExistingUserEmail] = useState('');
-  const [existingUserRole, setExistingUserRole] = useState('');
-  const [existingUserPassword, setExistingUserPassword] = useState('');
-  const [existingUserId, setExistingUserId] = useState<string | null>(null);
 
   // Fetch the admin welcome letter template
   const { data: welcomeTemplate } = useQuery({
@@ -69,59 +62,41 @@ export function UserManagement({ isGlobalAdmin = true }: UserManagementProps) {
     },
   });
 
-  const generateIntroLetter = (email: string, password: string | null, role: string) => {
+  const generateIntroLetter = (email: string, role: string, setupLink: string | null) => {
     const roleName = role === 'global_admin' ? 'Global Admin' : 'Admin';
-    const passwordValue = password
-      ? password
-      : '(Please set a password for this user or ask them to use "Forgot Password")';
     const loginUrl = `${publishedUrl}/auth`;
+    const setupSection = setupLink
+      ? `Set Your Password: ${setupLink}\n\nPlease use the link above to set your password. This link is unique to you and can only be used once.`
+      : `Login URL: ${loginUrl}\n\nPlease use the "Forgot Password" link on the login page to set your password.`;
 
     if (welcomeTemplate) {
       return welcomeTemplate
         .replace(/\{\{email\}\}/g, email)
-        .replace(/\{\{password\}\}/g, passwordValue)
+        .replace(/\{\{password\}\}/g, setupLink ? `(Use the link below to set your password)` : '(Use Forgot Password to set)')
         .replace(/\{\{role\}\}/g, roleName)
-        .replace(/\{\{login_url\}\}/g, loginUrl);
+        .replace(/\{\{login_url\}\}/g, setupLink || loginUrl)
+        .replace(/\{\{setup_link\}\}/g, setupLink || loginUrl);
     }
 
-    // Fallback if no template exists
-    return `Welcome to GBG Demo Lab!\n\nYour admin account has been created. Here are your login details:\n\nUsername: ${email}\nPassword: ${passwordValue}\nRole: ${roleName}\n\nLogin URL: ${loginUrl}\n\nPlease log in and change your password at your earliest convenience.\n\nIf you have any questions or need assistance, don't hesitate to reach out.\n\nBest regards,\nGBG Demo Lab Team`;
+    return `Welcome to GBG Demo Lab!\n\nYour admin account has been created. Here are your login details:\n\nUsername: ${email}\nRole: ${roleName}\n\n${setupSection}\n\nIf you have any questions or need assistance, don't hesitate to reach out.\n\nBest regards,\nGBG Demo Lab Team`;
   };
 
-  const openIntroLetterForExisting = (userId: string, email: string, role: string) => {
-    setExistingUserId(userId);
-    setExistingUserEmail(email);
-    setExistingUserRole(role);
-    setExistingUserPassword('');
-    setIntroLetterForExistingOpen(true);
-  };
-
-  const confirmExistingIntroLetter = async () => {
-    const pw = existingUserPassword.trim() || null;
-    
-    // If a password was provided, actually set it on the account
-    if (pw && existingUserId) {
-      try {
-        const { data: sessionData } = await supabase.auth.getSession();
-        const response = await supabase.functions.invoke('manage-admin-users', {
-          body: { action: 'resetPassword', userId: existingUserId, newPassword: pw },
-          headers: { Authorization: `Bearer ${sessionData.session?.access_token}` },
-        });
-        if (response.error || response.data?.error) {
-          toast({ title: 'Error', description: response.data?.error || 'Failed to set password', variant: 'destructive' });
-          return;
-        }
-        toast({ title: 'Password updated', description: 'The password has been set on the account.' });
-      } catch {
-        toast({ title: 'Error', description: 'Failed to set password on account.', variant: 'destructive' });
-        return;
-      }
+  const openIntroLetterForExisting = async (userId: string, email: string, role: string) => {
+    // Generate a fresh setup link for this user
+    try {
+      const { data, error } = await supabase.functions.invoke('manage-admin-users', {
+        body: { action: 'resetPassword', userId },
+      });
+      const setupLink = data?.setupLink || null;
+      setIntroLetterText(generateIntroLetter(email, role, setupLink));
+      setIntroLetterCopied(false);
+      setIntroLetterOpen(true);
+    } catch {
+      // Fallback without link
+      setIntroLetterText(generateIntroLetter(email, role, null));
+      setIntroLetterCopied(false);
+      setIntroLetterOpen(true);
     }
-    
-    setIntroLetterText(generateIntroLetter(existingUserEmail, pw, existingUserRole));
-    setIntroLetterCopied(false);
-    setIntroLetterForExistingOpen(false);
-    setIntroLetterOpen(true);
   };
 
   const handleCopyIntroLetter = async () => {
@@ -253,7 +228,7 @@ export function UserManagement({ isGlobalAdmin = true }: UserManagementProps) {
     setSetPasswordDialogOpen(true);
   };
 
-  // Add new admin by email, optionally with initial password
+  // Add new admin by email
   const handleAddAdmin = async () => {
     if (!newUserEmail.trim()) {
       setAddError('Please enter an email address');
@@ -265,9 +240,6 @@ export function UserManagement({ isGlobalAdmin = true }: UserManagementProps) {
 
     try {
       const body: any = { action: 'add', email: newUserEmail.trim(), role: newUserRole };
-      if (newUserPassword.trim()) {
-        body.password = newUserPassword.trim();
-      }
 
       const { data, error } = await supabase.functions.invoke('manage-admin-users', {
         body,
@@ -278,21 +250,18 @@ export function UserManagement({ isGlobalAdmin = true }: UserManagementProps) {
 
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
       logAdminAction({ action: "create", entityType: "admin_user", entityLabel: newUserEmail.trim(), details: { role: newUserRole } });
-      let msg: string;
-      if (data?.created && data?.hadPassword) {
-        msg = `Account created for ${newUserEmail} with admin access and the specified password.`;
-        // Show intro letter dialog
-        setIntroLetterText(generateIntroLetter(newUserEmail.trim(), newUserPassword.trim(), newUserRole));
-        setIntroLetterCopied(false);
-        setIntroLetterOpen(true);
-      } else if (data?.created) {
-        msg = `Account created for ${newUserEmail} with admin access. A password reset email has been sent.`;
-      } else {
-        msg = `${newUserEmail} now has admin access.`;
-      }
+      
+      const msg = data?.created
+        ? `Account created for ${newUserEmail} with admin access. A password setup link has been generated.`
+        : `${newUserEmail} now has admin access.`;
+      
+      // Show intro letter with the setup link
+      setIntroLetterText(generateIntroLetter(newUserEmail.trim(), newUserRole, data?.setupLink || null));
+      setIntroLetterCopied(false);
+      setIntroLetterOpen(true);
+
       toast({ title: 'Admin added', description: msg });
       setNewUserEmail('');
-      setNewUserPassword('');
       setNewUserRole('admin');
       setAddDialogOpen(false);
     } catch (err: any) {
@@ -358,19 +327,9 @@ export function UserManagement({ isGlobalAdmin = true }: UserManagementProps) {
                       onChange={(e) => setNewUserEmail(e.target.value)}
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="initial-password">Initial Password (optional)</Label>
-                    <Input
-                      id="initial-password"
-                      type="password"
-                      placeholder="Leave blank to send reset email"
-                      value={newUserPassword}
-                      onChange={(e) => setNewUserPassword(e.target.value)}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      If no account exists, one will be created. Leave password blank to send a reset email instead.
-                    </p>
-                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    If no account exists, one will be created. The user will receive a unique link to set their own password.
+                  </p>
                   <div className="space-y-2">
                     <Label>Role</Label>
                     <Select value={newUserRole} onValueChange={(v) => setNewUserRole(v as 'admin' | 'global_admin')}>
@@ -574,39 +533,6 @@ export function UserManagement({ isGlobalAdmin = true }: UserManagementProps) {
         </DialogContent>
       </Dialog>
 
-      {/* Password Prompt for Existing User Welcome Letter */}
-      <Dialog open={introLetterForExistingOpen} onOpenChange={setIntroLetterForExistingOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Generate Welcome Letter</DialogTitle>
-            <DialogDescription>
-              Enter a password to include in the welcome letter for {existingUserEmail}. Leave blank to omit.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label>Password (optional)</Label>
-              <Input
-                type="text"
-                value={existingUserPassword}
-                onChange={(e) => setExistingUserPassword(e.target.value)}
-                placeholder="Enter password to include, or leave blank"
-              />
-              <p className="text-xs text-muted-foreground">
-                This does NOT change the user's password. It only includes it in the letter for your reference.
-              </p>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIntroLetterForExistingOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={confirmExistingIntroLetter}>
-              Generate Letter
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </>
   );
 }
