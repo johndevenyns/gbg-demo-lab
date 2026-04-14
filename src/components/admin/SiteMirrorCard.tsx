@@ -397,25 +397,6 @@ interface SiteMirrorCardProps {
                </div>
              </div>
             )}
-            {/* Header CTA Element Picker — hotspot for screenshots, CSS picker for HTML */}
-            {hasAnyContent && headerHtml && (
-              <div className="mt-4">
-                {activeMethod === 'screenshot' ? (
-                  <HeaderHotspotPicker
-                    demoId={demo.id}
-                    headerHtml={headerHtml}
-                    useCaseLinks={useCaseLinks}
-                  />
-                ) : (
-                  <HeaderElementPicker
-                    demoId={demo.id}
-                    headerHtml={headerHtml}
-                    cssContent={cssContent || undefined}
-                    useCaseLinks={useCaseLinks}
-                  />
-                )}
-              </div>
-            )}
           </CardContent>
         </Card>
       );
