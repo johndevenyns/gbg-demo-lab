@@ -443,6 +443,8 @@ export function getButtonShadow(shadow: string = 'none'): string {
   const minHeight = formStyle.contentAreaMinHeight ?? 400;
   const justify = formStyle.contentAreaJustify || 'start';
   const justifyMap = { start: 'flex-start', center: 'center', end: 'flex-end' };
+  const maxWidth = formStyle.contentAreaMaxWidth;
+  const maxWidthStyle = maxWidth ? `max-width: ${maxWidth}px; margin-left: auto; margin-right: auto;` : 'max-width: 36rem; margin-left: auto; margin-right: auto;';
 
    return `
      <!DOCTYPE html>
@@ -457,8 +459,10 @@ export function getButtonShadow(shadow: string = 'none'): string {
        </head>
        <body>
          ${headerHtml || ''}
-        <div style="padding: ${paddingY}px 20px; background: ${bgColor}; min-height: ${minHeight}px; display: flex; flex-direction: column; justify-content: ${justifyMap[justify]};">
+        <div style="padding: ${paddingY}px 20px; background: ${bgColor}; min-height: ${minHeight}px; display: flex; flex-direction: column; justify-content: ${justifyMap[justify]}; align-items: center;">
+          <div style="${maxWidthStyle} width: 100%;">
            ${formHtml}
+          </div>
          </div>
          ${footerHtml || ''}
        </body>

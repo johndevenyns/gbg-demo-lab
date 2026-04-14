@@ -29,6 +29,7 @@ export function ContentLayoutEditor({
   const [minHeight, setMinHeight] = useState(formStyle.contentAreaMinHeight ?? 400);
   const [paddingY, setPaddingY] = useState(formStyle.contentAreaPaddingY ?? 40);
   const [justify, setJustify] = useState<'start' | 'center' | 'end'>(formStyle.contentAreaJustify || 'start');
+  const [maxWidth, setMaxWidth] = useState(formStyle.contentAreaMaxWidth ?? 0);
   const [open, setOpen] = useState(false);
 
   // Sync from props when dialog opens
