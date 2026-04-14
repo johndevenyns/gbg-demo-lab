@@ -125,9 +125,16 @@ export function ContentLayoutEditor({
     apply({ contentAreaJustify: v });
   };
 
-  const justifyMap: Record<string, string> = { start: 'flex-start', center: 'center', end: 'flex-end' };
+  const handleMaxWidthInput = (val: string) => {
+    const n = parseInt(val);
+    if (!isNaN(n) && n >= 0 && n <= 1600) {
+      setMaxWidth(n);
+      apply({ contentAreaMaxWidth: n });
+    }
+  };
 
-  return (
+  const justifyMap: Record<string, string> = { start: 'flex-start', center: 'center', end: 'flex-end' };
+  const maxWidthPx = maxWidth || 576; // default ~36rem
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" size="sm" className="w-full justify-between">
