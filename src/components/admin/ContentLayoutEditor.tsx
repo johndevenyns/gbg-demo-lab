@@ -1,7 +1,6 @@
-import { useState, useRef, useCallback, useEffect } from "react";
-import { SlidersHorizontal, GripHorizontal, X, Save } from "lucide-react";
+import { useState, useRef, useCallback } from "react";
+import { SlidersHorizontal, X, Save, ChevronUp, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DemoEnvironment } from "@/types/demo";
@@ -24,6 +23,41 @@ function draftFromStyle(fs: FormStyleConfig): LayoutDraft {
     maxWidth: fs.contentAreaMaxWidth ?? 0,
     bgColor: fs.contentAreaBgColor || '#f5f5f5',
   };
+}
+
+/* Compact numeric stepper: value display with up/down arrows */
+function NumericStepper({ value, onChange, min, max, step, suffix = "px" }: {
+  value: number;
+  onChange: (v: number) => void;
+  min: number;
+  max: number;
+  step: number;
+  suffix?: string;
+}) {
+  const clamp = (v: number) => Math.max(min, Math.min(max, v));
+  return (
+    <div className="flex items-center border rounded-md overflow-hidden h-7">
+      <span className="flex-1 text-xs font-mono px-2 text-center select-none">
+        {value}{suffix}
+      </span>
+      <div className="flex flex-col border-l">
+        <button
+          type="button"
+          className="px-1.5 h-3.5 flex items-center justify-center hover:bg-muted transition-colors"
+          onClick={() => onChange(clamp(value + step))}
+        >
+          <ChevronUp className="w-3 h-3" />
+        </button>
+        <button
+          type="button"
+          className="px-1.5 h-3.5 flex items-center justify-center hover:bg-muted transition-colors border-t"
+          onClick={() => onChange(clamp(value - step))}
+        >
+          <ChevronDown className="w-3 h-3" />
+        </button>
+      </div>
+    </div>
+  );
 }
 
 interface ContentLayoutEditorProps {
@@ -59,7 +93,6 @@ export function ContentLayoutEditor({
   }, [formStyle, draft, onApplyBranding, onClose]);
 
   const cancel = useCallback(() => {
-    // Reset draft to saved values
     onDraftChange(draftFromStyle(formStyle));
     onClose();
   }, [formStyle, onDraftChange, onClose]);
@@ -79,31 +112,15 @@ export function ContentLayoutEditor({
       </div>
 
       <div className="space-y-1.5">
-        <Label className="text-[10px] font-medium">Min Height (px)</Label>
-        <Input
-          type="number"
-          value={draft.minHeight}
-          min={100} max={1500} step={10}
-          onChange={(e) => {
-            const n = parseInt(e.target.value);
-            if (!isNaN(n)) onDraftChange({ ...draft, minHeight: Math.max(100, Math.min(1500, n)) });
-          }}
-          className="h-7 text-xs font-mono"
-        />
+        <Label className="text-[10px] font-medium">Min Height</Label>
+        <NumericStepper value={draft.minHeight} min={100} max={1500} step={10}
+          onChange={(v) => onDraftChange({ ...draft, minHeight: v })} />
       </div>
 
       <div className="space-y-1.5">
-        <Label className="text-[10px] font-medium">Vertical Padding (px)</Label>
-        <Input
-          type="number"
-          value={draft.paddingY}
-          min={0} max={200} step={4}
-          onChange={(e) => {
-            const n = parseInt(e.target.value);
-            if (!isNaN(n)) onDraftChange({ ...draft, paddingY: Math.max(0, Math.min(200, n)) });
-          }}
-          className="h-7 text-xs font-mono"
-        />
+        <Label className="text-[10px] font-medium">Vertical Padding</Label>
+        <NumericStepper value={draft.paddingY} min={0} max={200} step={4}
+          onChange={(v) => onDraftChange({ ...draft, paddingY: v })} />
       </div>
 
       <div className="space-y-1.5">
@@ -121,18 +138,9 @@ export function ContentLayoutEditor({
       </div>
 
       <div className="space-y-1.5">
-        <Label className="text-[10px] font-medium">Form Width (px)</Label>
-        <Input
-          type="number"
-          value={draft.maxWidth || ''}
-          placeholder="576 (default)"
-          min={200} max={1600} step={10}
-          onChange={(e) => {
-            const n = parseInt(e.target.value);
-            onDraftChange({ ...draft, maxWidth: !isNaN(n) ? Math.max(0, Math.min(1600, n)) : 0 });
-          }}
-          className="h-7 text-xs font-mono"
-        />
+        <Label className="text-[10px] font-medium">Form Width</Label>
+        <NumericStepper value={draft.maxWidth || 576} min={200} max={1600} step={10}
+          onChange={(v) => onDraftChange({ ...draft, maxWidth: v })} />
       </div>
 
       <div className="space-y-1.5">
@@ -144,15 +152,9 @@ export function ContentLayoutEditor({
             onChange={(e) => onDraftChange({ ...draft, bgColor: e.target.value })}
             className="w-7 h-7 rounded border cursor-pointer"
           />
-          <Input
-            value={draft.bgColor}
-            onChange={(e) => onDraftChange({ ...draft, bgColor: e.target.value })}
-            className="h-7 text-[10px] font-mono flex-1"
-          />
+          <span className="text-[10px] font-mono text-muted-foreground">{draft.bgColor}</span>
         </div>
       </div>
-
-      <p className="text-[9px] text-muted-foreground">Drag handles on the preview to resize visually</p>
 
       <div className="flex gap-2 pt-1">
         <Button variant="outline" size="sm" className="flex-1 h-7 text-xs" onClick={cancel}>
