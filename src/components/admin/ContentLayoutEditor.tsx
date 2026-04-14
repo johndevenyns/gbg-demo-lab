@@ -135,6 +135,8 @@ export function ContentLayoutEditor({
 
   const justifyMap: Record<string, string> = { start: 'flex-start', center: 'center', end: 'flex-end' };
   const maxWidthPx = maxWidth || 576; // default ~36rem
+
+  return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" size="sm" className="w-full justify-between">
