@@ -228,7 +228,7 @@ export function UserManagement({ isGlobalAdmin = true }: UserManagementProps) {
     setSetPasswordDialogOpen(true);
   };
 
-  // Add new admin by email, optionally with initial password
+  // Add new admin by email
   const handleAddAdmin = async () => {
     if (!newUserEmail.trim()) {
       setAddError('Please enter an email address');
@@ -240,9 +240,6 @@ export function UserManagement({ isGlobalAdmin = true }: UserManagementProps) {
 
     try {
       const body: any = { action: 'add', email: newUserEmail.trim(), role: newUserRole };
-      if (newUserPassword.trim()) {
-        body.password = newUserPassword.trim();
-      }
 
       const { data, error } = await supabase.functions.invoke('manage-admin-users', {
         body,
@@ -253,21 +250,18 @@ export function UserManagement({ isGlobalAdmin = true }: UserManagementProps) {
 
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
       logAdminAction({ action: "create", entityType: "admin_user", entityLabel: newUserEmail.trim(), details: { role: newUserRole } });
-      let msg: string;
-      if (data?.created && data?.hadPassword) {
-        msg = `Account created for ${newUserEmail} with admin access and the specified password.`;
-        // Show intro letter dialog
-        setIntroLetterText(generateIntroLetter(newUserEmail.trim(), newUserPassword.trim(), newUserRole));
-        setIntroLetterCopied(false);
-        setIntroLetterOpen(true);
-      } else if (data?.created) {
-        msg = `Account created for ${newUserEmail} with admin access. A password reset email has been sent.`;
-      } else {
-        msg = `${newUserEmail} now has admin access.`;
-      }
+      
+      const msg = data?.created
+        ? `Account created for ${newUserEmail} with admin access. A password setup link has been generated.`
+        : `${newUserEmail} now has admin access.`;
+      
+      // Show intro letter with the setup link
+      setIntroLetterText(generateIntroLetter(newUserEmail.trim(), newUserRole, data?.setupLink || null));
+      setIntroLetterCopied(false);
+      setIntroLetterOpen(true);
+
       toast({ title: 'Admin added', description: msg });
       setNewUserEmail('');
-      setNewUserPassword('');
       setNewUserRole('admin');
       setAddDialogOpen(false);
     } catch (err: any) {
@@ -333,17 +327,8 @@ export function UserManagement({ isGlobalAdmin = true }: UserManagementProps) {
                       onChange={(e) => setNewUserEmail(e.target.value)}
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="initial-password">Initial Password (optional)</Label>
-                    <Input
-                      id="initial-password"
-                      type="password"
-                      placeholder="Leave blank to send reset email"
-                      value={newUserPassword}
-                      onChange={(e) => setNewUserPassword(e.target.value)}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      If no account exists, one will be created. Leave password blank to send a reset email instead.
+                  <p className="text-xs text-muted-foreground">
+                      If no account exists, one will be created. The user will receive a unique link to set their own password.
                     </p>
                   </div>
                   <div className="space-y-2">
@@ -549,39 +534,6 @@ export function UserManagement({ isGlobalAdmin = true }: UserManagementProps) {
         </DialogContent>
       </Dialog>
 
-      {/* Password Prompt for Existing User Welcome Letter */}
-      <Dialog open={introLetterForExistingOpen} onOpenChange={setIntroLetterForExistingOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Generate Welcome Letter</DialogTitle>
-            <DialogDescription>
-              Enter a password to include in the welcome letter for {existingUserEmail}. Leave blank to omit.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label>Password (optional)</Label>
-              <Input
-                type="text"
-                value={existingUserPassword}
-                onChange={(e) => setExistingUserPassword(e.target.value)}
-                placeholder="Enter password to include, or leave blank"
-              />
-              <p className="text-xs text-muted-foreground">
-                This does NOT change the user's password. It only includes it in the letter for your reference.
-              </p>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIntroLetterForExistingOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={confirmExistingIntroLetter}>
-              Generate Letter
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </>
   );
 }
