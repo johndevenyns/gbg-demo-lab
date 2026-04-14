@@ -10,6 +10,7 @@ import { DEFAULT_SUCCESS_CONFIG, DEFAULT_FAILURE_CONFIG } from "@/components/pre
 import { DEFAULT_FORM_STYLE } from "@/types/formStyle";
 import { useDemoUseCaseLinks } from "@/hooks/useUseCases";
 import { useHeaderCtaLinks } from "@/hooks/useHeaderCtaLinks";
+import { parseHotspotSelector } from "@/components/admin/HeaderHotspotPicker";
 import { useIndustries } from "@/hooks/useIndustries";
 import { UseCaseLandingPage } from "@/components/preview/UseCaseLandingPage";
 import { BankingPortalShell } from "@/components/preview/mockPortal/BankingPortalShell";
@@ -508,7 +509,12 @@ export default function DemoPreview() {
           baseHref = `<base href="${u.origin}/">`;
         } catch { /* ignore */ }
 
+        // Separate hotspot links from CSS-selector links
+        const hotspotLinks = ctaLinks.filter(l => parseHotspotSelector(l.cssSelector));
+        const cssCtaLinks = ctaLinks.filter(l => !parseHotspotSelector(l.cssSelector));
+
         return (
+        <div className="relative">
         <iframe
           srcDoc={`
             <!DOCTYPE html>
@@ -526,15 +532,15 @@ export default function DemoPreview() {
                     width: 100%;
                     max-width: 100%;
                   }
-                  ${ctaLinks.map(l => `${l.cssSelector} { pointer-events: auto !important; cursor: pointer !important; }`).join('\n')}
+                  ${cssCtaLinks.map(l => `${l.cssSelector} { pointer-events: auto !important; cursor: pointer !important; }`).join('\n')}
                 </style>
                 ${previewDocument.cssContent ? `<style>${previewDocument.cssContent}</style>` : ''}
               </head>
               <body>
                 ${previewDocument.headerHtml}
-                ${ctaLinks.length > 0 ? `
+                ${cssCtaLinks.length > 0 ? `
                 <script>
-                  var ctaMappings = ${JSON.stringify(ctaLinks.map(l => ({ selector: l.cssSelector, useCaseId: l.useCaseId, label: l.elementLabel })))};
+                  var ctaMappings = ${JSON.stringify(cssCtaLinks.map(l => ({ selector: l.cssSelector, useCaseId: l.useCaseId, label: l.elementLabel })))};
                   var normalizeCtaValue = function(value) {
                     return (value || '').replace(/\\s+/g, ' ').trim().toLowerCase();
                   };
@@ -636,6 +642,27 @@ export default function DemoPreview() {
             enhanceHeaderPreviewIframe(e.currentTarget, 80);
           }}
         />
+        {/* Hotspot overlay regions */}
+        {hotspotLinks.map((link) => {
+          const hotspot = parseHotspotSelector(link.cssSelector);
+          if (!hotspot) return null;
+          return (
+            <div
+              key={link.id}
+              className="absolute cursor-pointer"
+              style={{
+                left: `${hotspot.x}%`,
+                top: `${hotspot.y}%`,
+                width: `${hotspot.w}%`,
+                height: `${hotspot.h}%`,
+              }}
+              onClick={() => {
+                window.postMessage({ type: 'cta-use-case', useCaseId: link.useCaseId }, '*');
+              }}
+            />
+          );
+        })}
+        </div>
         );
       })()}
 

@@ -14,6 +14,7 @@ import { HtmlCaptureTab } from "./HtmlCaptureTab";
 import { ScreenshotCaptureTab } from "./ScreenshotCaptureTab";
 import { EmbedFormSection } from "./EmbedFormSection";
 import { HeaderElementPicker } from "./HeaderElementPicker";
+import { HeaderHotspotPicker } from "./HeaderHotspotPicker";
 import { ScrapedBranding } from "@/lib/api/scraping";
 import { useToast } from "@/hooks/use-toast";
 import { DemoEnvironment } from "@/types/demo";
@@ -397,15 +398,23 @@ interface SiteMirrorCardProps {
                 </CollapsibleContent>
               </Collapsible>
             )}
-            {/* Header CTA Element Picker */}
+            {/* Header CTA Element Picker — hotspot for screenshots, CSS picker for HTML */}
             {hasAnyContent && headerHtml && (
               <div className="mt-4">
-                <HeaderElementPicker
-                  demoId={demo.id}
-                  headerHtml={headerHtml}
-                  cssContent={cssContent || undefined}
-                  useCaseLinks={useCaseLinks}
-                />
+                {activeMethod === 'screenshot' ? (
+                  <HeaderHotspotPicker
+                    demoId={demo.id}
+                    headerHtml={headerHtml}
+                    useCaseLinks={useCaseLinks}
+                  />
+                ) : (
+                  <HeaderElementPicker
+                    demoId={demo.id}
+                    headerHtml={headerHtml}
+                    cssContent={cssContent || undefined}
+                    useCaseLinks={useCaseLinks}
+                  />
+                )}
               </div>
             )}
           </CardContent>
