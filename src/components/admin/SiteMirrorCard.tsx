@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { Globe, X, Eye, Monitor, Tablet, Smartphone, SlidersHorizontal, GripHorizontal } from "lucide-react";
+import { Globe, X, Eye, Monitor, Tablet, Smartphone, SlidersHorizontal, GripHorizontal, GripVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -44,7 +44,7 @@ interface SiteMirrorCardProps {
     const [url, setUrl] = useState(demo.customerSiteUrl || "");
     const [previewViewport, setPreviewViewport] = useState<PreviewViewport>('desktop');
     const [layoutEditMode, setLayoutEditMode] = useState(false);
-    const { draft, setDraft, resetDraft, onTopPaddingMouseDown, onHeightMouseDown } = useContentLayoutDraft(demo);
+    const { draft, setDraft, resetDraft, onTopPaddingMouseDown, onHeightMouseDown, onWidthMouseDown, containerRef } = useContentLayoutDraft(demo);
    // Track which method is active for the demo (persisted) AND which tab user is viewing
    const [activeMethod, setActiveMethod] = useState<CaptureMode>(demo.mirrorActiveMethod || 'html');
    const [currentTab, setCurrentTab] = useState<CaptureTab>('html');
@@ -287,7 +287,32 @@ interface SiteMirrorCardProps {
                           alignItems: 'center',
                         }}
                       >
-                        <div style={{ maxWidth: `${contentMaxWidth}px`, width: '100%' }}>
+                        <div className="relative" style={{ maxWidth: `${contentMaxWidth}px`, width: '100%' }} ref={containerRef}>
+                          {/* Left width drag handle */}
+                          {layoutEditMode && (
+                            <div
+                              className="absolute left-0 top-0 bottom-0 w-3 flex items-center justify-center cursor-ew-resize z-10 group -ml-1.5"
+                              onMouseDown={(e) => onWidthMouseDown(e, 'left')}
+                            >
+                              <div className="w-1 h-12 rounded-full bg-primary/60 group-hover:bg-primary transition-colors" />
+                              <div className="absolute left-1/2 -translate-x-1/2 -top-5 px-1.5 py-0.5 rounded bg-primary/80 text-primary-foreground text-[9px] opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
+                                {contentMaxWidth}px
+                              </div>
+                            </div>
+                          )}
+                          {/* Right width drag handle */}
+                          {layoutEditMode && (
+                            <div
+                              className="absolute right-0 top-0 bottom-0 w-3 flex items-center justify-center cursor-ew-resize z-10 group -mr-1.5"
+                              onMouseDown={(e) => onWidthMouseDown(e, 'right')}
+                            >
+                              <div className="w-1 h-12 rounded-full bg-primary/60 group-hover:bg-primary transition-colors" />
+                            </div>
+                          )}
+                          {/* Dashed border outline in edit mode */}
+                          {layoutEditMode && (
+                            <div className="absolute inset-0 border border-dashed border-primary/30 rounded pointer-events-none z-[5]" />
+                          )}
                           <iframe
                             srcDoc={generatePreviewDocument({
                               formStyle: demo.formStyle || DEFAULT_FORM_STYLE,
