@@ -322,79 +322,15 @@ interface SiteMirrorCardProps {
             )}
             {/* Content Area Layout Controls */}
             {hasAnyContent && (
-              <Collapsible className="mt-4">
-                <CollapsibleTrigger asChild>
-                  <Button variant="outline" size="sm" className="w-full justify-between">
-                    <span className="flex items-center gap-2">
-                      <SlidersHorizontal className="w-4 h-4" />
-                      Content Area Layout
-                    </span>
-                    <span className="text-xs text-muted-foreground">Height, spacing &amp; alignment</span>
-                  </Button>
-                </CollapsibleTrigger>
-                <CollapsibleContent className="mt-3 p-4 rounded-lg border bg-muted/30 space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    {/* Min Height */}
-                    <div className="space-y-2">
-                      <Label className="text-xs font-medium">Min Height (px)</Label>
-                      <div className="flex items-center gap-2">
-                        <Slider
-                          value={[demo.formStyle?.contentAreaMinHeight ?? 400]}
-                          min={200}
-                          max={1200}
-                          step={50}
-                          onValueChange={([v]) => {
-                            const updatedStyle: FormStyleConfig = { ...(demo.formStyle || DEFAULT_FORM_STYLE), contentAreaMinHeight: v };
-                            onApplyBranding({ formStyle: updatedStyle }, true);
-                          }}
-                          className="flex-1"
-                        />
-                        <span className="text-xs font-mono w-12 text-right">{demo.formStyle?.contentAreaMinHeight ?? 400}</span>
-                      </div>
-                    </div>
-
-                    {/* Vertical Padding */}
-                    <div className="space-y-2">
-                      <Label className="text-xs font-medium">Vertical Padding (px)</Label>
-                      <div className="flex items-center gap-2">
-                        <Slider
-                          value={[demo.formStyle?.contentAreaPaddingY ?? 40]}
-                          min={0}
-                          max={120}
-                          step={4}
-                          onValueChange={([v]) => {
-                            const updatedStyle: FormStyleConfig = { ...(demo.formStyle || DEFAULT_FORM_STYLE), contentAreaPaddingY: v };
-                            onApplyBranding({ formStyle: updatedStyle }, true);
-                          }}
-                          className="flex-1"
-                        />
-                        <span className="text-xs font-mono w-12 text-right">{demo.formStyle?.contentAreaPaddingY ?? 40}</span>
-                      </div>
-                    </div>
-
-                    {/* Vertical Justification */}
-                    <div className="space-y-2">
-                      <Label className="text-xs font-medium">Vertical Alignment</Label>
-                      <Select
-                        value={demo.formStyle?.contentAreaJustify || 'start'}
-                        onValueChange={(v) => {
-                          const updatedStyle: FormStyleConfig = { ...(demo.formStyle || DEFAULT_FORM_STYLE), contentAreaJustify: v as 'start' | 'center' | 'end' };
-                          onApplyBranding({ formStyle: updatedStyle }, true);
-                        }}
-                      >
-                        <SelectTrigger className="h-9">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="start">Top</SelectItem>
-                          <SelectItem value="center">Center</SelectItem>
-                          <SelectItem value="end">Bottom</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                </CollapsibleContent>
-              </Collapsible>
+              <div className="mt-4">
+                <ContentLayoutEditor
+                  demo={demo}
+                  headerHtml={headerHtml}
+                  footerHtml={footerHtml}
+                  cssContent={cssContent || ''}
+                  onApplyBranding={onApplyBranding}
+                />
+              </div>
             )}
             {/* Header CTA Element Picker — hotspot for screenshots, CSS picker for HTML */}
             {hasAnyContent && headerHtml && (
