@@ -227,6 +227,7 @@ export function ContentLayoutEditor({
                       }
                     }}
                   />
+                  </div>
                 </div>
 
                 {/* Bottom height drag handle */}
