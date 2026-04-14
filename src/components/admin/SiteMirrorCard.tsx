@@ -329,7 +329,7 @@ interface SiteMirrorCardProps {
                           </html>
                         `}
                         className="block w-full border-0"
-                        style={{ height: '160px' }}
+                        style={{ height: `${footerHeight}px` }}
                         title="Live site footer preview"
                         sandbox="allow-same-origin"
                         onLoad={(e) => {
