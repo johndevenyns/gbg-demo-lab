@@ -31,6 +31,32 @@ const viewportConfig: Record<PreviewViewport, { width: string; iframeWidth: numb
   phone: { width: '390px', iframeWidth: null, label: 'Phone', icon: Smartphone },
 };
 
+
+function generateSelectorFromElement(el: Element): string {
+  if (el.id) return `#${el.id}`;
+  const tag = el.tagName.toLowerCase();
+  if (el.classList.length > 0) {
+    const classSelector = `${tag}.${Array.from(el.classList).join(".")}`;
+    const parent = el.parentElement;
+    if (parent && parent.querySelectorAll(classSelector).length === 1) return classSelector;
+  }
+  const parts: string[] = [];
+  let current: Element | null = el;
+  while (current && current.tagName.toLowerCase() !== "body" && current.tagName.toLowerCase() !== "html") {
+    let segment = current.tagName.toLowerCase();
+    if (current.id) { parts.unshift(`#${current.id}`); break; }
+    if (current.classList.length > 0) segment += `.${Array.from(current.classList).slice(0, 2).join(".")}`;
+    const parent = current.parentElement;
+    if (parent) {
+      const siblings = Array.from(parent.children).filter(c => c.tagName === current!.tagName);
+      if (siblings.length > 1) segment += `:nth-child(${siblings.indexOf(current) + 1})`;
+    }
+    parts.unshift(segment);
+    current = current.parentElement;
+  }
+  return parts.join(" > ");
+}
+
 export type { CaptureMode } from "./SiteMirrorTabs";
  
 interface SiteMirrorCardProps {
