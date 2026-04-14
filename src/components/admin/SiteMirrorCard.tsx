@@ -321,7 +321,6 @@ interface SiteMirrorCardProps {
                </div>
              </div>
             )}
-
             {/* Content Area Layout Controls */}
             {hasAnyContent && (
               <Collapsible className="mt-4">
