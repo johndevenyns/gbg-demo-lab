@@ -344,6 +344,7 @@ export function ContentLayoutEditor({
               <p className="text-[10px] text-muted-foreground">0 or empty = default (576px). Set to control form container width.</p>
             </div>
 
+            <div className="space-y-2">
               <Label className="text-xs font-medium">Background Color</Label>
               <div className="flex items-center gap-2">
                 <input
