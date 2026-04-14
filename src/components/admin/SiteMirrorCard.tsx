@@ -12,7 +12,7 @@ import { ScreenshotCaptureTab } from "./ScreenshotCaptureTab";
 import { EmbedFormSection } from "./EmbedFormSection";
 import { HeaderElementPicker } from "./HeaderElementPicker";
 import { HeaderHotspotPicker } from "./HeaderHotspotPicker";
-import { ContentLayoutEditor, useContentLayoutDrag } from "./ContentLayoutEditor";
+import { ContentLayoutEditor, useContentLayoutDraft } from "./ContentLayoutEditor";
 import { ScrapedBranding } from "@/lib/api/scraping";
 import { useToast } from "@/hooks/use-toast";
 import { DemoEnvironment } from "@/types/demo";
@@ -44,7 +44,7 @@ interface SiteMirrorCardProps {
     const [url, setUrl] = useState(demo.customerSiteUrl || "");
     const [previewViewport, setPreviewViewport] = useState<PreviewViewport>('desktop');
     const [layoutEditMode, setLayoutEditMode] = useState(false);
-    const dragHandlers = useContentLayoutDrag(demo, onApplyBranding);
+    const { draft, setDraft, resetDraft, onTopPaddingMouseDown, onHeightMouseDown } = useContentLayoutDraft(demo);
    // Track which method is active for the demo (persisted) AND which tab user is viewing
    const [activeMethod, setActiveMethod] = useState<CaptureMode>(demo.mirrorActiveMethod || 'html');
    const [currentTab, setCurrentTab] = useState<CaptureTab>('html');
@@ -135,11 +135,13 @@ interface SiteMirrorCardProps {
       const vpConfig = viewportConfig[previewViewport];
 
       const formStyle = demo.formStyle || DEFAULT_FORM_STYLE;
-      const paddingY = formStyle.contentAreaPaddingY ?? 40;
-      const minContentHeight = formStyle.contentAreaMinHeight ?? 400;
+      // When in edit mode, use draft values for the preview; otherwise use saved values
+      const paddingY = layoutEditMode ? draft.paddingY : (formStyle.contentAreaPaddingY ?? 40);
+      const minContentHeight = layoutEditMode ? draft.minHeight : (formStyle.contentAreaMinHeight ?? 400);
       const justifyMap: Record<string, string> = { start: 'flex-start', center: 'center', end: 'flex-end' };
-      const contentJustify = justifyMap[formStyle.contentAreaJustify || 'start'] || 'flex-start';
-      const contentMaxWidth = formStyle.contentAreaMaxWidth || 576;
+      const contentJustify = justifyMap[layoutEditMode ? draft.justify : (formStyle.contentAreaJustify || 'start')] || 'flex-start';
+      const contentMaxWidth = layoutEditMode ? (draft.maxWidth || 576) : (formStyle.contentAreaMaxWidth || 576);
+      const contentBgColor = layoutEditMode ? draft.bgColor : (formStyle.contentAreaBgColor || '#f5f5f5');
 
       return (
         <Card className="glass-card border-2 border-primary/20">
