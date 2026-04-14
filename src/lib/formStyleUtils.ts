@@ -433,6 +433,8 @@ export function getButtonShadow(shadow: string = 'none'): string {
    footerHtml?: string;
    cssContent?: string;
    contentBgColor?: string;
+   /** When true, skip the layout wrapper (padding, minHeight, justify) — used when the parent already provides it */
+   skipLayoutWrapper?: boolean;
  }
  
  export function generatePreviewDocument(options: PreviewDocumentOptions): string {
