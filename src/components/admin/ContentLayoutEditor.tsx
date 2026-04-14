@@ -324,6 +324,26 @@ export function ContentLayoutEditor({
             </div>
 
             <div className="space-y-2">
+              <Label className="text-xs font-medium">Form Container Width (px)</Label>
+              <Input
+                type="number"
+                value={maxWidth || ''}
+                placeholder="576 (default)"
+                min={200}
+                max={1600}
+                step={10}
+                onChange={(e) => {
+                  const n = parseInt(e.target.value);
+                  if (!isNaN(n)) setMaxWidth(n);
+                  else setMaxWidth(0);
+                }}
+                onBlur={(e) => handleMaxWidthInput(e.target.value || '0')}
+                onKeyDown={(e) => { if (e.key === 'Enter') handleMaxWidthInput((e.target as HTMLInputElement).value || '0'); }}
+                className="h-8 text-sm font-mono"
+              />
+              <p className="text-[10px] text-muted-foreground">0 or empty = default (576px). Set to control form container width.</p>
+            </div>
+
               <Label className="text-xs font-medium">Background Color</Label>
               <div className="flex items-center gap-2">
                 <input
