@@ -38,8 +38,9 @@ export function ContentLayoutEditor({
       setMinHeight(formStyle.contentAreaMinHeight ?? 400);
       setPaddingY(formStyle.contentAreaPaddingY ?? 40);
       setJustify(formStyle.contentAreaJustify || 'start');
+      setMaxWidth(formStyle.contentAreaMaxWidth ?? 0);
     }
-  }, [open, formStyle.contentAreaMinHeight, formStyle.contentAreaPaddingY, formStyle.contentAreaJustify]);
+  }, [open, formStyle.contentAreaMinHeight, formStyle.contentAreaPaddingY, formStyle.contentAreaJustify, formStyle.contentAreaMaxWidth]);
 
   const apply = useCallback((updates: Partial<FormStyleConfig>) => {
     const updatedStyle: FormStyleConfig = { ...formStyle, ...updates };
