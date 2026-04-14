@@ -276,27 +276,6 @@ interface SiteMirrorCardProps {
                         }}
                       >
                         <div className="relative" style={{ maxWidth: `${contentMaxWidth}px`, width: '100%' }} ref={containerRef}>
-                          {/* Left width drag handle */}
-                          {layoutEditMode && (
-                            <div
-                              className="absolute left-0 top-0 bottom-0 w-3 flex items-center justify-center cursor-ew-resize z-10 group -ml-1.5"
-                              onMouseDown={(e) => onWidthMouseDown(e, 'left')}
-                            >
-                              <div className="w-1 h-12 rounded-full bg-primary/60 group-hover:bg-primary transition-colors" />
-                              <div className="absolute left-1/2 -translate-x-1/2 -top-5 px-1.5 py-0.5 rounded bg-primary/80 text-primary-foreground text-[9px] opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
-                                {contentMaxWidth}px
-                              </div>
-                            </div>
-                          )}
-                          {/* Right width drag handle */}
-                          {layoutEditMode && (
-                            <div
-                              className="absolute right-0 top-0 bottom-0 w-3 flex items-center justify-center cursor-ew-resize z-10 group -mr-1.5"
-                              onMouseDown={(e) => onWidthMouseDown(e, 'right')}
-                            >
-                              <div className="w-1 h-12 rounded-full bg-primary/60 group-hover:bg-primary transition-colors" />
-                            </div>
-                          )}
                           {/* Dashed border outline in edit mode */}
                           {layoutEditMode && (
                             <div className="absolute inset-0 border border-dashed border-primary/30 rounded pointer-events-none z-[5]" />
@@ -327,20 +306,6 @@ interface SiteMirrorCardProps {
                           />
                         </div>
                       </div>
-
-                      {/* Bottom height drag handle */}
-                      {layoutEditMode && (
-                        <div
-                          className="absolute bottom-0 left-0 right-0 flex items-center justify-center cursor-ns-resize z-10 group h-4"
-                          onMouseDown={onHeightMouseDown}
-                        >
-                          <div className="flex items-center gap-1 px-2 py-0.5 rounded bg-primary/80 text-primary-foreground text-[10px] opacity-60 group-hover:opacity-100 transition-opacity pointer-events-none">
-                            <GripHorizontal className="w-3 h-3" />
-                            Height: {minContentHeight}px
-                          </div>
-                          <div className="absolute top-0 left-[10%] right-[10%] h-px border-t border-dashed border-primary/40 opacity-60 group-hover:opacity-100 transition-opacity" />
-                        </div>
-                      )}
                     </div>
 
                     {footerHtml && (
