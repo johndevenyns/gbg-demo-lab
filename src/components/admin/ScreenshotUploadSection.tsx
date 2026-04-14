@@ -21,19 +21,32 @@ function generateUploadedHtml(
   return `<div style="width: 100%; background-color: ${bgColor}; display: flex; justify-content: center; align-items: center; padding: 0;"><img src="${imageUrl}" style="max-width: 100%; height: auto; display: block;" alt="${alt}" /></div>`;
 }
 
+function parseUploadedHtml(html: string | null | undefined): { url: string | null; bgColor: string } {
+  if (!html) return { url: null, bgColor: "#ffffff" };
+  const imgMatch = html.match(/src="([^"]+)"/);
+  const bgMatch = html.match(/background-color:\s*([^;]+)/);
+  return {
+    url: imgMatch?.[1] || null,
+    bgColor: bgMatch?.[1]?.trim() || "#ffffff",
+  };
+}
+
 export function ScreenshotUploadSection({ demo, onApply }: ScreenshotUploadSectionProps) {
   const { toast } = useToast();
   const headerInputRef = useRef<HTMLInputElement>(null);
   const footerInputRef = useRef<HTMLInputElement>(null);
 
-  const [headerPreview, setHeaderPreview] = useState<string | null>(null);
-  const [footerPreview, setFooterPreview] = useState<string | null>(null);
-  const [headerBgColor, setHeaderBgColor] = useState("#ffffff");
-  const [footerBgColor, setFooterBgColor] = useState("#ffffff");
+  const existingHeader = parseUploadedHtml(demo.mirrorScreenshotHeaderHtml);
+  const existingFooter = parseUploadedHtml(demo.mirrorScreenshotFooterHtml);
+
+  const [headerPreview, setHeaderPreview] = useState<string | null>(existingHeader.url);
+  const [footerPreview, setFooterPreview] = useState<string | null>(existingFooter.url);
+  const [headerBgColor, setHeaderBgColor] = useState(existingHeader.bgColor);
+  const [footerBgColor, setFooterBgColor] = useState(existingFooter.bgColor);
   const [headerUploading, setHeaderUploading] = useState(false);
   const [footerUploading, setFooterUploading] = useState(false);
-  const [headerUrl, setHeaderUrl] = useState<string | null>(null);
-  const [footerUrl, setFooterUrl] = useState<string | null>(null);
+  const [headerUrl, setHeaderUrl] = useState<string | null>(existingHeader.url);
+  const [footerUrl, setFooterUrl] = useState<string | null>(existingFooter.url);
 
   const uploadImage = async (file: File, type: "header" | "footer"): Promise<string | null> => {
     const ext = file.name.split(".").pop() || "png";
