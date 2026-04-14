@@ -171,7 +171,10 @@ interface SiteMirrorCardProps {
                     variant={layoutEditMode ? "default" : "outline"}
                     size="sm"
                     className="gap-1.5"
-                    onClick={() => setLayoutEditMode(!layoutEditMode)}
+                    onClick={() => {
+                      if (!layoutEditMode) resetDraft();
+                      setLayoutEditMode(!layoutEditMode);
+                    }}
                   >
                     <SlidersHorizontal className="w-4 h-4" />
                     <span className="text-xs">Adjust Spacing</span>
@@ -216,6 +219,8 @@ interface SiteMirrorCardProps {
                     onApplyBranding={onApplyBranding}
                     active={layoutEditMode}
                     onClose={() => setLayoutEditMode(false)}
+                    draft={draft}
+                    onDraftChange={setDraft}
                   />
 
                   <div
@@ -253,13 +258,13 @@ interface SiteMirrorCardProps {
                     )}
 
                     {/* Content area — with optional drag handles */}
-                    <div className="relative" style={{ backgroundColor: formStyle.contentAreaBgColor || '#f5f5f5' }}>
+                    <div className="relative" style={{ backgroundColor: contentBgColor }}>
                       {/* Top padding drag handle */}
                       {layoutEditMode && (
                         <div
                           className="absolute top-0 left-0 right-0 flex items-center justify-center cursor-ns-resize z-10 group"
                           style={{ height: `${Math.max(paddingY, 12)}px` }}
-                          onMouseDown={dragHandlers.onTopPaddingMouseDown}
+                          onMouseDown={onTopPaddingMouseDown}
                         >
                           <div className="flex items-center gap-1 px-2 py-0.5 rounded bg-primary/80 text-primary-foreground text-[10px] opacity-60 group-hover:opacity-100 transition-opacity pointer-events-none">
                             <GripHorizontal className="w-3 h-3" />
@@ -313,7 +318,7 @@ interface SiteMirrorCardProps {
                       {layoutEditMode && (
                         <div
                           className="absolute bottom-0 left-0 right-0 flex items-center justify-center cursor-ns-resize z-10 group h-4"
-                          onMouseDown={dragHandlers.onHeightMouseDown}
+                          onMouseDown={onHeightMouseDown}
                         >
                           <div className="flex items-center gap-1 px-2 py-0.5 rounded bg-primary/80 text-primary-foreground text-[10px] opacity-60 group-hover:opacity-100 transition-opacity pointer-events-none">
                             <GripHorizontal className="w-3 h-3" />
