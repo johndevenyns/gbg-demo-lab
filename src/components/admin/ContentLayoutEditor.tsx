@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import { SlidersHorizontal, GripHorizontal, X } from "lucide-react";
+import { SlidersHorizontal, GripHorizontal, X, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,74 +7,62 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DemoEnvironment } from "@/types/demo";
 import { DEFAULT_FORM_STYLE, FormStyleConfig } from "@/types/formStyle";
 
+/** Local draft state for layout values */
+export interface LayoutDraft {
+  minHeight: number;
+  paddingY: number;
+  justify: 'start' | 'center' | 'end';
+  maxWidth: number;
+  bgColor: string;
+}
+
+function draftFromStyle(fs: FormStyleConfig): LayoutDraft {
+  return {
+    minHeight: fs.contentAreaMinHeight ?? 400,
+    paddingY: fs.contentAreaPaddingY ?? 40,
+    justify: fs.contentAreaJustify || 'start',
+    maxWidth: fs.contentAreaMaxWidth ?? 0,
+    bgColor: fs.contentAreaBgColor || '#f5f5f5',
+  };
+}
+
 interface ContentLayoutEditorProps {
   demo: DemoEnvironment;
   onApplyBranding: (updates: Partial<DemoEnvironment>, autoSave?: boolean) => void;
-  /** When true, the inline controls panel is visible */
   active: boolean;
   onClose: () => void;
+  draft: LayoutDraft;
+  onDraftChange: (d: LayoutDraft) => void;
 }
 
-/**
- * Floating controls panel that appears alongside the live preview.
- * Drag handles are rendered by the parent (SiteMirrorCard) directly on the preview.
- */
 export function ContentLayoutEditor({
   demo,
   onApplyBranding,
   active,
   onClose,
+  draft,
+  onDraftChange,
 }: ContentLayoutEditorProps) {
   const formStyle = demo.formStyle || DEFAULT_FORM_STYLE;
-  const [minHeight, setMinHeight] = useState(formStyle.contentAreaMinHeight ?? 400);
-  const [paddingY, setPaddingY] = useState(formStyle.contentAreaPaddingY ?? 40);
-  const [justify, setJustify] = useState<'start' | 'center' | 'end'>(formStyle.contentAreaJustify || 'start');
-  const [maxWidth, setMaxWidth] = useState(formStyle.contentAreaMaxWidth ?? 0);
 
-  // Sync from props when activated
-  useEffect(() => {
-    if (active) {
-      setMinHeight(formStyle.contentAreaMinHeight ?? 400);
-      setPaddingY(formStyle.contentAreaPaddingY ?? 40);
-      setJustify(formStyle.contentAreaJustify || 'start');
-      setMaxWidth(formStyle.contentAreaMaxWidth ?? 0);
-    }
-  }, [active, formStyle.contentAreaMinHeight, formStyle.contentAreaPaddingY, formStyle.contentAreaJustify, formStyle.contentAreaMaxWidth]);
-
-  const apply = useCallback((updates: Partial<FormStyleConfig>) => {
-    const updatedStyle: FormStyleConfig = { ...formStyle, ...updates };
+  const save = useCallback(() => {
+    const updatedStyle: FormStyleConfig = {
+      ...formStyle,
+      contentAreaMinHeight: draft.minHeight,
+      contentAreaPaddingY: draft.paddingY,
+      contentAreaJustify: draft.justify,
+      contentAreaMaxWidth: draft.maxWidth,
+      contentAreaBgColor: draft.bgColor,
+    };
     onApplyBranding({ formStyle: updatedStyle }, true);
-  }, [formStyle, onApplyBranding]);
+    onClose();
+  }, [formStyle, draft, onApplyBranding, onClose]);
 
-  const handleMinHeightInput = (val: string) => {
-    const n = parseInt(val);
-    if (!isNaN(n) && n >= 100 && n <= 1500) {
-      setMinHeight(n);
-      apply({ contentAreaMinHeight: n });
-    }
-  };
-
-  const handlePaddingInput = (val: string) => {
-    const n = parseInt(val);
-    if (!isNaN(n) && n >= 0 && n <= 200) {
-      setPaddingY(n);
-      apply({ contentAreaPaddingY: n });
-    }
-  };
-
-  const handleJustifyChange = (val: string) => {
-    const v = val as 'start' | 'center' | 'end';
-    setJustify(v);
-    apply({ contentAreaJustify: v });
-  };
-
-  const handleMaxWidthInput = (val: string) => {
-    const n = parseInt(val);
-    if (!isNaN(n) && n >= 0 && n <= 1600) {
-      setMaxWidth(n);
-      apply({ contentAreaMaxWidth: n });
-    }
-  };
+  const cancel = useCallback(() => {
+    // Reset draft to saved values
+    onDraftChange(draftFromStyle(formStyle));
+    onClose();
+  }, [formStyle, onDraftChange, onClose]);
 
   if (!active) return null;
 
@@ -85,7 +73,7 @@ export function ContentLayoutEditor({
           <SlidersHorizontal className="w-3.5 h-3.5" />
           Layout Controls
         </span>
-        <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={onClose}>
+        <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={cancel}>
           <X className="w-3.5 h-3.5" />
         </Button>
       </div>
@@ -94,16 +82,12 @@ export function ContentLayoutEditor({
         <Label className="text-[10px] font-medium">Min Height (px)</Label>
         <Input
           type="number"
-          value={minHeight}
-          min={100}
-          max={1500}
-          step={10}
+          value={draft.minHeight}
+          min={100} max={1500} step={10}
           onChange={(e) => {
             const n = parseInt(e.target.value);
-            if (!isNaN(n)) setMinHeight(n);
+            if (!isNaN(n)) onDraftChange({ ...draft, minHeight: Math.max(100, Math.min(1500, n)) });
           }}
-          onBlur={(e) => handleMinHeightInput(e.target.value)}
-          onKeyDown={(e) => { if (e.key === 'Enter') handleMinHeightInput((e.target as HTMLInputElement).value); }}
           className="h-7 text-xs font-mono"
         />
       </div>
@@ -112,23 +96,19 @@ export function ContentLayoutEditor({
         <Label className="text-[10px] font-medium">Vertical Padding (px)</Label>
         <Input
           type="number"
-          value={paddingY}
-          min={0}
-          max={200}
-          step={4}
+          value={draft.paddingY}
+          min={0} max={200} step={4}
           onChange={(e) => {
             const n = parseInt(e.target.value);
-            if (!isNaN(n)) setPaddingY(n);
+            if (!isNaN(n)) onDraftChange({ ...draft, paddingY: Math.max(0, Math.min(200, n)) });
           }}
-          onBlur={(e) => handlePaddingInput(e.target.value)}
-          onKeyDown={(e) => { if (e.key === 'Enter') handlePaddingInput((e.target as HTMLInputElement).value); }}
           className="h-7 text-xs font-mono"
         />
       </div>
 
       <div className="space-y-1.5">
         <Label className="text-[10px] font-medium">Vertical Alignment</Label>
-        <Select value={justify} onValueChange={handleJustifyChange}>
+        <Select value={draft.justify} onValueChange={(v) => onDraftChange({ ...draft, justify: v as 'start' | 'center' | 'end' })}>
           <SelectTrigger className="h-7 text-xs">
             <SelectValue />
           </SelectTrigger>
@@ -144,18 +124,13 @@ export function ContentLayoutEditor({
         <Label className="text-[10px] font-medium">Form Width (px)</Label>
         <Input
           type="number"
-          value={maxWidth || ''}
+          value={draft.maxWidth || ''}
           placeholder="576 (default)"
-          min={200}
-          max={1600}
-          step={10}
+          min={200} max={1600} step={10}
           onChange={(e) => {
             const n = parseInt(e.target.value);
-            if (!isNaN(n)) setMaxWidth(n);
-            else setMaxWidth(0);
+            onDraftChange({ ...draft, maxWidth: !isNaN(n) ? Math.max(0, Math.min(1600, n)) : 0 });
           }}
-          onBlur={(e) => handleMaxWidthInput(e.target.value || '0')}
-          onKeyDown={(e) => { if (e.key === 'Enter') handleMaxWidthInput((e.target as HTMLInputElement).value || '0'); }}
           className="h-7 text-xs font-mono"
         />
       </div>
@@ -165,83 +140,80 @@ export function ContentLayoutEditor({
         <div className="flex items-center gap-1.5">
           <input
             type="color"
-            value={formStyle.contentAreaBgColor || '#f5f5f5'}
-            onChange={(e) => apply({ contentAreaBgColor: e.target.value })}
+            value={draft.bgColor}
+            onChange={(e) => onDraftChange({ ...draft, bgColor: e.target.value })}
             className="w-7 h-7 rounded border cursor-pointer"
           />
           <Input
-            value={formStyle.contentAreaBgColor || '#f5f5f5'}
-            onChange={(e) => apply({ contentAreaBgColor: e.target.value })}
+            value={draft.bgColor}
+            onChange={(e) => onDraftChange({ ...draft, bgColor: e.target.value })}
             className="h-7 text-[10px] font-mono flex-1"
           />
         </div>
       </div>
 
-      <p className="text-[9px] text-muted-foreground">Drag the handles on the preview to resize visually</p>
+      <p className="text-[9px] text-muted-foreground">Drag handles on the preview to resize visually</p>
+
+      <div className="flex gap-2 pt-1">
+        <Button variant="outline" size="sm" className="flex-1 h-7 text-xs" onClick={cancel}>
+          Cancel
+        </Button>
+        <Button size="sm" className="flex-1 h-7 text-xs gap-1" onClick={save}>
+          <Save className="w-3 h-3" />
+          Save
+        </Button>
+      </div>
     </div>
   );
 }
 
-/** Hook that provides drag handlers for the preview's content area */
-export function useContentLayoutDrag(
-  demo: DemoEnvironment,
-  onApplyBranding: (updates: Partial<DemoEnvironment>, autoSave?: boolean) => void,
-) {
+/** Hook: manages draft state + drag handlers that only update local draft (no auto-save) */
+export function useContentLayoutDraft(demo: DemoEnvironment) {
   const formStyle = demo.formStyle || DEFAULT_FORM_STYLE;
+  const [draft, setDraft] = useState<LayoutDraft>(draftFromStyle(formStyle));
 
-  const applyTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
-
-  const applyUpdate = useCallback((updates: Partial<FormStyleConfig>) => {
-    const updatedStyle: FormStyleConfig = { ...formStyle, ...updates };
-    onApplyBranding({ formStyle: updatedStyle }, true);
-  }, [formStyle, onApplyBranding]);
-
-  const debouncedApply = useCallback((updates: Partial<FormStyleConfig>) => {
-    clearTimeout(applyTimeoutRef.current);
-    applyTimeoutRef.current = setTimeout(() => applyUpdate(updates), 150);
-  }, [applyUpdate]);
+  // Reset draft when entering edit mode (called externally)
+  const resetDraft = useCallback(() => {
+    setDraft(draftFromStyle(demo.formStyle || DEFAULT_FORM_STYLE));
+  }, [demo.formStyle]);
 
   const onTopPaddingMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     const startY = e.clientY;
-    const startVal = formStyle.contentAreaPaddingY ?? 40;
+    const startVal = draft.paddingY;
 
     const onMove = (ev: MouseEvent) => {
       const delta = ev.clientY - startY;
       const newVal = Math.max(0, Math.min(200, startVal + delta));
-      debouncedApply({ contentAreaPaddingY: newVal });
+      setDraft(prev => ({ ...prev, paddingY: newVal }));
     };
-    const onUp = (ev: MouseEvent) => {
-      const delta = ev.clientY - startY;
-      const newVal = Math.max(0, Math.min(200, startVal + delta));
-      applyUpdate({ contentAreaPaddingY: newVal });
+    const onUp = () => {
       document.removeEventListener("mousemove", onMove);
       document.removeEventListener("mouseup", onUp);
     };
     document.addEventListener("mousemove", onMove);
     document.addEventListener("mouseup", onUp);
-  }, [formStyle.contentAreaPaddingY, debouncedApply, applyUpdate]);
+  }, [draft.paddingY]);
 
   const onHeightMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     const startY = e.clientY;
-    const startVal = formStyle.contentAreaMinHeight ?? 400;
+    const startVal = draft.minHeight;
 
     const onMove = (ev: MouseEvent) => {
       const delta = ev.clientY - startY;
       const newVal = Math.max(100, Math.min(1500, startVal + delta));
-      debouncedApply({ contentAreaMinHeight: newVal });
+      setDraft(prev => ({ ...prev, minHeight: newVal }));
     };
-    const onUp = (ev: MouseEvent) => {
-      const delta = ev.clientY - startY;
-      const newVal = Math.max(100, Math.min(1500, startVal + delta));
-      applyUpdate({ contentAreaMinHeight: newVal });
+    const onUp = () => {
       document.removeEventListener("mousemove", onMove);
       document.removeEventListener("mouseup", onUp);
     };
     document.addEventListener("mousemove", onMove);
     document.addEventListener("mouseup", onUp);
-  }, [formStyle.contentAreaMinHeight, debouncedApply, applyUpdate]);
+  }, [draft.minHeight]);
 
-  return { onTopPaddingMouseDown, onHeightMouseDown };
+  return { draft, setDraft, resetDraft, onTopPaddingMouseDown, onHeightMouseDown };
 }
+
+export { draftFromStyle };
