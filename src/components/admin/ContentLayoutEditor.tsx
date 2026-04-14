@@ -213,7 +213,28 @@ export function useContentLayoutDraft(demo: DemoEnvironment) {
     document.addEventListener("mouseup", onUp);
   }, [draft.minHeight]);
 
-  return { draft, setDraft, resetDraft, onTopPaddingMouseDown, onHeightMouseDown };
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  const onWidthMouseDown = useCallback((e: React.MouseEvent, side: 'left' | 'right') => {
+    e.preventDefault();
+    const startX = e.clientX;
+    const startVal = draft.maxWidth || 576;
+
+    const onMove = (ev: MouseEvent) => {
+      // Dragging either side changes width symmetrically (double the delta)
+      const rawDelta = side === 'right' ? ev.clientX - startX : startX - ev.clientX;
+      const newVal = Math.max(200, Math.min(1600, startVal + rawDelta * 2));
+      setDraft(prev => ({ ...prev, maxWidth: Math.round(newVal) }));
+    };
+    const onUp = () => {
+      document.removeEventListener("mousemove", onMove);
+      document.removeEventListener("mouseup", onUp);
+    };
+    document.addEventListener("mousemove", onMove);
+    document.addEventListener("mouseup", onUp);
+  }, [draft.maxWidth]);
+
+  return { draft, setDraft, resetDraft, onTopPaddingMouseDown, onHeightMouseDown, onWidthMouseDown, containerRef };
 }
 
 export { draftFromStyle };
