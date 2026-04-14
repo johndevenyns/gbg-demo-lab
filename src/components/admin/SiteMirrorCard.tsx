@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { Globe, X, Eye, Monitor, Tablet, Smartphone } from "lucide-react";
+import { Globe, X, Eye, Monitor, Tablet, Smartphone, SlidersHorizontal, GripHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -12,7 +12,7 @@ import { ScreenshotCaptureTab } from "./ScreenshotCaptureTab";
 import { EmbedFormSection } from "./EmbedFormSection";
 import { HeaderElementPicker } from "./HeaderElementPicker";
 import { HeaderHotspotPicker } from "./HeaderHotspotPicker";
-import { ContentLayoutEditor } from "./ContentLayoutEditor";
+import { ContentLayoutEditor, useContentLayoutDrag } from "./ContentLayoutEditor";
 import { ScrapedBranding } from "@/lib/api/scraping";
 import { useToast } from "@/hooks/use-toast";
 import { DemoEnvironment } from "@/types/demo";
@@ -43,7 +43,8 @@ interface SiteMirrorCardProps {
    const { toast } = useToast();
     const [url, setUrl] = useState(demo.customerSiteUrl || "");
     const [previewViewport, setPreviewViewport] = useState<PreviewViewport>('desktop');
-    
+    const [layoutEditMode, setLayoutEditMode] = useState(false);
+    const dragHandlers = useContentLayoutDrag(demo, onApplyBranding);
    // Track which method is active for the demo (persisted) AND which tab user is viewing
    const [activeMethod, setActiveMethod] = useState<CaptureMode>(demo.mirrorActiveMethod || 'html');
    const [currentTab, setCurrentTab] = useState<CaptureTab>('html');
@@ -133,6 +134,13 @@ interface SiteMirrorCardProps {
 
       const vpConfig = viewportConfig[previewViewport];
 
+      const formStyle = demo.formStyle || DEFAULT_FORM_STYLE;
+      const paddingY = formStyle.contentAreaPaddingY ?? 40;
+      const minContentHeight = formStyle.contentAreaMinHeight ?? 400;
+      const justifyMap: Record<string, string> = { start: 'flex-start', center: 'center', end: 'flex-end' };
+      const contentJustify = justifyMap[formStyle.contentAreaJustify || 'start'] || 'flex-start';
+      const contentMaxWidth = formStyle.contentAreaMaxWidth || 576;
+
       return (
         <Card className="glass-card border-2 border-primary/20">
           <CardHeader className="pb-3">
@@ -154,27 +162,41 @@ interface SiteMirrorCardProps {
                   }
                 </p>
               </div>
-              {/* Viewport Size Selector */}
-              {hasContentForMethod && (
-                <div className="flex items-center gap-1 border rounded-lg p-1 bg-muted/50">
-                  {(Object.entries(viewportConfig) as [PreviewViewport, typeof vpConfig][]).map(([key, cfg]) => {
-                    const Icon = cfg.icon;
-                    return (
-                      <Button
-                        key={key}
-                        variant={previewViewport === key ? "default" : "ghost"}
-                        size="sm"
-                        className={cn("h-8 px-2.5 gap-1.5", previewViewport === key && "shadow-sm")}
-                        onClick={() => setPreviewViewport(key)}
-                        title={cfg.label}
-                      >
-                        <Icon className="w-4 h-4" />
-                        <span className="text-xs hidden sm:inline">{cfg.label}</span>
-                      </Button>
-                    );
-                  })}
-                </div>
-              )}
+              <div className="flex items-center gap-2">
+                {/* Adjust Spacing toggle */}
+                {hasContentForMethod && (
+                  <Button
+                    variant={layoutEditMode ? "default" : "outline"}
+                    size="sm"
+                    className="gap-1.5"
+                    onClick={() => setLayoutEditMode(!layoutEditMode)}
+                  >
+                    <SlidersHorizontal className="w-4 h-4" />
+                    <span className="text-xs">Adjust Spacing</span>
+                  </Button>
+                )}
+                {/* Viewport Size Selector */}
+                {hasContentForMethod && (
+                  <div className="flex items-center gap-1 border rounded-lg p-1 bg-muted/50">
+                    {(Object.entries(viewportConfig) as [PreviewViewport, typeof vpConfig][]).map(([key, cfg]) => {
+                      const Icon = cfg.icon;
+                      return (
+                        <Button
+                          key={key}
+                          variant={previewViewport === key ? "default" : "ghost"}
+                          size="sm"
+                          className={cn("h-8 px-2.5 gap-1.5", previewViewport === key && "shadow-sm")}
+                          onClick={() => setPreviewViewport(key)}
+                          title={cfg.label}
+                        >
+                          <Icon className="w-4 h-4" />
+                          <span className="text-xs hidden sm:inline">{cfg.label}</span>
+                        </Button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             </div>
           </CardHeader>
           <CardContent>
@@ -182,10 +204,18 @@ interface SiteMirrorCardProps {
               <ScrollArea className="w-full rounded-lg border bg-muted/30">
                 <div
                   className={cn(
-                    "p-4",
+                    "p-4 relative",
                     previewViewport === 'desktop' ? "min-w-[1280px]" : "flex justify-center"
                   )}
                 >
+                  {/* Floating layout controls panel */}
+                  <ContentLayoutEditor
+                    demo={demo}
+                    onApplyBranding={onApplyBranding}
+                    active={layoutEditMode}
+                    onClose={() => setLayoutEditMode(false)}
+                  />
+
                   <div
                     className="overflow-hidden rounded-lg border bg-background shadow-sm"
                     style={{ width: previewViewport === 'desktop' ? '1280px' : vpConfig.width }}
@@ -220,29 +250,77 @@ interface SiteMirrorCardProps {
                       />
                     )}
 
-                    <iframe
-                      srcDoc={generatePreviewDocument({
-                        formStyle: demo.formStyle || DEFAULT_FORM_STYLE,
-                        buttonColor: demo.buttonColor || '#3b82f6',
-                        headerHtml: '',
-                        footerHtml: '',
-                        contentBgColor: demo.formStyle?.contentAreaBgColor,
-                      })}
-                      className="block w-full border-0"
-                      style={{ height: '720px' }}
-                      title="Live form preview"
-                      sandbox="allow-same-origin"
-                      onLoad={(e) => {
-                        const iframe = e.target as HTMLIFrameElement;
-                        try {
-                          const body = iframe.contentDocument?.body;
-                          const height = body?.scrollHeight || 720;
-                          iframe.style.height = `${Math.max(height, 520)}px`;
-                        } catch {
-                          iframe.style.height = '720px';
-                        }
-                      }}
-                    />
+                    {/* Content area — with optional drag handles */}
+                    <div className="relative" style={{ backgroundColor: formStyle.contentAreaBgColor || '#f5f5f5' }}>
+                      {/* Top padding drag handle */}
+                      {layoutEditMode && (
+                        <div
+                          className="absolute top-0 left-0 right-0 flex items-center justify-center cursor-ns-resize z-10 group"
+                          style={{ height: `${Math.max(paddingY, 12)}px` }}
+                          onMouseDown={dragHandlers.onTopPaddingMouseDown}
+                        >
+                          <div className="flex items-center gap-1 px-2 py-0.5 rounded bg-primary/80 text-primary-foreground text-[10px] opacity-60 group-hover:opacity-100 transition-opacity pointer-events-none">
+                            <GripHorizontal className="w-3 h-3" />
+                            Padding: {paddingY}px
+                          </div>
+                          <div className="absolute bottom-0 left-[10%] right-[10%] h-px border-b border-dashed border-primary/40 opacity-60 group-hover:opacity-100 transition-opacity" />
+                        </div>
+                      )}
+
+                      <div
+                        style={{
+                          minHeight: `${minContentHeight}px`,
+                          paddingTop: `${paddingY}px`,
+                          paddingBottom: `${paddingY}px`,
+                          paddingLeft: '20px',
+                          paddingRight: '20px',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          justifyContent: contentJustify,
+                          alignItems: 'center',
+                        }}
+                      >
+                        <div style={{ maxWidth: `${contentMaxWidth}px`, width: '100%' }}>
+                          <iframe
+                            srcDoc={generatePreviewDocument({
+                              formStyle: demo.formStyle || DEFAULT_FORM_STYLE,
+                              buttonColor: demo.buttonColor || '#3b82f6',
+                              headerHtml: '',
+                              footerHtml: '',
+                              contentBgColor: 'transparent',
+                            })}
+                            className="block w-full border-0"
+                            style={{ height: '400px' }}
+                            title="Live form preview"
+                            sandbox="allow-same-origin"
+                            onLoad={(e) => {
+                              const iframe = e.target as HTMLIFrameElement;
+                              try {
+                                const body = iframe.contentDocument?.body;
+                                const height = body?.scrollHeight || 400;
+                                iframe.style.height = `${Math.max(height, 300)}px`;
+                              } catch {
+                                iframe.style.height = '400px';
+                              }
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Bottom height drag handle */}
+                      {layoutEditMode && (
+                        <div
+                          className="absolute bottom-0 left-0 right-0 flex items-center justify-center cursor-ns-resize z-10 group h-4"
+                          onMouseDown={dragHandlers.onHeightMouseDown}
+                        >
+                          <div className="flex items-center gap-1 px-2 py-0.5 rounded bg-primary/80 text-primary-foreground text-[10px] opacity-60 group-hover:opacity-100 transition-opacity pointer-events-none">
+                            <GripHorizontal className="w-3 h-3" />
+                            Height: {minContentHeight}px
+                          </div>
+                          <div className="absolute top-0 left-[10%] right-[10%] h-px border-t border-dashed border-primary/40 opacity-60 group-hover:opacity-100 transition-opacity" />
+                        </div>
+                      )}
+                    </div>
 
                     {footerHtml && (
                       <iframe
@@ -319,18 +397,6 @@ interface SiteMirrorCardProps {
                  )}
                </div>
              </div>
-            )}
-            {/* Content Area Layout Controls */}
-            {hasAnyContent && (
-              <div className="mt-4">
-                <ContentLayoutEditor
-                  demo={demo}
-                  headerHtml={headerHtml}
-                  footerHtml={footerHtml}
-                  cssContent={cssContent || ''}
-                  onApplyBranding={onApplyBranding}
-                />
-              </div>
             )}
             {/* Header CTA Element Picker — hotspot for screenshots, CSS picker for HTML */}
             {hasAnyContent && headerHtml && (
