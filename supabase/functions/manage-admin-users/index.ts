@@ -193,8 +193,6 @@ serve(async (req) => {
         );
       }
 
-      // initialPassword is already parsed from body above
-
       // Look up user by email using admin client
       const { data: users, error: lookupError } = await adminClient.auth.admin.listUsers();
       
@@ -208,12 +206,12 @@ serve(async (req) => {
       let targetUser = users.users.find(u => u.email?.toLowerCase() === email.toLowerCase());
       let wasCreated = false;
       
-      // If user doesn't exist, create them
+      // If user doesn't exist, create them with a random password (they'll set their own via link)
       if (!targetUser) {
-        const passwordToUse = initialPassword || (crypto.randomUUID() + "Aa1!");
+        const randomPassword = crypto.randomUUID() + "Aa1!";
         const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
           email: email.toLowerCase(),
-          password: passwordToUse,
+          password: randomPassword,
           email_confirm: true,
         });
 
@@ -226,14 +224,6 @@ serve(async (req) => {
 
         targetUser = newUser.user;
         wasCreated = true;
-
-        // If no initial password was set, send password reset so user can set their own
-        if (!initialPassword) {
-          await adminClient.auth.admin.generateLink({
-            type: 'recovery',
-            email: email.toLowerCase(),
-          });
-        }
       }
 
       // Check if already has this role
@@ -270,8 +260,19 @@ serve(async (req) => {
         );
       }
 
+      // Generate a password setup link for the user
+      let setupLink: string | null = null;
+      const { data: linkData, error: linkError } = await adminClient.auth.admin.generateLink({
+        type: 'recovery',
+        email: email.toLowerCase(),
+      });
+
+      if (!linkError && linkData?.properties?.action_link) {
+        setupLink = linkData.properties.action_link;
+      }
+
       return new Response(
-        JSON.stringify({ success: true, userId: targetUser.id, created: wasCreated, hadPassword: !!initialPassword, role: roleToAssign }),
+        JSON.stringify({ success: true, userId: targetUser.id, created: wasCreated, role: roleToAssign, setupLink }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
