@@ -328,9 +328,8 @@ export function UserManagement({ isGlobalAdmin = true }: UserManagementProps) {
                     />
                   </div>
                   <p className="text-xs text-muted-foreground">
-                      If no account exists, one will be created. The user will receive a unique link to set their own password.
-                    </p>
-                  </div>
+                    If no account exists, one will be created. The user will receive a unique link to set their own password.
+                  </p>
                   <div className="space-y-2">
                     <Label>Role</Label>
                     <Select value={newUserRole} onValueChange={(v) => setNewUserRole(v as 'admin' | 'global_admin')}>
