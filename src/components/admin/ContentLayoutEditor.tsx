@@ -200,8 +200,10 @@ export function ContentLayoutEditor({
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: justifyMap[justify] || 'flex-start',
+                    alignItems: 'center',
                   }}
                 >
+                  <div style={{ maxWidth: `${maxWidthPx}px`, width: '100%' }}>
                   <iframe
                     srcDoc={generatePreviewDocument({
                       formStyle: formStyle,
