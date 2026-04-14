@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { Globe, X, Eye, Monitor, Tablet, Smartphone, SlidersHorizontal, GripHorizontal, GripVertical } from "lucide-react";
+import { Globe, X, Eye, Monitor, Tablet, Smartphone, SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -136,12 +136,14 @@ interface SiteMirrorCardProps {
 
       const formStyle = demo.formStyle || DEFAULT_FORM_STYLE;
       // When in edit mode, use draft values for the preview; otherwise use saved values
-      const paddingY = layoutEditMode ? draft.paddingY : (formStyle.contentAreaPaddingY ?? 40);
-      const minContentHeight = layoutEditMode ? draft.minHeight : (formStyle.contentAreaMinHeight ?? 400);
-      const justifyMap: Record<string, string> = { start: 'flex-start', center: 'center', end: 'flex-end' };
-      const contentJustify = justifyMap[layoutEditMode ? draft.justify : (formStyle.contentAreaJustify || 'start')] || 'flex-start';
-      const contentMaxWidth = layoutEditMode ? (draft.maxWidth || 576) : (formStyle.contentAreaMaxWidth || 576);
-      const contentBgColor = layoutEditMode ? draft.bgColor : (formStyle.contentAreaBgColor || '#f5f5f5');
+       const paddingY = layoutEditMode ? draft.paddingY : (formStyle.contentAreaPaddingY ?? 40);
+       const minContentHeight = layoutEditMode ? draft.minHeight : (formStyle.contentAreaMinHeight ?? 400);
+       const justifyMap: Record<string, string> = { start: 'flex-start', center: 'center', end: 'flex-end' };
+       const contentJustify = justifyMap[layoutEditMode ? draft.justify : (formStyle.contentAreaJustify || 'start')] || 'flex-start';
+       const contentMaxWidth = layoutEditMode ? (draft.maxWidth || 576) : (formStyle.contentAreaMaxWidth || 576);
+       const contentBgColor = layoutEditMode ? draft.bgColor : (formStyle.contentAreaBgColor || '#f5f5f5');
+       const headerHeight = layoutEditMode ? draft.headerHeight : (formStyle.headerHeight ?? 120);
+       const footerHeight = layoutEditMode ? draft.footerHeight : (formStyle.footerHeight ?? 160);
 
       return (
         <Card className="glass-card border-2 border-primary/20">
