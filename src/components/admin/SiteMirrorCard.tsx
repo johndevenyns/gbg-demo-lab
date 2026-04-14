@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { Globe, X, Eye, Monitor, Tablet, Smartphone, SlidersHorizontal, GripHorizontal, GripVertical } from "lucide-react";
+import { Globe, X, Eye, Monitor, Tablet, Smartphone, SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -44,7 +44,7 @@ interface SiteMirrorCardProps {
     const [url, setUrl] = useState(demo.customerSiteUrl || "");
     const [previewViewport, setPreviewViewport] = useState<PreviewViewport>('desktop');
     const [layoutEditMode, setLayoutEditMode] = useState(false);
-    const { draft, setDraft, resetDraft, onTopPaddingMouseDown, onHeightMouseDown, onWidthMouseDown, containerRef } = useContentLayoutDraft(demo);
+    const { draft, setDraft, resetDraft, containerRef } = useContentLayoutDraft(demo);
    // Track which method is active for the demo (persisted) AND which tab user is viewing
    const [activeMethod, setActiveMethod] = useState<CaptureMode>(demo.mirrorActiveMethod || 'html');
    const [currentTab, setCurrentTab] = useState<CaptureTab>('html');
@@ -136,12 +136,14 @@ interface SiteMirrorCardProps {
 
       const formStyle = demo.formStyle || DEFAULT_FORM_STYLE;
       // When in edit mode, use draft values for the preview; otherwise use saved values
-      const paddingY = layoutEditMode ? draft.paddingY : (formStyle.contentAreaPaddingY ?? 40);
-      const minContentHeight = layoutEditMode ? draft.minHeight : (formStyle.contentAreaMinHeight ?? 400);
-      const justifyMap: Record<string, string> = { start: 'flex-start', center: 'center', end: 'flex-end' };
-      const contentJustify = justifyMap[layoutEditMode ? draft.justify : (formStyle.contentAreaJustify || 'start')] || 'flex-start';
-      const contentMaxWidth = layoutEditMode ? (draft.maxWidth || 576) : (formStyle.contentAreaMaxWidth || 576);
-      const contentBgColor = layoutEditMode ? draft.bgColor : (formStyle.contentAreaBgColor || '#f5f5f5');
+       const paddingY = layoutEditMode ? draft.paddingY : (formStyle.contentAreaPaddingY ?? 40);
+       const minContentHeight = layoutEditMode ? draft.minHeight : (formStyle.contentAreaMinHeight ?? 400);
+       const justifyMap: Record<string, string> = { start: 'flex-start', center: 'center', end: 'flex-end' };
+       const contentJustify = justifyMap[layoutEditMode ? draft.justify : (formStyle.contentAreaJustify || 'start')] || 'flex-start';
+       const contentMaxWidth = layoutEditMode ? (draft.maxWidth || 576) : (formStyle.contentAreaMaxWidth || 576);
+       const contentBgColor = layoutEditMode ? draft.bgColor : (formStyle.contentAreaBgColor || '#f5f5f5');
+       const headerHeight = layoutEditMode ? draft.headerHeight : (formStyle.headerHeight ?? 120);
+       const footerHeight = layoutEditMode ? draft.footerHeight : (formStyle.footerHeight ?? 160);
 
       return (
         <Card className="glass-card border-2 border-primary/20">
@@ -248,7 +250,7 @@ interface SiteMirrorCardProps {
                           </html>
                         `}
                         className="block w-full border-0"
-                        style={{ height: '120px' }}
+                        style={{ height: `${headerHeight}px` }}
                         title="Live site header preview"
                         sandbox="allow-same-origin"
                         onLoad={(e) => {
@@ -257,22 +259,8 @@ interface SiteMirrorCardProps {
                       />
                     )}
 
-                    {/* Content area — with optional drag handles */}
+                    {/* Content area */}
                     <div className="relative" style={{ backgroundColor: contentBgColor }}>
-                      {/* Top padding drag handle */}
-                      {layoutEditMode && (
-                        <div
-                          className="absolute top-0 left-0 right-0 flex items-center justify-center cursor-ns-resize z-10 group"
-                          style={{ height: `${Math.max(paddingY, 12)}px` }}
-                          onMouseDown={onTopPaddingMouseDown}
-                        >
-                          <div className="flex items-center gap-1 px-2 py-0.5 rounded bg-primary/80 text-primary-foreground text-[10px] opacity-60 group-hover:opacity-100 transition-opacity pointer-events-none">
-                            <GripHorizontal className="w-3 h-3" />
-                            Padding: {paddingY}px
-                          </div>
-                          <div className="absolute bottom-0 left-[10%] right-[10%] h-px border-b border-dashed border-primary/40 opacity-60 group-hover:opacity-100 transition-opacity" />
-                        </div>
-                      )}
 
                       <div
                         style={{
@@ -288,27 +276,6 @@ interface SiteMirrorCardProps {
                         }}
                       >
                         <div className="relative" style={{ maxWidth: `${contentMaxWidth}px`, width: '100%' }} ref={containerRef}>
-                          {/* Left width drag handle */}
-                          {layoutEditMode && (
-                            <div
-                              className="absolute left-0 top-0 bottom-0 w-3 flex items-center justify-center cursor-ew-resize z-10 group -ml-1.5"
-                              onMouseDown={(e) => onWidthMouseDown(e, 'left')}
-                            >
-                              <div className="w-1 h-12 rounded-full bg-primary/60 group-hover:bg-primary transition-colors" />
-                              <div className="absolute left-1/2 -translate-x-1/2 -top-5 px-1.5 py-0.5 rounded bg-primary/80 text-primary-foreground text-[9px] opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
-                                {contentMaxWidth}px
-                              </div>
-                            </div>
-                          )}
-                          {/* Right width drag handle */}
-                          {layoutEditMode && (
-                            <div
-                              className="absolute right-0 top-0 bottom-0 w-3 flex items-center justify-center cursor-ew-resize z-10 group -mr-1.5"
-                              onMouseDown={(e) => onWidthMouseDown(e, 'right')}
-                            >
-                              <div className="w-1 h-12 rounded-full bg-primary/60 group-hover:bg-primary transition-colors" />
-                            </div>
-                          )}
                           {/* Dashed border outline in edit mode */}
                           {layoutEditMode && (
                             <div className="absolute inset-0 border border-dashed border-primary/30 rounded pointer-events-none z-[5]" />
@@ -339,20 +306,6 @@ interface SiteMirrorCardProps {
                           />
                         </div>
                       </div>
-
-                      {/* Bottom height drag handle */}
-                      {layoutEditMode && (
-                        <div
-                          className="absolute bottom-0 left-0 right-0 flex items-center justify-center cursor-ns-resize z-10 group h-4"
-                          onMouseDown={onHeightMouseDown}
-                        >
-                          <div className="flex items-center gap-1 px-2 py-0.5 rounded bg-primary/80 text-primary-foreground text-[10px] opacity-60 group-hover:opacity-100 transition-opacity pointer-events-none">
-                            <GripHorizontal className="w-3 h-3" />
-                            Height: {minContentHeight}px
-                          </div>
-                          <div className="absolute top-0 left-[10%] right-[10%] h-px border-t border-dashed border-primary/40 opacity-60 group-hover:opacity-100 transition-opacity" />
-                        </div>
-                      )}
                     </div>
 
                     {footerHtml && (
@@ -376,7 +329,7 @@ interface SiteMirrorCardProps {
                           </html>
                         `}
                         className="block w-full border-0"
-                        style={{ height: '160px' }}
+                        style={{ height: `${footerHeight}px` }}
                         title="Live site footer preview"
                         sandbox="allow-same-origin"
                         onLoad={(e) => {

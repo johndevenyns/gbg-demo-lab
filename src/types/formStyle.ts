@@ -117,6 +117,10 @@ export interface FormStyleConfig {
   contentAreaJustify?: 'start' | 'center' | 'end'; // Vertical justification of form (default 'start')
   contentAreaMaxWidth?: number;    // Max width of form container in px (0 = full width, default 0)
   
+  // Header/Footer heights for the mirrored site preview
+  headerHeight?: number;   // Height in px for header iframe (default 120)
+  footerHeight?: number;   // Height in px for footer iframe (default 160)
+  
   // Form container styling
   formBorderWidth?: '0' | '1' | '2' | '3';
   formBorderColor?: string;
