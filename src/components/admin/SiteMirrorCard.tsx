@@ -5,10 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Slider } from "@/components/ui/slider";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { SiteMirrorTabs, CaptureTab, CaptureMode } from "./SiteMirrorTabs";
 import { HtmlCaptureTab } from "./HtmlCaptureTab";
 import { ScreenshotCaptureTab } from "./ScreenshotCaptureTab";
