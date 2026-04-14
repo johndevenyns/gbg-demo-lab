@@ -111,6 +111,11 @@ export interface FormStyleConfig {
   formBgColor?: string;        // Background color of the form container itself
   contentAreaBgColor?: string; // Background color of the area surrounding the form
   
+  // Content area layout (area between header and footer)
+  contentAreaMinHeight?: number;   // Minimum height in px (default 400)
+  contentAreaPaddingY?: number;    // Vertical padding in px (default 40)
+  contentAreaJustify?: 'start' | 'center' | 'end'; // Vertical justification of form (default 'start')
+  
   // Form container styling
   formBorderWidth?: '0' | '1' | '2' | '3';
   formBorderColor?: string;

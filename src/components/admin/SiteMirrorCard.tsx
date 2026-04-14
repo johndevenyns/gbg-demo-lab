@@ -1,9 +1,14 @@
 import { useState, useCallback } from "react";
-import { Globe, X, Eye, Monitor, Tablet, Smartphone } from "lucide-react";
+import { Globe, X, Eye, Monitor, Tablet, Smartphone, SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { SiteMirrorTabs, CaptureTab, CaptureMode } from "./SiteMirrorTabs";
 import { HtmlCaptureTab } from "./HtmlCaptureTab";
 import { ScreenshotCaptureTab } from "./ScreenshotCaptureTab";
@@ -13,7 +18,7 @@ import { ScrapedBranding } from "@/lib/api/scraping";
 import { useToast } from "@/hooks/use-toast";
 import { DemoEnvironment } from "@/types/demo";
 import { DemoUseCaseLink } from "@/types/useCase";
-import { DEFAULT_FORM_STYLE } from "@/types/formStyle";
+import { DEFAULT_FORM_STYLE, FormStyleConfig } from "@/types/formStyle";
 import { generatePreviewDocument } from "@/lib/formStyleUtils";
 import { enhanceHeaderPreviewIframe } from "@/lib/iframeContrast";
 import { cn } from "@/lib/utils";
@@ -316,7 +321,82 @@ interface SiteMirrorCardProps {
                </div>
              </div>
             )}
+            {/* Content Area Layout Controls */}
+            {hasAnyContent && (
+              <Collapsible className="mt-4">
+                <CollapsibleTrigger asChild>
+                  <Button variant="outline" size="sm" className="w-full justify-between">
+                    <span className="flex items-center gap-2">
+                      <SlidersHorizontal className="w-4 h-4" />
+                      Content Area Layout
+                    </span>
+                    <span className="text-xs text-muted-foreground">Height, spacing &amp; alignment</span>
+                  </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="mt-3 p-4 rounded-lg border bg-muted/30 space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    {/* Min Height */}
+                    <div className="space-y-2">
+                      <Label className="text-xs font-medium">Min Height (px)</Label>
+                      <div className="flex items-center gap-2">
+                        <Slider
+                          value={[demo.formStyle?.contentAreaMinHeight ?? 400]}
+                          min={200}
+                          max={1200}
+                          step={50}
+                          onValueChange={([v]) => {
+                            const updatedStyle: FormStyleConfig = { ...(demo.formStyle || DEFAULT_FORM_STYLE), contentAreaMinHeight: v };
+                            onApplyBranding({ formStyle: updatedStyle }, true);
+                          }}
+                          className="flex-1"
+                        />
+                        <span className="text-xs font-mono w-12 text-right">{demo.formStyle?.contentAreaMinHeight ?? 400}</span>
+                      </div>
+                    </div>
 
+                    {/* Vertical Padding */}
+                    <div className="space-y-2">
+                      <Label className="text-xs font-medium">Vertical Padding (px)</Label>
+                      <div className="flex items-center gap-2">
+                        <Slider
+                          value={[demo.formStyle?.contentAreaPaddingY ?? 40]}
+                          min={0}
+                          max={120}
+                          step={4}
+                          onValueChange={([v]) => {
+                            const updatedStyle: FormStyleConfig = { ...(demo.formStyle || DEFAULT_FORM_STYLE), contentAreaPaddingY: v };
+                            onApplyBranding({ formStyle: updatedStyle }, true);
+                          }}
+                          className="flex-1"
+                        />
+                        <span className="text-xs font-mono w-12 text-right">{demo.formStyle?.contentAreaPaddingY ?? 40}</span>
+                      </div>
+                    </div>
+
+                    {/* Vertical Justification */}
+                    <div className="space-y-2">
+                      <Label className="text-xs font-medium">Vertical Alignment</Label>
+                      <Select
+                        value={demo.formStyle?.contentAreaJustify || 'start'}
+                        onValueChange={(v) => {
+                          const updatedStyle: FormStyleConfig = { ...(demo.formStyle || DEFAULT_FORM_STYLE), contentAreaJustify: v as 'start' | 'center' | 'end' };
+                          onApplyBranding({ formStyle: updatedStyle }, true);
+                        }}
+                      >
+                        <SelectTrigger className="h-9">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="start">Top</SelectItem>
+                          <SelectItem value="center">Center</SelectItem>
+                          <SelectItem value="end">Bottom</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+            )}
             {/* Header CTA Element Picker */}
             {hasAnyContent && headerHtml && (
               <div className="mt-4">

@@ -641,8 +641,14 @@ export default function DemoPreview() {
 
       {/* Main Content */}
       <main
-        className="flex-1 py-4"
-        style={{ backgroundColor: previewDocument?.formStyle?.contentAreaBgColor || 'transparent' }}
+        className="flex-1 flex flex-col"
+        style={{
+          backgroundColor: previewDocument?.formStyle?.contentAreaBgColor || 'transparent',
+          paddingTop: `${previewDocument?.formStyle?.contentAreaPaddingY ?? 16}px`,
+          paddingBottom: `${previewDocument?.formStyle?.contentAreaPaddingY ?? 16}px`,
+          minHeight: `${previewDocument?.formStyle?.contentAreaMinHeight ?? 400}px`,
+          justifyContent: ({ start: 'flex-start', center: 'center', end: 'flex-end' } as const)[previewDocument?.formStyle?.contentAreaJustify || 'start'],
+        }}
       >
         <div className="max-w-xl mx-auto px-4">
           <div
