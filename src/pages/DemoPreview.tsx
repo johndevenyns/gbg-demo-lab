@@ -10,6 +10,7 @@ import { DEFAULT_SUCCESS_CONFIG, DEFAULT_FAILURE_CONFIG } from "@/components/pre
 import { DEFAULT_FORM_STYLE } from "@/types/formStyle";
 import { useDemoUseCaseLinks } from "@/hooks/useUseCases";
 import { useHeaderCtaLinks } from "@/hooks/useHeaderCtaLinks";
+import { parseHotspotSelector } from "@/components/admin/HeaderHotspotPicker";
 import { useIndustries } from "@/hooks/useIndustries";
 import { UseCaseLandingPage } from "@/components/preview/UseCaseLandingPage";
 import { BankingPortalShell } from "@/components/preview/mockPortal/BankingPortalShell";
