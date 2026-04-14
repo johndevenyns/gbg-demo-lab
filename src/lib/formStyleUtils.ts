@@ -433,10 +433,12 @@ export function getButtonShadow(shadow: string = 'none'): string {
    footerHtml?: string;
    cssContent?: string;
    contentBgColor?: string;
+   /** When true, skip the layout wrapper (padding, minHeight, justify) — used when the parent already provides it */
+   skipLayoutWrapper?: boolean;
  }
  
  export function generatePreviewDocument(options: PreviewDocumentOptions): string {
-  const { formStyle, buttonColor, headerHtml, footerHtml, cssContent, contentBgColor } = options;
+  const { formStyle, buttonColor, headerHtml, footerHtml, cssContent, contentBgColor, skipLayoutWrapper } = options;
    const formHtml = generateFormHtml(formStyle, buttonColor);
   const bgColor = contentBgColor || formStyle.contentAreaBgColor || '#f5f5f5';
   const paddingY = formStyle.contentAreaPaddingY ?? 40;
@@ -445,6 +447,14 @@ export function getButtonShadow(shadow: string = 'none'): string {
   const justifyMap = { start: 'flex-start', center: 'center', end: 'flex-end' };
   const maxWidth = formStyle.contentAreaMaxWidth;
   const maxWidthStyle = maxWidth ? `max-width: ${maxWidth}px; margin-left: auto; margin-right: auto;` : 'max-width: 36rem; margin-left: auto; margin-right: auto;';
+
+  const contentBody = skipLayoutWrapper
+    ? `<div style="width: 100%; padding: 0;">${formHtml}</div>`
+    : `<div style="padding: ${paddingY}px 20px; background: ${bgColor}; min-height: ${minHeight}px; display: flex; flex-direction: column; justify-content: ${justifyMap[justify]}; align-items: center;">
+        <div style="${maxWidthStyle} width: 100%;">
+          ${formHtml}
+        </div>
+      </div>`;
 
    return `
      <!DOCTYPE html>
@@ -459,13 +469,9 @@ export function getButtonShadow(shadow: string = 'none'): string {
        </head>
        <body>
          ${headerHtml || ''}
-        <div style="padding: ${paddingY}px 20px; background: ${bgColor}; min-height: ${minHeight}px; display: flex; flex-direction: column; justify-content: ${justifyMap[justify]}; align-items: center;">
-          <div style="${maxWidthStyle} width: 100%;">
-           ${formHtml}
-          </div>
-         </div>
+         ${contentBody}
          ${footerHtml || ''}
        </body>
      </html>
    `.trim();
-}
+ }
