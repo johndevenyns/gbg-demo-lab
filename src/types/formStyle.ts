@@ -115,6 +115,7 @@ export interface FormStyleConfig {
   contentAreaMinHeight?: number;   // Minimum height in px (default 400)
   contentAreaPaddingY?: number;    // Vertical padding in px (default 40)
   contentAreaJustify?: 'start' | 'center' | 'end'; // Vertical justification of form (default 'start')
+  contentAreaMaxWidth?: number;    // Max width of form container in px (0 = full width, default 0)
   
   // Form container styling
   formBorderWidth?: '0' | '1' | '2' | '3';

@@ -29,6 +29,7 @@ export function ContentLayoutEditor({
   const [minHeight, setMinHeight] = useState(formStyle.contentAreaMinHeight ?? 400);
   const [paddingY, setPaddingY] = useState(formStyle.contentAreaPaddingY ?? 40);
   const [justify, setJustify] = useState<'start' | 'center' | 'end'>(formStyle.contentAreaJustify || 'start');
+  const [maxWidth, setMaxWidth] = useState(formStyle.contentAreaMaxWidth ?? 0);
   const [open, setOpen] = useState(false);
 
   // Sync from props when dialog opens
@@ -37,8 +38,9 @@ export function ContentLayoutEditor({
       setMinHeight(formStyle.contentAreaMinHeight ?? 400);
       setPaddingY(formStyle.contentAreaPaddingY ?? 40);
       setJustify(formStyle.contentAreaJustify || 'start');
+      setMaxWidth(formStyle.contentAreaMaxWidth ?? 0);
     }
-  }, [open, formStyle.contentAreaMinHeight, formStyle.contentAreaPaddingY, formStyle.contentAreaJustify]);
+  }, [open, formStyle.contentAreaMinHeight, formStyle.contentAreaPaddingY, formStyle.contentAreaJustify, formStyle.contentAreaMaxWidth]);
 
   const apply = useCallback((updates: Partial<FormStyleConfig>) => {
     const updatedStyle: FormStyleConfig = { ...formStyle, ...updates };
@@ -123,7 +125,16 @@ export function ContentLayoutEditor({
     apply({ contentAreaJustify: v });
   };
 
+  const handleMaxWidthInput = (val: string) => {
+    const n = parseInt(val);
+    if (!isNaN(n) && n >= 0 && n <= 1600) {
+      setMaxWidth(n);
+      apply({ contentAreaMaxWidth: n });
+    }
+  };
+
   const justifyMap: Record<string, string> = { start: 'flex-start', center: 'center', end: 'flex-end' };
+  const maxWidthPx = maxWidth || 576; // default ~36rem
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -189,8 +200,10 @@ export function ContentLayoutEditor({
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: justifyMap[justify] || 'flex-start',
+                    alignItems: 'center',
                   }}
                 >
+                  <div style={{ maxWidth: `${maxWidthPx}px`, width: '100%' }}>
                   <iframe
                     srcDoc={generatePreviewDocument({
                       formStyle: formStyle,
@@ -214,6 +227,7 @@ export function ContentLayoutEditor({
                       }
                     }}
                   />
+                  </div>
                 </div>
 
                 {/* Bottom height drag handle */}
@@ -307,6 +321,27 @@ export function ContentLayoutEditor({
                   <SelectItem value="end">Bottom</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs font-medium">Form Container Width (px)</Label>
+              <Input
+                type="number"
+                value={maxWidth || ''}
+                placeholder="576 (default)"
+                min={200}
+                max={1600}
+                step={10}
+                onChange={(e) => {
+                  const n = parseInt(e.target.value);
+                  if (!isNaN(n)) setMaxWidth(n);
+                  else setMaxWidth(0);
+                }}
+                onBlur={(e) => handleMaxWidthInput(e.target.value || '0')}
+                onKeyDown={(e) => { if (e.key === 'Enter') handleMaxWidthInput((e.target as HTMLInputElement).value || '0'); }}
+                className="h-8 text-sm font-mono"
+              />
+              <p className="text-[10px] text-muted-foreground">0 or empty = default (576px). Set to control form container width.</p>
             </div>
 
             <div className="space-y-2">
