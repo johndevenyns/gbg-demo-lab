@@ -463,4 +463,5 @@ export function getButtonShadow(shadow: string = 'none'): string {
          ${footerHtml || ''}
        </body>
      </html>
+   `.trim();
 }
