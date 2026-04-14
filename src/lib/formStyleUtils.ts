@@ -439,7 +439,11 @@ export function getButtonShadow(shadow: string = 'none'): string {
   const { formStyle, buttonColor, headerHtml, footerHtml, cssContent, contentBgColor } = options;
    const formHtml = generateFormHtml(formStyle, buttonColor);
   const bgColor = contentBgColor || formStyle.contentAreaBgColor || '#f5f5f5';
- 
+  const paddingY = formStyle.contentAreaPaddingY ?? 40;
+  const minHeight = formStyle.contentAreaMinHeight ?? 400;
+  const justify = formStyle.contentAreaJustify || 'start';
+  const justifyMap = { start: 'flex-start', center: 'center', end: 'flex-end' };
+
    return `
      <!DOCTYPE html>
      <html>
@@ -453,10 +457,13 @@ export function getButtonShadow(shadow: string = 'none'): string {
        </head>
        <body>
          ${headerHtml || ''}
-        <div style="padding: 40px 20px; background: ${bgColor}; min-height: 150px;">
+        <div style="padding: ${paddingY}px 20px; background: ${bgColor}; min-height: ${minHeight}px; display: flex; flex-direction: column; justify-content: ${justifyMap[justify]};">
            ${formHtml}
          </div>
          ${footerHtml || ''}
+       </body>
+     </html>
+   `.trim();
        </body>
      </html>
    `.trim();
