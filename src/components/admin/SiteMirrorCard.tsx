@@ -457,6 +457,27 @@ interface SiteMirrorCardProps {
 
                     {/* Content area */}
                     <div className="relative" style={{ backgroundColor: contentBgColor }}>
+                      <RegionSizeBadge
+                        label="Content"
+                        value={minContentHeight}
+                        min={100}
+                        max={1500}
+                        step={10}
+                        onChange={(v) => updateStyle({ contentAreaMinHeight: v })}
+                        className="top-1 right-1"
+                        extraControls={
+                          <ContentExtraControls
+                            paddingY={paddingY}
+                            onPaddingYChange={(v) => updateStyle({ contentAreaPaddingY: v })}
+                            justify={justifyKey}
+                            onJustifyChange={(v) => updateStyle({ contentAreaJustify: v })}
+                            maxWidth={contentMaxWidth}
+                            onMaxWidthChange={(v) => updateStyle({ contentAreaMaxWidth: v })}
+                            bgColor={contentBgColor}
+                            onBgColorChange={(v) => updateStyle({ contentAreaBgColor: v })}
+                          />
+                        }
+                      />
 
                       <div
                         style={{
@@ -472,10 +493,6 @@ interface SiteMirrorCardProps {
                         }}
                       >
                         <div className="relative" style={{ maxWidth: `${contentMaxWidth}px`, width: '100%' }} ref={containerRef}>
-                          {/* Dashed border outline in edit mode */}
-                          {layoutEditMode && (
-                            <div className="absolute inset-0 border border-dashed border-primary/30 rounded pointer-events-none z-[5]" />
-                          )}
                           <iframe
                             srcDoc={generatePreviewDocument({
                               formStyle: demo.formStyle || DEFAULT_FORM_STYLE,
