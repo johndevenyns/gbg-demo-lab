@@ -677,7 +677,7 @@ export default function DemoPreview() {
           justifyContent: ({ start: 'flex-start', center: 'center', end: 'flex-end' } as const)[previewDocument?.formStyle?.contentAreaJustify || 'start'],
         }}
       >
-        <div className="mx-auto px-4" style={{ maxWidth: previewDocument?.formStyle?.contentAreaMaxWidth ? `${previewDocument.formStyle.contentAreaMaxWidth}px` : '36rem' }}>
+        <div className="mx-auto px-4" style={{ maxWidth: previewDocument?.formStyle?.contentAreaMaxWidth ? `${previewDocument.formStyle.contentAreaMaxWidth}px` : '36rem', width: '100%' }}>
           <div
             ref={formRef}
             className="p-8"
