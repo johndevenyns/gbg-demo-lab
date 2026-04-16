@@ -70,7 +70,6 @@ interface SiteMirrorCardProps {
    const { toast } = useToast();
     const [url, setUrl] = useState(demo.customerSiteUrl || "");
     const [previewViewport, setPreviewViewport] = useState<PreviewViewport>('desktop');
-    const [layoutEditMode, setLayoutEditMode] = useState(false);
     const [linkHeaderMode, setLinkHeaderMode] = useState(false);
     const headerIframeRef = useRef<HTMLIFrameElement>(null);
     const headerOverlayRef = useRef<HTMLDivElement>(null);
@@ -83,7 +82,7 @@ interface SiteMirrorCardProps {
     const [hotspotCurrent, setHotspotCurrent] = useState<{ x: number; y: number } | null>(null);
     const [pendingRect, setPendingRect] = useState<HotspotRect | null>(null);
     const { data: ctaLinks = [] } = useHeaderCtaLinks(demo.id);
-    const { draft, setDraft, resetDraft, containerRef } = useContentLayoutDraft(demo);
+    const containerRef = useRef<HTMLDivElement | null>(null);
    // Track which method is active for the demo (persisted) AND which tab user is viewing
    const [activeMethod, setActiveMethod] = useState<CaptureMode>(demo.mirrorActiveMethod || 'html');
    const [currentTab, setCurrentTab] = useState<CaptureTab>('html');
