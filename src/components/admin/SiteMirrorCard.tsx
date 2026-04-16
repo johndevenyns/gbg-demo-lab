@@ -173,15 +173,20 @@ interface SiteMirrorCardProps {
       const vpConfig = viewportConfig[previewViewport];
 
       const formStyle = demo.formStyle || DEFAULT_FORM_STYLE;
-      // When in edit mode, use draft values for the preview; otherwise use saved values
-       const paddingY = layoutEditMode ? draft.paddingY : (formStyle.contentAreaPaddingY ?? 40);
-       const minContentHeight = layoutEditMode ? draft.minHeight : (formStyle.contentAreaMinHeight ?? 400);
-       const justifyMap: Record<string, string> = { start: 'flex-start', center: 'center', end: 'flex-end' };
-       const contentJustify = justifyMap[layoutEditMode ? draft.justify : (formStyle.contentAreaJustify || 'start')] || 'flex-start';
-       const contentMaxWidth = layoutEditMode ? (draft.maxWidth || 576) : (formStyle.contentAreaMaxWidth || 576);
-       const contentBgColor = layoutEditMode ? draft.bgColor : (formStyle.contentAreaBgColor || '#f5f5f5');
-       const headerHeight = layoutEditMode ? draft.headerHeight : (formStyle.headerHeight ?? 120);
-       const footerHeight = layoutEditMode ? draft.footerHeight : (formStyle.footerHeight ?? 160);
+      const paddingY = formStyle.contentAreaPaddingY ?? 40;
+      const minContentHeight = formStyle.contentAreaMinHeight ?? 400;
+      const justifyMap: Record<string, string> = { start: 'flex-start', center: 'center', end: 'flex-end' };
+      const justifyKey = (formStyle.contentAreaJustify || 'start') as 'start' | 'center' | 'end';
+      const contentJustify = justifyMap[justifyKey] || 'flex-start';
+      const contentMaxWidth = formStyle.contentAreaMaxWidth || 576;
+      const contentBgColor = formStyle.contentAreaBgColor || '#f5f5f5';
+      const headerHeight = formStyle.headerHeight ?? 120;
+      const footerHeight = formStyle.footerHeight ?? 160;
+
+      // Helper: persist a single FormStyleConfig field change immediately
+      const updateStyle = (patch: Partial<FormStyleConfig>) => {
+        onApplyBranding({ formStyle: { ...formStyle, ...patch } }, true);
+      };
 
       return (
         <Card className="glass-card border-2 border-primary/20">
