@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from "react";
-import { Globe, X, Eye, Monitor, Tablet, Smartphone, SlidersHorizontal, MousePointerClick } from "lucide-react";
+import { Globe, X, Eye, Monitor, Tablet, Smartphone, MousePointerClick } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -12,7 +12,7 @@ import { ScreenshotCaptureTab } from "./ScreenshotCaptureTab";
 import { EmbedFormSection } from "./EmbedFormSection";
 import { HeaderLinkPanel } from "./HeaderLinkPanel";
 import { parseHotspotSelector, HotspotRect, toHotspotSelector } from "./HeaderHotspotPicker";
-import { ContentLayoutEditor, useContentLayoutDraft } from "./ContentLayoutEditor";
+import { RegionSizeBadge, ContentExtraControls } from "./RegionSizeBadge";
 import { ScrapedBranding } from "@/lib/api/scraping";
 import { useToast } from "@/hooks/use-toast";
 import { useHeaderCtaLinks } from "@/hooks/useHeaderCtaLinks";
@@ -70,7 +70,6 @@ interface SiteMirrorCardProps {
    const { toast } = useToast();
     const [url, setUrl] = useState(demo.customerSiteUrl || "");
     const [previewViewport, setPreviewViewport] = useState<PreviewViewport>('desktop');
-    const [layoutEditMode, setLayoutEditMode] = useState(false);
     const [linkHeaderMode, setLinkHeaderMode] = useState(false);
     const headerIframeRef = useRef<HTMLIFrameElement>(null);
     const headerOverlayRef = useRef<HTMLDivElement>(null);
@@ -83,7 +82,7 @@ interface SiteMirrorCardProps {
     const [hotspotCurrent, setHotspotCurrent] = useState<{ x: number; y: number } | null>(null);
     const [pendingRect, setPendingRect] = useState<HotspotRect | null>(null);
     const { data: ctaLinks = [] } = useHeaderCtaLinks(demo.id);
-    const { draft, setDraft, resetDraft, containerRef } = useContentLayoutDraft(demo);
+    const containerRef = useRef<HTMLDivElement | null>(null);
    // Track which method is active for the demo (persisted) AND which tab user is viewing
    const [activeMethod, setActiveMethod] = useState<CaptureMode>(demo.mirrorActiveMethod || 'html');
    const [currentTab, setCurrentTab] = useState<CaptureTab>('html');
@@ -174,15 +173,20 @@ interface SiteMirrorCardProps {
       const vpConfig = viewportConfig[previewViewport];
 
       const formStyle = demo.formStyle || DEFAULT_FORM_STYLE;
-      // When in edit mode, use draft values for the preview; otherwise use saved values
-       const paddingY = layoutEditMode ? draft.paddingY : (formStyle.contentAreaPaddingY ?? 40);
-       const minContentHeight = layoutEditMode ? draft.minHeight : (formStyle.contentAreaMinHeight ?? 400);
-       const justifyMap: Record<string, string> = { start: 'flex-start', center: 'center', end: 'flex-end' };
-       const contentJustify = justifyMap[layoutEditMode ? draft.justify : (formStyle.contentAreaJustify || 'start')] || 'flex-start';
-       const contentMaxWidth = layoutEditMode ? (draft.maxWidth || 576) : (formStyle.contentAreaMaxWidth || 576);
-       const contentBgColor = layoutEditMode ? draft.bgColor : (formStyle.contentAreaBgColor || '#f5f5f5');
-       const headerHeight = layoutEditMode ? draft.headerHeight : (formStyle.headerHeight ?? 120);
-       const footerHeight = layoutEditMode ? draft.footerHeight : (formStyle.footerHeight ?? 160);
+      const paddingY = formStyle.contentAreaPaddingY ?? 40;
+      const minContentHeight = formStyle.contentAreaMinHeight ?? 400;
+      const justifyMap: Record<string, string> = { start: 'flex-start', center: 'center', end: 'flex-end' };
+      const justifyKey = (formStyle.contentAreaJustify || 'start') as 'start' | 'center' | 'end';
+      const contentJustify = justifyMap[justifyKey] || 'flex-start';
+      const contentMaxWidth = formStyle.contentAreaMaxWidth || 576;
+      const contentBgColor = formStyle.contentAreaBgColor || '#f5f5f5';
+      const headerHeight = formStyle.headerHeight ?? 120;
+      const footerHeight = formStyle.footerHeight ?? 160;
+
+      // Helper: persist a single FormStyleConfig field change immediately
+      const updateStyle = (patch: Partial<FormStyleConfig>) => {
+        onApplyBranding({ formStyle: { ...formStyle, ...patch } }, true);
+      };
 
       return (
         <Card className="glass-card border-2 border-primary/20">
@@ -206,47 +210,29 @@ interface SiteMirrorCardProps {
                 </p>
               </div>
               <div className="flex items-center gap-2">
-                {/* Adjust Spacing toggle */}
-                {hasContentForMethod && (
-                  <>
-                    <Button
-                      variant={layoutEditMode ? "default" : "outline"}
-                      size="sm"
-                      className="gap-1.5"
-                      onClick={() => {
-                        if (!layoutEditMode) resetDraft();
-                        setLayoutEditMode(!layoutEditMode);
-                        if (!layoutEditMode) setLinkHeaderMode(false);
-                      }}
-                    >
-                      <SlidersHorizontal className="w-4 h-4" />
-                      <span className="text-xs">Adjust Spacing</span>
-                    </Button>
-                    {headerHtml && (
-                      <Button
-                        variant={linkHeaderMode ? "default" : "outline"}
-                        size="sm"
-                        className="gap-1.5"
-                        onClick={() => {
-                          setLinkHeaderMode(!linkHeaderMode);
-                          if (!linkHeaderMode) {
-                            setLayoutEditMode(false);
-                            setPendingSelector("");
-                            setPendingLabel("");
-                            setPendingRect(null);
-                          }
-                        }}
-                      >
-                        <MousePointerClick className="w-4 h-4" />
-                        <span className="text-xs">Link Header</span>
-                        {ctaLinks.length > 0 && (
-                          <Badge variant="secondary" className="text-[10px] ml-0.5 px-1.5 py-0">
-                            {ctaLinks.length}
-                          </Badge>
-                        )}
-                      </Button>
+                {/* Link Header toggle */}
+                {hasContentForMethod && headerHtml && (
+                  <Button
+                    variant={linkHeaderMode ? "default" : "outline"}
+                    size="sm"
+                    className="gap-1.5"
+                    onClick={() => {
+                      setLinkHeaderMode(!linkHeaderMode);
+                      if (!linkHeaderMode) {
+                        setPendingSelector("");
+                        setPendingLabel("");
+                        setPendingRect(null);
+                      }
+                    }}
+                  >
+                    <MousePointerClick className="w-4 h-4" />
+                    <span className="text-xs">Link Header</span>
+                    {ctaLinks.length > 0 && (
+                      <Badge variant="secondary" className="text-[10px] ml-0.5 px-1.5 py-0">
+                        {ctaLinks.length}
+                      </Badge>
                     )}
-                  </>
+                  </Button>
                 )}
                 {/* Viewport Size Selector */}
                 {hasContentForMethod && (
@@ -281,16 +267,6 @@ interface SiteMirrorCardProps {
                     previewViewport === 'desktop' ? "min-w-[1280px]" : "flex justify-center"
                   )}
                 >
-                  {/* Floating layout controls panel */}
-                  <ContentLayoutEditor
-                    demo={demo}
-                    onApplyBranding={onApplyBranding}
-                    active={layoutEditMode}
-                    onClose={() => setLayoutEditMode(false)}
-                    draft={draft}
-                    onDraftChange={setDraft}
-                  />
-
                   {/* Floating header link panel */}
                   <HeaderLinkPanel
                     active={linkHeaderMode}
@@ -311,6 +287,15 @@ interface SiteMirrorCardProps {
                   >
                     {headerHtml && (
                       <div className="relative" style={{ height: `${headerHeight}px`, overflow: 'hidden' }}>
+                        <RegionSizeBadge
+                          label="Header"
+                          value={headerHeight}
+                          min={40}
+                          max={500}
+                          step={10}
+                          onChange={(v) => updateStyle({ headerHeight: v })}
+                          className="top-1 right-1"
+                        />
                         <iframe
                           ref={headerIframeRef}
                           srcDoc={`
@@ -472,6 +457,27 @@ interface SiteMirrorCardProps {
 
                     {/* Content area */}
                     <div className="relative" style={{ backgroundColor: contentBgColor }}>
+                      <RegionSizeBadge
+                        label="Content"
+                        value={minContentHeight}
+                        min={100}
+                        max={1500}
+                        step={10}
+                        onChange={(v) => updateStyle({ contentAreaMinHeight: v })}
+                        className="top-1 right-1"
+                        extraControls={
+                          <ContentExtraControls
+                            paddingY={paddingY}
+                            onPaddingYChange={(v) => updateStyle({ contentAreaPaddingY: v })}
+                            justify={justifyKey}
+                            onJustifyChange={(v) => updateStyle({ contentAreaJustify: v })}
+                            maxWidth={contentMaxWidth}
+                            onMaxWidthChange={(v) => updateStyle({ contentAreaMaxWidth: v })}
+                            bgColor={contentBgColor}
+                            onBgColorChange={(v) => updateStyle({ contentAreaBgColor: v })}
+                          />
+                        }
+                      />
 
                       <div
                         style={{
@@ -487,10 +493,6 @@ interface SiteMirrorCardProps {
                         }}
                       >
                         <div className="relative" style={{ maxWidth: `${contentMaxWidth}px`, width: '100%' }} ref={containerRef}>
-                          {/* Dashed border outline in edit mode */}
-                          {layoutEditMode && (
-                            <div className="absolute inset-0 border border-dashed border-primary/30 rounded pointer-events-none z-[5]" />
-                          )}
                           <iframe
                             srcDoc={generatePreviewDocument({
                               formStyle: demo.formStyle || DEFAULT_FORM_STYLE,
@@ -520,41 +522,41 @@ interface SiteMirrorCardProps {
                     </div>
 
                     {footerHtml && (
-                      <iframe
-                        srcDoc={`
-                          <!DOCTYPE html>
-                          <html>
-                            <head>
-                              <meta charset="utf-8">
-                              <meta name="viewport" content="width=device-width, initial-scale=1">
-                              <style>
-                                html, body { margin: 0; padding: 0; overflow: hidden; background: transparent; }
-                                * { box-sizing: border-box; }
-                                a { pointer-events: none; }
-                              </style>
-                              ${cssContent ? `<style>${cssContent}</style>` : ''}
-                            </head>
-                            <body>
-                              ${footerHtml}
-                            </body>
-                          </html>
-                        `}
-                        className="block w-full border-0"
-                        style={{ height: `${footerHeight}px` }}
-                        title="Live site footer preview"
-                        sandbox="allow-same-origin"
-                        onLoad={(e) => {
-                          const iframe = e.target as HTMLIFrameElement;
-                          try {
-                            const body = iframe.contentDocument?.body;
-                            const firstChild = body?.firstElementChild as HTMLElement | null;
-                            const height = firstChild?.offsetHeight || body?.scrollHeight || 160;
-                            iframe.style.height = `${Math.max(height, 100)}px`;
-                          } catch {
-                            iframe.style.height = '160px';
-                          }
-                        }}
-                      />
+                      <div className="relative" style={{ height: `${footerHeight}px`, overflow: 'hidden' }}>
+                        <RegionSizeBadge
+                          label="Footer"
+                          value={footerHeight}
+                          min={40}
+                          max={500}
+                          step={10}
+                          onChange={(v) => updateStyle({ footerHeight: v })}
+                          className="top-1 right-1"
+                        />
+                        <iframe
+                          srcDoc={`
+                            <!DOCTYPE html>
+                            <html>
+                              <head>
+                                <meta charset="utf-8">
+                                <meta name="viewport" content="width=device-width, initial-scale=1">
+                                <style>
+                                  html, body { margin: 0; padding: 0; overflow: hidden; background: transparent; }
+                                  * { box-sizing: border-box; }
+                                  a { pointer-events: none; }
+                                </style>
+                                ${cssContent ? `<style>${cssContent}</style>` : ''}
+                              </head>
+                              <body>
+                                ${footerHtml}
+                              </body>
+                            </html>
+                          `}
+                          className="block w-full border-0"
+                          style={{ height: `${footerHeight}px` }}
+                          title="Live site footer preview"
+                          sandbox="allow-same-origin"
+                        />
+                      </div>
                     )}
                   </div>
                 </div>
