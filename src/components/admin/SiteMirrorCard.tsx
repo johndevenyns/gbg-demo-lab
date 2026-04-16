@@ -522,41 +522,41 @@ interface SiteMirrorCardProps {
                     </div>
 
                     {footerHtml && (
-                      <iframe
-                        srcDoc={`
-                          <!DOCTYPE html>
-                          <html>
-                            <head>
-                              <meta charset="utf-8">
-                              <meta name="viewport" content="width=device-width, initial-scale=1">
-                              <style>
-                                html, body { margin: 0; padding: 0; overflow: hidden; background: transparent; }
-                                * { box-sizing: border-box; }
-                                a { pointer-events: none; }
-                              </style>
-                              ${cssContent ? `<style>${cssContent}</style>` : ''}
-                            </head>
-                            <body>
-                              ${footerHtml}
-                            </body>
-                          </html>
-                        `}
-                        className="block w-full border-0"
-                        style={{ height: `${footerHeight}px` }}
-                        title="Live site footer preview"
-                        sandbox="allow-same-origin"
-                        onLoad={(e) => {
-                          const iframe = e.target as HTMLIFrameElement;
-                          try {
-                            const body = iframe.contentDocument?.body;
-                            const firstChild = body?.firstElementChild as HTMLElement | null;
-                            const height = firstChild?.offsetHeight || body?.scrollHeight || 160;
-                            iframe.style.height = `${Math.max(height, 100)}px`;
-                          } catch {
-                            iframe.style.height = '160px';
-                          }
-                        }}
-                      />
+                      <div className="relative" style={{ height: `${footerHeight}px`, overflow: 'hidden' }}>
+                        <RegionSizeBadge
+                          label="Footer"
+                          value={footerHeight}
+                          min={40}
+                          max={500}
+                          step={10}
+                          onChange={(v) => updateStyle({ footerHeight: v })}
+                          className="top-1 right-1"
+                        />
+                        <iframe
+                          srcDoc={`
+                            <!DOCTYPE html>
+                            <html>
+                              <head>
+                                <meta charset="utf-8">
+                                <meta name="viewport" content="width=device-width, initial-scale=1">
+                                <style>
+                                  html, body { margin: 0; padding: 0; overflow: hidden; background: transparent; }
+                                  * { box-sizing: border-box; }
+                                  a { pointer-events: none; }
+                                </style>
+                                ${cssContent ? `<style>${cssContent}</style>` : ''}
+                              </head>
+                              <body>
+                                ${footerHtml}
+                              </body>
+                            </html>
+                          `}
+                          className="block w-full border-0"
+                          style={{ height: `${footerHeight}px` }}
+                          title="Live site footer preview"
+                          sandbox="allow-same-origin"
+                        />
+                      </div>
                     )}
                   </div>
                 </div>
