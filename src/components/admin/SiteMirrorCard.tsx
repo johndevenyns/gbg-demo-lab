@@ -267,16 +267,6 @@ interface SiteMirrorCardProps {
                     previewViewport === 'desktop' ? "min-w-[1280px]" : "flex justify-center"
                   )}
                 >
-                  {/* Floating layout controls panel */}
-                  <ContentLayoutEditor
-                    demo={demo}
-                    onApplyBranding={onApplyBranding}
-                    active={layoutEditMode}
-                    onClose={() => setLayoutEditMode(false)}
-                    draft={draft}
-                    onDraftChange={setDraft}
-                  />
-
                   {/* Floating header link panel */}
                   <HeaderLinkPanel
                     active={linkHeaderMode}
@@ -297,6 +287,15 @@ interface SiteMirrorCardProps {
                   >
                     {headerHtml && (
                       <div className="relative" style={{ height: `${headerHeight}px`, overflow: 'hidden' }}>
+                        <RegionSizeBadge
+                          label="Header"
+                          value={headerHeight}
+                          min={40}
+                          max={500}
+                          step={10}
+                          onChange={(v) => updateStyle({ headerHeight: v })}
+                          className="top-1 right-1"
+                        />
                         <iframe
                           ref={headerIframeRef}
                           srcDoc={`
