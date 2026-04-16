@@ -210,47 +210,29 @@ interface SiteMirrorCardProps {
                 </p>
               </div>
               <div className="flex items-center gap-2">
-                {/* Adjust Spacing toggle */}
-                {hasContentForMethod && (
-                  <>
-                    <Button
-                      variant={layoutEditMode ? "default" : "outline"}
-                      size="sm"
-                      className="gap-1.5"
-                      onClick={() => {
-                        if (!layoutEditMode) resetDraft();
-                        setLayoutEditMode(!layoutEditMode);
-                        if (!layoutEditMode) setLinkHeaderMode(false);
-                      }}
-                    >
-                      <SlidersHorizontal className="w-4 h-4" />
-                      <span className="text-xs">Adjust Spacing</span>
-                    </Button>
-                    {headerHtml && (
-                      <Button
-                        variant={linkHeaderMode ? "default" : "outline"}
-                        size="sm"
-                        className="gap-1.5"
-                        onClick={() => {
-                          setLinkHeaderMode(!linkHeaderMode);
-                          if (!linkHeaderMode) {
-                            setLayoutEditMode(false);
-                            setPendingSelector("");
-                            setPendingLabel("");
-                            setPendingRect(null);
-                          }
-                        }}
-                      >
-                        <MousePointerClick className="w-4 h-4" />
-                        <span className="text-xs">Link Header</span>
-                        {ctaLinks.length > 0 && (
-                          <Badge variant="secondary" className="text-[10px] ml-0.5 px-1.5 py-0">
-                            {ctaLinks.length}
-                          </Badge>
-                        )}
-                      </Button>
+                {/* Link Header toggle */}
+                {hasContentForMethod && headerHtml && (
+                  <Button
+                    variant={linkHeaderMode ? "default" : "outline"}
+                    size="sm"
+                    className="gap-1.5"
+                    onClick={() => {
+                      setLinkHeaderMode(!linkHeaderMode);
+                      if (!linkHeaderMode) {
+                        setPendingSelector("");
+                        setPendingLabel("");
+                        setPendingRect(null);
+                      }
+                    }}
+                  >
+                    <MousePointerClick className="w-4 h-4" />
+                    <span className="text-xs">Link Header</span>
+                    {ctaLinks.length > 0 && (
+                      <Badge variant="secondary" className="text-[10px] ml-0.5 px-1.5 py-0">
+                        {ctaLinks.length}
+                      </Badge>
                     )}
-                  </>
+                  </Button>
                 )}
                 {/* Viewport Size Selector */}
                 {hasContentForMethod && (
