@@ -1667,7 +1667,7 @@ export function DemoFlowRenderer({
 
   // Create verification session with the API
   // skipAdvance: if true, don't call goToNextStep after creation (for unified_verification)
-  const createVerificationSession = useCallback(async (verificationType: VerificationType, skipAdvance = false, resourceIdOverride?: string) => {
+  const createVerificationSession = useCallback(async (verificationType: VerificationType, skipAdvance = false, resourceIdOverride?: string, popupMode = false) => {
     // Guard against duplicate calls
     if (verificationSessionId) {
       console.log('Session already exists, skipping creation');
@@ -1692,11 +1692,17 @@ export function DemoFlowRenderer({
       }
     };
     
+    // For Trinsic popup mode, the verifier must redirect to our redirect-handler
+    // page which uses signalRedirectFromPopup() to forward the result to the opener.
+    const popupReturnUrl = popupMode
+      ? `${window.location.origin}/verify/redirect`
+      : (returnUrl || window.location.href);
+
     const requestBody = {
       formData,
       verificationType,
       customerName: customerName || 'Verification Demo',
-      returnUrl: returnUrl || window.location.href,
+      returnUrl: popupReturnUrl,
       includeQr: includeQr ?? true,
       referenceIdPrefix: referenceIdPrefix,
       resourceId: resourceIdOverride || getResourceIdForType(verificationType),
