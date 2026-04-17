@@ -2722,7 +2722,7 @@ export function DemoFlowRenderer({
                 <Button
                   onClick={() => launchTrinsicPopup(vType, stepResId)}
                   disabled={isLoading}
-                  style={{ backgroundColor: buttonColor, color: getContrastColor(buttonColor) }}
+                  style={{ backgroundColor: buttonColor, color: getContrastTextColor(buttonColor) }}
                   className="min-w-[220px]"
                 >
                   {isLoading ? (
