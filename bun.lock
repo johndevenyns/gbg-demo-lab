@@ -406,7 +406,7 @@
 
     "@tootallnate/once": ["@tootallnate/once@2.0.0", "", {}, "sha512-XCuKFP5PS55gnMVu3dty8KPatLqUoy/ZYzDzAGCQ8JNFCkLXzmI7vNHCR+XpbZaMWQK/vQubr7PkYq8g470J/A=="],
 
-    "@trinsic/web-ui": ["@trinsic/web-ui@3.0.3", "https://europe-west4-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@trinsic/web-ui/-/web-ui-3.0.3.tgz", { "dependencies": { "micromodal": "0.4.10" } }, "sha512-FReBJw8QLZDFJ2Bt4LQCKcDut9sRYum0jgDqKf5ebYsu9SH7ZeEgb9oQG248SoTYgk6xlK96FaqK0zJgGj/JKw=="],
+    "@trinsic/web-ui": ["@trinsic/web-ui@3.0.3", "https://europe-west1-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@trinsic/web-ui/-/web-ui-3.0.3.tgz", { "dependencies": { "micromodal": "0.4.10" } }, "sha512-FReBJw8QLZDFJ2Bt4LQCKcDut9sRYum0jgDqKf5ebYsu9SH7ZeEgb9oQG248SoTYgk6xlK96FaqK0zJgGj/JKw=="],
 
     "@types/chai": ["@types/chai@5.2.3", "", { "dependencies": { "@types/deep-eql": "*", "assertion-error": "^2.0.1" } }, "sha512-Mw558oeA9fFbv65/y4mHtXDs9bPnFMZAL/jxdPFUpOHHIXX91mcgEHbS5Lahr+pwZFR8A7GQleRWeI6cGFC2UA=="],
 
@@ -834,7 +834,7 @@
 
     "micromatch": ["micromatch@4.0.8", "", { "dependencies": { "braces": "^3.0.3", "picomatch": "^2.3.1" } }, "sha512-PXwfBhYu0hBCPw8Dn0E+WDYb7af3dSLVWKi3HGv84IdF4TyFoC0ysxFd0Goxw7nSv4T/PzEJQxsYsEiFCKo2BA=="],
 
-    "micromodal": ["micromodal@0.4.10", "https://europe-west4-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/micromodal/-/micromodal-0.4.10.tgz", {}, "sha512-BUrEnzMPFBwK8nOE4xUDYHLrlGlLULQVjpja99tpJQPSUEWgw3kTLp1n1qv0HmKU29AiHE7Y7sMLiRziDK4ghQ=="],
+    "micromodal": ["micromodal@0.4.10", "https://europe-west1-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/micromodal/-/micromodal-0.4.10.tgz", {}, "sha512-BUrEnzMPFBwK8nOE4xUDYHLrlGlLULQVjpja99tpJQPSUEWgw3kTLp1n1qv0HmKU29AiHE7Y7sMLiRziDK4ghQ=="],
 
     "mime-db": ["mime-db@1.52.0", "", {}, "sha512-sPU4uV7dYlvtWJxwwxHD0PuihVNiE7TyAbQ5SWxDCB9mUYvOgroQOwYQQOKPJ8CIbE+1ETVlOoK1UC2nU3gYvg=="],
 
