@@ -708,6 +708,11 @@ export function DemoFlowRenderer({
   const { data: mdlProvidersData } = useMdlProviders(true);
   const mdlProviders: MdlProviderVerification[] = useMemo(() => {
     return mdlProvidersData || [];
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mdlProvidersData]);
+
+  // Custom HTML for the mobile-popup launch screen (configured at Global → Verification → mDL)
+  const { data: customLaunchHtml } = useMdlPageHtml(MDL_LAUNCH_HTML_KEY);
   }, [mdlProvidersData]);
 
   // Resolve resource IDs using 3-tier hierarchy: Customer → Admin → Global
