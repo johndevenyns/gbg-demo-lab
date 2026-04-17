@@ -24,6 +24,7 @@ import {
   useMyAdminResourceIds, useUpsertAdminResourceId, useDeleteAdminResourceId,
 } from "@/hooks/useAdminResourceIds";
 import { VerificationTypeConfig, MdlProvider, MdlProviderFormData } from "@/types/verification";
+import { MdlPageHtmlEditor } from "./MdlPageHtmlEditor";
 
 // Icon mapping
 const iconMap: Record<string, React.ReactNode> = {
@@ -309,6 +310,9 @@ function VerificationTypeCard({ type, onUpdate, isMdl, mdlProviders, onUpdatePro
                   ))}
                 </div>
               )}
+
+              <Separator className="my-4" />
+              <MdlPageHtmlEditor />
             </div>
           )}
         </CollapsibleContent>
