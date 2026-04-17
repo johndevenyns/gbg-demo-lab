@@ -310,8 +310,13 @@ function VerificationTypeCard({ type, onUpdate, isMdl, mdlProviders, onUpdatePro
                   ))}
                 </div>
               )}
+            </div>
+          )}
 
-              <Separator className="my-4" />
+          {/* Launch Page + Redirect Page editors (mDL only) */}
+          {isMdl && isGlobalAdmin && (
+            <div className="px-6 pb-6">
+              <Separator className="mb-4" />
               <MdlPageHtmlEditor />
             </div>
           )}
