@@ -791,6 +791,28 @@ function VerificationTypePanel({
         </div>
       )}
 
+      {/* Mobile popup launch (Trinsic web-ui) */}
+      {!isDataOnly && (
+        <div className="space-y-2 p-3 rounded-lg border border-emerald-500/30 bg-emerald-500/5">
+          <div className="flex items-center justify-between">
+            <Label className="text-sm font-medium flex items-center gap-2">
+              <Smartphone className="w-4 h-4" />
+              Mobile Popup Launch
+            </Label>
+            <Switch
+              checked={typeConfig.popupMode ?? false}
+              onCheckedChange={(v) => onUpdate({ popupMode: v })}
+              className="scale-75"
+            />
+          </div>
+          <p className="text-xs text-muted-foreground">
+            When enabled, the verifyUrl is opened as a popup using the Trinsic web-ui SDK.
+            On completion, the user is auto-redirected to the demo's approved or rejected URL.
+            The popup's redirect target is set to <code className="font-mono">/verify/redirect</code>.
+          </p>
+        </div>
+      )}
+
       {/* Status polling */}
       {!isDataOnly && (
         <div className="space-y-2 p-3 rounded-lg border border-border">
