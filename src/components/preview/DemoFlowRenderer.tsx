@@ -2714,6 +2714,25 @@ export function DemoFlowRenderer({
             };
             const vType = TYPE_KEY_TO_VTYPE[activeTypeKey] || 'docBio';
             const stepResId = activeTypeConfig?.resourceId;
+            const onLaunch = () => launchTrinsicPopup(vType, stepResId);
+
+            // If admin configured custom HTML in Global → Verification → mDL,
+            // render it and delegate clicks on [data-popup-launch-button] to onLaunch.
+            if (customLaunchHtml) {
+              return (
+                <div
+                  onClick={(e) => {
+                    const target = e.target as HTMLElement;
+                    if (target.closest('[data-popup-launch-button]')) {
+                      e.preventDefault();
+                      if (!isLoading) onLaunch();
+                    }
+                  }}
+                  dangerouslySetInnerHTML={{ __html: customLaunchHtml }}
+                />
+              );
+            }
+
             return (
               <div className="text-center py-8 space-y-6">
                 <Smartphone className="w-12 h-12 mx-auto text-primary" />
@@ -2726,7 +2745,7 @@ export function DemoFlowRenderer({
                   </p>
                 </div>
                 <Button
-                  onClick={() => launchTrinsicPopup(vType, stepResId)}
+                  onClick={onLaunch}
                   disabled={isLoading}
                   style={{ backgroundColor: buttonColor, color: getContrastTextColor(buttonColor) }}
                   className="min-w-[220px]"
