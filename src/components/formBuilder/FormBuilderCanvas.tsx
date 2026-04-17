@@ -457,8 +457,8 @@ export function FormBuilderCanvas({ steps, onUpdateSteps, demo }: FormBuilderCan
             },
             {
               id: generateId(),
-              label: 'Mobile ID',
-              description: 'Use your mobile driver\'s license',
+              label: 'Digital ID',
+              description: 'Use your Digital ID',
               icon: 'smartphone',
               collapsedByDefault: false,
               destinationType: 'verification',

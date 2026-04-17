@@ -50,9 +50,9 @@ export const VERIFICATION_PATHS: VerificationPath[] = [
   },
   {
     id: 'mdl',
-    name: 'Mobile Driver\'s License',
+    name: 'Digital ID',
     type: 'dataBio',
-    description: 'Mobile credential verification (iOS/Android)',
+    description: 'Digital ID credential verification (iOS/Android)',
     condition: 'mobile_detected',
     priority: 1,
     resourceIdField: 'resourceIdDataBio',

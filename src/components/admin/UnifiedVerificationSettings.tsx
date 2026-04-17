@@ -34,7 +34,7 @@ const iconMap: Record<string, React.ReactNode> = {
   Smartphone: <Smartphone className="w-5 h-5" />,
 };
 
-// ── mDL Provider Card (inline) ──────────────────────────────────────
+// ── Digital ID Provider Card (inline) ──────────────────────────────────────
 function MdlProviderCard({ provider, onUpdate, onDelete }: {
   provider: MdlProvider;
   onUpdate: (updates: Partial<MdlProvider>) => void;
@@ -112,8 +112,8 @@ function AddProviderDialog({ open, onOpenChange, onAdd }: {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Add mDL Provider</DialogTitle>
-          <DialogDescription>Add a new mobile ID provider.</DialogDescription>
+          <DialogTitle>Add Digital ID Provider</DialogTitle>
+          <DialogDescription>Add a new Digital ID provider.</DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="grid grid-cols-2 gap-4">
@@ -283,14 +283,14 @@ function VerificationTypeCard({ type, onUpdate, isMdl, mdlProviders, onUpdatePro
             </div>
           )}
 
-          {/* mDL Providers subsection */}
+          {/* Digital ID Providers subsection */}
           {isMdl && isGlobalAdmin && (
             <div className="px-6 pb-6">
               <Separator className="mb-4" />
               <div className="flex items-center justify-between mb-3">
                 <div>
-                  <h4 className="text-sm font-semibold">Mobile ID Providers</h4>
-                  <p className="text-xs text-muted-foreground">Manage available mobile ID providers for this verification type</p>
+                  <h4 className="text-sm font-semibold">Digital ID Providers</h4>
+                  <p className="text-xs text-muted-foreground">Manage available Digital ID providers for this verification type</p>
                 </div>
                 <Button size="sm" variant="outline" onClick={onAddProvider}>
                   <Plus className="w-3.5 h-3.5 mr-1" />Add
@@ -313,7 +313,7 @@ function VerificationTypeCard({ type, onUpdate, isMdl, mdlProviders, onUpdatePro
             </div>
           )}
 
-          {/* Launch Page + Redirect Page editors (mDL only) */}
+          {/* Launch Page + Redirect Page editors (Digital ID only) */}
           {isMdl && isGlobalAdmin && (
             <div className="px-6 pb-6">
               <Separator className="mb-4" />
