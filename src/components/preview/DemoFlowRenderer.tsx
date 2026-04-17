@@ -1667,7 +1667,7 @@ export function DemoFlowRenderer({
 
   // Create verification session with the API
   // skipAdvance: if true, don't call goToNextStep after creation (for unified_verification)
-  const createVerificationSession = useCallback(async (verificationType: VerificationType, skipAdvance = false, resourceIdOverride?: string) => {
+  const createVerificationSession = useCallback(async (verificationType: VerificationType, skipAdvance = false, resourceIdOverride?: string, popupMode = false) => {
     // Guard against duplicate calls
     if (verificationSessionId) {
       console.log('Session already exists, skipping creation');
@@ -1692,11 +1692,17 @@ export function DemoFlowRenderer({
       }
     };
     
+    // For Trinsic popup mode, the verifier must redirect to our redirect-handler
+    // page which uses signalRedirectFromPopup() to forward the result to the opener.
+    const popupReturnUrl = popupMode
+      ? `${window.location.origin}/verify/redirect`
+      : (returnUrl || window.location.href);
+
     const requestBody = {
       formData,
       verificationType,
       customerName: customerName || 'Verification Demo',
-      returnUrl: returnUrl || window.location.href,
+      returnUrl: popupReturnUrl,
       includeQr: includeQr ?? true,
       referenceIdPrefix: referenceIdPrefix,
       resourceId: resourceIdOverride || getResourceIdForType(verificationType),
@@ -1795,7 +1801,11 @@ export function DemoFlowRenderer({
       setApiResponses(prev => [...prev, apiResponse]);
 
       toast.success('Verification session created');
-      
+
+      // Trinsic mobile popup mode is handled by `launchTrinsicPopup` (a user-
+      // gesture-initiated function), NOT here. We only create the session here.
+      // Falling through to normal QR/redirect rendering otherwise.
+
       // Only advance to next step if not skipping (unified_verification skips to show QR)
       if (!skipAdvance) {
         goToNextStep();
@@ -1809,7 +1819,7 @@ export function DemoFlowRenderer({
     } finally {
       setIsLoading(false);
     }
-  }, [formData, customerName, returnUrl, includeQr, referenceIdPrefix, resolvedIds, logoUrl, buttonColor, headerTextColor, headerBgColor, currentStep?.id, goToNextStep, onSubmissionLog, verificationSessionId]);
+  }, [formData, customerName, returnUrl, includeQr, referenceIdPrefix, resolvedIds, logoUrl, buttonColor, headerTextColor, headerBgColor, currentStep?.id, goToNextStep, onSubmissionLog, verificationSessionId, approvedUrl, rejectedUrl]);
 
   // Poll for verification status
   const pollVerificationStatus = useCallback(async () => {
@@ -1992,6 +2002,95 @@ export function DemoFlowRenderer({
     // Create verification session with step-level resource ID override if configured
     createVerificationSession(verificationType, true, stepResourceId || undefined);
   }, [createVerificationSession, currentStep?.unifiedVerificationConfig]);
+
+  // Trinsic mobile popup launcher — MUST be called from a user gesture (e.g. onClick)
+  // so the browser allows window.open(). The session is created inside
+  // sessionCreationFunction per Trinsic's required pattern.
+  const launchTrinsicPopup = useCallback(async (verificationType: VerificationType, stepResourceId?: string) => {
+    try {
+      const { createPopupAndWaitForResults, TrinsicPopupResultCode } = await import('@trinsic/web-ui');
+
+      const result = await createPopupAndWaitForResults({
+        sessionCreationFunction: async () => {
+          const popupReturnUrl = `${window.location.origin}/verify/redirect`;
+          const getResId = (t: VerificationType) => {
+            switch (t) {
+              case 'docBio': return resolvedIds.resourceIdDocBio;
+              case 'dataBio': return resolvedIds.resourceIdDataBio;
+              case 'dataOnly': return resolvedIds.resourceIdDataOnly;
+              default: return resolvedIds.resourceId;
+            }
+          };
+
+          const requestBody = {
+            formData,
+            verificationType,
+            customerName: customerName || 'Verification Demo',
+            returnUrl: popupReturnUrl,
+            includeQr: includeQr ?? true,
+            referenceIdPrefix,
+            resourceId: stepResourceId || getResId(verificationType),
+            logoUrl,
+            branding: { buttonColor, headerTextColor, headerBgColor },
+          };
+
+          const { data, error: invokeError } = await supabase.functions.invoke(
+            'create-verification-session',
+            { body: requestBody }
+          );
+          if (invokeError) throw new Error(invokeError.message);
+          if (!data?.success || !data?.verifyUrl) {
+            throw new Error(data?.error || 'No verifyUrl returned');
+          }
+
+          setVerificationSessionId(data.sessionId);
+          if (data.referenceId) setReferenceId(data.referenceId);
+          verificationSessionDataRef.current = {
+            qrCodeUrl: data.qrCodeUrl,
+            shortUrl: data.shortUrl,
+            verifyUrl: data.verifyUrl,
+          };
+
+          return data.verifyUrl as string;
+        },
+      });
+
+      console.log('Trinsic popup result:', result);
+
+      // For Signal/Polling completion, fetch final session status to decide outcome.
+      let success = false;
+      if (
+        result.code === TrinsicPopupResultCode.SignalReceived ||
+        result.code === TrinsicPopupResultCode.PollingFunctionIndicatedCompletion
+      ) {
+        try {
+          const { data: statusData } = await supabase.functions.invoke(
+            'get-verification-status',
+            { body: { sessionId: result.sessionId } }
+          );
+          const status = (statusData?.status || '').toLowerCase();
+          success = status === 'completed' || status === 'success' || status === 'approved';
+        } catch (statusErr) {
+          console.error('Failed to fetch final verification status:', statusErr);
+        }
+      }
+
+      const target = success ? approvedUrl : rejectedUrl;
+      if (target) {
+        window.location.href = target;
+      } else {
+        toast.message(success ? 'Verification approved' : 'Verification did not complete');
+      }
+    } catch (err) {
+      console.error('Trinsic popup launch failed:', err);
+      const msg = err instanceof Error ? err.message : 'Failed to launch verification';
+      toast.error(msg);
+      setError(msg);
+    }
+  }, [
+    formData, customerName, includeQr, referenceIdPrefix, resolvedIds, logoUrl,
+    buttonColor, headerTextColor, headerBgColor, approvedUrl, rejectedUrl,
+  ]);
 
   // Handle step-specific rendering and actions
   useEffect(() => {
@@ -2592,7 +2691,52 @@ export function DemoFlowRenderer({
           );
         }
         
-        // No session yet - show selection UI (or auto-trigger for admin_preselect)
+        // No session yet — check if popup mode is enabled on the active type.
+        // Popup mode requires a user gesture (button click) to open the window.
+        {
+          const enabledTypes = unifiedConfig.enabledTypes || [];
+          const activeTypeKey = enabledTypes[0] || 'docbio';
+          const activeTypeConfig = unifiedConfig.typeConfigs?.[activeTypeKey];
+          const isPopupMode = activeTypeConfig?.popupMode === true;
+
+          if (isPopupMode) {
+            const TYPE_KEY_TO_VTYPE: Record<string, VerificationType> = {
+              docbio: 'docBio',
+              databio: 'dataBio',
+              dataonly: 'dataOnly',
+              mdl: 'dataBio',
+            };
+            const vType = TYPE_KEY_TO_VTYPE[activeTypeKey] || 'docBio';
+            const stepResId = activeTypeConfig?.resourceId;
+            return (
+              <div className="text-center py-8 space-y-6">
+                <Smartphone className="w-12 h-12 mx-auto text-primary" />
+                <div className="space-y-1">
+                  <p className="text-lg font-medium" style={{ fontFamily: style.fontFamily }}>
+                    {activeTypeConfig?.customTitle || 'Mobile Verification'}
+                  </p>
+                  <p className="text-sm text-muted-foreground" style={{ fontFamily: style.fontFamily }}>
+                    {activeTypeConfig?.customDescription || 'A secure verification window will open. Complete the steps and we\'ll bring you right back here.'}
+                  </p>
+                </div>
+                <Button
+                  onClick={() => launchTrinsicPopup(vType, stepResId)}
+                  disabled={isLoading}
+                  style={{ backgroundColor: buttonColor, color: getContrastTextColor(buttonColor) }}
+                  className="min-w-[220px]"
+                >
+                  {isLoading ? (
+                    <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Launching…</>
+                  ) : (
+                    <>Start Mobile Verification</>
+                  )}
+                </Button>
+              </div>
+            );
+          }
+        }
+
+        // Default: show selection UI (or auto-trigger for admin_preselect)
         return (
           <UnifiedVerificationRenderer
             config={unifiedConfig}

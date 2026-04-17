@@ -15,6 +15,7 @@ import ReportingPage from "./pages/ReportingPage";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 import QrCodePreview from "./pages/QrCodePreview";
+import VerifyRedirect from "./pages/VerifyRedirect";
 
 const queryClient = new QueryClient();
 
@@ -65,6 +66,7 @@ function AppContent() {
           <Route path="/demo/:slug" element={<DemoPreview />} />
           <Route path="/embed/:slug" element={<DemoEmbed />} />
           <Route path="/qr-preview" element={<QrCodePreview />} />
+          <Route path="/verify/redirect" element={<VerifyRedirect />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
