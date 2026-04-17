@@ -2003,6 +2003,95 @@ export function DemoFlowRenderer({
     createVerificationSession(verificationType, true, stepResourceId || undefined);
   }, [createVerificationSession, currentStep?.unifiedVerificationConfig]);
 
+  // Trinsic mobile popup launcher — MUST be called from a user gesture (e.g. onClick)
+  // so the browser allows window.open(). The session is created inside
+  // sessionCreationFunction per Trinsic's required pattern.
+  const launchTrinsicPopup = useCallback(async (verificationType: VerificationType, stepResourceId?: string) => {
+    try {
+      const { createPopupAndWaitForResults, TrinsicPopupResultCode } = await import('@trinsic/web-ui');
+
+      const result = await createPopupAndWaitForResults({
+        sessionCreationFunction: async () => {
+          const popupReturnUrl = `${window.location.origin}/verify/redirect`;
+          const getResId = (t: VerificationType) => {
+            switch (t) {
+              case 'docBio': return resolvedIds.resourceIdDocBio;
+              case 'dataBio': return resolvedIds.resourceIdDataBio;
+              case 'dataOnly': return resolvedIds.resourceIdDataOnly;
+              default: return resolvedIds.resourceId;
+            }
+          };
+
+          const requestBody = {
+            formData,
+            verificationType,
+            customerName: customerName || 'Verification Demo',
+            returnUrl: popupReturnUrl,
+            includeQr: includeQr ?? true,
+            referenceIdPrefix,
+            resourceId: stepResourceId || getResId(verificationType),
+            logoUrl,
+            branding: { buttonColor, headerTextColor, headerBgColor },
+          };
+
+          const { data, error: invokeError } = await supabase.functions.invoke(
+            'create-verification-session',
+            { body: requestBody }
+          );
+          if (invokeError) throw new Error(invokeError.message);
+          if (!data?.success || !data?.verifyUrl) {
+            throw new Error(data?.error || 'No verifyUrl returned');
+          }
+
+          setVerificationSessionId(data.sessionId);
+          if (data.referenceId) setReferenceId(data.referenceId);
+          verificationSessionDataRef.current = {
+            qrCodeUrl: data.qrCodeUrl,
+            shortUrl: data.shortUrl,
+            verifyUrl: data.verifyUrl,
+          };
+
+          return data.verifyUrl as string;
+        },
+      });
+
+      console.log('Trinsic popup result:', result);
+
+      // For Signal/Polling completion, fetch final session status to decide outcome.
+      let success = false;
+      if (
+        result.code === TrinsicPopupResultCode.SignalReceived ||
+        result.code === TrinsicPopupResultCode.PollingFunctionIndicatedCompletion
+      ) {
+        try {
+          const { data: statusData } = await supabase.functions.invoke(
+            'get-verification-status',
+            { body: { sessionId: result.sessionId } }
+          );
+          const status = (statusData?.status || '').toLowerCase();
+          success = status === 'completed' || status === 'success' || status === 'approved';
+        } catch (statusErr) {
+          console.error('Failed to fetch final verification status:', statusErr);
+        }
+      }
+
+      const target = success ? approvedUrl : rejectedUrl;
+      if (target) {
+        window.location.href = target;
+      } else {
+        toast.message(success ? 'Verification approved' : 'Verification did not complete');
+      }
+    } catch (err) {
+      console.error('Trinsic popup launch failed:', err);
+      const msg = err instanceof Error ? err.message : 'Failed to launch verification';
+      toast.error(msg);
+      setError(msg);
+    }
+  }, [
+    formData, customerName, includeQr, referenceIdPrefix, resolvedIds, logoUrl,
+    buttonColor, headerTextColor, headerBgColor, approvedUrl, rejectedUrl,
+  ]);
+
   // Handle step-specific rendering and actions
   useEffect(() => {
     if (currentStep?.stepType === 'api' && !apiResponses.find(r => r.stepId === currentStep.id)) {
