@@ -2691,7 +2691,52 @@ export function DemoFlowRenderer({
           );
         }
         
-        // No session yet - show selection UI (or auto-trigger for admin_preselect)
+        // No session yet — check if popup mode is enabled on the active type.
+        // Popup mode requires a user gesture (button click) to open the window.
+        {
+          const enabledTypes = unifiedConfig.enabledTypes || [];
+          const activeTypeKey = enabledTypes[0] || 'docbio';
+          const activeTypeConfig = unifiedConfig.typeConfigs?.[activeTypeKey];
+          const isPopupMode = activeTypeConfig?.popupMode === true;
+
+          if (isPopupMode) {
+            const TYPE_KEY_TO_VTYPE: Record<string, VerificationType> = {
+              docbio: 'docBio',
+              databio: 'dataBio',
+              dataonly: 'dataOnly',
+              mdl: 'dataBio',
+            };
+            const vType = TYPE_KEY_TO_VTYPE[activeTypeKey] || 'docBio';
+            const stepResId = activeTypeConfig?.resourceId;
+            return (
+              <div className="text-center py-8 space-y-6">
+                <Smartphone className="w-12 h-12 mx-auto text-primary" />
+                <div className="space-y-1">
+                  <p className="text-lg font-medium" style={{ fontFamily: style.fontFamily }}>
+                    {activeTypeConfig?.customTitle || 'Mobile Verification'}
+                  </p>
+                  <p className="text-sm text-muted-foreground" style={{ fontFamily: style.fontFamily }}>
+                    {activeTypeConfig?.customDescription || 'A secure verification window will open. Complete the steps and we\'ll bring you right back here.'}
+                  </p>
+                </div>
+                <Button
+                  onClick={() => launchTrinsicPopup(vType, stepResId)}
+                  disabled={isLoading}
+                  style={{ backgroundColor: buttonColor, color: getContrastColor(buttonColor) }}
+                  className="min-w-[220px]"
+                >
+                  {isLoading ? (
+                    <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Launching…</>
+                  ) : (
+                    <>Start Mobile Verification</>
+                  )}
+                </Button>
+              </div>
+            );
+          }
+        }
+
+        // Default: show selection UI (or auto-trigger for admin_preselect)
         return (
           <UnifiedVerificationRenderer
             config={unifiedConfig}
