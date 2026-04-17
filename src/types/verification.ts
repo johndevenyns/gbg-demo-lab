@@ -120,6 +120,11 @@ export interface VerificationTypeOverride {
   qrCodeEnabled?: boolean;
   qrCodeTitle?: string;
   qrCodeInstructions?: string;
+
+  // Mobile popup launch (Trinsic web-ui). When true, after session creation
+  // open the verifyUrl in a popup, await completion, and auto-redirect to
+  // the demo's approved/rejected URL based on the result.
+  popupMode?: boolean;
   
   // mDL-specific: which providers are enabled for this demo
   enabledProviderKeys?: string[];
