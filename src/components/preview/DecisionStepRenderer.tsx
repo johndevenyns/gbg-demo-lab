@@ -91,7 +91,7 @@ export function DecisionStepRenderer({
           <h2 className="text-2xl font-semibold text-foreground">
             Select Your ID Provider
           </h2>
-          <p className="text-muted-foreground">Choose which mobile ID to use for verification</p>
+          <p className="text-muted-foreground">Choose which Digital ID to use for verification</p>
         </div>
 
         {/* Provider Cards */}

@@ -160,7 +160,7 @@ export function MdlPageHtmlEditor() {
     <div className="space-y-3">
       <div className="flex items-center justify-between gap-2">
         <div>
-          <h4 className="text-sm font-semibold">mDL Popup Pages</h4>
+          <h4 className="text-sm font-semibold">Digital ID Popup Pages</h4>
           <p className="text-xs text-muted-foreground">
             Customize the HTML for the Launch Page and the Redirect Page used by the mobile verification popup.
           </p>

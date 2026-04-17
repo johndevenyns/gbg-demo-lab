@@ -20,8 +20,8 @@ const DEFAULT_CONFIG: VerificationConfig = {
   statusEnabled: true,
   statusPollingInterval: 5,
   mobileIdEnabled: false,
-  mobileIdTitle: 'Mobile ID Verification',
-  mobileIdInstructions: 'Use your mobile driver\'s license for faster verification',
+  mobileIdTitle: 'Digital ID Verification',
+  mobileIdInstructions: 'Use your Digital ID for faster verification',
   mobileIdProviders: AVAILABLE_MDL_PROVIDERS.map(p => ({ ...p, enabled: true })),
   autoAdvanceOnComplete: true,
   showBackButton: true,
@@ -69,7 +69,7 @@ export function VerificationStepConfig({ step, onUpdateStep }: VerificationStepC
               {config.mobileIdEnabled && (
                 <Badge variant="outline" className="text-xs bg-green-500/10 text-green-600 border-green-500/30">
                   <Smartphone className="w-3 h-3 mr-1" />
-                  mDL
+                  dID
                 </Badge>
               )}
             </div>
@@ -182,12 +182,12 @@ export function VerificationStepConfig({ step, onUpdateStep }: VerificationStepC
           )}
         </div>
 
-        {/* Mobile ID Configuration */}
+        {/* Digital ID Configuration */}
         <div className="space-y-3 pt-2 border-t border-border">
           <div className="flex items-center justify-between">
             <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
               <Smartphone className="w-3 h-3" />
-              Mobile ID / mDL Path
+              Digital ID Path
             </Label>
             <Switch
               checked={config.mobileIdEnabled}
@@ -201,7 +201,7 @@ export function VerificationStepConfig({ step, onUpdateStep }: VerificationStepC
               <div className="space-y-2">
                 <Label className="text-sm flex items-center gap-2">
                   <Link className="w-3 h-3" />
-                  Mobile ID URL Field (from API response)
+                  Digital ID URL Field (from API response)
                 </Label>
                 <Input
                   value={config.mobileIdUrlField || ''}
@@ -210,7 +210,7 @@ export function VerificationStepConfig({ step, onUpdateStep }: VerificationStepC
                   className="h-8 text-sm font-mono"
                 />
                 <p className="text-xs text-muted-foreground">
-                  URL for mobile driver's license verification flow
+                  URL for Digital ID verification flow
                 </p>
               </div>
               
@@ -220,7 +220,7 @@ export function VerificationStepConfig({ step, onUpdateStep }: VerificationStepC
                   <Input
                     value={config.mobileIdTitle || ''}
                     onChange={(e) => handleConfigUpdate({ mobileIdTitle: e.target.value })}
-                    placeholder="Mobile ID Verification"
+                    placeholder="Digital ID Verification"
                     className="h-8 text-sm"
                   />
                 </div>
@@ -235,7 +235,7 @@ export function VerificationStepConfig({ step, onUpdateStep }: VerificationStepC
                 </div>
               </div>
 
-              {/* mDL Provider Selection */}
+              {/* dID Provider Selection */}
               <div className="pt-2 border-t border-green-500/20">
                 <MdlProviderConfig
                   enabledProviders={config.mobileIdProviders || []}

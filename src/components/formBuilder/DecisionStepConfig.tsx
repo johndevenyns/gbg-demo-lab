@@ -32,7 +32,7 @@ const VERIFICATION_TYPES = [
   { id: 'docbio', label: 'Document + Biometric', description: 'ID scan and selfie' },
   { id: 'databio', label: 'Data + Biometric', description: 'Data verification with selfie' },
   { id: 'dataonly', label: 'Data Only', description: 'Backend data verification' },
-  { id: 'mdl', label: 'Mobile Driver\'s License', description: 'Mobile ID verification' },
+  { id: 'mdl', label: 'Digital ID', description: 'Digital ID verification' },
 ];
 
 const getIconComponent = (iconId?: DecisionChoiceIcon) => {
@@ -328,7 +328,7 @@ export function DecisionStepConfig({ step, allSteps, onUpdateStep }: DecisionSte
                         value={choice.verificationType || 'docbio'}
                         onValueChange={(v) => handleUpdateChoice(choice.id, { 
                           verificationType: v as 'docbio' | 'databio' | 'dataonly' | 'mdl',
-                          // Initialize mDL providers with all available when switching to mDL
+                          // Initialize dID providers with all available when switching to dID
                           ...(v === 'mdl' && !choice.mobileIdProviders?.length ? {
                             mobileIdProviders: AVAILABLE_MDL_PROVIDERS.map(p => ({ ...p, enabled: true }))
                           } : {})
@@ -350,7 +350,7 @@ export function DecisionStepConfig({ step, allSteps, onUpdateStep }: DecisionSte
                       </Select>
                     )}
 
-                    {/* mDL Provider Selection - show when mDL is selected */}
+                    {/* dID Provider Selection - show when dID is selected */}
                     {choice.destinationType === 'verification' && choice.verificationType === 'mdl' && (
                       <div className="mt-2">
                         <MdlProviderConfig

@@ -92,12 +92,12 @@ export function VerificationMethodSelector({
         </div>
       )}
 
-      {/* Mobile ID Providers Section */}
+      {/* Digital ID Providers Section */}
       {config.mobileIdEnabled && enabledProviders.length > 0 && (
         <div className="space-y-3">
           <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             <Smartphone className="w-3.5 h-3.5" />
-            Mobile ID Providers
+            Digital ID Providers
           </div>
           
           <div className="space-y-2">

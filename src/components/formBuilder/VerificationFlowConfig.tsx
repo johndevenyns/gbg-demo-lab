@@ -38,8 +38,8 @@ const DEFAULT_CONFIG: VerificationFlowConfigType = {
   statusEnabled: true,
   statusPollingInterval: 5,
   mobileIdEnabled: false,
-  mobileIdTitle: 'Mobile ID Verification',
-  mobileIdInstructions: 'Use your mobile driver\'s license for faster verification',
+  mobileIdTitle: 'Digital ID Verification',
+  mobileIdInstructions: 'Use your Digital ID for faster verification',
   mobileIdProviders: AVAILABLE_MDL_PROVIDERS.map(p => ({ ...p, enabled: true })),
   autoAdvanceOnComplete: true,
   showBackButton: true,
@@ -116,7 +116,7 @@ export function VerificationFlowConfig({ step, onUpdateStep, demo }: Verificatio
                 <div className="w-16 h-16 mx-auto mb-1 bg-muted rounded-lg flex items-center justify-center border border-dashed border-muted-foreground/30">
                   <Smartphone className="w-8 h-8 text-muted-foreground/50" />
                 </div>
-                <p className="text-xs text-green-600 font-medium">mDL</p>
+                <p className="text-xs text-green-600 font-medium">dID</p>
               </div>
             )}
           </div>
@@ -220,7 +220,7 @@ export function VerificationFlowConfig({ step, onUpdateStep, demo }: Verificatio
                   {isMdlPath && config.mobileIdEnabled && (
                     <Badge variant="outline" className="text-xs bg-green-500/10 text-green-600 border-green-500/30">
                       <Smartphone className="w-3 h-3 mr-1" />
-                      mDL
+                      dID
                     </Badge>
                   )}
                 </div>
@@ -307,13 +307,13 @@ export function VerificationFlowConfig({ step, onUpdateStep, demo }: Verificatio
               )}
             </div>
 
-            {/* Mobile ID Configuration - Only for mDL path */}
+            {/* Digital ID Configuration - Only for dID path */}
             {isMdlPath && (
               <div className="space-y-3 pt-2 border-t border-border">
                 <div className="flex items-center justify-between">
                   <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
                     <Smartphone className="w-3 h-3" />
-                    Mobile ID Providers
+                    Digital ID Providers
                   </Label>
                   <Switch
                     checked={config.mobileIdEnabled}
@@ -330,7 +330,7 @@ export function VerificationFlowConfig({ step, onUpdateStep, demo }: Verificatio
                         <Input
                           value={config.mobileIdTitle || ''}
                           onChange={(e) => handleConfigUpdate({ mobileIdTitle: e.target.value })}
-                          placeholder="Mobile ID Verification"
+                          placeholder="Digital ID Verification"
                           className="h-8 text-sm"
                         />
                       </div>
@@ -339,13 +339,13 @@ export function VerificationFlowConfig({ step, onUpdateStep, demo }: Verificatio
                         <Input
                           value={config.mobileIdInstructions || ''}
                           onChange={(e) => handleConfigUpdate({ mobileIdInstructions: e.target.value })}
-                          placeholder="Use your mobile license..."
+                          placeholder="Use your Digital ID..."
                           className="h-8 text-sm"
                         />
                       </div>
                     </div>
 
-                    {/* mDL Provider Selection */}
+                    {/* dID Provider Selection */}
                     <div className="pt-2 border-t border-green-500/20">
                       <MdlProviderConfig
                         enabledProviders={config.mobileIdProviders || []}

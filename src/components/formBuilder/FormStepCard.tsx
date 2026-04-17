@@ -68,7 +68,7 @@ const PATH_LABELS: Record<string, string> = {
   docbio: 'Document + Biometric',
   databio: 'Data + Biometric',
   dataonly: 'Data Only',
-  mdl: 'Mobile Driver\'s License',
+  mdl: 'Digital ID',
 };
 
 interface SortableFieldProps {
@@ -455,7 +455,7 @@ export function FormStepCard({
               {step.verificationFlowConfig?.pathType === 'docbio' && 'Doc + Bio'}
               {step.verificationFlowConfig?.pathType === 'databio' && 'Data + Bio'}
               {step.verificationFlowConfig?.pathType === 'dataonly' && 'Data Only'}
-              {step.verificationFlowConfig?.pathType === 'mdl' && 'Mobile ID'}
+              {step.verificationFlowConfig?.pathType === 'mdl' && 'Digital ID'}
               {!step.verificationFlowConfig?.pathType && 'Verification'}
             </Badge>
           )}
@@ -611,7 +611,7 @@ export function FormStepCard({
                         <Smartphone className="w-12 h-12 text-muted-foreground/50" />
                       </div>
                       <p className="text-sm font-medium text-green-600">
-                        {step.verificationConfig?.mobileIdTitle || 'Mobile ID'}
+                        {step.verificationConfig?.mobileIdTitle || 'Digital ID'}
                       </p>
                       <p className="text-xs text-muted-foreground">
                         URL from: {step.verificationConfig?.mobileIdUrlField || '(configure field)'}
@@ -670,7 +670,7 @@ export function FormStepCard({
                     {step.methodSelectionConfig?.mobileIdEnabled && (
                       <div className="flex items-center gap-1 text-green-600">
                         <Smartphone className="w-4 h-4" />
-                        <span>Mobile ID ({(step.methodSelectionConfig?.mobileIdProviders || []).filter(p => p.enabled).length} providers)</span>
+                        <span>Digital ID ({(step.methodSelectionConfig?.mobileIdProviders || []).filter(p => p.enabled).length} providers)</span>
                       </div>
                     )}
                   </div>

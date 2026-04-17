@@ -128,7 +128,7 @@ export function MdlProviderConfig({ enabledProviders, onChange }: MdlProviderCon
 
         {enabledCount === 0 && (
           <p className="text-xs text-amber-600 bg-amber-500/10 p-2 rounded">
-            ⚠️ No providers selected. Users won't be able to complete mDL verification.
+            ⚠️ No providers selected. Users won't be able to complete Digital ID verification.
           </p>
         )}
       </CollapsibleContent>

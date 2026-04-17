@@ -56,7 +56,7 @@ export function MethodSelectionStepConfig({ step, onUpdateStep }: MethodSelectio
               {config.mobileIdEnabled && (
                 <Badge variant="outline" className="text-xs bg-green-500/10 text-green-600 border-green-500/30">
                   <Smartphone className="w-3 h-3 mr-1" />
-                  mDL
+                  dID
                 </Badge>
               )}
             </div>

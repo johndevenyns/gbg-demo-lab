@@ -8,7 +8,7 @@ import { useMdlPageHtml, MDL_REDIRECT_HTML_KEY, DEFAULT_REDIRECT_HTML } from '@/
  * provider redirects back to this URL with `?sessionId=...`, we forward the
  * result to the opener window via `signalRedirectFromPopup` and close ourselves.
  *
- * The visible HTML is configurable at the Global Settings → Verification → mDL
+ * The visible HTML is configurable at the Global Settings → Verification → Digital ID
  * level (key: `mdl_redirect_html`). The signalling logic always runs.
  */
 export default function VerifyRedirect() {

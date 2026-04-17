@@ -30,7 +30,7 @@ const VERIFICATION_TYPES = [
   { id: 'docbio', label: 'Document + Biometric', description: 'ID scan and selfie' },
   { id: 'databio', label: 'Data + Biometric', description: 'Data verification with selfie' },
   { id: 'dataonly', label: 'Data Only', description: 'Backend data verification' },
-  { id: 'mdl', label: 'Mobile Driver\'s License', description: 'Mobile ID verification' },
+  { id: 'mdl', label: 'Digital ID', description: 'Digital ID verification' },
 ];
 
 const getIconComponent = (iconId?: DecisionChoiceIcon) => {
