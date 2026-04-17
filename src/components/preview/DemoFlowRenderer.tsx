@@ -713,7 +713,7 @@ export function DemoFlowRenderer({
 
   // Custom HTML for the mobile-popup launch screen (configured at Global → Verification → mDL)
   const { data: customLaunchHtml } = useMdlPageHtml(MDL_LAUNCH_HTML_KEY);
-  }, [mdlProvidersData]);
+
 
   // Resolve resource IDs using 3-tier hierarchy: Customer → Admin → Global
   const resolvedIds = useResolvedResourceIds(
