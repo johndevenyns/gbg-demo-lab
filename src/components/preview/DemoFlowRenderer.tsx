@@ -1801,7 +1801,38 @@ export function DemoFlowRenderer({
       setApiResponses(prev => [...prev, apiResponse]);
 
       toast.success('Verification session created');
-      
+
+      // Trinsic mobile popup mode: launch the verifyUrl as a popup, await
+      // completion, then auto-redirect to approved/rejected URL based on result.
+      if (popupMode && data.verifyUrl) {
+        try {
+          // Lazy-load the SDK so it isn't bundled when popup mode is unused.
+          const { popup } = await import('@trinsic/web-ui');
+          popup.initialize(data.verifyUrl);
+          const popupResult = await popup.waitForCompletion({
+            onWindowMaybeClosed: () => {
+              console.log('Trinsic popup connection lost (may still resolve)');
+            },
+          });
+          console.log('Trinsic popup result:', popupResult);
+
+          // Determine outcome — Trinsic returns success/cancelled/failed shapes.
+          const success =
+            (popupResult as { success?: boolean })?.success === true ||
+            (popupResult as { status?: string })?.status === 'success' ||
+            (popupResult as { status?: string })?.status === 'completed';
+          const target = success ? approvedUrl : rejectedUrl;
+          if (target) {
+            window.location.href = target;
+            return;
+          }
+          console.warn('Popup completed but no approved/rejected URL configured');
+        } catch (popupErr) {
+          console.error('Trinsic popup error:', popupErr);
+          toast.error('Mobile verification popup failed');
+        }
+      }
+
       // Only advance to next step if not skipping (unified_verification skips to show QR)
       if (!skipAdvance) {
         goToNextStep();
@@ -1815,7 +1846,7 @@ export function DemoFlowRenderer({
     } finally {
       setIsLoading(false);
     }
-  }, [formData, customerName, returnUrl, includeQr, referenceIdPrefix, resolvedIds, logoUrl, buttonColor, headerTextColor, headerBgColor, currentStep?.id, goToNextStep, onSubmissionLog, verificationSessionId]);
+  }, [formData, customerName, returnUrl, includeQr, referenceIdPrefix, resolvedIds, logoUrl, buttonColor, headerTextColor, headerBgColor, currentStep?.id, goToNextStep, onSubmissionLog, verificationSessionId, approvedUrl, rejectedUrl]);
 
   // Poll for verification status
   const pollVerificationStatus = useCallback(async () => {
