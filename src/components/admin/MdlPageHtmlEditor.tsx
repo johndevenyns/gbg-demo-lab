@@ -160,18 +160,18 @@ export function MdlPageHtmlEditor() {
     <div className="space-y-3">
       <div className="flex items-center justify-between gap-2">
         <div>
-          <h4 className="text-sm font-semibold">Mobile Popup Pages</h4>
+          <h4 className="text-sm font-semibold">mDL Popup Pages</h4>
           <p className="text-xs text-muted-foreground">
-            Customize the HTML for the popup launch screen and the redirect handler page.
+            Customize the HTML for the Launch Page and the Redirect Page used by the mobile verification popup.
           </p>
         </div>
       </div>
       <div className="flex flex-wrap gap-2">
         <Button size="sm" variant="outline" onClick={() => setLaunchOpen(true)}>
-          <Code2 className="w-3.5 h-3.5 mr-1" /> Edit Launch Page HTML
+          <Code2 className="w-3.5 h-3.5 mr-1" /> Edit Launch Page
         </Button>
         <Button size="sm" variant="outline" onClick={() => setRedirectOpen(true)}>
-          <Code2 className="w-3.5 h-3.5 mr-1" /> Edit Redirect Page HTML
+          <Code2 className="w-3.5 h-3.5 mr-1" /> Edit Redirect Page
         </Button>
       </div>
 
@@ -179,7 +179,7 @@ export function MdlPageHtmlEditor() {
         open={launchOpen}
         onOpenChange={setLaunchOpen}
         settingKey={MDL_LAUNCH_HTML_KEY}
-        title="Launch Page HTML"
+        title="Launch Page"
         description="Shown inside the verification step before the user clicks to open the mobile popup."
         defaultHtml={DEFAULT_LAUNCH_HTML}
       />
@@ -187,7 +187,7 @@ export function MdlPageHtmlEditor() {
         open={redirectOpen}
         onOpenChange={setRedirectOpen}
         settingKey={MDL_REDIRECT_HTML_KEY}
-        title="Redirect Page HTML"
+        title="Redirect Page"
         description="Shown on /verify/redirect — the page the popup lands on before signalling back to the opener and closing."
         defaultHtml={DEFAULT_REDIRECT_HTML}
       />
