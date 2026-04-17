@@ -162,7 +162,7 @@ export function MdlPageHtmlEditor() {
         <div>
           <h4 className="text-sm font-semibold">Digital ID Popup Pages</h4>
           <p className="text-xs text-muted-foreground">
-            Customize the HTML for the Launch Page and the Redirect Page used by the mobile verification popup.
+            Customize the HTML for the Launch Page and the Redirect Page used by the Digital ID popup.
           </p>
         </div>
       </div>
