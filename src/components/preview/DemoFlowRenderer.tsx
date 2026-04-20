@@ -1191,43 +1191,29 @@ export function DemoFlowRenderer({
     setIsLoading(true);
 
     try {
-      // Find user by email in portal_users
-      const { data: portalUser, error: userError } = await supabase
-        .from('portal_users')
-        .select('id, email, password, is_active, is_default, profile_data')
-        .eq('email', email)
-        .eq('is_active', true)
-        .maybeSingle();
+      // Validate credentials server-side via edge function (the password
+      // column is no longer readable from the client).
+      const { data: validateResp, error: validateError } = await supabase.functions.invoke(
+        'validate-portal-login',
+        { body: { email, password, demoId } }
+      );
 
-      if (userError) throw userError;
+      if (validateError) throw validateError;
 
-      if (!portalUser) {
-        setLoginError('Invalid email or password.');
+      if (!validateResp?.success || !validateResp?.user) {
+        setLoginError(validateResp?.error || 'Invalid email or password.');
         setIsLoading(false);
         return false;
       }
 
-      // Check if user has access to this demo (is_default or has assignment)
-      if (!portalUser.is_default) {
-        const { data: assignment } = await supabase
-          .from('portal_user_demo_assignments')
-          .select('id')
-          .eq('portal_user_id', portalUser.id)
-          .eq('demo_id', demoId)
-          .maybeSingle();
-
-        if (!assignment) {
-          setLoginError('Invalid email or password.');
-          setIsLoading(false);
-          return false;
-        }
-      }
-
-      if (portalUser.password !== password) {
-        setLoginError('Invalid email or password.');
-        setIsLoading(false);
-        return false;
-      }
+      const portalUser = validateResp.user as {
+        id: string;
+        email: string;
+        display_name: string | null;
+        is_default: boolean;
+        profile_data: unknown;
+        verification_status: string;
+      };
 
       // Notify parent of successful login with user data
       const profileData = (portalUser.profile_data && typeof portalUser.profile_data === 'object' && !Array.isArray(portalUser.profile_data))
