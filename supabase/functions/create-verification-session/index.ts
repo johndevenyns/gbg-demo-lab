@@ -13,6 +13,24 @@ const normalizeUrl = (url?: string) =>
     ? url.replace(LEGACY_BASE_URL, BASE_URL)
     : url;
 
+/** Redact sensitive fields before logging. */
+const SENSITIVE_KEYS = new Set([
+  'ssn', 'ssn4', 'dateOfBirth', 'birthday', 'dlNumber', 'documentNumber',
+  'address', 'streetAddress', 'apartment', 'phone', 'email', 'lqtkey',
+  'resourceId', 'authorization',
+]);
+function redact(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(redact);
+  if (value && typeof value === 'object') {
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+      out[k] = SENSITIVE_KEYS.has(k) ? '[REDACTED]' : redact(v);
+    }
+    return out;
+  }
+  return value;
+}
+
 interface CreateSessionRequest {
   formData: Record<string, string>;
   verificationType: 'docBio' | 'dataBio' | 'dataOnly';
@@ -150,7 +168,7 @@ serve(async (req) => {
     console.log('=== CREATE VERIFICATION SESSION REQUEST ===');
     console.log('verificationType:', requestData.verificationType);
     console.log('customerName:', requestData.customerName);
-    console.log('resourceId:', requestData.resourceId);
+    console.log('hasResourceId:', Boolean(requestData.resourceId));
     console.log('includeQr:', requestData.includeQr);
     console.log('formDataKeys:', Object.keys(requestData.formData || {}));
 
@@ -166,8 +184,8 @@ serve(async (req) => {
 
     const requestPayload = buildPayload(requestData, referenceId);
 
-    console.log('=== FULL API REQUEST PAYLOAD ===');
-    console.log(JSON.stringify(requestPayload, null, 2));
+    console.log('=== API REQUEST PAYLOAD (redacted) ===');
+    console.log(JSON.stringify(redact(requestPayload), null, 2));
     console.log('=== END PAYLOAD ===');
 
     const response = await fetch(`${BASE_URL}/api/verification/sessions`, {
@@ -182,7 +200,6 @@ serve(async (req) => {
 
     const responseText = await response.text();
     console.log('Verification API response status:', response.status);
-    console.log('Verification API response:', responseText.substring(0, 1000));
 
     if (!response.ok) {
       console.error('API Error:', response.status, responseText);
@@ -225,7 +242,7 @@ serve(async (req) => {
     };
 
     console.log('=== SESSION CREATED SUCCESSFULLY ===');
-    console.log(JSON.stringify(result, null, 2));
+    console.log('sessionId:', result.sessionId, 'status:', result.status);
 
     return new Response(
       JSON.stringify(result),
