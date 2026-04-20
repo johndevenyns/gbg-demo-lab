@@ -1,5 +1,6 @@
 import { CheckCircle2, XCircle, ExternalLink, ArrowRight, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import DOMPurify from 'dompurify';
 import { FormStyleConfig, DEFAULT_FORM_STYLE } from '@/types/formStyle';
 import { 
   getFormBorderRadius, 
@@ -159,7 +160,12 @@ export function ResultPage({ config, formStyle, buttonColor, onButtonClick }: Re
           <div 
             className="prose prose-sm max-w-none"
             style={{ color: textColor }}
-            dangerouslySetInnerHTML={{ __html: config.customContent }}
+            dangerouslySetInnerHTML={{
+              __html: DOMPurify.sanitize(config.customContent, {
+                ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'b', 'i', 'u', 'a', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'span', 'div'],
+                ALLOWED_ATTR: ['href', 'target', 'rel', 'class', 'style'],
+              }),
+            }}
           />
         )}
 
