@@ -70,8 +70,8 @@ serve(async (req) => {
           addr.PostalCode
         ].filter(Boolean).join(", ");
         
-        console.log("Retrieved address:", formattedAddress);
-        
+        console.log("Retrieved address (redacted)");
+
         return new Response(
           JSON.stringify({ 
             success: true, 

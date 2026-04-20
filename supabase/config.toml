@@ -29,3 +29,6 @@ verify_jwt = false
 
 [functions.compare-form-styles]
 verify_jwt = false
+
+[functions.validate-portal-login]
+verify_jwt = false

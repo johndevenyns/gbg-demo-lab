@@ -46,7 +46,7 @@ serve(async (req) => {
       );
     }
 
-    console.log('Getting verification status for session:', sessionId);
+    console.log('Getting verification status for session');
 
     // Get session status from API
     const response = await fetch(`${BASE_URL}/api/verification/sessions/${sessionId}`, {
@@ -57,7 +57,7 @@ serve(async (req) => {
     });
 
     const responseText = await response.text();
-    console.log('Status API response:', response.status, responseText.substring(0, 500));
+    console.log('Status API response status:', response.status);
 
     if (!response.ok) {
       console.error('API Error:', response.status, responseText);
@@ -119,7 +119,7 @@ serve(async (req) => {
       isPassed: data.status === 'completed',
     };
 
-    console.log('Returning status result:', JSON.stringify(result, null, 2));
+    console.log('Returning status:', result.status, 'isComplete:', result.isComplete);
 
     return new Response(
       JSON.stringify(result),
