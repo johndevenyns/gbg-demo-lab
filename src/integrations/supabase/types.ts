@@ -809,6 +809,13 @@ export type Database = {
             referencedRelation: "portal_users"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "portal_user_demo_assignments_portal_user_id_fkey"
+            columns: ["portal_user_id"]
+            isOneToOne: false
+            referencedRelation: "portal_users_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       portal_users: {
@@ -987,7 +994,51 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      portal_users_public: {
+        Row: {
+          created_at: string | null
+          display_name: string | null
+          email: string | null
+          id: string | null
+          is_active: boolean | null
+          is_default: boolean | null
+          is_super: boolean | null
+          profile_data: Json | null
+          registration_code: string | null
+          registration_code_expires_at: string | null
+          updated_at: string | null
+          verification_status: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          display_name?: string | null
+          email?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          is_default?: boolean | null
+          is_super?: boolean | null
+          profile_data?: Json | null
+          registration_code?: string | null
+          registration_code_expires_at?: string | null
+          updated_at?: string | null
+          verification_status?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          display_name?: string | null
+          email?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          is_default?: boolean | null
+          is_super?: boolean | null
+          profile_data?: Json | null
+          registration_code?: string | null
+          registration_code_expires_at?: string | null
+          updated_at?: string | null
+          verification_status?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       bootstrap_first_admin: {
@@ -1003,6 +1054,17 @@ export type Database = {
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
       is_global_admin: { Args: { _user_id: string }; Returns: boolean }
+      validate_portal_login: {
+        Args: { _demo_id: string; _email: string; _password: string }
+        Returns: {
+          display_name: string
+          email: string
+          is_default: boolean
+          profile_data: Json
+          user_id: string
+          verification_status: string
+        }[]
+      }
     }
     Enums: {
       app_role: "admin" | "global_admin"
