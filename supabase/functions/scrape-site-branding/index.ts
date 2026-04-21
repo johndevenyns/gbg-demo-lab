@@ -797,6 +797,7 @@ Deno.serve(async (req) => {
           fontLinks: jsExtracted?.fontLinks || [],
           usedInlineMethod,
           footerHeight: jsExtracted?.footerHeight || 0,
+          headerHeight: jsExtracted?.headerHeight || 0,
           logoUrl,
           logoFoundAt,
           fetchedUrls,
