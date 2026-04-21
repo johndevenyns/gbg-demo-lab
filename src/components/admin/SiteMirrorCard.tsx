@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from "react";
-import { Globe, X, Eye, Monitor, Tablet, Smartphone, MousePointerClick } from "lucide-react";
+import { Globe, X, Eye, Monitor, Tablet, Smartphone, MousePointerClick, Sparkles, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -13,7 +13,7 @@ import { EmbedFormSection } from "./EmbedFormSection";
 import { HeaderLinkPanel } from "./HeaderLinkPanel";
 import { parseHotspotSelector, HotspotRect, toHotspotSelector } from "./HeaderHotspotPicker";
 import { RegionSizeBadge, ContentExtraControls } from "./RegionSizeBadge";
-import { ScrapedBranding } from "@/lib/api/scraping";
+import { ScrapedBranding, headerRefinementApi } from "@/lib/api/scraping";
 import { useToast } from "@/hooks/use-toast";
 import { useHeaderCtaLinks } from "@/hooks/useHeaderCtaLinks";
 import { DemoEnvironment } from "@/types/demo";
@@ -243,6 +243,8 @@ interface SiteMirrorCardProps {
     const [url, setUrl] = useState(demo.customerSiteUrl || "");
     const [previewViewport, setPreviewViewport] = useState<PreviewViewport>('desktop');
     const [linkHeaderMode, setLinkHeaderMode] = useState(false);
+    const [isRefining, setIsRefining] = useState(false);
+    const [lastRefinementScore, setLastRefinementScore] = useState<number | null>(null);
     const headerIframeRef = useRef<HTMLIFrameElement>(null);
     const headerOverlayRef = useRef<HTMLDivElement>(null);
   const headerFrameId = useRef<string>(`header-${Math.random().toString(36).slice(2, 8)}`).current;
@@ -292,6 +294,101 @@ interface SiteMirrorCardProps {
    const handleApplyBranding = (updates: Partial<DemoEnvironment>) => {
      onApplyBranding(updates, true);
    };
+
+   /**
+    * On-demand AI refinement of the saved HTML capture. Compares the captured
+    * header/footer to the desktop screenshot using vision AI and applies
+    * corrected HTML + an additional CSS override block. Triggered by the
+    * "Refine with AI" button on the live preview, NOT during demo creation,
+    * so the wizard stays fast and refinement only runs when the user wants it.
+    */
+   const handleRefineWithAi = useCallback(async () => {
+     // Need an existing capture to refine and a screenshot to compare against
+     const screenshot = (() => {
+       try {
+         const parsed = demo.mirrorScreenshotCss ? JSON.parse(demo.mirrorScreenshotCss) : null;
+         return parsed?.viewportScreenshots?.desktop?.src as string | undefined;
+       } catch {
+         return undefined;
+       }
+     })();
+
+     if (!screenshot) {
+       toast({
+         title: "Screenshot Required",
+         description: "AI refinement compares the HTML capture against a screenshot of the site. Re-fetch the site to generate one first.",
+         variant: "destructive",
+       });
+       return;
+     }
+
+     if (!demo.mirrorHtmlHeaderHtml || demo.mirrorHtmlHeaderHtml.trim().length === 0) {
+       toast({
+         title: "No HTML Capture",
+         description: "Capture the site's HTML header/footer first, then refine.",
+         variant: "destructive",
+       });
+       return;
+     }
+
+     setIsRefining(true);
+     setLastRefinementScore(null);
+     try {
+       // Hard 100s client-side timeout so a hung refinement never blocks the UI
+       const controller = new AbortController();
+       const timer = setTimeout(() => controller.abort(), 100_000);
+       const refinement = await headerRefinementApi.refineCapture(
+         screenshot,
+         demo.mirrorHtmlHeaderHtml || '',
+         demo.mirrorHtmlFooterHtml || '',
+         demo.mirrorHtmlCss || '',
+         demo.customerSiteUrl || url || '',
+         controller.signal,
+       ).finally(() => clearTimeout(timer));
+
+       if (refinement.success && refinement.data) {
+         const r = refinement.data;
+         const refinedHeader = r.refinedHeaderHtml || demo.mirrorHtmlHeaderHtml || '';
+         const refinedFooter = r.refinedFooterHtml || demo.mirrorHtmlFooterHtml || '';
+         const refinedCss = r.additionalCss
+           ? (demo.mirrorHtmlCss || '') + '\n/* AI Refinement */\n' + r.additionalCss
+           : (demo.mirrorHtmlCss || '');
+
+         const updates: Partial<DemoEnvironment> = {
+           mirrorHtmlHeaderHtml: refinedHeader,
+           mirrorHtmlFooterHtml: refinedFooter,
+           mirrorHtmlCss: refinedCss,
+         };
+         // Also adopt better extracted brand colors when AI provides them
+         if (r.extractedColors?.headerBgColor) updates.headerBgColor = r.extractedColors.headerBgColor;
+         if (r.extractedColors?.headerTextColor) updates.headerTextColor = r.extractedColors.headerTextColor;
+         if (r.extractedColors?.buttonColor) updates.buttonColor = r.extractedColors.buttonColor;
+
+         onApplyBranding(updates, true);
+         setLastRefinementScore(r.matchScore);
+         const changeCount = r.changes?.length || 0;
+         toast({
+           title: `AI Refined — ${r.matchScore}% Match`,
+           description: `Applied ${changeCount} correction${changeCount !== 1 ? 's' : ''} to the HTML capture.`,
+         });
+       } else {
+         toast({
+           title: "Refinement Failed",
+           description: refinement.error || "AI could not refine the capture. Original capture is unchanged.",
+           variant: "destructive",
+         });
+       }
+     } catch (e) {
+       const msg = e instanceof Error ? e.message : 'Unknown error';
+       toast({
+         title: "Refinement Error",
+         description: msg.includes('abort') ? 'Refinement timed out after 100s.' : msg,
+         variant: "destructive",
+       });
+     } finally {
+       setIsRefining(false);
+     }
+   }, [demo, url, onApplyBranding, toast]);
 
    // Unified fetch: when HTML capture completes, also populate screenshot + branding data
    const handleUnifiedFetchComplete = useCallback((data: ScrapedBranding) => {
@@ -384,6 +481,29 @@ interface SiteMirrorCardProps {
                 </p>
               </div>
               <div className="flex items-center gap-2">
+                {/* Refine HTML capture with AI (only when HTML mode is active and configured) */}
+                {hasContentForMethod && activeMethod === 'html' && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5"
+                    onClick={handleRefineWithAi}
+                    disabled={isRefining}
+                    title="Use vision AI to compare the capture to the screenshot and apply corrections"
+                  >
+                    {isRefining ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Sparkles className="w-4 h-4" />
+                    )}
+                    <span className="text-xs">{isRefining ? 'Refining…' : 'Refine with AI'}</span>
+                    {lastRefinementScore !== null && !isRefining && (
+                      <Badge variant="secondary" className="text-[10px] ml-0.5 px-1.5 py-0">
+                        {lastRefinementScore}%
+                      </Badge>
+                    )}
+                  </Button>
+                )}
                 {/* Link Header toggle */}
                 {hasContentForMethod && headerHtml && (
                   <Button

@@ -16,7 +16,7 @@ import { useGlobalUseCases, useAddDemoUseCaseLink } from "@/hooks/useUseCases";
 import { useIndustries } from "@/hooks/useIndustries";
 import { useEnabledPortalTypes } from "@/hooks/usePortalTypes";
 import { IndustryTemplate, DemoEnvironment } from "@/types/demo";
-import { scrapingApi, ScrapedBranding, headerRefinementApi } from "@/lib/api/scraping";
+import { scrapingApi, ScrapedBranding } from "@/lib/api/scraping";
 import { useTestProfiles } from "@/hooks/useTestProfiles";
 import { formElementStylesToConfig, generatePreviewDocument, generateFormHtml } from "@/lib/formStyleUtils";
 import { DEFAULT_FORM_STYLE } from "@/types/formStyle";
@@ -169,7 +169,6 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
     ];
     if (enableMirroring && siteUrl) {
       tasks.push({ id: 'scrape-html', label: 'Capturing HTML header & footer', status: 'pending' });
-      tasks.push({ id: 'refine-html', label: 'AI-refining HTML capture', status: 'pending' });
       tasks.push({ id: 'scrape-screenshot', label: 'Capturing screenshot', status: 'pending' });
       tasks.push({ id: 'apply', label: 'Applying branding to demo', status: 'pending' });
     }
@@ -218,66 +217,6 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
           updateTaskStatus('scrape-html', 'complete');
         } else {
           updateTaskStatus('scrape-html', 'error');
-        }
-
-        // AI Refinement of HTML capture
-        if (scrapedData?.screenshot) {
-          updateTaskStatus('refine-html', 'in_progress');
-          try {
-            const screenshotSrc = getScreenshotSrc(scrapedData.screenshot);
-            // Hard client-side timeout so a hung refinement never blocks demo creation.
-            // Edge function aborts AI at 90s; give it a small buffer here.
-            const refineController = new AbortController();
-            const refineTimer = setTimeout(() => refineController.abort(), 100_000);
-            const refineResult = await Promise.race([
-              headerRefinementApi.refineCapture(
-                screenshotSrc,
-                refinedHtml?.headerHtml || '',
-                refinedHtml?.footerHtml || '',
-                refinedHtml?.css || '',
-                siteUrl,
-                refineController.signal
-              ),
-              new Promise<{ success: false; error: string }>((resolve) =>
-                setTimeout(() => {
-                  refineController.abort();
-                  resolve({ success: false, error: 'Refinement timed out' });
-                }, 100_000)
-              ),
-            ]).finally(() => clearTimeout(refineTimer));
-            if (refineResult.success && refineResult.data) {
-              refinedHtml = {
-                headerHtml: refineResult.data.refinedHeaderHtml || refinedHtml?.headerHtml || '',
-                footerHtml: refineResult.data.refinedFooterHtml || refinedHtml?.footerHtml || '',
-                css: (refinedHtml?.css || '') + '\n' + (refineResult.data.additionalCss || ''),
-              };
-              // Override colors with AI-extracted ones if available
-              if (refineResult.data.extractedColors && scrapedData) {
-                if (refineResult.data.extractedColors.headerBgColor) {
-                  scrapedData.colors.headerBgColor = refineResult.data.extractedColors.headerBgColor;
-                }
-                if (refineResult.data.extractedColors.headerTextColor) {
-                  scrapedData.colors.headerTextColor = refineResult.data.extractedColors.headerTextColor;
-                }
-                if (refineResult.data.extractedColors.buttonColor) {
-                  scrapedData.colors.buttonColor = refineResult.data.extractedColors.buttonColor;
-                }
-                if (refineResult.data.extractedColors.logoUrl) {
-                  scrapedData.logoUrl = refineResult.data.extractedColors.logoUrl;
-                }
-              }
-              updateTaskStatus('refine-html', 'complete');
-            } else {
-              // Refinement failed/timed out — keep the un-refined capture and continue.
-              console.warn('AI refinement skipped:', (refineResult as { error?: string }).error);
-              updateTaskStatus('refine-html', 'error');
-            }
-          } catch (e) {
-            console.error('AI refinement failed:', e);
-            updateTaskStatus('refine-html', 'error');
-          }
-        } else {
-          updateTaskStatus('refine-html', 'error');
         }
 
         // Generate screenshot-based capture
