@@ -654,6 +654,7 @@ Deno.serve(async (req) => {
           pseudoRules?: string[];
           svgSpriteHtml?: string;
           footerHeight?: number;
+          headerHeight?: number;
         }
       | null = null;
 
