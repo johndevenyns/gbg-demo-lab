@@ -522,41 +522,12 @@ interface SiteMirrorCardProps {
                     </div>
 
                     {footerHtml && (
-                      <div className="relative" style={{ height: `${footerHeight}px`, overflow: 'hidden' }}>
-                        <RegionSizeBadge
-                          label="Footer"
-                          value={footerHeight}
-                          min={40}
-                          max={500}
-                          step={10}
-                          onChange={(v) => updateStyle({ footerHeight: v })}
-                          className="top-1 right-1"
-                        />
-                        <iframe
-                          srcDoc={`
-                            <!DOCTYPE html>
-                            <html>
-                              <head>
-                                <meta charset="utf-8">
-                                <meta name="viewport" content="width=device-width, initial-scale=1">
-                                <style>
-                                  html, body { margin: 0; padding: 0; overflow: hidden; background: transparent; }
-                                  * { box-sizing: border-box; }
-                                  a { pointer-events: none; }
-                                </style>
-                                ${cssContent ? `<style>${cssContent}</style>` : ''}
-                              </head>
-                              <body>
-                                ${footerHtml}
-                              </body>
-                            </html>
-                          `}
-                          className="block w-full border-0"
-                          style={{ height: `${footerHeight}px` }}
-                          title="Live site footer preview"
-                          sandbox="allow-same-origin"
-                        />
-                      </div>
+                      <FooterPreviewFrame
+                        footerHtml={footerHtml}
+                        cssContent={cssContent}
+                        minHeight={footerHeight}
+                        onHeightChange={(v) => updateStyle({ footerHeight: v })}
+                      />
                     )}
                   </div>
                 </div>
