@@ -508,7 +508,7 @@ interface SiteMirrorCardProps {
                           className="block w-full border-0"
                           style={{ height: `${Math.max(headerHeight, headerNaturalHeight)}px` }}
                           title="Live site header preview"
-                          sandbox="allow-same-origin"
+                          sandbox="allow-same-origin allow-scripts"
                           onLoad={(e) => {
                             const iframe = e.currentTarget;
                             enhanceHeaderPreviewIframe(iframe, 80);
