@@ -452,9 +452,13 @@ Deno.serve(async (req) => {
       url: formattedUrl,
       formats: ['rawHtml'],
       onlyMainContent: false,
-      waitFor: 2000,
-      timeout: 45000,
+      waitFor: 3500,
+      timeout: 60000,
       actions: [
+        // Initial settle for SPA hydration
+        { type: 'wait', milliseconds: 2000 },
+        // Scroll to bottom so IntersectionObserver-driven footers mount
+        { type: 'scroll', direction: 'down' },
         { type: 'wait', milliseconds: 1500 },
         { type: 'executeJavascript', script: INLINE_STYLES_SCRIPT },
       ],
