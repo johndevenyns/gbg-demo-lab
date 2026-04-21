@@ -49,6 +49,12 @@ export interface ScrapedBranding {
   logoUrl: string | null;
   logoFoundAt?: string | null;
   fetchedUrls?: string[];
+  /**
+   * Natural rendered height of the footer (in CSS pixels) measured on the
+   * live site. Used as a starting value for the footer-height badge so
+   * captured footers don't get clipped by the default fixed height.
+   */
+  footerHeight?: number;
   screenshot: string | null;
   screenshots?: {
     desktop: string | null;

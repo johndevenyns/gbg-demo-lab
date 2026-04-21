@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { Globe, X, Eye, Monitor, Tablet, Smartphone, MousePointerClick } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -22,6 +22,117 @@ import { DEFAULT_FORM_STYLE, FormStyleConfig } from "@/types/formStyle";
 import { generatePreviewDocument } from "@/lib/formStyleUtils";
 import { enhanceHeaderPreviewIframe } from "@/lib/iframeContrast";
 import { cn } from "@/lib/utils";
+
+/**
+ * Footer preview iframe that auto-fits its captured content's natural height.
+ *
+ * Captured footers vary wildly in size (some sites have 80px legal strips,
+ * others have 800px multi-column sitemaps). A fixed iframe height clipped
+ * the content. Now we listen for postMessage updates from a tiny script
+ * injected into the iframe, and grow the visible height to fit — but never
+ * shrink below the user-set badge value, which still acts as a minimum.
+ */
+function FooterPreviewFrame({
+  footerHtml,
+  cssContent,
+  minHeight,
+  onHeightChange,
+}: {
+  footerHtml: string;
+  cssContent?: string;
+  minHeight: number;
+  onHeightChange: (h: number) => void;
+}) {
+  const [naturalHeight, setNaturalHeight] = useState<number>(minHeight);
+  const frameId = useRef<string>(`footer-${Math.random().toString(36).slice(2, 8)}`);
+
+  useEffect(() => {
+    const handler = (e: MessageEvent) => {
+      if (!e.data || typeof e.data !== 'object') return;
+      if (e.data.type === 'mirror-footer-height' && e.data.frameId === frameId.current) {
+        const h = Number(e.data.height) || 0;
+        if (h > 20 && h < 2000) setNaturalHeight(h);
+      }
+    };
+    window.addEventListener('message', handler);
+    return () => window.removeEventListener('message', handler);
+  }, []);
+
+  // The visible height is the larger of the user-set minimum and the
+  // measured natural height. This means the badge effectively becomes a
+  // floor, and the iframe expands to show the whole footer.
+  const displayHeight = Math.max(minHeight, naturalHeight);
+
+  const srcDoc = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    html, body { margin: 0; padding: 0; background: transparent; }
+    * { box-sizing: border-box; }
+    a { pointer-events: none; }
+  </style>
+  ${cssContent ? `<style>${cssContent}</style>` : ''}
+</head>
+<body>
+  ${footerHtml}
+  <script>
+    (function() {
+      var FRAME_ID = ${JSON.stringify(frameId.current)};
+      function report() {
+        try {
+          var h = Math.max(
+            document.body.scrollHeight,
+            document.documentElement.scrollHeight,
+            document.body.offsetHeight,
+            document.documentElement.offsetHeight
+          );
+          window.parent.postMessage({ type: 'mirror-footer-height', frameId: FRAME_ID, height: h }, '*');
+        } catch (e) {}
+      }
+      // Report after initial paint, then whenever images load, then on
+      // any DOM mutation (covers async-mounted footer widgets).
+      report();
+      setTimeout(report, 100);
+      setTimeout(report, 500);
+      setTimeout(report, 1500);
+      var imgs = document.querySelectorAll('img');
+      for (var i = 0; i < imgs.length; i++) {
+        imgs[i].addEventListener('load', report);
+        imgs[i].addEventListener('error', report);
+      }
+      try {
+        var mo = new MutationObserver(report);
+        mo.observe(document.body, { childList: true, subtree: true, attributes: true });
+      } catch (e) {}
+    })();
+  </script>
+</body>
+</html>`;
+
+  return (
+    <div className="relative" style={{ height: `${displayHeight}px`, overflow: 'hidden' }}>
+      <RegionSizeBadge
+        label="Footer"
+        value={minHeight}
+        min={40}
+        max={1200}
+        step={10}
+        onChange={onHeightChange}
+        className="top-1 right-1"
+      />
+      <iframe
+        srcDoc={srcDoc}
+        className="block w-full border-0"
+        style={{ height: `${displayHeight}px` }}
+        title="Live site footer preview"
+        sandbox="allow-same-origin allow-scripts"
+      />
+    </div>
+  );
+}
 
 type PreviewViewport = 'desktop' | 'tablet' | 'phone';
 
@@ -522,41 +633,12 @@ interface SiteMirrorCardProps {
                     </div>
 
                     {footerHtml && (
-                      <div className="relative" style={{ height: `${footerHeight}px`, overflow: 'hidden' }}>
-                        <RegionSizeBadge
-                          label="Footer"
-                          value={footerHeight}
-                          min={40}
-                          max={500}
-                          step={10}
-                          onChange={(v) => updateStyle({ footerHeight: v })}
-                          className="top-1 right-1"
-                        />
-                        <iframe
-                          srcDoc={`
-                            <!DOCTYPE html>
-                            <html>
-                              <head>
-                                <meta charset="utf-8">
-                                <meta name="viewport" content="width=device-width, initial-scale=1">
-                                <style>
-                                  html, body { margin: 0; padding: 0; overflow: hidden; background: transparent; }
-                                  * { box-sizing: border-box; }
-                                  a { pointer-events: none; }
-                                </style>
-                                ${cssContent ? `<style>${cssContent}</style>` : ''}
-                              </head>
-                              <body>
-                                ${footerHtml}
-                              </body>
-                            </html>
-                          `}
-                          className="block w-full border-0"
-                          style={{ height: `${footerHeight}px` }}
-                          title="Live site footer preview"
-                          sandbox="allow-same-origin"
-                        />
-                      </div>
+                      <FooterPreviewFrame
+                        footerHtml={footerHtml}
+                        cssContent={cssContent}
+                        minHeight={footerHeight}
+                        onHeightChange={(v) => updateStyle({ footerHeight: v })}
+                      />
                     )}
                   </div>
                 </div>

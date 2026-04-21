@@ -50,6 +50,81 @@ const INLINE_STYLES_SCRIPT = `
     'backface-visibility'
   ]);
 
+  // ---- Lazy-load triggering ----------------------------------------------
+  // Many sites mount footer content only after IntersectionObserver fires
+  // when the footer scrolls into view. We force that by jumping to the
+  // bottom of the page and back, then waiting a tick for content to render.
+  function triggerLazyLoad() {
+    try {
+      // Jump to the very bottom so footer + lazy images mount
+      window.scrollTo(0, document.body.scrollHeight);
+      // Force any native lazy-loaded images near the footer to resolve
+      var lazyImgs = document.querySelectorAll('img[loading="lazy"], img[data-src], img[data-lazy-src]');
+      for (var li = 0; li < lazyImgs.length; li++) {
+        var im = lazyImgs[li];
+        im.removeAttribute('loading');
+        var ds = im.getAttribute('data-src') || im.getAttribute('data-lazy-src');
+        if (ds && !im.getAttribute('src')) im.setAttribute('src', ds);
+      }
+      // Walk back up to trigger observers in viewport order
+      window.scrollTo(0, Math.max(0, document.body.scrollHeight - window.innerHeight));
+    } catch (e) { /* ignore */ }
+  }
+  triggerLazyLoad();
+  // Synchronous busy-wait for ~600ms to let lazy content paint.
+  // We can't await inside Firecrawl's executeJavascript, so a tight loop is
+  // the only portable trick. 600ms is the sweet spot — long enough for most
+  // lazy mounts, short enough to stay under the action timeout.
+  var lazyDeadline = Date.now() + 600;
+  while (Date.now() < lazyDeadline) { /* spin */ }
+
+  // ---- Pseudo-element + SVG sprite capture -------------------------------
+  // Many footers depend on ::before / ::after for icons, dividers, and
+  // background shapes. We collect them as scoped CSS rules keyed by a
+  // data-pe-id we apply to the original element (mirrored on the clone).
+  var pseudoIdCounter = 0;
+  var pseudoRules = [];
+  function collectPseudo(el) {
+    var beforeStyle = window.getComputedStyle(el, '::before');
+    var afterStyle = window.getComputedStyle(el, '::after');
+    var hasBefore = beforeStyle && beforeStyle.content && beforeStyle.content !== 'none' && beforeStyle.content !== 'normal';
+    var hasAfter  = afterStyle  && afterStyle.content  && afterStyle.content  !== 'none' && afterStyle.content  !== 'normal';
+    if (!hasBefore && !hasAfter) return null;
+    var peId = 'pe-' + (++pseudoIdCounter);
+    function dump(cs) {
+      var out = [];
+      for (var i = 0; i < cs.length; i++) {
+        var p = cs[i];
+        if (skipProps.has(p)) continue;
+        var v = cs.getPropertyValue(p);
+        if (v) out.push(p + ':' + v);
+      }
+      return out.join(';');
+    }
+    if (hasBefore) pseudoRules.push('[data-pe-id="' + peId + '"]::before{' + dump(beforeStyle) + '}');
+    if (hasAfter)  pseudoRules.push('[data-pe-id="' + peId + '"]::after{'  + dump(afterStyle)  + '}');
+    return peId;
+  }
+
+  // Collect inline SVG <symbol> definitions used as sprites via <use href="#id">.
+  // We snapshot every inline <svg> that contains <symbol>s once, prepend
+  // them to the captured HTML so <use href="#sprite-id"> resolves locally.
+  function collectSvgSprites() {
+    var sprites = [];
+    var seen = {};
+    var symbols = document.querySelectorAll('svg symbol[id]');
+    for (var i = 0; i < symbols.length; i++) {
+      var sym = symbols[i];
+      var id = sym.getAttribute('id');
+      if (!id || seen[id]) continue;
+      seen[id] = true;
+      sprites.push(sym.outerHTML);
+    }
+    if (!sprites.length) return '';
+    return '<svg xmlns="http://www.w3.org/2000/svg" style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true">' + sprites.join('') + '</svg>';
+  }
+  var svgSpriteHtml = collectSvgSprites();
+
   // Create a reference element to compare defaults
   var refDiv = document.createElement('div');
   document.body.appendChild(refDiv);
@@ -72,6 +147,7 @@ const INLINE_STYLES_SCRIPT = `
     
     // Walk the original and build a map of styles per element index
     var styleMap = [];
+    var pseudoMap = []; // idx -> peId (or undefined)
     function collectStyles(origEl, idx) {
       if (origEl.nodeType !== 1) return idx;
       var cs = window.getComputedStyle(origEl);
@@ -85,6 +161,9 @@ const INLINE_STYLES_SCRIPT = `
         }
       }
       styleMap[idx] = props.join(';');
+      // Capture ::before / ::after on the original element
+      var pe = collectPseudo(origEl);
+      if (pe) pseudoMap[idx] = pe;
       var nextIdx = idx + 1;
       var children = origEl.children;
       for (var c = 0; c < children.length; c++) {
@@ -103,6 +182,9 @@ const INLINE_STYLES_SCRIPT = `
       if (cloneEl.nodeType !== 1) return idx;
       if (styleMap[idx]) {
         cloneEl.setAttribute('style', styleMap[idx]);
+      }
+      if (pseudoMap[idx]) {
+        cloneEl.setAttribute('data-pe-id', pseudoMap[idx]);
       }
       var nextIdx = idx + 1;
       var children = cloneEl.children;
@@ -216,6 +298,20 @@ const INLINE_STYLES_SCRIPT = `
     '[id*="footer"]', '[role="contentinfo"]'
   ]);
 
+  // Measure the natural rendered height of the live footer so the iframe
+  // in the admin preview can size itself correctly without the user
+  // hand-tuning the footer-height badge for every site.
+  var footerHeight = 0;
+  try {
+    var footerEl = document.querySelector('footer')
+      || document.querySelector('[role="contentinfo"]')
+      || document.querySelector('[class*="site-footer"], [class*="main-footer"], [class*="page-footer"], [id*="footer"]');
+    if (footerEl) {
+      var rect = footerEl.getBoundingClientRect();
+      footerHeight = Math.round(rect.height);
+    }
+  } catch(e) { /* ignore */ }
+
   // Extract actual header background color from computed style
   var headerBgColor = '';
   var headerTextColor = '';
@@ -241,6 +337,9 @@ const INLINE_STYLES_SCRIPT = `
   return JSON.stringify({
     headerHtml: (topBarHtml ? topBarHtml + '\\n' : '') + headerHtml,
     footerHtml: footerHtml,
+    pseudoRules: pseudoRules,
+    svgSpriteHtml: svgSpriteHtml,
+    footerHeight: footerHeight,
     fontFaceRules: fontInfo,
     fontLinks: fontLinks,
     origin: window.location.origin,
@@ -353,9 +452,13 @@ Deno.serve(async (req) => {
       url: formattedUrl,
       formats: ['rawHtml'],
       onlyMainContent: false,
-      waitFor: 2000,
-      timeout: 45000,
+      waitFor: 3500,
+      timeout: 60000,
       actions: [
+        // Initial settle for SPA hydration
+        { type: 'wait', milliseconds: 2000 },
+        // Scroll to bottom so IntersectionObserver-driven footers mount
+        { type: 'scroll', direction: 'down' },
         { type: 'wait', milliseconds: 1500 },
         { type: 'executeJavascript', script: INLINE_STYLES_SCRIPT },
       ],
@@ -429,7 +532,20 @@ Deno.serve(async (req) => {
     const metadata = mainData.data?.metadata || mainData.metadata || {};
 
     // Extract the JS-returned header/footer with inlined styles from the separate request
-    let jsExtracted: { headerHtml: string; footerHtml: string; fontFaceRules: string[]; fontLinks: string[]; origin: string; headerBgColor?: string; headerTextColor?: string } | null = null;
+    let jsExtracted:
+      | {
+          headerHtml: string;
+          footerHtml: string;
+          fontFaceRules: string[];
+          fontLinks: string[];
+          origin: string;
+          headerBgColor?: string;
+          headerTextColor?: string;
+          pseudoRules?: string[];
+          svgSpriteHtml?: string;
+          footerHeight?: number;
+        }
+      | null = null;
 
     try {
       const jsData = await jsResponse.json();
@@ -489,7 +605,18 @@ Deno.serve(async (req) => {
       if (jsExtracted.fontFaceRules?.length) {
         fontParts.push(jsExtracted.fontFaceRules.join('\n'));
       }
+      // Pseudo-element rules captured from ::before / ::after
+      if (jsExtracted.pseudoRules?.length) {
+        fontParts.push(jsExtracted.pseudoRules.join('\n'));
+      }
       cssContent = fontParts.join('\n');
+
+      // Prepend inline SVG sprite definitions so <use href="#id"> resolves
+      // inside the iframe (sites like banks rely on this for footer icons).
+      if (jsExtracted.svgSpriteHtml) {
+        if (headerHtml) headerHtml = jsExtracted.svgSpriteHtml + headerHtml;
+        if (footerHtml) footerHtml = jsExtracted.svgSpriteHtml + footerHtml;
+      }
       
       console.log('Using JS inline-styles method for header/footer');
     } else {
@@ -558,6 +685,7 @@ Deno.serve(async (req) => {
           cssContent,
           fontLinks: jsExtracted?.fontLinks || [],
           usedInlineMethod,
+          footerHeight: jsExtracted?.footerHeight || 0,
           logoUrl,
           logoFoundAt,
           fetchedUrls,
