@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from "react";
-import { Globe, X, Eye, Monitor, Tablet, Smartphone, MousePointerClick } from "lucide-react";
+import { Globe, X, Eye, Monitor, Tablet, Smartphone, MousePointerClick, Sparkles, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -13,7 +13,7 @@ import { EmbedFormSection } from "./EmbedFormSection";
 import { HeaderLinkPanel } from "./HeaderLinkPanel";
 import { parseHotspotSelector, HotspotRect, toHotspotSelector } from "./HeaderHotspotPicker";
 import { RegionSizeBadge, ContentExtraControls } from "./RegionSizeBadge";
-import { ScrapedBranding } from "@/lib/api/scraping";
+import { ScrapedBranding, headerRefinementApi } from "@/lib/api/scraping";
 import { useToast } from "@/hooks/use-toast";
 import { useHeaderCtaLinks } from "@/hooks/useHeaderCtaLinks";
 import { DemoEnvironment } from "@/types/demo";
