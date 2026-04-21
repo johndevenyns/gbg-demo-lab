@@ -601,7 +601,18 @@ Deno.serve(async (req) => {
       if (jsExtracted.fontFaceRules?.length) {
         fontParts.push(jsExtracted.fontFaceRules.join('\n'));
       }
+      // Pseudo-element rules captured from ::before / ::after
+      if (jsExtracted.pseudoRules?.length) {
+        fontParts.push(jsExtracted.pseudoRules.join('\n'));
+      }
       cssContent = fontParts.join('\n');
+
+      // Prepend inline SVG sprite definitions so <use href="#id"> resolves
+      // inside the iframe (sites like banks rely on this for footer icons).
+      if (jsExtracted.svgSpriteHtml) {
+        if (headerHtml) headerHtml = jsExtracted.svgSpriteHtml + headerHtml;
+        if (footerHtml) footerHtml = jsExtracted.svgSpriteHtml + footerHtml;
+      }
       
       console.log('Using JS inline-styles method for header/footer');
     } else {
