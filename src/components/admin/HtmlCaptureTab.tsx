@@ -180,72 +180,10 @@ export function HtmlCaptureTab({ demo, url, onUrlChange, onApply, isConfigured, 
             if (hasCss) parts.push("CSS");
             if (hasScreenshot && !hasHeader) parts.push("screenshot");
 
-            const willRefine = hasScreenshot;
-            toast({ title: "Site Fetched", description: willRefine 
-              ? `Extracted ${parts.join(", ")}. Running AI refinement...` 
-              : `Extracted ${parts.join(", ")}.` 
+            toast({
+              title: "Site Fetched",
+              description: `Extracted ${parts.join(", ")}. Use 'Refine with AI' on the live preview to polish the capture.`,
             });
-
-            // Auto-refine with AI if we have a screenshot (even if header is empty - AI can generate from screenshot)
-            if (willRefine) {
-              setFetchProgress(hasHeader ? 'Comparing capture to screenshot...' : 'Generating header from screenshot with AI...');
-              setIsRefining(true);
-              try {
-                const refinement = await headerRefinementApi.refineCapture(
-                  d.screenshot,
-                  d.headerHtml || '',
-                  d.footerHtml || '',
-                  d.cssContent || '',
-                  url,
-                  controller.signal
-                );
-                if (controller.signal.aborted) return;
-                if (refinement.success && refinement.data) {
-                  const r = refinement.data;
-                  setRefinementScore(r.matchScore);
-                  
-                  // Apply refined HTML and CSS
-                  const refinedHeader = r.refinedHeaderHtml || d.headerHtml || '';
-                  const refinedFooter = r.refinedFooterHtml || d.footerHtml || '';
-                  const refinedCss = r.additionalCss 
-                    ? (d.cssContent || '') + '\n/* AI Refinement */\n' + r.additionalCss
-                    : d.cssContent || '';
-                  
-                  setEditedHeaderHtml(refinedHeader);
-                  setEditedFooterHtml(refinedFooter);
-                  setEditedCss(refinedCss);
-                  setHasEdits(true);
-
-                  // Update scraped data with refined content
-                  const refinedData = {
-                    ...d,
-                    headerHtml: refinedHeader,
-                    footerHtml: refinedFooter,
-                    cssContent: refinedCss,
-                  };
-                  // Also update colors if AI extracted better ones
-                  if (r.extractedColors) {
-                    if (r.extractedColors.headerBgColor) refinedData.colors.headerBgColor = r.extractedColors.headerBgColor;
-                    if (r.extractedColors.headerTextColor) refinedData.colors.headerTextColor = r.extractedColors.headerTextColor;
-                    if (r.extractedColors.buttonColor) refinedData.colors.buttonColor = r.extractedColors.buttonColor;
-                  }
-                  setScrapedData(refinedData);
-
-                  const changeCount = r.changes?.length || 0;
-                  toast({
-                    title: `AI Refined — ${r.matchScore}% Match`,
-                    description: `Applied ${changeCount} correction${changeCount !== 1 ? 's' : ''} to improve visual accuracy.`,
-                  });
-                } else {
-                  console.warn('AI refinement failed:', refinement.error);
-                  toast({ title: "Refinement Skipped", description: refinement.error || "AI could not refine the capture. Using raw extraction." });
-                }
-              } catch (refineErr) {
-                console.warn('AI refinement error:', refineErr);
-              } finally {
-                setIsRefining(false);
-              }
-            }
           }
         } else {
           const errMsg = response.error || "Could not extract content";
