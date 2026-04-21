@@ -169,7 +169,6 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
     ];
     if (enableMirroring && siteUrl) {
       tasks.push({ id: 'scrape-html', label: 'Capturing HTML header & footer', status: 'pending' });
-      tasks.push({ id: 'refine-html', label: 'AI-refining HTML capture', status: 'pending' });
       tasks.push({ id: 'scrape-screenshot', label: 'Capturing screenshot', status: 'pending' });
       tasks.push({ id: 'apply', label: 'Applying branding to demo', status: 'pending' });
     }
