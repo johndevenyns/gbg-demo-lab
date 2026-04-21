@@ -305,15 +305,25 @@ export function HtmlCaptureTab({ demo, url, onUrlChange, onApply, isConfigured, 
        const measuredFooter = scrapedData.footerHeight && scrapedData.footerHeight > 40
          ? Math.min(scrapedData.footerHeight, 800)
          : 0;
-       if (measuredFooter) {
+       // Same idea for the header — seed the header-height floor so
+       // mega-menus / stacked top bars don't get clipped to the default.
+       const measuredHeader = scrapedData.headerHeight && scrapedData.headerHeight > 30
+         ? Math.min(scrapedData.headerHeight, 500)
+         : 0;
+       if (measuredFooter || measuredHeader) {
          const currentStyle = demo.formStyle || DEFAULT_FORM_STYLE;
-         updates.formStyle = { ...currentStyle, footerHeight: measuredFooter };
+         updates.formStyle = {
+           ...currentStyle,
+           ...(measuredFooter ? { footerHeight: measuredFooter } : {}),
+           ...(measuredHeader ? { headerHeight: measuredHeader } : {}),
+         };
        }
 
        // Auto-apply form styling if form hasn't been customized and we have extracted styles
        if (isFormStyleDefault && scrapedData.formStyles) {
          const formStyle = formElementStylesToConfig(scrapedData.formStyles);
          if (measuredFooter) formStyle.footerHeight = measuredFooter;
+         if (measuredHeader) formStyle.headerHeight = measuredHeader;
          updates.formStyle = formStyle;
          updates.buttonColor = scrapedData.colors.buttonColor;
          onApply(updates);
