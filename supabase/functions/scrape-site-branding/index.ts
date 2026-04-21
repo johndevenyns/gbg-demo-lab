@@ -147,6 +147,7 @@ const INLINE_STYLES_SCRIPT = `
     
     // Walk the original and build a map of styles per element index
     var styleMap = [];
+    var pseudoMap = []; // idx -> peId (or undefined)
     function collectStyles(origEl, idx) {
       if (origEl.nodeType !== 1) return idx;
       var cs = window.getComputedStyle(origEl);
@@ -160,6 +161,9 @@ const INLINE_STYLES_SCRIPT = `
         }
       }
       styleMap[idx] = props.join(';');
+      // Capture ::before / ::after on the original element
+      var pe = collectPseudo(origEl);
+      if (pe) pseudoMap[idx] = pe;
       var nextIdx = idx + 1;
       var children = origEl.children;
       for (var c = 0; c < children.length; c++) {
@@ -178,6 +182,9 @@ const INLINE_STYLES_SCRIPT = `
       if (cloneEl.nodeType !== 1) return idx;
       if (styleMap[idx]) {
         cloneEl.setAttribute('style', styleMap[idx]);
+      }
+      if (pseudoMap[idx]) {
+        cloneEl.setAttribute('data-pe-id', pseudoMap[idx]);
       }
       var nextIdx = idx + 1;
       var children = cloneEl.children;
