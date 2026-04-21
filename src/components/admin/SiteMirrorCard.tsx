@@ -142,6 +142,67 @@ const viewportConfig: Record<PreviewViewport, { width: string; iframeWidth: numb
   phone: { width: '390px', iframeWidth: null, label: 'Phone', icon: Smartphone },
 };
 
+/**
+ * Hook that listens for `mirror-region-height` postMessages from a child
+ * iframe and returns the largest reported natural content height. Used to
+ * auto-fit the header preview around mega-menus and stacked top bars in
+ * the same way `FooterPreviewFrame` already does for footers.
+ */
+function useNaturalIframeHeight(frameId: string) {
+  const [height, setHeight] = useState<number>(0);
+  useEffect(() => {
+    const handler = (e: MessageEvent) => {
+      if (!e.data || typeof e.data !== 'object') return;
+      if (e.data.type === 'mirror-region-height' && e.data.frameId === frameId) {
+        const h = Number(e.data.height) || 0;
+        if (h > 20 && h < 2000) setHeight(h);
+      }
+    };
+    window.addEventListener('message', handler);
+    return () => window.removeEventListener('message', handler);
+  }, [frameId]);
+  return height;
+}
+
+/**
+ * Tiny script injected into header / footer preview iframes that reports
+ * the natural content height back to the parent via postMessage. Kept as
+ * a string so it can be dropped into a `srcDoc` template literal.
+ */
+function buildHeightReporterScript(frameId: string, messageType: string): string {
+  return `
+  <script>
+    (function() {
+      var FRAME_ID = ${JSON.stringify(frameId)};
+      var TYPE = ${JSON.stringify(messageType)};
+      function report() {
+        try {
+          var h = Math.max(
+            document.body.scrollHeight,
+            document.documentElement.scrollHeight,
+            document.body.offsetHeight,
+            document.documentElement.offsetHeight
+          );
+          window.parent.postMessage({ type: TYPE, frameId: FRAME_ID, height: h }, '*');
+        } catch (e) {}
+      }
+      report();
+      setTimeout(report, 100);
+      setTimeout(report, 500);
+      setTimeout(report, 1500);
+      var imgs = document.querySelectorAll('img');
+      for (var i = 0; i < imgs.length; i++) {
+        imgs[i].addEventListener('load', report);
+        imgs[i].addEventListener('error', report);
+      }
+      try {
+        var mo = new MutationObserver(report);
+        mo.observe(document.body, { childList: true, subtree: true, attributes: true });
+      } catch (e) {}
+    })();
+  </script>`;
+}
+
 
 function generateSelectorFromElement(el: Element): string {
   if (el.id) return `#${el.id}`;
