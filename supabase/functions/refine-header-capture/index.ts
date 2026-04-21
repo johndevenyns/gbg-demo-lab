@@ -38,10 +38,11 @@ Deno.serve(async (req) => {
     console.log('Header HTML length:', capturedHeaderHtml?.length || 0, 'has substantial header:', hasHeader);
     console.log('Footer HTML length:', capturedFooterHtml?.length || 0, 'has substantial footer:', hasFooter);
 
-    const maxHtmlLen = 15000;
+    // Keep inputs small to stay well under the 150s edge function idle timeout.
+    const maxHtmlLen = 6000;
     const headerHtml = (capturedHeaderHtml || '').substring(0, maxHtmlLen);
     const footerHtml = (capturedFooterHtml || '').substring(0, maxHtmlLen);
-    const css = (capturedCss || '').substring(0, 5000);
+    const css = (capturedCss || '').substring(0, 2000);
 
     // Different prompts depending on whether we have existing HTML or need to generate from scratch
     const systemPrompt = hasHeader
@@ -146,14 +147,21 @@ Generate clean header and footer HTML with inline styles that matches the screen
       screenshotDataUrl = `data:image/png;base64,${originalScreenshot}`;
     }
 
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    // Use AbortController to fail fast if the AI call hangs, leaving time to respond before the 150s edge timeout.
+    const aiController = new AbortController();
+    const aiTimeout = setTimeout(() => aiController.abort(), 120_000);
+
+    let response: Response;
+    try {
+      response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
+      signal: aiController.signal,
       headers: {
         'Authorization': `Bearer ${LOVABLE_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: 'google/gemini-2.5-flash-lite',
         messages: [
           { role: 'system', content: systemPrompt },
           {
@@ -223,7 +231,17 @@ Generate clean header and footer HTML with inline styles that matches the screen
         ],
         tool_choice: { type: 'function', function: { name: 'report_refined_capture' } },
       }),
-    });
+      });
+    } catch (err) {
+      clearTimeout(aiTimeout);
+      const aborted = (err as Error)?.name === 'AbortError';
+      console.error('AI gateway fetch failed:', aborted ? 'timeout (120s)' : err);
+      return new Response(
+        JSON.stringify({ success: false, error: aborted ? 'AI refinement timed out' : 'AI refinement failed', fallback: true }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    clearTimeout(aiTimeout);
 
     if (!response.ok) {
       const errorText = await response.text();
