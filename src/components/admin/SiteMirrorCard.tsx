@@ -142,6 +142,67 @@ const viewportConfig: Record<PreviewViewport, { width: string; iframeWidth: numb
   phone: { width: '390px', iframeWidth: null, label: 'Phone', icon: Smartphone },
 };
 
+/**
+ * Hook that listens for `mirror-region-height` postMessages from a child
+ * iframe and returns the largest reported natural content height. Used to
+ * auto-fit the header preview around mega-menus and stacked top bars in
+ * the same way `FooterPreviewFrame` already does for footers.
+ */
+function useNaturalIframeHeight(frameId: string) {
+  const [height, setHeight] = useState<number>(0);
+  useEffect(() => {
+    const handler = (e: MessageEvent) => {
+      if (!e.data || typeof e.data !== 'object') return;
+      if (e.data.type === 'mirror-region-height' && e.data.frameId === frameId) {
+        const h = Number(e.data.height) || 0;
+        if (h > 20 && h < 2000) setHeight(h);
+      }
+    };
+    window.addEventListener('message', handler);
+    return () => window.removeEventListener('message', handler);
+  }, [frameId]);
+  return height;
+}
+
+/**
+ * Tiny script injected into header / footer preview iframes that reports
+ * the natural content height back to the parent via postMessage. Kept as
+ * a string so it can be dropped into a `srcDoc` template literal.
+ */
+function buildHeightReporterScript(frameId: string, messageType: string): string {
+  return `
+  <script>
+    (function() {
+      var FRAME_ID = ${JSON.stringify(frameId)};
+      var TYPE = ${JSON.stringify(messageType)};
+      function report() {
+        try {
+          var h = Math.max(
+            document.body.scrollHeight,
+            document.documentElement.scrollHeight,
+            document.body.offsetHeight,
+            document.documentElement.offsetHeight
+          );
+          window.parent.postMessage({ type: TYPE, frameId: FRAME_ID, height: h }, '*');
+        } catch (e) {}
+      }
+      report();
+      setTimeout(report, 100);
+      setTimeout(report, 500);
+      setTimeout(report, 1500);
+      var imgs = document.querySelectorAll('img');
+      for (var i = 0; i < imgs.length; i++) {
+        imgs[i].addEventListener('load', report);
+        imgs[i].addEventListener('error', report);
+      }
+      try {
+        var mo = new MutationObserver(report);
+        mo.observe(document.body, { childList: true, subtree: true, attributes: true });
+      } catch (e) {}
+    })();
+  </script>`;
+}
+
 
 function generateSelectorFromElement(el: Element): string {
   if (el.id) return `#${el.id}`;
@@ -184,6 +245,8 @@ interface SiteMirrorCardProps {
     const [linkHeaderMode, setLinkHeaderMode] = useState(false);
     const headerIframeRef = useRef<HTMLIFrameElement>(null);
     const headerOverlayRef = useRef<HTMLDivElement>(null);
+  const headerFrameId = useRef<string>(`header-${Math.random().toString(36).slice(2, 8)}`).current;
+  const headerNaturalHeight = useNaturalIframeHeight(headerFrameId);
     // HTML mode picking state
     const [pendingSelector, setPendingSelector] = useState("");
     const [pendingLabel, setPendingLabel] = useState("");
@@ -397,7 +460,16 @@ interface SiteMirrorCardProps {
                     style={{ width: previewViewport === 'desktop' ? '1280px' : vpConfig.width }}
                   >
                     {headerHtml && (
-                      <div className="relative" style={{ height: `${headerHeight}px`, overflow: 'hidden' }}>
+                      <div
+                        className="relative"
+                        style={{
+                          // Badge value is a FLOOR, not a ceiling — let the
+                          // captured header reveal mega-menus / top bars
+                          // without being clipped to the default height.
+                          height: `${Math.max(headerHeight, headerNaturalHeight)}px`,
+                          overflow: 'hidden',
+                        }}
+                      >
                         <RegionSizeBadge
                           label="Header"
                           value={headerHeight}
@@ -429,13 +501,14 @@ interface SiteMirrorCardProps {
                               </head>
                               <body>
                                 ${headerHtml}
+                                ${buildHeightReporterScript(headerFrameId, 'mirror-region-height')}
                               </body>
                             </html>
                           `}
                           className="block w-full border-0"
-                          style={{ height: `${headerHeight}px` }}
+                          style={{ height: `${Math.max(headerHeight, headerNaturalHeight)}px` }}
                           title="Live site header preview"
-                          sandbox="allow-same-origin"
+                          sandbox="allow-same-origin allow-scripts"
                           onLoad={(e) => {
                             const iframe = e.currentTarget;
                             enhanceHeaderPreviewIframe(iframe, 80);

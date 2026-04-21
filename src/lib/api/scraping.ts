@@ -55,6 +55,13 @@ export interface ScrapedBranding {
    * captured footers don't get clipped by the default fixed height.
    */
   footerHeight?: number;
+  /**
+   * Natural rendered height of the header (in CSS pixels) measured on the
+   * live site BEFORE any scroll-driven shrink behavior. Used as the
+   * starting floor for the header preview so mega-menus and stacked
+   * top-bars are visible without manual badge tweaking.
+   */
+  headerHeight?: number;
   screenshot: string | null;
   screenshots?: {
     desktop: string | null;
