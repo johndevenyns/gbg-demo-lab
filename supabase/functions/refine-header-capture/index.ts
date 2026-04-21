@@ -147,9 +147,9 @@ Generate clean header and footer HTML with inline styles that matches the screen
       screenshotDataUrl = `data:image/png;base64,${originalScreenshot}`;
     }
 
-    // Use AbortController to fail fast if the AI call hangs, leaving time to respond before the 150s edge timeout.
+    // Edge functions have a 150s idle timeout. Abort well before so we always return a clean response.
     const aiController = new AbortController();
-    const aiTimeout = setTimeout(() => aiController.abort(), 120_000);
+    const aiTimeout = setTimeout(() => aiController.abort(), 90_000);
 
     let response: Response;
     try {

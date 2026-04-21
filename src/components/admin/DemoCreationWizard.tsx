@@ -225,13 +225,26 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
           updateTaskStatus('refine-html', 'in_progress');
           try {
             const screenshotSrc = getScreenshotSrc(scrapedData.screenshot);
-            const refineResult = await headerRefinementApi.refineCapture(
-              screenshotSrc,
-              refinedHtml?.headerHtml || '',
-              refinedHtml?.footerHtml || '',
-              refinedHtml?.css || '',
-              siteUrl
-            );
+            // Hard client-side timeout so a hung refinement never blocks demo creation.
+            // Edge function aborts AI at 90s; give it a small buffer here.
+            const refineController = new AbortController();
+            const refineTimer = setTimeout(() => refineController.abort(), 100_000);
+            const refineResult = await Promise.race([
+              headerRefinementApi.refineCapture(
+                screenshotSrc,
+                refinedHtml?.headerHtml || '',
+                refinedHtml?.footerHtml || '',
+                refinedHtml?.css || '',
+                siteUrl,
+                refineController.signal
+              ),
+              new Promise<{ success: false; error: string }>((resolve) =>
+                setTimeout(() => {
+                  refineController.abort();
+                  resolve({ success: false, error: 'Refinement timed out' });
+                }, 100_000)
+              ),
+            ]).finally(() => clearTimeout(refineTimer));
             if (refineResult.success && refineResult.data) {
               refinedHtml = {
                 headerHtml: refineResult.data.refinedHeaderHtml || refinedHtml?.headerHtml || '',
@@ -253,8 +266,12 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
                   scrapedData.logoUrl = refineResult.data.extractedColors.logoUrl;
                 }
               }
+              updateTaskStatus('refine-html', 'complete');
+            } else {
+              // Refinement failed/timed out — keep the un-refined capture and continue.
+              console.warn('AI refinement skipped:', (refineResult as { error?: string }).error);
+              updateTaskStatus('refine-html', 'error');
             }
-            updateTaskStatus('refine-html', 'complete');
           } catch (e) {
             console.error('AI refinement failed:', e);
             updateTaskStatus('refine-html', 'error');
