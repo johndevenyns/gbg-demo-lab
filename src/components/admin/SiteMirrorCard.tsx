@@ -481,6 +481,29 @@ interface SiteMirrorCardProps {
                 </p>
               </div>
               <div className="flex items-center gap-2">
+                {/* Refine HTML capture with AI (only when HTML mode is active and configured) */}
+                {hasContentForMethod && activeMethod === 'html' && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5"
+                    onClick={handleRefineWithAi}
+                    disabled={isRefining}
+                    title="Use vision AI to compare the capture to the screenshot and apply corrections"
+                  >
+                    {isRefining ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Sparkles className="w-4 h-4" />
+                    )}
+                    <span className="text-xs">{isRefining ? 'Refining…' : 'Refine with AI'}</span>
+                    {lastRefinementScore !== null && !isRefining && (
+                      <Badge variant="secondary" className="text-[10px] ml-0.5 px-1.5 py-0">
+                        {lastRefinementScore}%
+                      </Badge>
+                    )}
+                  </Button>
+                )}
                 {/* Link Header toggle */}
                 {hasContentForMethod && headerHtml && (
                   <Button
