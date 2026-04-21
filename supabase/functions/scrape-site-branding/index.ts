@@ -226,7 +226,7 @@ const INLINE_STYLES_SCRIPT = `
   }
   document.body.removeChild(refDiv);
 
-  function extractWithInlinedStyles(selector, fallbackSelectors) {
+  function extractWithInlinedStyles(selector, fallbackSelectors, neutralizeFixed) {
     var el = document.querySelector(selector);
     if (!el && fallbackSelectors) {
       for (var i = 0; i < fallbackSelectors.length; i++) {
@@ -249,6 +249,23 @@ const INLINE_STYLES_SCRIPT = `
         var val = cs.getPropertyValue(prop);
         if (val && val !== defaultMap[prop]) {
           props.push(prop + ':' + val);
+        }
+      }
+      // For headers: neutralize fixed/sticky/translate so the cloned tree
+      // lays out as a normal block inside the iframe. We do this on EVERY
+      // descendant because nav drawers, sticky sub-bars, and transformed
+      // logos all break iframe layout if left in place.
+      if (neutralizeFixed) {
+        var pos = cs.getPropertyValue('position');
+        if (pos === 'fixed' || pos === 'sticky' || pos === 'absolute') {
+          for (var npn in neutralizePositioning) {
+            if (Object.prototype.hasOwnProperty.call(neutralizePositioning, npn)) {
+              props.push(npn + ':' + neutralizePositioning[npn]);
+            }
+          }
+        } else {
+          var tr = cs.getPropertyValue('transform');
+          if (tr && tr !== 'none') props.push('transform:none');
         }
       }
       styleMap[idx] = props.join(';');
