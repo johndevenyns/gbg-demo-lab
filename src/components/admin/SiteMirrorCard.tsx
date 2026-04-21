@@ -243,6 +243,8 @@ interface SiteMirrorCardProps {
     const [url, setUrl] = useState(demo.customerSiteUrl || "");
     const [previewViewport, setPreviewViewport] = useState<PreviewViewport>('desktop');
     const [linkHeaderMode, setLinkHeaderMode] = useState(false);
+    const [isRefining, setIsRefining] = useState(false);
+    const [lastRefinementScore, setLastRefinementScore] = useState<number | null>(null);
     const headerIframeRef = useRef<HTMLIFrameElement>(null);
     const headerOverlayRef = useRef<HTMLDivElement>(null);
   const headerFrameId = useRef<string>(`header-${Math.random().toString(36).slice(2, 8)}`).current;
