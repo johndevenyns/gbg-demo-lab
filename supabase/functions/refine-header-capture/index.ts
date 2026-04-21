@@ -38,10 +38,11 @@ Deno.serve(async (req) => {
     console.log('Header HTML length:', capturedHeaderHtml?.length || 0, 'has substantial header:', hasHeader);
     console.log('Footer HTML length:', capturedFooterHtml?.length || 0, 'has substantial footer:', hasFooter);
 
-    const maxHtmlLen = 15000;
+    // Keep inputs small to stay well under the 150s edge function idle timeout.
+    const maxHtmlLen = 6000;
     const headerHtml = (capturedHeaderHtml || '').substring(0, maxHtmlLen);
     const footerHtml = (capturedFooterHtml || '').substring(0, maxHtmlLen);
-    const css = (capturedCss || '').substring(0, 5000);
+    const css = (capturedCss || '').substring(0, 2000);
 
     // Different prompts depending on whether we have existing HTML or need to generate from scratch
     const systemPrompt = hasHeader
