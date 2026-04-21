@@ -245,6 +245,8 @@ interface SiteMirrorCardProps {
     const [linkHeaderMode, setLinkHeaderMode] = useState(false);
     const headerIframeRef = useRef<HTMLIFrameElement>(null);
     const headerOverlayRef = useRef<HTMLDivElement>(null);
+  const headerFrameId = useRef<string>(`header-${Math.random().toString(36).slice(2, 8)}`).current;
+  const headerNaturalHeight = useNaturalIframeHeight(headerFrameId);
     // HTML mode picking state
     const [pendingSelector, setPendingSelector] = useState("");
     const [pendingLabel, setPendingLabel] = useState("");
