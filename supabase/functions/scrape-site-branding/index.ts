@@ -298,6 +298,20 @@ const INLINE_STYLES_SCRIPT = `
     '[id*="footer"]', '[role="contentinfo"]'
   ]);
 
+  // Measure the natural rendered height of the live footer so the iframe
+  // in the admin preview can size itself correctly without the user
+  // hand-tuning the footer-height badge for every site.
+  var footerHeight = 0;
+  try {
+    var footerEl = document.querySelector('footer')
+      || document.querySelector('[role="contentinfo"]')
+      || document.querySelector('[class*="site-footer"], [class*="main-footer"], [class*="page-footer"], [id*="footer"]');
+    if (footerEl) {
+      var rect = footerEl.getBoundingClientRect();
+      footerHeight = Math.round(rect.height);
+    }
+  } catch(e) { /* ignore */ }
+
   // Extract actual header background color from computed style
   var headerBgColor = '';
   var headerTextColor = '';
@@ -323,6 +337,9 @@ const INLINE_STYLES_SCRIPT = `
   return JSON.stringify({
     headerHtml: (topBarHtml ? topBarHtml + '\\n' : '') + headerHtml,
     footerHtml: footerHtml,
+    pseudoRules: pseudoRules,
+    svgSpriteHtml: svgSpriteHtml,
+    footerHeight: footerHeight,
     fontFaceRules: fontInfo,
     fontLinks: fontLinks,
     origin: window.location.origin,
