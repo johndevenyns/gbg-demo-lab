@@ -50,6 +50,81 @@ const INLINE_STYLES_SCRIPT = `
     'backface-visibility'
   ]);
 
+  // ---- Lazy-load triggering ----------------------------------------------
+  // Many sites mount footer content only after IntersectionObserver fires
+  // when the footer scrolls into view. We force that by jumping to the
+  // bottom of the page and back, then waiting a tick for content to render.
+  function triggerLazyLoad() {
+    try {
+      // Jump to the very bottom so footer + lazy images mount
+      window.scrollTo(0, document.body.scrollHeight);
+      // Force any native lazy-loaded images near the footer to resolve
+      var lazyImgs = document.querySelectorAll('img[loading="lazy"], img[data-src], img[data-lazy-src]');
+      for (var li = 0; li < lazyImgs.length; li++) {
+        var im = lazyImgs[li];
+        im.removeAttribute('loading');
+        var ds = im.getAttribute('data-src') || im.getAttribute('data-lazy-src');
+        if (ds && !im.getAttribute('src')) im.setAttribute('src', ds);
+      }
+      // Walk back up to trigger observers in viewport order
+      window.scrollTo(0, Math.max(0, document.body.scrollHeight - window.innerHeight));
+    } catch (e) { /* ignore */ }
+  }
+  triggerLazyLoad();
+  // Synchronous busy-wait for ~600ms to let lazy content paint.
+  // We can't await inside Firecrawl's executeJavascript, so a tight loop is
+  // the only portable trick. 600ms is the sweet spot — long enough for most
+  // lazy mounts, short enough to stay under the action timeout.
+  var lazyDeadline = Date.now() + 600;
+  while (Date.now() < lazyDeadline) { /* spin */ }
+
+  // ---- Pseudo-element + SVG sprite capture -------------------------------
+  // Many footers depend on ::before / ::after for icons, dividers, and
+  // background shapes. We collect them as scoped CSS rules keyed by a
+  // data-pe-id we apply to the original element (mirrored on the clone).
+  var pseudoIdCounter = 0;
+  var pseudoRules = [];
+  function collectPseudo(el) {
+    var beforeStyle = window.getComputedStyle(el, '::before');
+    var afterStyle = window.getComputedStyle(el, '::after');
+    var hasBefore = beforeStyle && beforeStyle.content && beforeStyle.content !== 'none' && beforeStyle.content !== 'normal';
+    var hasAfter  = afterStyle  && afterStyle.content  && afterStyle.content  !== 'none' && afterStyle.content  !== 'normal';
+    if (!hasBefore && !hasAfter) return null;
+    var peId = 'pe-' + (++pseudoIdCounter);
+    function dump(cs) {
+      var out = [];
+      for (var i = 0; i < cs.length; i++) {
+        var p = cs[i];
+        if (skipProps.has(p)) continue;
+        var v = cs.getPropertyValue(p);
+        if (v) out.push(p + ':' + v);
+      }
+      return out.join(';');
+    }
+    if (hasBefore) pseudoRules.push('[data-pe-id="' + peId + '"]::before{' + dump(beforeStyle) + '}');
+    if (hasAfter)  pseudoRules.push('[data-pe-id="' + peId + '"]::after{'  + dump(afterStyle)  + '}');
+    return peId;
+  }
+
+  // Collect inline SVG <symbol> definitions used as sprites via <use href="#id">.
+  // We snapshot every inline <svg> that contains <symbol>s once, prepend
+  // them to the captured HTML so <use href="#sprite-id"> resolves locally.
+  function collectSvgSprites() {
+    var sprites = [];
+    var seen = {};
+    var symbols = document.querySelectorAll('svg symbol[id]');
+    for (var i = 0; i < symbols.length; i++) {
+      var sym = symbols[i];
+      var id = sym.getAttribute('id');
+      if (!id || seen[id]) continue;
+      seen[id] = true;
+      sprites.push(sym.outerHTML);
+    }
+    if (!sprites.length) return '';
+    return '<svg xmlns="http://www.w3.org/2000/svg" style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true">' + sprites.join('') + '</svg>';
+  }
+  var svgSpriteHtml = collectSvgSprites();
+
   // Create a reference element to compare defaults
   var refDiv = document.createElement('div');
   document.body.appendChild(refDiv);
