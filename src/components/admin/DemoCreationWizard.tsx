@@ -16,7 +16,7 @@ import { useGlobalUseCases, useAddDemoUseCaseLink } from "@/hooks/useUseCases";
 import { useIndustries } from "@/hooks/useIndustries";
 import { useEnabledPortalTypes } from "@/hooks/usePortalTypes";
 import { IndustryTemplate, DemoEnvironment } from "@/types/demo";
-import { scrapingApi, ScrapedBranding, headerRefinementApi } from "@/lib/api/scraping";
+import { scrapingApi, ScrapedBranding } from "@/lib/api/scraping";
 import { useTestProfiles } from "@/hooks/useTestProfiles";
 import { formElementStylesToConfig, generatePreviewDocument, generateFormHtml } from "@/lib/formStyleUtils";
 import { DEFAULT_FORM_STYLE } from "@/types/formStyle";

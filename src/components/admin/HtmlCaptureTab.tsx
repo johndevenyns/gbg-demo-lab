@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
- import { scrapingApi, ScrapedBranding, FormElementStyles, headerRefinementApi } from "@/lib/api/scraping";
+  import { scrapingApi, ScrapedBranding, FormElementStyles } from "@/lib/api/scraping";
  import { useToast } from "@/hooks/use-toast";
  import { DemoEnvironment } from "@/types/demo";
  import { DEFAULT_FORM_STYLE, FormStyleConfig } from "@/types/formStyle";
