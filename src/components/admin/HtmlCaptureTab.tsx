@@ -299,9 +299,21 @@ export function HtmlCaptureTab({ demo, url, onUrlChange, onApply, isConfigured, 
         mirrorHtmlCss: editedCss,
        };
 
+       // If we measured a real footer height on the source site, seed the
+       // formStyle.footerHeight so the preview iframe shows the captured
+       // footer at its natural size instead of clipping it to the default.
+       const measuredFooter = scrapedData.footerHeight && scrapedData.footerHeight > 40
+         ? Math.min(scrapedData.footerHeight, 800)
+         : 0;
+       if (measuredFooter) {
+         const currentStyle = demo.formStyle || DEFAULT_FORM_STYLE;
+         updates.formStyle = { ...currentStyle, footerHeight: measuredFooter };
+       }
+
        // Auto-apply form styling if form hasn't been customized and we have extracted styles
        if (isFormStyleDefault && scrapedData.formStyles) {
          const formStyle = formElementStylesToConfig(scrapedData.formStyles);
+         if (measuredFooter) formStyle.footerHeight = measuredFooter;
          updates.formStyle = formStyle;
          updates.buttonColor = scrapedData.colors.buttonColor;
          onApply(updates);
