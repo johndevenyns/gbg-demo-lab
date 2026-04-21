@@ -50,7 +50,78 @@ const INLINE_STYLES_SCRIPT = `
     'backface-visibility'
   ]);
 
-  // ---- Lazy-load triggering ----------------------------------------------
+  // ---- HEADER FIRST (capture before any scrolling) -----------------------
+  // Many sites apply a "scrolled" class to the header that compacts it,
+  // changes its background, or hides menu items. If we scroll first to
+  // trigger footer lazy-load, we'd capture the wrong (scrolled) header.
+  // So we measure & remember the header BEFORE we touch the scroll.
+  window.scrollTo(0, 0);
+
+  // Force-resolve lazy-loaded images inside the header up front so the
+  // logo and any eager hero images render in the iframe preview.
+  function resolveLazyImagesIn(root) {
+    if (!root) return;
+    var lazy = root.querySelectorAll('img[loading="lazy"], img[data-src], img[data-lazy-src], img[data-original]');
+    for (var i = 0; i < lazy.length; i++) {
+      var im = lazy[i];
+      im.removeAttribute('loading');
+      var ds = im.getAttribute('data-src') || im.getAttribute('data-lazy-src') || im.getAttribute('data-original');
+      if (ds && !im.getAttribute('src')) im.setAttribute('src', ds);
+    }
+    // Flatten <picture> sources to a concrete <img src>. The cloned img loses
+    // its <source> siblings' context inside the iframe, so we pick the first
+    // viable URL from the largest <source> and drop it onto the <img>.
+    var pictures = root.querySelectorAll('picture');
+    for (var p = 0; p < pictures.length; p++) {
+      var pic = pictures[p];
+      var img = pic.querySelector('img');
+      if (!img) continue;
+      // If the img already has a real, non-lazy src, skip.
+      var existing = img.getAttribute('src') || '';
+      if (existing && !existing.startsWith('data:image/gif')) continue;
+      var sources = pic.querySelectorAll('source[srcset]');
+      for (var s = 0; s < sources.length; s++) {
+        var srcset = sources[s].getAttribute('srcset') || '';
+        var first = srcset.split(',')[0].trim().split(' ')[0];
+        if (first) { img.setAttribute('src', first); break; }
+      }
+    }
+    // Pick the first srcset entry as the concrete src for any <img srcset>.
+    var srcsetImgs = root.querySelectorAll('img[srcset]');
+    for (var si = 0; si < srcsetImgs.length; si++) {
+      var sii = srcsetImgs[si];
+      var ss = sii.getAttribute('srcset') || '';
+      var firstUrl = ss.split(',')[0].trim().split(' ')[0];
+      if (firstUrl && !sii.getAttribute('src')) sii.setAttribute('src', firstUrl);
+    }
+  }
+  var preHeaderEl = document.querySelector('header')
+    || document.querySelector('[role="banner"]')
+    || document.querySelector('[class*="site-header"], [class*="main-header"], [class*="page-header"]')
+    || document.querySelector('nav');
+  // Resolve header lazy images while we are still at scrollTop=0
+  resolveLazyImagesIn(preHeaderEl);
+
+  // Measure header natural height NOW so it reflects the unscrolled,
+  // mega-menu / top-bar combined size, not a compacted scrolled state.
+  var headerNaturalHeight = 0;
+  try {
+    if (preHeaderEl) {
+      var hr = preHeaderEl.getBoundingClientRect();
+      headerNaturalHeight = Math.round(hr.height);
+      // Include announcement / utility bar that sits ABOVE the header.
+      var prevSib = preHeaderEl.previousElementSibling;
+      if (prevSib) {
+        var tag = (prevSib.className || '').toLowerCase() + ' ' + (prevSib.id || '').toLowerCase();
+        if (tag.match(/top-bar|announcement|promo|utility|alert|banner|ribbon|notification/)) {
+          var prevR = prevSib.getBoundingClientRect();
+          headerNaturalHeight += Math.round(prevR.height);
+        }
+      }
+    }
+  } catch (e) { /* ignore */ }
+
+  // ---- Lazy-load triggering (FOR FOOTER) ---------------------------------
   // Many sites mount footer content only after IntersectionObserver fires
   // when the footer scrolls into view. We force that by jumping to the
   // bottom of the page and back, then waiting a tick for content to render.
@@ -77,6 +148,26 @@ const INLINE_STYLES_SCRIPT = `
   // lazy mounts, short enough to stay under the action timeout.
   var lazyDeadline = Date.now() + 600;
   while (Date.now() < lazyDeadline) { /* spin */ }
+
+  // After footer lazy-load, scroll back to top so any "scroll-shrink"
+  // header CSS reverts to its unscrolled state before we capture it.
+  try { window.scrollTo(0, 0); } catch (e) {}
+  // Brief settle to let scroll-driven listeners reset header classes.
+  var settleDeadline = Date.now() + 150;
+  while (Date.now() < settleDeadline) { /* spin */ }
+
+  // Properties that wreck the iframe layout if kept as-is. We force them
+  // to safe values so a fixed/sticky/translate-d header lays out inline.
+  var neutralizePositioning = {
+    'position': 'static',
+    'top': 'auto',
+    'left': 'auto',
+    'right': 'auto',
+    'bottom': 'auto',
+    'transform': 'none',
+    'translate': 'none',
+    'z-index': 'auto'
+  };
 
   // ---- Pseudo-element + SVG sprite capture -------------------------------
   // Many footers depend on ::before / ::after for icons, dividers, and
