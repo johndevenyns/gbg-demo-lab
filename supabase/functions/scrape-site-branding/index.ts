@@ -385,7 +385,7 @@ const INLINE_STYLES_SCRIPT = `
   var headerHtml = extractWithInlinedStyles('header', [
     '[class*="site-header"]', '[class*="main-header"]', '[class*="page-header"]',
     '[id*="header"]', '[role="banner"]', 'nav'
-  ]);
+  ], true);
   
   // Check for announcement/top bar above header
   var header = document.querySelector('header') || document.querySelector('[role="banner"]');
@@ -396,7 +396,8 @@ const INLINE_STYLES_SCRIPT = `
     if (prevText.match(/top-bar|announcement|promo|utility|alert|banner|ribbon/)) {
       topBarHtml = extractWithInlinedStyles(
         prev.tagName.toLowerCase() + (prev.id ? '#' + prev.id : '') + (prev.className ? '.' + prev.className.split(' ')[0] : ''),
-        []
+        [],
+        true
       );
     }
   }
@@ -404,7 +405,7 @@ const INLINE_STYLES_SCRIPT = `
   var footerHtml = extractWithInlinedStyles('footer', [
     '[class*="site-footer"]', '[class*="main-footer"]', '[class*="page-footer"]',
     '[id*="footer"]', '[role="contentinfo"]'
-  ]);
+  ], false);
 
   // Measure the natural rendered height of the live footer so the iframe
   // in the admin preview can size itself correctly without the user
@@ -448,6 +449,7 @@ const INLINE_STYLES_SCRIPT = `
     pseudoRules: pseudoRules,
     svgSpriteHtml: svgSpriteHtml,
     footerHeight: footerHeight,
+    headerHeight: headerNaturalHeight,
     fontFaceRules: fontInfo,
     fontLinks: fontLinks,
     origin: window.location.origin,
