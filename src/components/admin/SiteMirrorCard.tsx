@@ -460,7 +460,16 @@ interface SiteMirrorCardProps {
                     style={{ width: previewViewport === 'desktop' ? '1280px' : vpConfig.width }}
                   >
                     {headerHtml && (
-                      <div className="relative" style={{ height: `${headerHeight}px`, overflow: 'hidden' }}>
+                      <div
+                        className="relative"
+                        style={{
+                          // Badge value is a FLOOR, not a ceiling — let the
+                          // captured header reveal mega-menus / top bars
+                          // without being clipped to the default height.
+                          height: `${Math.max(headerHeight, headerNaturalHeight)}px`,
+                          overflow: 'hidden',
+                        }}
+                      >
                         <RegionSizeBadge
                           label="Header"
                           value={headerHeight}
@@ -492,11 +501,12 @@ interface SiteMirrorCardProps {
                               </head>
                               <body>
                                 ${headerHtml}
+                                ${buildHeightReporterScript(headerFrameId, 'mirror-region-height')}
                               </body>
                             </html>
                           `}
                           className="block w-full border-0"
-                          style={{ height: `${headerHeight}px` }}
+                          style={{ height: `${Math.max(headerHeight, headerNaturalHeight)}px` }}
                           title="Live site header preview"
                           sandbox="allow-same-origin"
                           onLoad={(e) => {
