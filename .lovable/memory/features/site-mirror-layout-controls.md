@@ -9,6 +9,8 @@ The Content badge also exposes a small gear icon opening a popover with extra co
 
 The "Link Header" toggle remains as a separate mode for picking CSS selectors (HTML method) or drawing hotspot rectangles (Screenshot method) over the header iframe, with a floating `HeaderLinkPanel` for use case assignment.
 
-Footer iframe height is now governed strictly by `formStyle.footerHeight` (the previous auto-resize-on-load was removed so the badge value is honored).
+Footer iframe uses a `FooterPreviewFrame` sub-component: the `formStyle.footerHeight` badge is a **minimum** floor; the iframe auto-grows to its captured natural height via `postMessage` (type `mirror-footer-height`) so multi-column site footers aren't clipped. The badge still lets users force a smaller viewport when desired.
+
+The `scrape-site-branding` edge function now (a) scrolls to the bottom and busy-waits 600ms inside its `executeJavascript` to trigger lazy-mounted footers, (b) captures `::before`/`::after` pseudo-element styles via scoped `[data-pe-id]` rules appended to `cssContent`, (c) snapshots inline `<svg><symbol>` sprite definitions and prepends them to header/footer HTML so `<use href="#id">` icons resolve, and (d) returns a measured `footerHeight` that `HtmlCaptureTab.handleApplySiteLayout` seeds into `formStyle.footerHeight` on apply.
 
 Replaces the previous floating `ContentLayoutEditor` panel (deleted).
