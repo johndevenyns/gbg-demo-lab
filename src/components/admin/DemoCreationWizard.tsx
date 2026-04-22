@@ -203,25 +203,33 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
     if (!customerName.trim() || !selectedIndustryId) return;
 
     const tasks: ProcessingTask[] = [
-      { id: 'create', label: 'Creating demo environment', status: 'pending' },
+      { id: 'create', label: 'Creating demo environment', phase: 'foundation', status: 'pending' },
     ];
     if (enableMirroring && siteUrl) {
-      tasks.push({ id: 'scrape-html', label: 'Capturing HTML header & footer', status: 'pending' });
-      tasks.push({ id: 'scrape-screenshot', label: 'Capturing screenshot', status: 'pending' });
-      tasks.push({ id: 'apply', label: 'Applying branding to demo', status: 'pending' });
+      tasks.push({ id: 'scrape-html', label: 'Extracting HTML header & footer', phase: 'branding', status: 'pending' });
+      tasks.push({ id: 'scrape-screenshot', label: 'Capturing pixel-perfect screenshot', phase: 'branding', status: 'pending' });
+      tasks.push({ id: 'apply', label: 'Applying brand colors, logo & typography', phase: 'branding', status: 'pending' });
+      tasks.push({ id: 'discover-form', label: 'Crawling site for application or contact form', phase: 'forms', status: 'pending' });
+      tasks.push({ id: 'capture-form', label: 'Capturing form fields, labels & styling', phase: 'forms', status: 'pending' });
+      tasks.push({ id: 'generate-steps', label: 'Generating matching workflow steps', phase: 'forms', status: 'pending' });
     }
     if (selectedUseCases.length > 0) {
-      tasks.push({ id: 'use-cases', label: 'Linking use cases', status: 'pending' });
+      tasks.push({ id: 'use-cases', label: 'Linking use cases to demo', phase: 'workflow', status: 'pending' });
     }
-    tasks.push({ id: 'finalize', label: 'Finalizing configuration', status: 'pending' });
+    tasks.push({ id: 'finalize', label: 'Loading test profiles & finalizing', phase: 'finalize', status: 'pending' });
 
     setProcessingTasks(tasks);
     setStep('processing');
     setProcessingError(null);
+    setProcessingStartedAt(Date.now());
+    setElapsedMs(0);
+    setDiscoveredFormUrl(null);
+    setDiscoveredFieldCount(null);
 
     try {
       // Step 1: Create the demo
       updateTaskStatus('create', 'in_progress');
+      setTaskDetail('create', `Provisioning environment for ${customerName.trim()}…`);
       const template: IndustryTemplate = 'custom';
       const demo = await createDemo.mutateAsync({ customerName: customerName.trim(), template });
       setCreatedDemoId(demo.id);
@@ -233,7 +241,7 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
           portalType: hasPortal ? selectedPortalType : 'none',
         } as any,
       });
-      updateTaskStatus('create', 'complete');
+      updateTaskStatus('create', 'complete', `Demo /${demo.slug} ready`);
 
       // Step 2: Site mirroring - capture BOTH methods
       let scrapedData: ScrapedBranding | null = null;
@@ -244,6 +252,7 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
       if (enableMirroring && siteUrl) {
         // Fetch site branding (returns HTML + screenshots)
         updateTaskStatus('scrape-html', 'in_progress');
+        setTaskDetail('scrape-html', `Fetching ${new URL(siteUrl).hostname}…`);
         const response = await scrapingApi.scrapeSiteBranding(siteUrl);
         if (response.success && response.data) {
           scrapedData = response.data;
@@ -252,9 +261,11 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
             footerHtml: scrapedData.footerHtml || '',
             css: scrapedData.cssContent || '',
           };
-          updateTaskStatus('scrape-html', 'complete');
+          const headerKb = Math.round((scrapedData.headerHtml?.length || 0) / 1024);
+          const cssKb = Math.round((scrapedData.cssContent?.length || 0) / 1024);
+          updateTaskStatus('scrape-html', 'complete', `Header ${headerKb}KB · CSS ${cssKb}KB`);
         } else {
-          updateTaskStatus('scrape-html', 'error');
+          updateTaskStatus('scrape-html', 'error', response.error || 'Could not fetch site HTML');
         }
 
         // Generate screenshot-based capture
@@ -272,9 +283,9 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
               }
             }),
           };
-          updateTaskStatus('scrape-screenshot', 'complete');
+          updateTaskStatus('scrape-screenshot', 'complete', 'Desktop snapshot saved');
         } else {
-          updateTaskStatus('scrape-screenshot', 'error');
+          updateTaskStatus('scrape-screenshot', 'error', 'No screenshot returned');
         }
 
         // Apply branding (colors, logo, formStyle, BOTH captures)
@@ -307,7 +318,7 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
         }
 
         await updateDemo.mutateAsync({ id: demo.id, updates: brandingUpdates as any });
-        updateTaskStatus('apply', 'complete');
+        updateTaskStatus('apply', 'complete', `Brand color ${brandingUpdates.buttonColor}`);
 
         // Build preview documents for review step
         const appliedButtonColor = (scrapedData?.colors?.buttonColor || '#6366f1');
@@ -321,6 +332,89 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
           setScreenshotPreviewDoc(buildPreviewHtml(screenshotCapture.headerHtml, screenshotCapture.footerHtml, '', appliedButtonColor));
           setScreenshotAvailable(true);
         }
+
+        // ===== Form Discovery & Capture (best-effort, non-blocking) =====
+        let extractedFields: ExtractedField[] = [];
+        let capturedFormSteps: FormStep[] | null = null;
+        try {
+          updateTaskStatus('discover-form', 'in_progress');
+          setTaskDetail('discover-form', 'Scanning /apply, /contact, /signup…');
+          const discovery = await scrapingApi.discoverForms(siteUrl, { formType: 'any', maxPages: 6 });
+          if (discovery.success && discovery.data?.best) {
+            const best = discovery.data.best;
+            setDiscoveredFormUrl(best.pageUrl);
+            updateTaskStatus(
+              'discover-form',
+              'complete',
+              `Found ${best.detectedKind} form on ${new URL(best.pageUrl).pathname || '/'} (${best.fieldCount} fields)`,
+            );
+
+            try {
+              updateTaskStatus('capture-form', 'in_progress');
+              setTaskDetail('capture-form', 'Extracting HTML, CSS & field metadata…');
+              const capture = await scrapingApi.captureFormById(best.pageUrl, best.formId || '');
+              if (capture.success && capture.data) {
+                extractedFields = capture.data.extractedFields || [];
+                setDiscoveredFieldCount(extractedFields.length);
+                // Persist captured form styling (merge with existing)
+                if (capture.data.styles) {
+                  const formStyleFromCapture = formElementStylesToConfig(capture.data.styles);
+                  await updateDemo.mutateAsync({
+                    id: demo.id,
+                    updates: { formStyle: formStyleFromCapture } as any,
+                  });
+                }
+                updateTaskStatus(
+                  'capture-form',
+                  'complete',
+                  `Captured ${extractedFields.length} field${extractedFields.length === 1 ? '' : 's'}`,
+                );
+              } else {
+                updateTaskStatus('capture-form', 'skipped', 'Form found but capture failed — you can retry from Site Appearance');
+              }
+            } catch (e) {
+              updateTaskStatus('capture-form', 'skipped', 'Capture skipped — retry from Site Appearance');
+            }
+          } else {
+            updateTaskStatus('discover-form', 'skipped', 'No suitable form found on site');
+            updateTaskStatus('capture-form', 'skipped', 'Skipped — no form to capture');
+          }
+        } catch (e) {
+          updateTaskStatus('discover-form', 'skipped', 'Discovery skipped — you can run it later');
+          updateTaskStatus('capture-form', 'skipped', 'Skipped');
+        }
+
+        // Generate workflow steps from captured fields
+        try {
+          updateTaskStatus('generate-steps', 'in_progress');
+          if (extractedFields.length > 0) {
+            const formFields: FormField[] = extractedFields.map((f, i) => ({
+              id: `f-${Date.now()}-${i}`,
+              type: (f.canonicalType as FormFieldType) || 'text',
+              label: f.label || f.name,
+              name: f.name || `field_${i}`,
+              placeholder: f.placeholder || undefined,
+              required: f.required,
+              order: i + 1,
+            }));
+            capturedFormSteps = [{
+              id: `step-${Date.now()}`,
+              title: 'Application',
+              description: 'Auto-generated from captured form',
+              order: 1,
+              fields: formFields,
+            }];
+            await updateDemo.mutateAsync({
+              id: demo.id,
+              updates: { formSteps: capturedFormSteps } as any,
+            });
+            updateTaskStatus('generate-steps', 'complete', `Generated 1 step with ${formFields.length} field${formFields.length === 1 ? '' : 's'}`);
+          } else {
+            updateTaskStatus('generate-steps', 'skipped', 'No fields to map — using default workflow');
+          }
+        } catch (e) {
+          updateTaskStatus('generate-steps', 'skipped', 'Skipped — using default workflow');
+        }
       }
 
       // Link selected use cases
@@ -328,16 +422,18 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
       let shouldShowFillFail = false;
       if (selectedUseCases.length > 0) {
         updateTaskStatus('use-cases', 'in_progress');
+        setTaskDetail('use-cases', `Linking ${selectedUseCases.length} use case${selectedUseCases.length === 1 ? '' : 's'}…`);
         for (let i = 0; i < selectedUseCases.length; i++) {
           await addUseCaseLink.mutateAsync({ demoId: demo.id, useCaseId: selectedUseCases[i], displayOrder: i, showOnLandingPage: !hiddenFromLanding.has(selectedUseCases[i]) });
           const uc = globalUseCases.find(u => u.id === selectedUseCases[i]);
           if (uc?.showFillPass) shouldShowFillPass = true;
           if (uc?.showFillFail) shouldShowFillFail = true;
         }
-        updateTaskStatus('use-cases', 'complete');
+        updateTaskStatus('use-cases', 'complete', `${selectedUseCases.length} linked`);
       }
 
       updateTaskStatus('finalize', 'in_progress');
+      setTaskDetail('finalize', 'Loading Pass / Fail test profiles…');
       // Always populate test data from global profiles so Fill Pass/Fail works
       // Fetch profiles directly if the cached query hasn't resolved yet
       let profiles = globalProfiles;
@@ -364,7 +460,7 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
           },
         },
       });
-      updateTaskStatus('finalize', 'complete');
+      updateTaskStatus('finalize', 'complete', 'Demo ready to preview');
 
       // If mirroring was enabled and we have captures, go to review step
       // Otherwise, finish immediately
