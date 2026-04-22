@@ -254,6 +254,44 @@ export interface RetailAddress {
   isDefault: boolean;
 }
 
+// ── Hotel-specific types ──
+
+export interface HotelRoom {
+  id: string;
+  name: string;          // e.g. "Deluxe King Room"
+  category: 'standard' | 'deluxe' | 'suite' | 'executive' | 'presidential';
+  image: string;         // emoji or asset
+  pricePerNight: number;
+  bedConfig: string;     // e.g. "1 King Bed", "2 Queen Beds"
+  maxGuests: number;
+  sizeSqft: number;
+  view?: string;         // e.g. "City View", "Ocean View"
+  amenities: string[];
+  badge?: string;        // e.g. "Most Booked", "Best Value"
+  rating: number;
+  reviewCount: number;
+}
+
+export interface HotelReservation {
+  confirmationId: string;
+  room: { name: string; image: string; category: string };
+  hotelName: string;
+  checkInDate: string;
+  checkOutDate: string;
+  nights: number;
+  guests: number;
+  status: 'upcoming' | 'checked_in' | 'completed' | 'cancelled';
+  totalCost: number;
+  addOns?: string[];
+}
+
+export interface HotelPaymentMethod {
+  type: 'visa' | 'mastercard' | 'amex';
+  lastFour: string;
+  expiryDate: string;
+  isDefault: boolean;
+}
+
 export interface PortalConfig {
   // Branding (shared)
   bankName?: string;       // also used as generic "portal name"
@@ -261,6 +299,7 @@ export interface PortalConfig {
   retailStoreName?: string;
   rentalCarCompanyName?: string;
   insuranceCompanyName?: string;
+  hotelName?: string;
   accentColor?: string;
   userName?: string;
   userEmail?: string;
@@ -311,6 +350,15 @@ export interface PortalConfig {
   insuranceAgentName?: string;
   insuranceAgentPhone?: string;
   insurancePolicyHolderSince?: string;
+
+  // Hotel dashboard content
+  hotelRooms?: HotelRoom[];
+  hotelReservations?: HotelReservation[];
+  hotelPaymentMethods?: HotelPaymentMethod[];
+  hotelLocations?: string[];           // city / property options
+  hotelLoyaltyNumber?: string;
+  hotelLoyaltyTier?: string;
+  hotelTagline?: string;               // promo strip text
 
   // Settings — which actions trigger IDV
   verificationTriggers?: PortalVerificationTrigger[];
@@ -601,5 +649,56 @@ export const DEFAULT_INSURANCE_CONFIG: PortalConfig = {
     { id: 'ins-payment', action: 'update your payment method', label: 'Update Payment', enabled: true, category: 'settings_change', condition: 'always', successMessage: 'Payment method updated.', postVerificationBehavior: 'return_with_toast' },
     { id: 'ins-policy-change', action: 'modify a policy', label: 'Modify Policy', enabled: true, category: 'settings_change', condition: 'always', successMessage: 'Policy modification submitted.', postVerificationBehavior: 'return_with_toast' },
     { id: 'ins-claim', action: 'file an insurance claim', label: 'File Claim', enabled: true, category: 'transaction', condition: 'threshold', thresholdAmount: 1000, thresholdCurrency: 'USD', successMessage: 'Claim submitted successfully!', postVerificationBehavior: 'show_completion', completionTitle: 'Claim Submitted', completionActions: [{ label: 'File Another Claim', action: 'repeat', variant: 'secondary' }, { label: 'View Claims', action: 'return_to_previous', variant: 'primary' }] },
+  ],
+};
+
+export const DEFAULT_HOTEL_CONFIG: PortalConfig = {
+  hotelName: 'Demo Hotels',
+  accentColor: '#0E7490',
+  userName: 'Jane Cooper',
+  userEmail: 'jane.cooper@email.com',
+  userPhone: '(555) 867-5309',
+  hotelLoyaltyNumber: 'HTL-9284751',
+  hotelLoyaltyTier: 'Platinum',
+  hotelTagline: '🏨 Members earn 2× points this weekend · Free cancellation on most rooms',
+
+  hotelLocations: [
+    'New York, NY — Times Square',
+    'San Francisco, CA — Union Square',
+    'Chicago, IL — Magnificent Mile',
+    'Miami, FL — South Beach',
+    'Las Vegas, NV — The Strip',
+    'Los Angeles, CA — Beverly Hills',
+  ],
+
+  hotelRooms: [
+    { id: 'h1', name: 'Standard Queen Room', category: 'standard', image: '🛏️', pricePerNight: 159, bedConfig: '1 Queen Bed', maxGuests: 2, sizeSqft: 320, view: 'City View', amenities: ['Free Wi-Fi', 'Smart TV', 'Coffee Maker'], rating: 4.3, reviewCount: 1284, badge: 'Best Value' },
+    { id: 'h2', name: 'Deluxe King Room', category: 'deluxe', image: '🛌', pricePerNight: 219, bedConfig: '1 King Bed', maxGuests: 2, sizeSqft: 380, view: 'City View', amenities: ['Free Wi-Fi', '55" Smart TV', 'Mini Bar', 'Premium Bedding'], rating: 4.6, reviewCount: 2103, badge: 'Most Booked' },
+    { id: 'h3', name: 'Deluxe Double Queen', category: 'deluxe', image: '🛏️', pricePerNight: 249, bedConfig: '2 Queen Beds', maxGuests: 4, sizeSqft: 420, view: 'City View', amenities: ['Free Wi-Fi', '55" Smart TV', 'Mini Bar', 'Workspace'], rating: 4.5, reviewCount: 1876 },
+    { id: 'h4', name: 'Executive Suite', category: 'executive', image: '🏨', pricePerNight: 389, bedConfig: '1 King Bed + Sofa', maxGuests: 3, sizeSqft: 620, view: 'Skyline View', amenities: ['Lounge Access', 'Free Wi-Fi', 'Espresso Machine', 'Marble Bath', 'Workspace'], rating: 4.8, reviewCount: 942, badge: 'Top Rated' },
+    { id: 'h5', name: 'Premier Ocean Suite', category: 'suite', image: '🌊', pricePerNight: 549, bedConfig: '1 King Bed + Living Area', maxGuests: 4, sizeSqft: 780, view: 'Ocean View', amenities: ['Private Balcony', 'Lounge Access', 'Soaking Tub', 'Mini Kitchen'], rating: 4.9, reviewCount: 612, badge: 'Premium' },
+    { id: 'h6', name: 'Presidential Suite', category: 'presidential', image: '👑', pricePerNight: 1299, bedConfig: '2 Bedrooms · King + Queen', maxGuests: 6, sizeSqft: 1850, view: 'Panoramic View', amenities: ['Butler Service', 'Private Dining', 'Grand Piano', 'Steam Shower', 'Wet Bar'], rating: 5.0, reviewCount: 187, badge: 'Signature' },
+  ],
+
+  hotelReservations: [
+    { confirmationId: 'HTL-48291', room: { name: 'Deluxe King Room', image: '🛌', category: 'deluxe' }, hotelName: 'Demo Hotels — Times Square', checkInDate: 'Apr 15, 3:00 PM', checkOutDate: 'Apr 19, 11:00 AM', nights: 4, guests: 2, status: 'upcoming', totalCost: 947.50, addOns: ['Breakfast Package', 'Late Checkout'] },
+    { confirmationId: 'HTL-48102', room: { name: 'Premier Ocean Suite', image: '🌊', category: 'suite' }, hotelName: 'Demo Hotels — South Beach', checkInDate: 'Mar 20, 4:00 PM', checkOutDate: 'Mar 23, 11:00 AM', nights: 3, guests: 2, status: 'completed', totalCost: 1782.50, addOns: ['Spa Credit', 'Airport Transfer'] },
+    { confirmationId: 'HTL-47998', room: { name: 'Executive Suite', image: '🏨', category: 'executive' }, hotelName: 'Demo Hotels — Magnificent Mile', checkInDate: 'Feb 5, 3:00 PM', checkOutDate: 'Feb 8, 11:00 AM', nights: 3, guests: 2, status: 'completed', totalCost: 1262.20 },
+    { confirmationId: 'HTL-47654', room: { name: 'Standard Queen Room', image: '🛏️', category: 'standard' }, hotelName: 'Demo Hotels — Union Square', checkInDate: 'Jan 12, 3:00 PM', checkOutDate: 'Jan 14, 11:00 AM', nights: 2, guests: 1, status: 'completed', totalCost: 343.20 },
+  ],
+
+  hotelPaymentMethods: [
+    { type: 'visa', lastFour: '4829', expiryDate: '09/27', isDefault: true },
+    { type: 'amex', lastFour: '7163', expiryDate: '03/26', isDefault: false },
+  ],
+
+  verificationTriggers: [
+    { id: 'hotel-name', action: 'change your name', label: 'Change Name', enabled: true, category: 'settings_change', condition: 'always', successMessage: 'Your name has been updated.', postVerificationBehavior: 'return_with_toast' },
+    { id: 'hotel-email', action: 'change your email address', label: 'Change Email', enabled: true, category: 'settings_change', condition: 'always', successMessage: 'Your email has been updated.', postVerificationBehavior: 'return_with_toast' },
+    { id: 'hotel-phone', action: 'change your phone number', label: 'Change Phone', enabled: true, category: 'settings_change', condition: 'always', successMessage: 'Your phone number has been updated.', postVerificationBehavior: 'return_with_toast' },
+    { id: 'hotel-password', action: 'change your password', label: 'Change Password', enabled: true, category: 'settings_change', condition: 'always', successMessage: 'Your password has been changed.', postVerificationBehavior: 'return_with_toast' },
+    { id: 'hotel-payment', action: 'update your payment method', label: 'Update Payment', enabled: true, category: 'settings_change', condition: 'always', successMessage: 'Payment method updated.', postVerificationBehavior: 'return_with_toast' },
+    { id: 'hotel-loyalty', action: 'update your loyalty profile', label: 'Update Loyalty Profile', enabled: true, category: 'settings_change', condition: 'always', successMessage: 'Loyalty profile updated.', postVerificationBehavior: 'return_with_toast' },
+    { id: 'hotel-booking', action: 'complete a hotel booking', label: 'Complete Booking', enabled: true, category: 'transaction', condition: 'threshold', thresholdAmount: 250, thresholdCurrency: 'USD', successMessage: 'Reservation confirmed!', postVerificationBehavior: 'show_completion', completionTitle: 'Reservation Confirmed', completionActions: [{ label: 'Browse More Rooms', action: 'return_to_dashboard', variant: 'secondary' }, { label: 'View Reservations', action: 'return_to_previous', variant: 'primary' }] },
   ],
 };
