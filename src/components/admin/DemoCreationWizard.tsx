@@ -1,6 +1,9 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Check, Globe, ArrowRight, ArrowLeft, Loader2, Monitor, Eye, EyeOff, Image, Code } from "lucide-react";
+import {
+  Check, Globe, ArrowRight, ArrowLeft, Loader2, Monitor, Eye, EyeOff, Image, Code,
+  Sparkles, Database, Palette, FileSearch, Workflow, Rocket, AlertTriangle,
+} from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,8 +18,8 @@ import { useCreateDemo, useUpdateDemo } from "@/hooks/useDemos";
 import { useGlobalUseCases, useAddDemoUseCaseLink } from "@/hooks/useUseCases";
 import { useIndustries } from "@/hooks/useIndustries";
 import { useEnabledPortalTypes } from "@/hooks/usePortalTypes";
-import { IndustryTemplate, DemoEnvironment } from "@/types/demo";
-import { scrapingApi, ScrapedBranding } from "@/lib/api/scraping";
+import { IndustryTemplate, DemoEnvironment, FormStep, FormField, FormFieldType } from "@/types/demo";
+import { scrapingApi, ScrapedBranding, ExtractedField } from "@/lib/api/scraping";
 import { useTestProfiles } from "@/hooks/useTestProfiles";
 import { formElementStylesToConfig, generatePreviewDocument, generateFormHtml } from "@/lib/formStyleUtils";
 import { DEFAULT_FORM_STYLE } from "@/types/formStyle";
@@ -31,11 +34,32 @@ interface DemoCreationWizardProps {
 
 type WizardStep = 'details' | 'industry' | 'portal' | 'use-cases' | 'processing' | 'review';
 
+type TaskPhase = 'foundation' | 'branding' | 'forms' | 'workflow' | 'finalize';
+
 interface ProcessingTask {
   id: string;
   label: string;
-  status: 'pending' | 'in_progress' | 'complete' | 'error';
+  phase: TaskPhase;
+  status: 'pending' | 'in_progress' | 'complete' | 'error' | 'skipped';
+  detail?: string;
 }
+
+const PHASE_META: Record<TaskPhase, { title: string; icon: React.ComponentType<{ className?: string }>; tint: string }> = {
+  foundation: { title: 'Foundation', icon: Database, tint: 'text-blue-500' },
+  branding: { title: 'Branding & Site Mirror', icon: Palette, tint: 'text-purple-500' },
+  forms: { title: 'Form Discovery', icon: FileSearch, tint: 'text-amber-500' },
+  workflow: { title: 'Workflow', icon: Workflow, tint: 'text-emerald-500' },
+  finalize: { title: 'Finishing Touches', icon: Rocket, tint: 'text-pink-500' },
+};
+
+const FUN_MESSAGES = [
+  'Mixing pixels and policies…',
+  'Teaching forms to behave…',
+  'Borrowing your customer\'s style…',
+  'Wiring up the workflow…',
+  'Polishing the demo to a shine…',
+  'Aligning the verification stars…',
+];
 
 // Helper to generate screenshot-based header/footer HTML
 function getScreenshotSrc(screenshot: string): string {
@@ -82,6 +106,11 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
   const [processingTasks, setProcessingTasks] = useState<ProcessingTask[]>([]);
   const [createdDemoId, setCreatedDemoId] = useState<string | null>(null);
   const [processingError, setProcessingError] = useState<string | null>(null);
+  const [processingStartedAt, setProcessingStartedAt] = useState<number | null>(null);
+  const [elapsedMs, setElapsedMs] = useState(0);
+  const [funMessageIndex, setFunMessageIndex] = useState(0);
+  const [discoveredFormUrl, setDiscoveredFormUrl] = useState<string | null>(null);
+  const [discoveredFieldCount, setDiscoveredFieldCount] = useState<number | null>(null);
 
   // Review step state - stores both capture results for comparison
   const [htmlPreviewDoc, setHtmlPreviewDoc] = useState<string>('');
@@ -124,6 +153,24 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
     }
   }, [hasPortal, selectedIndustryId, useCasesInitialized, globalUseCases]);
 
+  // Elapsed-time ticker while processing
+  useEffect(() => {
+    if (step !== 'processing' || !processingStartedAt) return;
+    const id = setInterval(() => {
+      setElapsedMs(Date.now() - processingStartedAt);
+    }, 250);
+    return () => clearInterval(id);
+  }, [step, processingStartedAt]);
+
+  // Rotate fun status messages
+  useEffect(() => {
+    if (step !== 'processing') return;
+    const id = setInterval(() => {
+      setFunMessageIndex(i => (i + 1) % FUN_MESSAGES.length);
+    }, 2400);
+    return () => clearInterval(id);
+  }, [step]);
+
   const resetForm = () => {
     setStep('details');
     setCustomerName("");
@@ -145,12 +192,21 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
     setScreenshotCaptureData(null);
     setHtmlAvailable(false);
     setScreenshotAvailable(false);
+    setProcessingStartedAt(null);
+    setElapsedMs(0);
+    setFunMessageIndex(0);
+    setDiscoveredFormUrl(null);
+    setDiscoveredFieldCount(null);
   };
 
   const toggleUseCase = (id: string) => setSelectedUseCases(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
 
-  const updateTaskStatus = (taskId: string, status: ProcessingTask['status']) => {
-    setProcessingTasks(prev => prev.map(t => t.id === taskId ? { ...t, status } : t));
+  const updateTaskStatus = (taskId: string, status: ProcessingTask['status'], detail?: string) => {
+    setProcessingTasks(prev => prev.map(t => t.id === taskId ? { ...t, status, detail: detail ?? t.detail } : t));
+  };
+
+  const setTaskDetail = (taskId: string, detail: string) => {
+    setProcessingTasks(prev => prev.map(t => t.id === taskId ? { ...t, detail } : t));
   };
 
   const selectedIndustry = industries.find(i => i.id === selectedIndustryId);
@@ -165,25 +221,33 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
     if (!customerName.trim() || !selectedIndustryId) return;
 
     const tasks: ProcessingTask[] = [
-      { id: 'create', label: 'Creating demo environment', status: 'pending' },
+      { id: 'create', label: 'Creating demo environment', phase: 'foundation', status: 'pending' },
     ];
     if (enableMirroring && siteUrl) {
-      tasks.push({ id: 'scrape-html', label: 'Capturing HTML header & footer', status: 'pending' });
-      tasks.push({ id: 'scrape-screenshot', label: 'Capturing screenshot', status: 'pending' });
-      tasks.push({ id: 'apply', label: 'Applying branding to demo', status: 'pending' });
+      tasks.push({ id: 'scrape-html', label: 'Extracting HTML header & footer', phase: 'branding', status: 'pending' });
+      tasks.push({ id: 'scrape-screenshot', label: 'Capturing pixel-perfect screenshot', phase: 'branding', status: 'pending' });
+      tasks.push({ id: 'apply', label: 'Applying brand colors, logo & typography', phase: 'branding', status: 'pending' });
+      tasks.push({ id: 'discover-form', label: 'Crawling site for application or contact form', phase: 'forms', status: 'pending' });
+      tasks.push({ id: 'capture-form', label: 'Capturing form fields, labels & styling', phase: 'forms', status: 'pending' });
+      tasks.push({ id: 'generate-steps', label: 'Generating matching workflow steps', phase: 'forms', status: 'pending' });
     }
     if (selectedUseCases.length > 0) {
-      tasks.push({ id: 'use-cases', label: 'Linking use cases', status: 'pending' });
+      tasks.push({ id: 'use-cases', label: 'Linking use cases to demo', phase: 'workflow', status: 'pending' });
     }
-    tasks.push({ id: 'finalize', label: 'Finalizing configuration', status: 'pending' });
+    tasks.push({ id: 'finalize', label: 'Loading test profiles & finalizing', phase: 'finalize', status: 'pending' });
 
     setProcessingTasks(tasks);
     setStep('processing');
     setProcessingError(null);
+    setProcessingStartedAt(Date.now());
+    setElapsedMs(0);
+    setDiscoveredFormUrl(null);
+    setDiscoveredFieldCount(null);
 
     try {
       // Step 1: Create the demo
       updateTaskStatus('create', 'in_progress');
+      setTaskDetail('create', `Provisioning environment for ${customerName.trim()}…`);
       const template: IndustryTemplate = 'custom';
       const demo = await createDemo.mutateAsync({ customerName: customerName.trim(), template });
       setCreatedDemoId(demo.id);
@@ -195,7 +259,7 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
           portalType: hasPortal ? selectedPortalType : 'none',
         } as any,
       });
-      updateTaskStatus('create', 'complete');
+      updateTaskStatus('create', 'complete', `Demo /${demo.slug} ready`);
 
       // Step 2: Site mirroring - capture BOTH methods
       let scrapedData: ScrapedBranding | null = null;
@@ -206,6 +270,7 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
       if (enableMirroring && siteUrl) {
         // Fetch site branding (returns HTML + screenshots)
         updateTaskStatus('scrape-html', 'in_progress');
+        setTaskDetail('scrape-html', `Fetching ${new URL(siteUrl).hostname}…`);
         const response = await scrapingApi.scrapeSiteBranding(siteUrl);
         if (response.success && response.data) {
           scrapedData = response.data;
@@ -214,9 +279,11 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
             footerHtml: scrapedData.footerHtml || '',
             css: scrapedData.cssContent || '',
           };
-          updateTaskStatus('scrape-html', 'complete');
+          const headerKb = Math.round((scrapedData.headerHtml?.length || 0) / 1024);
+          const cssKb = Math.round((scrapedData.cssContent?.length || 0) / 1024);
+          updateTaskStatus('scrape-html', 'complete', `Header ${headerKb}KB · CSS ${cssKb}KB`);
         } else {
-          updateTaskStatus('scrape-html', 'error');
+          updateTaskStatus('scrape-html', 'error', response.error || 'Could not fetch site HTML');
         }
 
         // Generate screenshot-based capture
@@ -234,9 +301,9 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
               }
             }),
           };
-          updateTaskStatus('scrape-screenshot', 'complete');
+          updateTaskStatus('scrape-screenshot', 'complete', 'Desktop snapshot saved');
         } else {
-          updateTaskStatus('scrape-screenshot', 'error');
+          updateTaskStatus('scrape-screenshot', 'error', 'No screenshot returned');
         }
 
         // Apply branding (colors, logo, formStyle, BOTH captures)
@@ -269,7 +336,7 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
         }
 
         await updateDemo.mutateAsync({ id: demo.id, updates: brandingUpdates as any });
-        updateTaskStatus('apply', 'complete');
+        updateTaskStatus('apply', 'complete', `Brand color ${brandingUpdates.buttonColor}`);
 
         // Build preview documents for review step
         const appliedButtonColor = (scrapedData?.colors?.buttonColor || '#6366f1');
@@ -283,6 +350,89 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
           setScreenshotPreviewDoc(buildPreviewHtml(screenshotCapture.headerHtml, screenshotCapture.footerHtml, '', appliedButtonColor));
           setScreenshotAvailable(true);
         }
+
+        // ===== Form Discovery & Capture (best-effort, non-blocking) =====
+        let extractedFields: ExtractedField[] = [];
+        let capturedFormSteps: FormStep[] | null = null;
+        try {
+          updateTaskStatus('discover-form', 'in_progress');
+          setTaskDetail('discover-form', 'Scanning /apply, /contact, /signup…');
+          const discovery = await scrapingApi.discoverForms(siteUrl, { formType: 'any', maxPages: 6 });
+          if (discovery.success && discovery.data?.best) {
+            const best = discovery.data.best;
+            setDiscoveredFormUrl(best.pageUrl);
+            updateTaskStatus(
+              'discover-form',
+              'complete',
+              `Found ${best.detectedKind} form on ${new URL(best.pageUrl).pathname || '/'} (${best.fieldCount} fields)`,
+            );
+
+            try {
+              updateTaskStatus('capture-form', 'in_progress');
+              setTaskDetail('capture-form', 'Extracting HTML, CSS & field metadata…');
+              const capture = await scrapingApi.captureFormById(best.pageUrl, best.formId || '');
+              if (capture.success && capture.data) {
+                extractedFields = capture.data.extractedFields || [];
+                setDiscoveredFieldCount(extractedFields.length);
+                // Persist captured form styling (merge with existing)
+                if (capture.data.styles) {
+                  const formStyleFromCapture = formElementStylesToConfig(capture.data.styles);
+                  await updateDemo.mutateAsync({
+                    id: demo.id,
+                    updates: { formStyle: formStyleFromCapture } as any,
+                  });
+                }
+                updateTaskStatus(
+                  'capture-form',
+                  'complete',
+                  `Captured ${extractedFields.length} field${extractedFields.length === 1 ? '' : 's'}`,
+                );
+              } else {
+                updateTaskStatus('capture-form', 'skipped', 'Form found but capture failed — you can retry from Site Appearance');
+              }
+            } catch (e) {
+              updateTaskStatus('capture-form', 'skipped', 'Capture skipped — retry from Site Appearance');
+            }
+          } else {
+            updateTaskStatus('discover-form', 'skipped', 'No suitable form found on site');
+            updateTaskStatus('capture-form', 'skipped', 'Skipped — no form to capture');
+          }
+        } catch (e) {
+          updateTaskStatus('discover-form', 'skipped', 'Discovery skipped — you can run it later');
+          updateTaskStatus('capture-form', 'skipped', 'Skipped');
+        }
+
+        // Generate workflow steps from captured fields
+        try {
+          updateTaskStatus('generate-steps', 'in_progress');
+          if (extractedFields.length > 0) {
+            const formFields: FormField[] = extractedFields.map((f, i) => ({
+              id: `f-${Date.now()}-${i}`,
+              type: (f.canonicalType as FormFieldType) || 'text',
+              label: f.label || f.name,
+              name: f.name || `field_${i}`,
+              placeholder: f.placeholder || undefined,
+              required: f.required,
+              order: i + 1,
+            }));
+            capturedFormSteps = [{
+              id: `step-${Date.now()}`,
+              title: 'Application',
+              description: 'Auto-generated from captured form',
+              order: 1,
+              fields: formFields,
+            }];
+            await updateDemo.mutateAsync({
+              id: demo.id,
+              updates: { formSteps: capturedFormSteps } as any,
+            });
+            updateTaskStatus('generate-steps', 'complete', `Generated 1 step with ${formFields.length} field${formFields.length === 1 ? '' : 's'}`);
+          } else {
+            updateTaskStatus('generate-steps', 'skipped', 'No fields to map — using default workflow');
+          }
+        } catch (e) {
+          updateTaskStatus('generate-steps', 'skipped', 'Skipped — using default workflow');
+        }
       }
 
       // Link selected use cases
@@ -290,16 +440,18 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
       let shouldShowFillFail = false;
       if (selectedUseCases.length > 0) {
         updateTaskStatus('use-cases', 'in_progress');
+        setTaskDetail('use-cases', `Linking ${selectedUseCases.length} use case${selectedUseCases.length === 1 ? '' : 's'}…`);
         for (let i = 0; i < selectedUseCases.length; i++) {
           await addUseCaseLink.mutateAsync({ demoId: demo.id, useCaseId: selectedUseCases[i], displayOrder: i, showOnLandingPage: !hiddenFromLanding.has(selectedUseCases[i]) });
           const uc = globalUseCases.find(u => u.id === selectedUseCases[i]);
           if (uc?.showFillPass) shouldShowFillPass = true;
           if (uc?.showFillFail) shouldShowFillFail = true;
         }
-        updateTaskStatus('use-cases', 'complete');
+        updateTaskStatus('use-cases', 'complete', `${selectedUseCases.length} linked`);
       }
 
       updateTaskStatus('finalize', 'in_progress');
+      setTaskDetail('finalize', 'Loading Pass / Fail test profiles…');
       // Always populate test data from global profiles so Fill Pass/Fail works
       // Fetch profiles directly if the cached query hasn't resolved yet
       let profiles = globalProfiles;
@@ -326,7 +478,7 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
           },
         },
       });
-      updateTaskStatus('finalize', 'complete');
+      updateTaskStatus('finalize', 'complete', 'Demo ready to preview');
 
       // If mirroring was enabled and we have captures, go to review step
       // Otherwise, finish immediately
@@ -714,44 +866,157 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
         )}
 
         {/* Processing Screen */}
-        {step === 'processing' && (
-          <div className="py-6 space-y-6">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Progress</span>
-                <span className="font-medium">{progressPercent}%</span>
+        {step === 'processing' && (() => {
+          const activeTask = processingTasks.find(t => t.status === 'in_progress');
+          const lastCompleted = [...processingTasks].reverse().find(t => t.status === 'complete' || t.status === 'skipped' || t.status === 'error');
+          const headlineTask = activeTask || lastCompleted;
+          const ActiveIcon = headlineTask ? PHASE_META[headlineTask.phase].icon : Sparkles;
+          const activeTint = headlineTask ? PHASE_META[headlineTask.phase].tint : 'text-primary';
+          const elapsedSec = Math.floor(elapsedMs / 1000);
+          const elapsedLabel = elapsedSec < 60 ? `${elapsedSec}s` : `${Math.floor(elapsedSec / 60)}m ${elapsedSec % 60}s`;
+
+          // Group tasks by phase, only showing phases that have tasks
+          const phaseOrder: TaskPhase[] = ['foundation', 'branding', 'forms', 'workflow', 'finalize'];
+          const tasksByPhase = phaseOrder
+            .map(phase => ({ phase, tasks: processingTasks.filter(t => t.phase === phase) }))
+            .filter(g => g.tasks.length > 0);
+
+          return (
+            <div className="py-4 space-y-5">
+              {/* Hero status: animated icon + current task + elapsed */}
+              <div className="relative overflow-hidden rounded-xl border border-border bg-gradient-to-br from-primary/5 via-background to-muted/30 p-5">
+                <div className="absolute -top-12 -right-12 w-40 h-40 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
+                <div className="relative flex items-start gap-4">
+                  <div className={cn(
+                    "w-14 h-14 rounded-xl flex items-center justify-center bg-background border border-border shadow-sm shrink-0",
+                    activeTask && "animate-pulse",
+                  )}>
+                    <ActiveIcon className={cn("w-7 h-7", activeTint)} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                        {headlineTask ? PHASE_META[headlineTask.phase].title : 'Starting'}
+                      </span>
+                      <Badge variant="outline" className="text-[10px]">{elapsedLabel}</Badge>
+                    </div>
+                    <h3 className="text-base font-semibold mt-0.5 truncate">
+                      {activeTask ? activeTask.label : (processingError ? 'Stopped' : 'All done!')}
+                    </h3>
+                    <p className="text-sm text-muted-foreground mt-0.5 truncate">
+                      {activeTask?.detail || (activeTask ? FUN_MESSAGES[funMessageIndex] : 'Wrapping up your demo…')}
+                    </p>
+                  </div>
+                </div>
+                {/* Progress bar */}
+                <div className="mt-4 space-y-1">
+                  <Progress value={progressPercent} className="h-2" />
+                  <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                    <span>{processingTasks.filter(t => t.status === 'complete' || t.status === 'skipped').length} of {processingTasks.length} complete</span>
+                    <span className="font-medium">{progressPercent}%</span>
+                  </div>
+                </div>
               </div>
-              <Progress value={progressPercent} className="h-3" />
-            </div>
-            <div className="space-y-3">
-              {processingTasks.map((task) => (
-                <div
-                  key={task.id}
-                  className={cn(
-                    "flex items-center gap-3 p-3 rounded-lg transition-all",
-                    task.status === 'in_progress' && "bg-primary/5",
-                    task.status === 'complete' && "opacity-60"
-                  )}
-                >
-                  {task.status === 'pending' && <div className="w-5 h-5 rounded-full border-2 border-muted-foreground/30" />}
-                  {task.status === 'in_progress' && <Loader2 className="w-5 h-5 animate-spin text-primary" />}
-                  {task.status === 'complete' && <Check className="w-5 h-5 text-green-500" />}
-                  {task.status === 'error' && (
-                    <div className="w-5 h-5 rounded-full bg-destructive/20 flex items-center justify-center">
-                      <span className="text-destructive text-xs">!</span>
+
+              {/* Discovery highlights */}
+              {(discoveredFormUrl || discoveredFieldCount !== null) && (
+                <div className="rounded-lg border border-border bg-muted/30 p-3 text-xs space-y-1">
+                  {discoveredFormUrl && (
+                    <div className="flex items-center gap-2">
+                      <FileSearch className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                      <span className="text-muted-foreground">Form found at</span>
+                      <code className="font-mono text-foreground truncate">{discoveredFormUrl}</code>
                     </div>
                   )}
-                  <span className={cn("text-sm", task.status === 'in_progress' && "font-medium")}>{task.label}</span>
+                  {discoveredFieldCount !== null && discoveredFieldCount > 0 && (
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="w-3.5 h-3.5 text-primary shrink-0" />
+                      <span className="text-muted-foreground">{discoveredFieldCount} field{discoveredFieldCount === 1 ? '' : 's'} extracted and mapped to canonical types</span>
+                    </div>
+                  )}
                 </div>
-              ))}
-            </div>
-            {processingError && (
-              <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-sm text-destructive">
-                {processingError}
+              )}
+
+              {/* Phased task list */}
+              <div className="space-y-3">
+                {tasksByPhase.map(({ phase, tasks }) => {
+                  const PhaseIcon = PHASE_META[phase].icon;
+                  const phaseDone = tasks.every(t => t.status === 'complete' || t.status === 'skipped' || t.status === 'error');
+                  const phaseActive = tasks.some(t => t.status === 'in_progress');
+                  return (
+                    <div key={phase} className="rounded-lg border border-border overflow-hidden">
+                      <div className={cn(
+                        "flex items-center gap-2 px-3 py-2 border-b border-border bg-muted/20",
+                        phaseActive && "bg-primary/5",
+                      )}>
+                        <PhaseIcon className={cn("w-4 h-4", PHASE_META[phase].tint)} />
+                        <span className="text-xs font-semibold uppercase tracking-wider">{PHASE_META[phase].title}</span>
+                        {phaseDone && <Check className="w-3.5 h-3.5 text-emerald-500 ml-auto" />}
+                        {phaseActive && <Loader2 className="w-3.5 h-3.5 animate-spin text-primary ml-auto" />}
+                      </div>
+                      <div className="divide-y divide-border">
+                        {tasks.map(task => (
+                          <div
+                            key={task.id}
+                            className={cn(
+                              "flex items-start gap-3 px-3 py-2.5 transition-all",
+                              task.status === 'in_progress' && "bg-primary/5",
+                            )}
+                          >
+                            <div className="mt-0.5 shrink-0">
+                              {task.status === 'pending' && <div className="w-4 h-4 rounded-full border-2 border-muted-foreground/30" />}
+                              {task.status === 'in_progress' && <Loader2 className="w-4 h-4 animate-spin text-primary" />}
+                              {task.status === 'complete' && (
+                                <div className="w-4 h-4 rounded-full bg-emerald-500/15 flex items-center justify-center">
+                                  <Check className="w-3 h-3 text-emerald-600" />
+                                </div>
+                              )}
+                              {task.status === 'skipped' && (
+                                <div className="w-4 h-4 rounded-full bg-muted flex items-center justify-center">
+                                  <span className="text-muted-foreground text-[10px] font-bold">–</span>
+                                </div>
+                              )}
+                              {task.status === 'error' && (
+                                <div className="w-4 h-4 rounded-full bg-destructive/20 flex items-center justify-center">
+                                  <AlertTriangle className="w-2.5 h-2.5 text-destructive" />
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className={cn(
+                                "text-sm leading-tight",
+                                task.status === 'in_progress' && "font-medium",
+                                task.status === 'complete' && "text-muted-foreground",
+                                task.status === 'skipped' && "text-muted-foreground line-through decoration-muted-foreground/30",
+                              )}>
+                                {task.label}
+                              </p>
+                              {task.detail && (
+                                <p className={cn(
+                                  "text-xs mt-0.5 truncate",
+                                  task.status === 'error' ? "text-destructive" : "text-muted-foreground",
+                                )}>
+                                  {task.detail}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-            )}
-          </div>
-        )}
+
+              {processingError && (
+                <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-sm text-destructive flex items-start gap-2">
+                  <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+                  <span>{processingError}</span>
+                </div>
+              )}
+            </div>
+          );
+        })()}
 
         {/* Review Step - Compare captures side by side */}
         {step === 'review' && (
