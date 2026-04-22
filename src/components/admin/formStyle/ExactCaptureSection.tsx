@@ -191,9 +191,13 @@ export function ExactCaptureSection({
   formStyle,
   onUpdateStyle,
   isActive,
+  onGenerateFormSteps,
 }: ExactCaptureSectionProps) {
   const { toast } = useToast();
   const [isCapturing, setIsCapturing] = useState(false);
+  const [isDiscovering, setIsDiscovering] = useState(false);
+  const [isRefining, setIsRefining] = useState(false);
+  const [refineScore, setRefineScore] = useState<number | null>(null);
   const [captureFormId, setCaptureFormId] = useState(formStyle.capturedFormId || '');
   const [captureUrl, setCaptureUrl] = useState(formStyle.capturedSourceUrl || formStyle.formStyleUrl || '');
   const [captureTrigger, setCaptureTrigger] = useState<string>('');
@@ -202,6 +206,103 @@ export function ExactCaptureSection({
   const [captureMessage, setCaptureMessage] = useState<string>('');
   const [availableFormIds, setAvailableFormIds] = useState<string[]>([]);
   const [originalScreenshot, setOriginalScreenshot] = useState<string | null>(null);
+
+  const handleAutoDetect = async () => {
+    if (!captureUrl) {
+      toast({ title: 'URL required', description: 'Enter the customer site URL first', variant: 'destructive' });
+      return;
+    }
+    setIsDiscovering(true);
+    setCaptureStatus('capturing');
+    setCaptureMessage('Crawling site for application/contact forms...');
+    try {
+      const res = await scrapingApi.discoverForms(captureUrl, { formType: 'any', maxPages: 6 });
+      if (!res.success || !res.data) throw new Error(res.error || 'No forms found');
+      const best = res.data.best;
+      setCaptureUrl(best.pageUrl);
+      setCaptureFormId(best.formId || '');
+      setCaptureStatus('idle');
+      setCaptureMessage('');
+      toast({
+        title: 'Form found',
+        description: `Best match: ${best.detectedKind} form (${best.fieldCount} fields) on ${new URL(best.pageUrl).pathname}. Click Capture to extract it.`,
+      });
+    } catch (e) {
+      setCaptureStatus('error');
+      setCaptureMessage(e instanceof Error ? e.message : 'Discovery failed');
+      toast({ title: 'Discovery failed', description: e instanceof Error ? e.message : 'Could not find a form', variant: 'destructive' });
+    } finally {
+      setIsDiscovering(false);
+    }
+  };
+
+  const handleRefineWithAi = async () => {
+    if (!originalScreenshot || !formStyle.capturedFormHtml) {
+      toast({ title: 'Capture a form first', description: 'Refinement requires a captured form and original screenshot.', variant: 'destructive' });
+      return;
+    }
+    setIsRefining(true);
+    setRefineScore(null);
+    try {
+      const res = await scrapingApi.refineFormCapture(
+        originalScreenshot,
+        formStyle.capturedFormHtml,
+        formStyle.capturedFormCss || '',
+      );
+      if (!res.success || !res.data) throw new Error(res.error || 'Refinement failed');
+      const additional = res.data.additionalCss || '';
+      const updated: FormStyleConfig = {
+        ...formStyle,
+        capturedFormCss: (formStyle.capturedFormCss || '') + '\n\n/* AI refinements */\n' + additional,
+      };
+      const c = res.data.detectedColors;
+      if (c) {
+        if (c.buttonBgColor) {
+          updated.buttonBgColor = c.buttonBgColor;
+          updated.buttonHoverBgColor = getSmartHoverColor(c.buttonBgColor);
+        }
+        if (c.buttonTextColor) updated.buttonTextColor = c.buttonTextColor;
+        if (c.inputBorderColor) updated.inputBorderColor = c.inputBorderColor;
+        if (c.inputFocusBorderColor) updated.inputFocusBorderColor = c.inputFocusBorderColor;
+        if (c.labelColor) updated.labelColor = c.labelColor;
+        if (c.formBgColor) updated.formBgColor = c.formBgColor;
+      }
+      onUpdateStyle(updated);
+      setRefineScore(res.data.matchScore);
+      toast({ title: 'AI refinement applied', description: `Match score: ${res.data.matchScore}% — ${res.data.changes.length} change(s) applied.` });
+    } catch (e) {
+      toast({ title: 'Refinement failed', description: e instanceof Error ? e.message : 'Could not refine', variant: 'destructive' });
+    } finally {
+      setIsRefining(false);
+    }
+  };
+
+  const handleGenerateSteps = () => {
+    const fields = capturedData?.extractedFields;
+    if (!fields || fields.length === 0) {
+      toast({ title: 'No fields detected', description: 'Re-capture the form to extract field metadata.', variant: 'destructive' });
+      return;
+    }
+    if (!onGenerateFormSteps) return;
+    const formFields: FormField[] = fields.map((f, i) => ({
+      id: `f-${Date.now()}-${i}`,
+      type: (f.canonicalType as FormFieldType) || 'text',
+      label: f.label || f.name,
+      name: f.name || `field_${i}`,
+      placeholder: f.placeholder || undefined,
+      required: f.required,
+      order: i + 1,
+    }));
+    const step: FormStep = {
+      id: `step-${Date.now()}`,
+      title: 'Application',
+      description: 'Auto-generated from captured form',
+      order: 1,
+      fields: formFields,
+    };
+    onGenerateFormSteps([step]);
+    toast({ title: 'Form steps generated', description: `Created ${formFields.length} matching field(s) in the workflow builder.` });
+  };
 
   const handleCaptureFormById = async () => {
     if (!captureUrl) {
