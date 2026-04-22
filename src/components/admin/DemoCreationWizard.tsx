@@ -174,6 +174,11 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
     setScreenshotCaptureData(null);
     setHtmlAvailable(false);
     setScreenshotAvailable(false);
+    setProcessingStartedAt(null);
+    setElapsedMs(0);
+    setFunMessageIndex(0);
+    setDiscoveredFormUrl(null);
+    setDiscoveredFieldCount(null);
   };
 
   const toggleUseCase = (id: string) => setSelectedUseCases(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
