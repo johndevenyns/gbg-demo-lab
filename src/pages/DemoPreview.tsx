@@ -19,6 +19,7 @@ import { RetailPortalShell } from "@/components/preview/mockPortal/RetailPortalS
 import { GamingPortalShell } from "@/components/preview/mockPortal/GamingPortalShell";
 import { RentalCarPortalShell } from "@/components/preview/mockPortal/RentalCarPortalShell";
 import { InsurancePortalShell } from "@/components/preview/mockPortal/InsurancePortalShell";
+import { HotelPortalShell } from "@/components/preview/mockPortal/HotelPortalShell";
 import { ResolvedUseCase } from "@/types/useCase";
 import { FormStep } from "@/types/demo";
 import { PortalBranding, PortalVerificationTrigger } from "@/types/portalConfig";
@@ -322,6 +323,7 @@ export default function DemoPreview() {
     const isGamingPortal = demoPortalType === 'gaming';
     const isRentalCarPortal = demoPortalType === 'rental_car';
     const isInsurancePortal = demoPortalType === 'insurance';
+    const isHotelPortal = demoPortalType === 'hotel';
     return (
       <div style={{ position: 'relative' }}>
         {isPharmacyPortal ? (
@@ -382,6 +384,19 @@ export default function DemoPreview() {
             accentColor={demo.buttonColor || '#1D4ED8'}
             logoUrl={demo.useUploadedLogo ? demo.uploadedLogoUrl : demo.logoUrl}
             companyName={demo.customerName}
+            portalConfig={demoIndustry?.portalConfig}
+            branding={portalBranding}
+            isNewAccount={portalUser.isNewAccount}
+            onTriggerVerification={handlePortalVerification}
+            onLogout={handlePortalLogout}
+          />
+        ) : isHotelPortal ? (
+          <HotelPortalShell
+            userName={portalUserName}
+            userEmail={portalUser.email}
+            accentColor={demo.buttonColor || '#0E7490'}
+            logoUrl={demo.useUploadedLogo ? demo.uploadedLogoUrl : demo.logoUrl}
+            hotelName={demo.customerName}
             portalConfig={demoIndustry?.portalConfig}
             branding={portalBranding}
             isNewAccount={portalUser.isNewAccount}
