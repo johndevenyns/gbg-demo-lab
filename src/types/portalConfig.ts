@@ -254,6 +254,44 @@ export interface RetailAddress {
   isDefault: boolean;
 }
 
+// ── Hotel-specific types ──
+
+export interface HotelRoom {
+  id: string;
+  name: string;          // e.g. "Deluxe King Room"
+  category: 'standard' | 'deluxe' | 'suite' | 'executive' | 'presidential';
+  image: string;         // emoji or asset
+  pricePerNight: number;
+  bedConfig: string;     // e.g. "1 King Bed", "2 Queen Beds"
+  maxGuests: number;
+  sizeSqft: number;
+  view?: string;         // e.g. "City View", "Ocean View"
+  amenities: string[];
+  badge?: string;        // e.g. "Most Booked", "Best Value"
+  rating: number;
+  reviewCount: number;
+}
+
+export interface HotelReservation {
+  confirmationId: string;
+  room: { name: string; image: string; category: string };
+  hotelName: string;
+  checkInDate: string;
+  checkOutDate: string;
+  nights: number;
+  guests: number;
+  status: 'upcoming' | 'checked_in' | 'completed' | 'cancelled';
+  totalCost: number;
+  addOns?: string[];
+}
+
+export interface HotelPaymentMethod {
+  type: 'visa' | 'mastercard' | 'amex';
+  lastFour: string;
+  expiryDate: string;
+  isDefault: boolean;
+}
+
 export interface PortalConfig {
   // Branding (shared)
   bankName?: string;       // also used as generic "portal name"
@@ -261,6 +299,7 @@ export interface PortalConfig {
   retailStoreName?: string;
   rentalCarCompanyName?: string;
   insuranceCompanyName?: string;
+  hotelName?: string;
   accentColor?: string;
   userName?: string;
   userEmail?: string;
@@ -311,6 +350,15 @@ export interface PortalConfig {
   insuranceAgentName?: string;
   insuranceAgentPhone?: string;
   insurancePolicyHolderSince?: string;
+
+  // Hotel dashboard content
+  hotelRooms?: HotelRoom[];
+  hotelReservations?: HotelReservation[];
+  hotelPaymentMethods?: HotelPaymentMethod[];
+  hotelLocations?: string[];           // city / property options
+  hotelLoyaltyNumber?: string;
+  hotelLoyaltyTier?: string;
+  hotelTagline?: string;               // promo strip text
 
   // Settings — which actions trigger IDV
   verificationTriggers?: PortalVerificationTrigger[];
