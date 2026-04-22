@@ -255,10 +255,24 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
   const startProcessing = async () => {
     if (!customerName.trim() || !selectedIndustryId) return;
 
+    // Validate the site URL up front so we fail with a helpful message instead of mid-flow.
+    let normalizedSiteUrl: string | null = null;
+    if (enableMirroring && siteUrl) {
+      normalizedSiteUrl = safeNormalizeUrl(siteUrl);
+      if (!normalizedSiteUrl) {
+        setProcessingTasks([{ id: 'create', label: 'Creating demo environment', phase: 'foundation', status: 'error', detail: `"${siteUrl}" is not a valid URL. Please use a format like https://example.com` }]);
+        setStep('processing');
+        setProcessingError(`Invalid website URL: "${siteUrl}". Please go back and enter a valid URL.`);
+        setFailedTaskId('create');
+        setProcessingStartedAt(Date.now());
+        return;
+      }
+    }
+
     const tasks: ProcessingTask[] = [
       { id: 'create', label: 'Creating demo environment', phase: 'foundation', status: 'pending' },
     ];
-    if (enableMirroring && siteUrl) {
+    if (enableMirroring && normalizedSiteUrl) {
       tasks.push({ id: 'scrape-html', label: 'Extracting HTML header & footer', phase: 'branding', status: 'pending' });
       tasks.push({ id: 'scrape-screenshot', label: 'Capturing pixel-perfect screenshot', phase: 'branding', status: 'pending' });
       tasks.push({ id: 'apply', label: 'Applying brand colors, logo & typography', phase: 'branding', status: 'pending' });
@@ -274,13 +288,16 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
     setProcessingTasks(tasks);
     setStep('processing');
     setProcessingError(null);
+    setFailedTaskId(null);
     setProcessingStartedAt(Date.now());
     setElapsedMs(0);
     setDiscoveredFormUrl(null);
     setDiscoveredFieldCount(null);
 
+    let activeTaskId = 'create';
     try {
       // Step 1: Create the demo
+      activeTaskId = 'create';
       updateTaskStatus('create', 'in_progress');
       setTaskDetail('create', `Provisioning environment for ${customerName.trim()}…`);
       const template: IndustryTemplate = 'custom';
@@ -302,11 +319,17 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
       let screenshotCapture: { headerHtml: string; footerHtml: string; css: string } | null = null;
       const buttonColor = '#6366f1';
 
-      if (enableMirroring && siteUrl) {
+      if (enableMirroring && normalizedSiteUrl) {
         // Fetch site branding (returns HTML + screenshots)
+        activeTaskId = 'scrape-html';
         updateTaskStatus('scrape-html', 'in_progress');
-        setTaskDetail('scrape-html', `Fetching ${new URL(siteUrl).hostname}…`);
-        const response = await scrapingApi.scrapeSiteBranding(siteUrl);
+        setTaskDetail('scrape-html', `Fetching ${safeHostname(normalizedSiteUrl)}…`);
+        let response;
+        try {
+          response = await scrapingApi.scrapeSiteBranding(normalizedSiteUrl);
+        } catch (e) {
+          response = { success: false, error: e instanceof Error ? e.message : 'Network error contacting scraper' };
+        }
         if (response.success && response.data) {
           scrapedData = response.data;
           refinedHtml = {
