@@ -107,6 +107,53 @@ export interface CapturedFormData {
   patterns: CapturedFormPatterns;
   formScreenshot?: string; // Base64 screenshot of the page
   availableFormIds?: string[]; // Available form IDs found on the page
+  extractedFields?: ExtractedField[];
+}
+
+export interface ExtractedField {
+  canonicalType: string;
+  rawType: string;
+  label: string;
+  name: string;
+  id: string | null;
+  placeholder: string | null;
+  required: boolean;
+  options?: Array<{ value: string; label: string }>;
+  confidence: number;
+}
+
+export interface DiscoveredForm {
+  pageUrl: string;
+  formId: string | null;
+  selector: string | null;
+  fieldCount: number;
+  inputTypes: string[];
+  hasSubmitButton: boolean;
+  detectedKind: 'application' | 'contact' | 'signup' | 'login' | 'newsletter' | 'search' | 'unknown';
+  score: number;
+  reason: string;
+}
+
+export interface DiscoverFormsResponse {
+  success: boolean;
+  error?: string;
+  searchedUrls?: string[];
+  data?: {
+    best: DiscoveredForm;
+    candidates: DiscoveredForm[];
+    scannedUrls: string[];
+  };
+}
+
+export interface RefineFormResponse {
+  success: boolean;
+  error?: string;
+  data?: {
+    matchScore: number;
+    additionalCss: string;
+    changes: Array<{ element: string; change: string; severity: string }>;
+    detectedColors?: Record<string, string>;
+  };
 }
 
 export interface ScrapeResponse {
@@ -195,6 +242,44 @@ export const scrapingApi = {
       return { success: false, error: error.message };
     }
     
+    return data;
+  },
+
+  async discoverForms(
+    url: string,
+    options?: { formType?: 'application' | 'contact' | 'signup' | 'any'; maxPages?: number; signal?: AbortSignal }
+  ): Promise<DiscoverFormsResponse> {
+    const { data, error } = await supabase.functions.invoke('discover-forms', {
+      body: { url, formType: options?.formType ?? 'any', maxPages: options?.maxPages ?? 6 },
+      ...(options?.signal ? { signal: options.signal } : {}),
+    });
+    if (error) {
+      if (options?.signal?.aborted) return { success: false, error: 'Cancelled' };
+      return { success: false, error: error.message };
+    }
+    return data;
+  },
+
+  async refineFormCapture(
+    originalScreenshot: string,
+    capturedFormHtml: string,
+    capturedFormCss: string,
+    options?: { renderedScreenshot?: string; mimeType?: string; signal?: AbortSignal }
+  ): Promise<RefineFormResponse> {
+    const { data, error } = await supabase.functions.invoke('refine-form-capture', {
+      body: {
+        originalScreenshot,
+        renderedScreenshot: options?.renderedScreenshot,
+        capturedFormHtml,
+        capturedFormCss,
+        mimeType: options?.mimeType ?? 'image/png',
+      },
+      ...(options?.signal ? { signal: options.signal } : {}),
+    });
+    if (error) {
+      if (options?.signal?.aborted) return { success: false, error: 'Cancelled' };
+      return { success: false, error: error.message };
+    }
     return data;
   },
 };
