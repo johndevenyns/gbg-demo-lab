@@ -142,6 +142,8 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
   const [funMessageIndex, setFunMessageIndex] = useState(0);
   const [discoveredFormUrl, setDiscoveredFormUrl] = useState<string | null>(null);
   const [discoveredFieldCount, setDiscoveredFieldCount] = useState<number | null>(null);
+  const [failedTaskId, setFailedTaskId] = useState<string | null>(null);
+  const [retryAttempt, setRetryAttempt] = useState(0);
 
   // Review step state - stores both capture results for comparison
   const [htmlPreviewDoc, setHtmlPreviewDoc] = useState<string>('');
@@ -228,6 +230,8 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
     setFunMessageIndex(0);
     setDiscoveredFormUrl(null);
     setDiscoveredFieldCount(null);
+    setFailedTaskId(null);
+    setRetryAttempt(0);
   };
 
   const toggleUseCase = (id: string) => setSelectedUseCases(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
