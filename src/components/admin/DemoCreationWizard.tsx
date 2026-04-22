@@ -106,6 +106,11 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
   const [processingTasks, setProcessingTasks] = useState<ProcessingTask[]>([]);
   const [createdDemoId, setCreatedDemoId] = useState<string | null>(null);
   const [processingError, setProcessingError] = useState<string | null>(null);
+  const [processingStartedAt, setProcessingStartedAt] = useState<number | null>(null);
+  const [elapsedMs, setElapsedMs] = useState(0);
+  const [funMessageIndex, setFunMessageIndex] = useState(0);
+  const [discoveredFormUrl, setDiscoveredFormUrl] = useState<string | null>(null);
+  const [discoveredFieldCount, setDiscoveredFieldCount] = useState<number | null>(null);
 
   // Review step state - stores both capture results for comparison
   const [htmlPreviewDoc, setHtmlPreviewDoc] = useState<string>('');
@@ -173,8 +178,12 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
 
   const toggleUseCase = (id: string) => setSelectedUseCases(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
 
-  const updateTaskStatus = (taskId: string, status: ProcessingTask['status']) => {
-    setProcessingTasks(prev => prev.map(t => t.id === taskId ? { ...t, status } : t));
+  const updateTaskStatus = (taskId: string, status: ProcessingTask['status'], detail?: string) => {
+    setProcessingTasks(prev => prev.map(t => t.id === taskId ? { ...t, status, detail: detail ?? t.detail } : t));
+  };
+
+  const setTaskDetail = (taskId: string, detail: string) => {
+    setProcessingTasks(prev => prev.map(t => t.id === taskId ? { ...t, detail } : t));
   };
 
   const selectedIndustry = industries.find(i => i.id === selectedIndustryId);
