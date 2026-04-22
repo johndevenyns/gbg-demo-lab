@@ -1522,3 +1522,194 @@ function extractDetailedTypography(formHtml: string, formCss: string, allCss: st
     buttonTextTransform: extract(/button[^{]*\{[^}]*text-transform:\s*([^;}\s]+)/i),
   };
 }
+
+// ==================== STRUCTURED FIELD EXTRACTION ====================
+
+/**
+ * Parse the captured form HTML into a list of {label, name, type, required, ...}
+ * objects so the client can offer to auto-generate matching workflow steps.
+ */
+function parseFormFields(formHtml: string): ExtractedField[] {
+  const fields: ExtractedField[] = [];
+
+  // Build a map of label-for -> label text first.
+  const labelMap = new Map<string, string>();
+  const labelRe = /<label[^>]*\sfor=["']([^"']+)["'][^>]*>([\s\S]*?)<\/label>/gi;
+  let lm: RegExpExecArray | null;
+  while ((lm = labelRe.exec(formHtml)) !== null) {
+    labelMap.set(lm[1], cleanText(lm[2]));
+  }
+
+  // INPUT elements
+  const inputRe = /<input\b([^>]*)>/gi;
+  let im: RegExpExecArray | null;
+  while ((im = inputRe.exec(formHtml)) !== null) {
+    const attrs = im[1];
+    const rawType = (getAttr(attrs, 'type') || 'text').toLowerCase();
+    if (['hidden', 'submit', 'button', 'reset', 'image', 'file'].includes(rawType)) continue;
+    if (rawType === 'checkbox' || rawType === 'radio') {
+      const f = buildField(attrs, rawType, labelMap, formHtml, im.index);
+      if (f) fields.push(f);
+      continue;
+    }
+    const f = buildField(attrs, rawType, labelMap, formHtml, im.index);
+    if (f) fields.push(f);
+  }
+
+  // SELECT elements (with their <option>s)
+  const selectRe = /<select\b([^>]*)>([\s\S]*?)<\/select>/gi;
+  let sm: RegExpExecArray | null;
+  while ((sm = selectRe.exec(formHtml)) !== null) {
+    const attrs = sm[1];
+    const inner = sm[2];
+    const f = buildField(attrs, 'select', labelMap, formHtml, sm.index);
+    if (!f) continue;
+    const options: Array<{ value: string; label: string }> = [];
+    const optRe = /<option\b([^>]*)>([\s\S]*?)<\/option>/gi;
+    let om: RegExpExecArray | null;
+    while ((om = optRe.exec(inner)) !== null) {
+      const value = getAttr(om[1], 'value') ?? cleanText(om[2]);
+      const label = cleanText(om[2]) || value;
+      if (value || label) options.push({ value: value || label, label });
+    }
+    if (options.length) f.options = options;
+    fields.push(f);
+  }
+
+  // TEXTAREA elements
+  const taRe = /<textarea\b([^>]*)>/gi;
+  let tm: RegExpExecArray | null;
+  while ((tm = taRe.exec(formHtml)) !== null) {
+    const f = buildField(tm[1], 'textarea', labelMap, formHtml, tm.index);
+    if (f) fields.push(f);
+  }
+
+  // De-dup by name (some forms duplicate fields across visible/mobile breakpoints).
+  const seen = new Set<string>();
+  const deduped: ExtractedField[] = [];
+  for (const f of fields) {
+    const key = f.name || f.id || `${f.canonicalType}:${f.label}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    deduped.push(f);
+  }
+
+  return deduped;
+}
+
+function buildField(
+  attrs: string,
+  rawType: string,
+  labelMap: Map<string, string>,
+  fullHtml: string,
+  position: number,
+): ExtractedField | null {
+  const id = getAttr(attrs, 'id');
+  const name = getAttr(attrs, 'name') || id || '';
+  if (!name && !id) return null;
+
+  const ariaLabel = getAttr(attrs, 'aria-label');
+  const placeholder = getAttr(attrs, 'placeholder');
+  const required = / required(\s|=|>)/i.test(attrs) || /aria-required=["']true/i.test(attrs);
+  let label = (id && labelMap.get(id)) || ariaLabel || placeholder || '';
+  if (!label) {
+    // Look for a sibling label immediately before the input (common in inline forms).
+    const lookback = fullHtml.substring(Math.max(0, position - 400), position);
+    const sib = lookback.match(/<label\b[^>]*>([\s\S]*?)<\/label>\s*$/i);
+    if (sib) label = cleanText(sib[1]);
+  }
+  if (!label) label = humanize(name);
+
+  const { canonical, confidence } = mapToCanonicalType(rawType, name, id || '', label, placeholder || '');
+
+  return {
+    canonicalType: canonical,
+    rawType,
+    label,
+    name: name || humanize(label).replace(/\s+/g, '_').toLowerCase(),
+    id: id || null,
+    placeholder: placeholder || null,
+    required,
+    confidence,
+  };
+}
+
+function getAttr(attrs: string, attr: string): string | null {
+  const re = new RegExp(`\\s${attr}=["']([^"']*)["']`, 'i');
+  const m = attrs.match(re);
+  if (m) return m[1];
+  // boolean attribute (e.g., required, disabled)
+  const bool = new RegExp(`\\s${attr}(\\s|>|$)`, 'i');
+  return bool.test(attrs) ? '' : null;
+}
+
+function cleanText(html: string): string {
+  return html.replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+function humanize(s: string): string {
+  if (!s) return '';
+  return s
+    .replace(/[_-]+/g, ' ')
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+/**
+ * Map a raw HTML field to one of our internal canonical types from FormFieldType.
+ * Returns the canonical type plus a 0-1 confidence score.
+ */
+function mapToCanonicalType(
+  rawType: string,
+  name: string,
+  id: string,
+  label: string,
+  placeholder: string,
+): { canonical: string; confidence: number } {
+  const hay = `${name} ${id} ${label} ${placeholder}`.toLowerCase();
+
+  // Strong signals from raw type.
+  if (rawType === 'email') return { canonical: 'email', confidence: 0.95 };
+  if (rawType === 'tel' || rawType === 'phone') return { canonical: 'phone', confidence: 0.95 };
+  if (rawType === 'password') return { canonical: 'password', confidence: 0.95 };
+  if (rawType === 'date') {
+    if (/(birth|dob|d\.o\.b|date.*of.*birth)/.test(hay)) return { canonical: 'date_of_birth', confidence: 0.95 };
+    return { canonical: 'date', confidence: 0.9 };
+  }
+  if (rawType === 'textarea') return { canonical: 'textarea', confidence: 0.9 };
+  if (rawType === 'checkbox') {
+    if (/(consent|agree|terms|privacy|policy|gdpr)/.test(hay)) return { canonical: 'consent_checkbox', confidence: 0.85 };
+    return { canonical: 'checkbox', confidence: 0.85 };
+  }
+  if (rawType === 'select') {
+    if (/(state|province|region)/.test(hay)) return { canonical: 'address_state', confidence: 0.8 };
+    if (/(country|nation)/.test(hay)) return { canonical: 'nationality', confidence: 0.7 };
+    if (/(gender|sex)/.test(hay)) return { canonical: 'gender', confidence: 0.85 };
+    return { canonical: 'select', confidence: 0.6 };
+  }
+
+  // Name-based heuristics for text inputs.
+  if (/(first.?name|given.?name|fname|firstname)/.test(hay)) return { canonical: 'first_name', confidence: 0.95 };
+  if (/(last.?name|surname|family.?name|lname|lastname)/.test(hay)) return { canonical: 'last_name', confidence: 0.95 };
+  if (/(middle.?name|mname)/.test(hay)) return { canonical: 'middle_name', confidence: 0.9 };
+  if (/^name$|full.?name|your.?name/.test(hay)) return { canonical: 'first_name', confidence: 0.5 };
+  if (/(email|e-mail|e_mail)/.test(hay)) return { canonical: 'email', confidence: 0.9 };
+  if (/(phone|mobile|cell|telephone|tel)/.test(hay)) return { canonical: 'phone', confidence: 0.9 };
+  if (/(birth|dob|d\.o\.b)/.test(hay)) return { canonical: 'date_of_birth', confidence: 0.85 };
+  if (/(ssn|social.?security)/.test(hay)) return { canonical: 'ssn', confidence: 0.9 };
+  if (/(street|address.?1|address1|addr1)/.test(hay) && !/email/.test(hay)) return { canonical: 'address_street', confidence: 0.85 };
+  if (/(apt|apartment|unit|suite|address.?2|address2|addr2)/.test(hay)) return { canonical: 'apartment', confidence: 0.85 };
+  if (/(city|town|locality)/.test(hay)) return { canonical: 'address_city', confidence: 0.9 };
+  if (/(state|province|region)/.test(hay)) return { canonical: 'address_state', confidence: 0.9 };
+  if (/(zip|postal|postcode)/.test(hay)) return { canonical: 'address_zip', confidence: 0.9 };
+  if (/(country|nation)/.test(hay)) return { canonical: 'nationality', confidence: 0.7 };
+  if (/(gender|sex)/.test(hay)) return { canonical: 'gender', confidence: 0.85 };
+  if (/(employer|company|organization|organisation)/.test(hay)) return { canonical: 'employer', confidence: 0.85 };
+  if (/(income|salary|earnings|annual)/.test(hay)) return { canonical: 'income', confidence: 0.8 };
+  if (/(message|comment|inquiry|enquiry|notes|details|description)/.test(hay)) return { canonical: 'textarea', confidence: 0.7 };
+  if (/(document|id.?number|passport|license)/.test(hay)) return { canonical: 'document_number', confidence: 0.75 };
+
+  return { canonical: 'text', confidence: 0.4 };
+}
