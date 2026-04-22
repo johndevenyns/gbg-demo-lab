@@ -582,8 +582,52 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
       }
     } catch (error) {
       console.error('Processing error:', error);
-      setProcessingError(error instanceof Error ? error.message : 'An error occurred');
+      const message = error instanceof Error ? error.message : 'An unexpected error occurred';
+      setProcessingError(message);
+      setFailedTaskId(activeTaskId);
+      // Mark the active task as errored so the UI shows where it failed
+      setProcessingTasks(prev => prev.map(t =>
+        t.id === activeTaskId
+          ? { ...t, status: 'error', detail: message }
+          : t.status === 'in_progress' ? { ...t, status: 'error', detail: message } : t
+      ));
     }
+  };
+
+  /** Continue with whatever has been created so far (skip remaining tasks). */
+  const handleContinueAnyway = () => {
+    if (!createdDemoId) {
+      onOpenChange(false);
+      return;
+    }
+    onOpenChange(false);
+    onCreated(createdDemoId);
+  };
+
+  /** Retry the entire processing flow. If a demo was already created, clear it so we don't double-create. */
+  const handleRetry = async () => {
+    setRetryAttempt(a => a + 1);
+    // If a demo was created but later steps failed, keep it and continue from the failed task is complex —
+    // simplest reliable approach is to clean up the half-created demo and re-run.
+    if (createdDemoId) {
+      try {
+        await supabase.from('demo_environments').delete().eq('id', createdDemoId);
+      } catch (e) {
+        console.warn('Could not delete partially-created demo before retry:', e);
+      }
+      setCreatedDemoId(null);
+    }
+    setProcessingError(null);
+    setFailedTaskId(null);
+    startProcessing();
+  };
+
+  /** Go back to the wizard form (e.g. to fix a bad URL). */
+  const handleBackToForm = () => {
+    setProcessingTasks([]);
+    setProcessingError(null);
+    setFailedTaskId(null);
+    setStep('details');
   };
 
   const handleReviewComplete = async () => {
