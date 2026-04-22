@@ -53,7 +53,8 @@ export function PortalPreviewDialog({
   const isGaming = portalType === 'gaming';
   const isRentalCar = portalType === 'rental_car';
   const isInsurance = portalType === 'insurance';
-  const defaultConfig = isPharmacy ? DEFAULT_PHARMACY_CONFIG : isRetail ? DEFAULT_RETAIL_CONFIG : isGaming ? DEFAULT_GAMING_CONFIG : isRentalCar ? DEFAULT_RENTAL_CAR_CONFIG : isInsurance ? DEFAULT_INSURANCE_CONFIG : DEFAULT_BANKING_CONFIG;
+  const isHotel = portalType === 'hotel';
+  const defaultConfig = isPharmacy ? DEFAULT_PHARMACY_CONFIG : isRetail ? DEFAULT_RETAIL_CONFIG : isGaming ? DEFAULT_GAMING_CONFIG : isRentalCar ? DEFAULT_RENTAL_CAR_CONFIG : isInsurance ? DEFAULT_INSURANCE_CONFIG : isHotel ? DEFAULT_HOTEL_CONFIG : DEFAULT_BANKING_CONFIG;
   const config = { ...defaultConfig, ...portalConfig };
   const portalName = isPharmacy
     ? (brandingOverrides?.bankName || config.pharmacyName || 'Demo Pharmacy')
@@ -65,8 +66,10 @@ export function PortalPreviewDialog({
     ? (brandingOverrides?.bankName || config.rentalCarCompanyName || 'Demo Rentals')
     : isInsurance
     ? (brandingOverrides?.bankName || config.insuranceCompanyName || 'Demo Insurance')
+    : isHotel
+    ? (brandingOverrides?.bankName || config.hotelName || 'Demo Hotels')
     : (brandingOverrides?.bankName || config.bankName || 'Demo Bank');
-  const defaultAccent = isPharmacy ? '#DC2626' : isRetail ? '#6366F1' : isGaming ? '#22C55E' : isRentalCar ? '#FF6B00' : isInsurance ? '#1D4ED8' : '#2563EB';
+  const defaultAccent = isPharmacy ? '#DC2626' : isRetail ? '#6366F1' : isGaming ? '#22C55E' : isRentalCar ? '#FF6B00' : isInsurance ? '#1D4ED8' : isHotel ? '#0E7490' : '#2563EB';
   const accentColor = brandingOverrides?.accentColor || config.accentColor || defaultAccent;
   const logoUrl = brandingOverrides?.logoUrl;
 
@@ -125,6 +128,17 @@ export function PortalPreviewDialog({
               accentColor={accentColor}
               logoUrl={logoUrl}
               companyName={portalName}
+              portalConfig={config}
+              onTriggerVerification={(trigger) => setVerifyAction(trigger.action)}
+              onLogout={() => onOpenChange(false)}
+            />
+          ) : isHotel ? (
+            <HotelPortalShell
+              userName={userNameOverride || config.userName || 'Jane Cooper'}
+              userEmail={userEmailOverride || config.userEmail || 'jane.cooper@email.com'}
+              accentColor={accentColor}
+              logoUrl={logoUrl}
+              hotelName={portalName}
               portalConfig={config}
               onTriggerVerification={(trigger) => setVerifyAction(trigger.action)}
               onLogout={() => onOpenChange(false)}

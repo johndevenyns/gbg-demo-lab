@@ -19,6 +19,7 @@ import { RetailPortalShell } from "@/components/preview/mockPortal/RetailPortalS
 import { GamingPortalShell } from "@/components/preview/mockPortal/GamingPortalShell";
 import { RentalCarPortalShell } from "@/components/preview/mockPortal/RentalCarPortalShell";
 import { InsurancePortalShell } from "@/components/preview/mockPortal/InsurancePortalShell";
+import { HotelPortalShell } from "@/components/preview/mockPortal/HotelPortalShell";
 import { ResolvedUseCase } from "@/types/useCase";
 import { FormStep } from "@/types/demo";
 import { PortalBranding, PortalVerificationTrigger } from "@/types/portalConfig";
@@ -322,6 +323,7 @@ export default function DemoPreview() {
     const isGamingPortal = demoPortalType === 'gaming';
     const isRentalCarPortal = demoPortalType === 'rental_car';
     const isInsurancePortal = demoPortalType === 'insurance';
+    const isHotelPortal = demoPortalType === 'hotel';
     return (
       <div style={{ position: 'relative' }}>
         {isPharmacyPortal ? (
