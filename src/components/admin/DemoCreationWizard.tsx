@@ -80,6 +80,37 @@ function generateScreenshotFooterHtml(src: string, naturalHeight: number): strin
   return `<div style="width: 100%; overflow: hidden; position: relative; height: 0; padding-bottom: ${footerHeightPercent}%;"><img src="${src}" style="position: absolute; width: 100%; top: -${footerTopPercent}%; left: 0;" alt="Site footer" /></div>`;
 }
 
+/** Safely normalize a user-entered URL. Adds https:// if missing and never throws. */
+function safeNormalizeUrl(input: string): string | null {
+  if (!input) return null;
+  const trimmed = input.trim();
+  if (!trimmed) return null;
+  const withProto = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+  try {
+    return new URL(withProto).toString();
+  } catch {
+    return null;
+  }
+}
+
+/** Safely extract a hostname; returns the original string if URL parsing fails. */
+function safeHostname(input: string): string {
+  try {
+    return new URL(/^https?:\/\//i.test(input) ? input : `https://${input}`).hostname;
+  } catch {
+    return input;
+  }
+}
+
+/** Safely extract a pathname; returns '/' on failure. */
+function safePathname(input: string): string {
+  try {
+    return new URL(input).pathname || '/';
+  } catch {
+    return '/';
+  }
+}
+
 export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreationWizardProps) {
   const createDemo = useCreateDemo();
   const updateDemo = useUpdateDemo();
@@ -111,6 +142,8 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
   const [funMessageIndex, setFunMessageIndex] = useState(0);
   const [discoveredFormUrl, setDiscoveredFormUrl] = useState<string | null>(null);
   const [discoveredFieldCount, setDiscoveredFieldCount] = useState<number | null>(null);
+  const [failedTaskId, setFailedTaskId] = useState<string | null>(null);
+  const [retryAttempt, setRetryAttempt] = useState(0);
 
   // Review step state - stores both capture results for comparison
   const [htmlPreviewDoc, setHtmlPreviewDoc] = useState<string>('');
@@ -197,6 +230,8 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
     setFunMessageIndex(0);
     setDiscoveredFormUrl(null);
     setDiscoveredFieldCount(null);
+    setFailedTaskId(null);
+    setRetryAttempt(0);
   };
 
   const toggleUseCase = (id: string) => setSelectedUseCases(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
@@ -220,10 +255,24 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
   const startProcessing = async () => {
     if (!customerName.trim() || !selectedIndustryId) return;
 
+    // Validate the site URL up front so we fail with a helpful message instead of mid-flow.
+    let normalizedSiteUrl: string | null = null;
+    if (enableMirroring && siteUrl) {
+      normalizedSiteUrl = safeNormalizeUrl(siteUrl);
+      if (!normalizedSiteUrl) {
+        setProcessingTasks([{ id: 'create', label: 'Creating demo environment', phase: 'foundation', status: 'error', detail: `"${siteUrl}" is not a valid URL. Please use a format like https://example.com` }]);
+        setStep('processing');
+        setProcessingError(`Invalid website URL: "${siteUrl}". Please go back and enter a valid URL.`);
+        setFailedTaskId('create');
+        setProcessingStartedAt(Date.now());
+        return;
+      }
+    }
+
     const tasks: ProcessingTask[] = [
       { id: 'create', label: 'Creating demo environment', phase: 'foundation', status: 'pending' },
     ];
-    if (enableMirroring && siteUrl) {
+    if (enableMirroring && normalizedSiteUrl) {
       tasks.push({ id: 'scrape-html', label: 'Extracting HTML header & footer', phase: 'branding', status: 'pending' });
       tasks.push({ id: 'scrape-screenshot', label: 'Capturing pixel-perfect screenshot', phase: 'branding', status: 'pending' });
       tasks.push({ id: 'apply', label: 'Applying brand colors, logo & typography', phase: 'branding', status: 'pending' });
@@ -239,13 +288,16 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
     setProcessingTasks(tasks);
     setStep('processing');
     setProcessingError(null);
+    setFailedTaskId(null);
     setProcessingStartedAt(Date.now());
     setElapsedMs(0);
     setDiscoveredFormUrl(null);
     setDiscoveredFieldCount(null);
 
+    let activeTaskId = 'create';
     try {
       // Step 1: Create the demo
+      activeTaskId = 'create';
       updateTaskStatus('create', 'in_progress');
       setTaskDetail('create', `Provisioning environment for ${customerName.trim()}…`);
       const template: IndustryTemplate = 'custom';
@@ -267,11 +319,17 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
       let screenshotCapture: { headerHtml: string; footerHtml: string; css: string } | null = null;
       const buttonColor = '#6366f1';
 
-      if (enableMirroring && siteUrl) {
+      if (enableMirroring && normalizedSiteUrl) {
         // Fetch site branding (returns HTML + screenshots)
+        activeTaskId = 'scrape-html';
         updateTaskStatus('scrape-html', 'in_progress');
-        setTaskDetail('scrape-html', `Fetching ${new URL(siteUrl).hostname}…`);
-        const response = await scrapingApi.scrapeSiteBranding(siteUrl);
+        setTaskDetail('scrape-html', `Fetching ${safeHostname(normalizedSiteUrl)}…`);
+        let response;
+        try {
+          response = await scrapingApi.scrapeSiteBranding(normalizedSiteUrl);
+        } catch (e) {
+          response = { success: false, error: e instanceof Error ? e.message : 'Network error contacting scraper' };
+        }
         if (response.success && response.data) {
           scrapedData = response.data;
           refinedHtml = {
@@ -287,29 +345,34 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
         }
 
         // Generate screenshot-based capture
+        activeTaskId = 'scrape-screenshot';
         updateTaskStatus('scrape-screenshot', 'in_progress');
-        if (scrapedData?.screenshot) {
-          const screenshotSrc = getScreenshotSrc(scrapedData.screenshot);
-          // Determine natural height from the screenshot
-          const naturalHeight = 1000; // Default estimate
-          screenshotCapture = {
-            headerHtml: generateScreenshotHeaderHtml(screenshotSrc, naturalHeight),
-            footerHtml: generateScreenshotFooterHtml(screenshotSrc, naturalHeight),
-            css: JSON.stringify({
-              viewportScreenshots: {
-                desktop: { src: screenshotSrc, crop: { headerHeight: 180, headerOffsetY: 0, footerHeight: 180, footerOffsetY: 0 } },
-              }
-            }),
-          };
-          updateTaskStatus('scrape-screenshot', 'complete', 'Desktop snapshot saved');
-        } else {
-          updateTaskStatus('scrape-screenshot', 'error', 'No screenshot returned');
+        try {
+          if (scrapedData?.screenshot) {
+            const screenshotSrc = getScreenshotSrc(scrapedData.screenshot);
+            const naturalHeight = 1000; // Default estimate
+            screenshotCapture = {
+              headerHtml: generateScreenshotHeaderHtml(screenshotSrc, naturalHeight),
+              footerHtml: generateScreenshotFooterHtml(screenshotSrc, naturalHeight),
+              css: JSON.stringify({
+                viewportScreenshots: {
+                  desktop: { src: screenshotSrc, crop: { headerHeight: 180, headerOffsetY: 0, footerHeight: 180, footerOffsetY: 0 } },
+                }
+              }),
+            };
+            updateTaskStatus('scrape-screenshot', 'complete', 'Desktop snapshot saved');
+          } else {
+            updateTaskStatus('scrape-screenshot', 'skipped', 'No screenshot returned — you can capture manually later');
+          }
+        } catch (e) {
+          updateTaskStatus('scrape-screenshot', 'skipped', e instanceof Error ? e.message : 'Screenshot processing failed');
         }
 
         // Apply branding (colors, logo, formStyle, BOTH captures)
+        activeTaskId = 'apply';
         updateTaskStatus('apply', 'in_progress');
         const brandingUpdates: Record<string, unknown> = {
-          customerSiteUrl: siteUrl,
+          customerSiteUrl: normalizedSiteUrl,
           headerBgColor: scrapedData?.colors?.headerBgColor || '#1a1a2e',
           headerTextColor: scrapedData?.colors?.headerTextColor || '#ffffff',
           buttonColor: scrapedData?.colors?.buttonColor || '#6366f1',
@@ -335,8 +398,12 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
           brandingUpdates.formStyle = formElementStylesToConfig(scrapedData.formStyles);
         }
 
-        await updateDemo.mutateAsync({ id: demo.id, updates: brandingUpdates as any });
-        updateTaskStatus('apply', 'complete', `Brand color ${brandingUpdates.buttonColor}`);
+        try {
+          await updateDemo.mutateAsync({ id: demo.id, updates: brandingUpdates as any });
+          updateTaskStatus('apply', 'complete', `Brand color ${brandingUpdates.buttonColor}`);
+        } catch (e) {
+          updateTaskStatus('apply', 'error', e instanceof Error ? e.message : 'Failed to save branding');
+        }
 
         // Build preview documents for review step
         const appliedButtonColor = (scrapedData?.colors?.buttonColor || '#6366f1');
@@ -355,19 +422,21 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
         let extractedFields: ExtractedField[] = [];
         let capturedFormSteps: FormStep[] | null = null;
         try {
+          activeTaskId = 'discover-form';
           updateTaskStatus('discover-form', 'in_progress');
           setTaskDetail('discover-form', 'Scanning /apply, /contact, /signup…');
-          const discovery = await scrapingApi.discoverForms(siteUrl, { formType: 'any', maxPages: 6 });
+          const discovery = await scrapingApi.discoverForms(normalizedSiteUrl, { formType: 'any', maxPages: 6 });
           if (discovery.success && discovery.data?.best) {
             const best = discovery.data.best;
             setDiscoveredFormUrl(best.pageUrl);
             updateTaskStatus(
               'discover-form',
               'complete',
-              `Found ${best.detectedKind} form on ${new URL(best.pageUrl).pathname || '/'} (${best.fieldCount} fields)`,
+              `Found ${best.detectedKind} form on ${safePathname(best.pageUrl)} (${best.fieldCount} fields)`,
             );
 
             try {
+              activeTaskId = 'capture-form';
               updateTaskStatus('capture-form', 'in_progress');
               setTaskDetail('capture-form', 'Extracting HTML, CSS & field metadata…');
               const capture = await scrapingApi.captureFormById(best.pageUrl, best.formId || '');
@@ -439,17 +508,32 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
       let shouldShowFillPass = false;
       let shouldShowFillFail = false;
       if (selectedUseCases.length > 0) {
+        activeTaskId = 'use-cases';
         updateTaskStatus('use-cases', 'in_progress');
         setTaskDetail('use-cases', `Linking ${selectedUseCases.length} use case${selectedUseCases.length === 1 ? '' : 's'}…`);
+        let linked = 0;
+        const linkErrors: string[] = [];
         for (let i = 0; i < selectedUseCases.length; i++) {
-          await addUseCaseLink.mutateAsync({ demoId: demo.id, useCaseId: selectedUseCases[i], displayOrder: i, showOnLandingPage: !hiddenFromLanding.has(selectedUseCases[i]) });
-          const uc = globalUseCases.find(u => u.id === selectedUseCases[i]);
-          if (uc?.showFillPass) shouldShowFillPass = true;
-          if (uc?.showFillFail) shouldShowFillFail = true;
+          try {
+            await addUseCaseLink.mutateAsync({ demoId: demo.id, useCaseId: selectedUseCases[i], displayOrder: i, showOnLandingPage: !hiddenFromLanding.has(selectedUseCases[i]) });
+            linked += 1;
+            const uc = globalUseCases.find(u => u.id === selectedUseCases[i]);
+            if (uc?.showFillPass) shouldShowFillPass = true;
+            if (uc?.showFillFail) shouldShowFillFail = true;
+          } catch (e) {
+            linkErrors.push(e instanceof Error ? e.message : 'unknown');
+          }
         }
-        updateTaskStatus('use-cases', 'complete', `${selectedUseCases.length} linked`);
+        if (linkErrors.length === 0) {
+          updateTaskStatus('use-cases', 'complete', `${linked} linked`);
+        } else if (linked > 0) {
+          updateTaskStatus('use-cases', 'complete', `${linked} of ${selectedUseCases.length} linked (${linkErrors.length} failed)`);
+        } else {
+          updateTaskStatus('use-cases', 'error', `Could not link use cases: ${linkErrors[0]}`);
+        }
       }
 
+      activeTaskId = 'finalize';
       updateTaskStatus('finalize', 'in_progress');
       setTaskDetail('finalize', 'Loading Pass / Fail test profiles…');
       // Always populate test data from global profiles so Fill Pass/Fail works
@@ -467,18 +551,22 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
       const passData: Record<string, string> = firstPass ? (firstPass.field_data as Record<string, string>) : {};
       const failData: Record<string, string> = firstFail ? (firstFail.field_data as Record<string, string>) : {};
       
-      await updateDemo.mutateAsync({
-        id: demo.id,
-        updates: {
-          storedTestData: {
-            passData,
-            failData,
-            showFillPassButton: shouldShowFillPass || Object.keys(passData).length > 0,
-            showFillFailButton: shouldShowFillFail || Object.keys(failData).length > 0,
+      try {
+        await updateDemo.mutateAsync({
+          id: demo.id,
+          updates: {
+            storedTestData: {
+              passData,
+              failData,
+              showFillPassButton: shouldShowFillPass || Object.keys(passData).length > 0,
+              showFillFailButton: shouldShowFillFail || Object.keys(failData).length > 0,
+            },
           },
-        },
-      });
-      updateTaskStatus('finalize', 'complete', 'Demo ready to preview');
+        });
+        updateTaskStatus('finalize', 'complete', 'Demo ready to preview');
+      } catch (e) {
+        updateTaskStatus('finalize', 'error', e instanceof Error ? e.message : 'Failed to save test profiles');
+      }
 
       // If mirroring was enabled and we have captures, go to review step
       // Otherwise, finish immediately
@@ -494,8 +582,52 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
       }
     } catch (error) {
       console.error('Processing error:', error);
-      setProcessingError(error instanceof Error ? error.message : 'An error occurred');
+      const message = error instanceof Error ? error.message : 'An unexpected error occurred';
+      setProcessingError(message);
+      setFailedTaskId(activeTaskId);
+      // Mark the active task as errored so the UI shows where it failed
+      setProcessingTasks(prev => prev.map(t =>
+        t.id === activeTaskId
+          ? { ...t, status: 'error', detail: message }
+          : t.status === 'in_progress' ? { ...t, status: 'error', detail: message } : t
+      ));
     }
+  };
+
+  /** Continue with whatever has been created so far (skip remaining tasks). */
+  const handleContinueAnyway = () => {
+    if (!createdDemoId) {
+      onOpenChange(false);
+      return;
+    }
+    onOpenChange(false);
+    onCreated(createdDemoId);
+  };
+
+  /** Retry the entire processing flow. If a demo was already created, clear it so we don't double-create. */
+  const handleRetry = async () => {
+    setRetryAttempt(a => a + 1);
+    // If a demo was created but later steps failed, keep it and continue from the failed task is complex —
+    // simplest reliable approach is to clean up the half-created demo and re-run.
+    if (createdDemoId) {
+      try {
+        await supabase.from('demo_environments').delete().eq('id', createdDemoId);
+      } catch (e) {
+        console.warn('Could not delete partially-created demo before retry:', e);
+      }
+      setCreatedDemoId(null);
+    }
+    setProcessingError(null);
+    setFailedTaskId(null);
+    startProcessing();
+  };
+
+  /** Go back to the wizard form (e.g. to fix a bad URL). */
+  const handleBackToForm = () => {
+    setProcessingTasks([]);
+    setProcessingError(null);
+    setFailedTaskId(null);
+    setStep('details');
   };
 
   const handleReviewComplete = async () => {
@@ -1008,12 +1140,63 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
                 })}
               </div>
 
-              {processingError && (
-                <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-sm text-destructive flex items-start gap-2">
-                  <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
-                  <span>{processingError}</span>
-                </div>
-              )}
+              {processingError && (() => {
+                const failedTask = processingTasks.find(t => t.id === failedTaskId);
+                const failedPhaseTitle = failedTask ? PHASE_META[failedTask.phase].title : null;
+                const isFatal = failedTaskId === 'create' || !createdDemoId;
+                return (
+                  <div className="rounded-lg bg-destructive/5 border border-destructive/30 p-4 space-y-3">
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-destructive/15 flex items-center justify-center shrink-0">
+                        <AlertTriangle className="w-4 h-4 text-destructive" />
+                      </div>
+                      <div className="flex-1 min-w-0 space-y-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h4 className="font-semibold text-sm text-destructive">
+                            {isFatal ? 'Demo creation failed' : 'Setup hit a problem'}
+                          </h4>
+                          {failedPhaseTitle && (
+                            <Badge variant="outline" className="text-[10px] border-destructive/30 text-destructive">
+                              {failedPhaseTitle}
+                            </Badge>
+                          )}
+                          {retryAttempt > 0 && (
+                            <Badge variant="outline" className="text-[10px]">Attempt {retryAttempt + 1}</Badge>
+                          )}
+                        </div>
+                        {failedTask && (
+                          <p className="text-xs text-muted-foreground">
+                            Stopped at: <span className="font-medium text-foreground">{failedTask.label}</span>
+                          </p>
+                        )}
+                        <p className="text-xs text-destructive/90 font-mono break-words bg-destructive/5 rounded px-2 py-1.5 mt-1">
+                          {processingError}
+                        </p>
+                        {!isFatal && createdDemoId && (
+                          <p className="text-xs text-muted-foreground italic">
+                            Your demo was created, but some optional setup didn't finish. You can continue and configure it manually, or retry to start over.
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-2 justify-end">
+                      <Button variant="ghost" size="sm" onClick={handleBackToForm}>
+                        <ArrowLeft className="w-3.5 h-3.5 mr-1.5" />
+                        Back to form
+                      </Button>
+                      {!isFatal && createdDemoId && (
+                        <Button variant="outline" size="sm" onClick={handleContinueAnyway}>
+                          Continue anyway
+                        </Button>
+                      )}
+                      <Button size="sm" onClick={handleRetry} className="gradient-primary">
+                        <Loader2 className="w-3.5 h-3.5 mr-1.5" />
+                        Retry
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           );
         })()}
