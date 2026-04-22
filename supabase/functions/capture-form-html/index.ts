@@ -328,6 +328,11 @@ Deno.serve(async (req) => {
 
     console.log('Form capture complete');
 
+    // Parse the captured form HTML into structured field metadata so the client
+    // can offer to auto-generate matching workflow steps.
+    const extractedFields = parseFormFields(formHtml);
+    console.log(`Extracted ${extractedFields.length} structured fields from the form`);
+
     const capturedData: CapturedFormData = {
       formHtml,
       formCss: relevantCss,
@@ -340,6 +345,7 @@ Deno.serve(async (req) => {
       formScreenshot: pageScreenshot || undefined,
       availableFormIds,
       detectedFrameworks,
+      extractedFields,
     };
 
     return new Response(
