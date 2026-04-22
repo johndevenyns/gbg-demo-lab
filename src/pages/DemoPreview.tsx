@@ -390,6 +390,19 @@ export default function DemoPreview() {
             onTriggerVerification={handlePortalVerification}
             onLogout={handlePortalLogout}
           />
+        ) : isHotelPortal ? (
+          <HotelPortalShell
+            userName={portalUserName}
+            userEmail={portalUser.email}
+            accentColor={demo.buttonColor || '#0E7490'}
+            logoUrl={demo.useUploadedLogo ? demo.uploadedLogoUrl : demo.logoUrl}
+            hotelName={demo.customerName}
+            portalConfig={demoIndustry?.portalConfig}
+            branding={portalBranding}
+            isNewAccount={portalUser.isNewAccount}
+            onTriggerVerification={handlePortalVerification}
+            onLogout={handlePortalLogout}
+          />
         ) : (
           <BankingPortalShell
             userName={portalUserName}
