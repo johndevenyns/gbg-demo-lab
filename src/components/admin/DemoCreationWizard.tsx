@@ -1140,12 +1140,63 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
                 })}
               </div>
 
-              {processingError && (
-                <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-sm text-destructive flex items-start gap-2">
-                  <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
-                  <span>{processingError}</span>
-                </div>
-              )}
+              {processingError && (() => {
+                const failedTask = processingTasks.find(t => t.id === failedTaskId);
+                const failedPhaseTitle = failedTask ? PHASE_META[failedTask.phase].title : null;
+                const isFatal = failedTaskId === 'create' || !createdDemoId;
+                return (
+                  <div className="rounded-lg bg-destructive/5 border border-destructive/30 p-4 space-y-3">
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-destructive/15 flex items-center justify-center shrink-0">
+                        <AlertTriangle className="w-4 h-4 text-destructive" />
+                      </div>
+                      <div className="flex-1 min-w-0 space-y-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h4 className="font-semibold text-sm text-destructive">
+                            {isFatal ? 'Demo creation failed' : 'Setup hit a problem'}
+                          </h4>
+                          {failedPhaseTitle && (
+                            <Badge variant="outline" className="text-[10px] border-destructive/30 text-destructive">
+                              {failedPhaseTitle}
+                            </Badge>
+                          )}
+                          {retryAttempt > 0 && (
+                            <Badge variant="outline" className="text-[10px]">Attempt {retryAttempt + 1}</Badge>
+                          )}
+                        </div>
+                        {failedTask && (
+                          <p className="text-xs text-muted-foreground">
+                            Stopped at: <span className="font-medium text-foreground">{failedTask.label}</span>
+                          </p>
+                        )}
+                        <p className="text-xs text-destructive/90 font-mono break-words bg-destructive/5 rounded px-2 py-1.5 mt-1">
+                          {processingError}
+                        </p>
+                        {!isFatal && createdDemoId && (
+                          <p className="text-xs text-muted-foreground italic">
+                            Your demo was created, but some optional setup didn't finish. You can continue and configure it manually, or retry to start over.
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-2 justify-end">
+                      <Button variant="ghost" size="sm" onClick={handleBackToForm}>
+                        <ArrowLeft className="w-3.5 h-3.5 mr-1.5" />
+                        Back to form
+                      </Button>
+                      {!isFatal && createdDemoId && (
+                        <Button variant="outline" size="sm" onClick={handleContinueAnyway}>
+                          Continue anyway
+                        </Button>
+                      )}
+                      <Button size="sm" onClick={handleRetry} className="gradient-primary">
+                        <Loader2 className="w-3.5 h-3.5 mr-1.5" />
+                        Retry
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           );
         })()}
