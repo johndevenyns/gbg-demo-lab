@@ -551,17 +551,6 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
       const passData: Record<string, string> = firstPass ? (firstPass.field_data as Record<string, string>) : {};
       const failData: Record<string, string> = firstFail ? (firstFail.field_data as Record<string, string>) : {};
       
-      await updateDemo.mutateAsync({
-        id: demo.id,
-        updates: {
-          storedTestData: {
-            passData,
-            failData,
-            showFillPassButton: shouldShowFillPass || Object.keys(passData).length > 0,
-            showFillFailButton: shouldShowFillFail || Object.keys(failData).length > 0,
-          },
-        },
-      });
       try {
         await updateDemo.mutateAsync({
           id: demo.id,
