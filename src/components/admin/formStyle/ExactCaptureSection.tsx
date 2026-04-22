@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Globe, Loader2, Paintbrush, CheckCircle, AlertCircle } from 'lucide-react';
+import { Globe, Loader2, Paintbrush, CheckCircle, AlertCircle, Search, Wand2, ListPlus } from 'lucide-react';
 import { CompareFixButton } from './CompareFixButton';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,7 +9,8 @@ import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { FormStyleConfig, DEFAULT_FORM_STYLE } from '@/types/formStyle';
-import { scrapingApi, FormElementStyles, CapturedFormData } from '@/lib/api/scraping';
+import { scrapingApi, FormElementStyles, CapturedFormData, ExtractedField } from '@/lib/api/scraping';
+import { FormStep, FormField, FormFieldType } from '@/types/demo';
 
 interface ExactCaptureSectionProps {
   formStyle: FormStyleConfig;
