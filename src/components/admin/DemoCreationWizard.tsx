@@ -508,17 +508,32 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
       let shouldShowFillPass = false;
       let shouldShowFillFail = false;
       if (selectedUseCases.length > 0) {
+        activeTaskId = 'use-cases';
         updateTaskStatus('use-cases', 'in_progress');
         setTaskDetail('use-cases', `Linking ${selectedUseCases.length} use case${selectedUseCases.length === 1 ? '' : 's'}…`);
+        let linked = 0;
+        const linkErrors: string[] = [];
         for (let i = 0; i < selectedUseCases.length; i++) {
-          await addUseCaseLink.mutateAsync({ demoId: demo.id, useCaseId: selectedUseCases[i], displayOrder: i, showOnLandingPage: !hiddenFromLanding.has(selectedUseCases[i]) });
-          const uc = globalUseCases.find(u => u.id === selectedUseCases[i]);
-          if (uc?.showFillPass) shouldShowFillPass = true;
-          if (uc?.showFillFail) shouldShowFillFail = true;
+          try {
+            await addUseCaseLink.mutateAsync({ demoId: demo.id, useCaseId: selectedUseCases[i], displayOrder: i, showOnLandingPage: !hiddenFromLanding.has(selectedUseCases[i]) });
+            linked += 1;
+            const uc = globalUseCases.find(u => u.id === selectedUseCases[i]);
+            if (uc?.showFillPass) shouldShowFillPass = true;
+            if (uc?.showFillFail) shouldShowFillFail = true;
+          } catch (e) {
+            linkErrors.push(e instanceof Error ? e.message : 'unknown');
+          }
         }
-        updateTaskStatus('use-cases', 'complete', `${selectedUseCases.length} linked`);
+        if (linkErrors.length === 0) {
+          updateTaskStatus('use-cases', 'complete', `${linked} linked`);
+        } else if (linked > 0) {
+          updateTaskStatus('use-cases', 'complete', `${linked} of ${selectedUseCases.length} linked (${linkErrors.length} failed)`);
+        } else {
+          updateTaskStatus('use-cases', 'error', `Could not link use cases: ${linkErrors[0]}`);
+        }
       }
 
+      activeTaskId = 'finalize';
       updateTaskStatus('finalize', 'in_progress');
       setTaskDetail('finalize', 'Loading Pass / Fail test profiles…');
       // Always populate test data from global profiles so Fill Pass/Fail works
@@ -547,7 +562,22 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
           },
         },
       });
-      updateTaskStatus('finalize', 'complete', 'Demo ready to preview');
+      try {
+        await updateDemo.mutateAsync({
+          id: demo.id,
+          updates: {
+            storedTestData: {
+              passData,
+              failData,
+              showFillPassButton: shouldShowFillPass || Object.keys(passData).length > 0,
+              showFillFailButton: shouldShowFillFail || Object.keys(failData).length > 0,
+            },
+          },
+        });
+        updateTaskStatus('finalize', 'complete', 'Demo ready to preview');
+      } catch (e) {
+        updateTaskStatus('finalize', 'error', e instanceof Error ? e.message : 'Failed to save test profiles');
+      }
 
       // If mirroring was enabled and we have captures, go to review step
       // Otherwise, finish immediately
