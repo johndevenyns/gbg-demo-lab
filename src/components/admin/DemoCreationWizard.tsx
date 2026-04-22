@@ -345,29 +345,34 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
         }
 
         // Generate screenshot-based capture
+        activeTaskId = 'scrape-screenshot';
         updateTaskStatus('scrape-screenshot', 'in_progress');
-        if (scrapedData?.screenshot) {
-          const screenshotSrc = getScreenshotSrc(scrapedData.screenshot);
-          // Determine natural height from the screenshot
-          const naturalHeight = 1000; // Default estimate
-          screenshotCapture = {
-            headerHtml: generateScreenshotHeaderHtml(screenshotSrc, naturalHeight),
-            footerHtml: generateScreenshotFooterHtml(screenshotSrc, naturalHeight),
-            css: JSON.stringify({
-              viewportScreenshots: {
-                desktop: { src: screenshotSrc, crop: { headerHeight: 180, headerOffsetY: 0, footerHeight: 180, footerOffsetY: 0 } },
-              }
-            }),
-          };
-          updateTaskStatus('scrape-screenshot', 'complete', 'Desktop snapshot saved');
-        } else {
-          updateTaskStatus('scrape-screenshot', 'error', 'No screenshot returned');
+        try {
+          if (scrapedData?.screenshot) {
+            const screenshotSrc = getScreenshotSrc(scrapedData.screenshot);
+            const naturalHeight = 1000; // Default estimate
+            screenshotCapture = {
+              headerHtml: generateScreenshotHeaderHtml(screenshotSrc, naturalHeight),
+              footerHtml: generateScreenshotFooterHtml(screenshotSrc, naturalHeight),
+              css: JSON.stringify({
+                viewportScreenshots: {
+                  desktop: { src: screenshotSrc, crop: { headerHeight: 180, headerOffsetY: 0, footerHeight: 180, footerOffsetY: 0 } },
+                }
+              }),
+            };
+            updateTaskStatus('scrape-screenshot', 'complete', 'Desktop snapshot saved');
+          } else {
+            updateTaskStatus('scrape-screenshot', 'skipped', 'No screenshot returned — you can capture manually later');
+          }
+        } catch (e) {
+          updateTaskStatus('scrape-screenshot', 'skipped', e instanceof Error ? e.message : 'Screenshot processing failed');
         }
 
         // Apply branding (colors, logo, formStyle, BOTH captures)
+        activeTaskId = 'apply';
         updateTaskStatus('apply', 'in_progress');
         const brandingUpdates: Record<string, unknown> = {
-          customerSiteUrl: siteUrl,
+          customerSiteUrl: normalizedSiteUrl,
           headerBgColor: scrapedData?.colors?.headerBgColor || '#1a1a2e',
           headerTextColor: scrapedData?.colors?.headerTextColor || '#ffffff',
           buttonColor: scrapedData?.colors?.buttonColor || '#6366f1',
@@ -393,8 +398,12 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
           brandingUpdates.formStyle = formElementStylesToConfig(scrapedData.formStyles);
         }
 
-        await updateDemo.mutateAsync({ id: demo.id, updates: brandingUpdates as any });
-        updateTaskStatus('apply', 'complete', `Brand color ${brandingUpdates.buttonColor}`);
+        try {
+          await updateDemo.mutateAsync({ id: demo.id, updates: brandingUpdates as any });
+          updateTaskStatus('apply', 'complete', `Brand color ${brandingUpdates.buttonColor}`);
+        } catch (e) {
+          updateTaskStatus('apply', 'error', e instanceof Error ? e.message : 'Failed to save branding');
+        }
 
         // Build preview documents for review step
         const appliedButtonColor = (scrapedData?.colors?.buttonColor || '#6366f1');
@@ -413,19 +422,21 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
         let extractedFields: ExtractedField[] = [];
         let capturedFormSteps: FormStep[] | null = null;
         try {
+          activeTaskId = 'discover-form';
           updateTaskStatus('discover-form', 'in_progress');
           setTaskDetail('discover-form', 'Scanning /apply, /contact, /signup…');
-          const discovery = await scrapingApi.discoverForms(siteUrl, { formType: 'any', maxPages: 6 });
+          const discovery = await scrapingApi.discoverForms(normalizedSiteUrl, { formType: 'any', maxPages: 6 });
           if (discovery.success && discovery.data?.best) {
             const best = discovery.data.best;
             setDiscoveredFormUrl(best.pageUrl);
             updateTaskStatus(
               'discover-form',
               'complete',
-              `Found ${best.detectedKind} form on ${new URL(best.pageUrl).pathname || '/'} (${best.fieldCount} fields)`,
+              `Found ${best.detectedKind} form on ${safePathname(best.pageUrl)} (${best.fieldCount} fields)`,
             );
 
             try {
+              activeTaskId = 'capture-form';
               updateTaskStatus('capture-form', 'in_progress');
               setTaskDetail('capture-form', 'Extracting HTML, CSS & field metadata…');
               const capture = await scrapingApi.captureFormById(best.pageUrl, best.formId || '');
