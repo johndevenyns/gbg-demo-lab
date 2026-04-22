@@ -80,6 +80,37 @@ function generateScreenshotFooterHtml(src: string, naturalHeight: number): strin
   return `<div style="width: 100%; overflow: hidden; position: relative; height: 0; padding-bottom: ${footerHeightPercent}%;"><img src="${src}" style="position: absolute; width: 100%; top: -${footerTopPercent}%; left: 0;" alt="Site footer" /></div>`;
 }
 
+/** Safely normalize a user-entered URL. Adds https:// if missing and never throws. */
+function safeNormalizeUrl(input: string): string | null {
+  if (!input) return null;
+  const trimmed = input.trim();
+  if (!trimmed) return null;
+  const withProto = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+  try {
+    return new URL(withProto).toString();
+  } catch {
+    return null;
+  }
+}
+
+/** Safely extract a hostname; returns the original string if URL parsing fails. */
+function safeHostname(input: string): string {
+  try {
+    return new URL(/^https?:\/\//i.test(input) ? input : `https://${input}`).hostname;
+  } catch {
+    return input;
+  }
+}
+
+/** Safely extract a pathname; returns '/' on failure. */
+function safePathname(input: string): string {
+  try {
+    return new URL(input).pathname || '/';
+  } catch {
+    return '/';
+  }
+}
+
 export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreationWizardProps) {
   const createDemo = useCreateDemo();
   const updateDemo = useUpdateDemo();
