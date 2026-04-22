@@ -153,6 +153,24 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
     }
   }, [hasPortal, selectedIndustryId, useCasesInitialized, globalUseCases]);
 
+  // Elapsed-time ticker while processing
+  useEffect(() => {
+    if (step !== 'processing' || !processingStartedAt) return;
+    const id = setInterval(() => {
+      setElapsedMs(Date.now() - processingStartedAt);
+    }, 250);
+    return () => clearInterval(id);
+  }, [step, processingStartedAt]);
+
+  // Rotate fun status messages
+  useEffect(() => {
+    if (step !== 'processing') return;
+    const id = setInterval(() => {
+      setFunMessageIndex(i => (i + 1) % FUN_MESSAGES.length);
+    }, 2400);
+    return () => clearInterval(id);
+  }, [step]);
+
   const resetForm = () => {
     setStep('details');
     setCustomerName("");
