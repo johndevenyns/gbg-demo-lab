@@ -16,6 +16,8 @@ interface ExactCaptureSectionProps {
   formStyle: FormStyleConfig;
   onUpdateStyle: (style: FormStyleConfig) => void;
   isActive: boolean;
+  /** Optional: when provided, enables a "Generate Form Steps" button that builds workflow steps from the captured fields. */
+  onGenerateFormSteps?: (steps: FormStep[]) => void;
 }
 
 // Helper to calculate luminance and determine if color is light or dark
