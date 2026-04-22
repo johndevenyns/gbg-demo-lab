@@ -11,6 +11,7 @@ import {
   DEFAULT_FORM_STYLE,
 } from '@/types/formStyle';
 import { DemoEnvironment } from '@/types/demo';
+import { FormStep } from '@/types/demo';
 import { ScrapedBranding } from '@/lib/api/scraping';
 import { useToast } from '@/hooks/use-toast';
 import { getBorderRadius, getPadding, getFontSize, getLabelWeight, getFormBorderRadius, getFormShadow, getTitleFontSize, getTitleFontWeight, getButtonPadding, getButtonBorderRadius, getButtonFontWeight, getButtonShadow } from '@/lib/formStyleUtils';
@@ -32,9 +33,11 @@ interface FormStyleCardProps {
   onUpdateStyle: (style: FormStyleConfig) => void;
   onUpdateButtonColor?: (color: string) => void;
   scrapedBranding?: ScrapedBranding | null;
+  /** Optional: when provided, enables auto-generating workflow steps from a captured form. */
+  onGenerateFormSteps?: (steps: FormStep[]) => void;
 }
 
-export function FormStyleCard({ demo, formStyle, onUpdateStyle, onUpdateButtonColor }: FormStyleCardProps) {
+export function FormStyleCard({ demo, formStyle, onUpdateStyle, onUpdateButtonColor, onGenerateFormSteps }: FormStyleCardProps) {
   const { toast } = useToast();
   
   // Determine active method from current formStyle source
@@ -502,6 +505,7 @@ export function FormStyleCard({ demo, formStyle, onUpdateStyle, onUpdateButtonCo
                 formStyle={formStyle}
                 onUpdateStyle={onUpdateStyle}
                 isActive={true}
+                onGenerateFormSteps={onGenerateFormSteps}
               />
             )}
 

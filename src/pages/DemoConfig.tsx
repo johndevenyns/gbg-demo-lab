@@ -350,6 +350,7 @@ export default function DemoConfig() {
                 formStyle={localDemo.formStyle || DEFAULT_FORM_STYLE}
                 onUpdateStyle={(style: FormStyleConfig) => handleUpdate({ formStyle: style })}
                 onUpdateButtonColor={(color: string) => handleUpdate({ buttonColor: color })}
+                onGenerateFormSteps={(steps) => handleUpdate({ formSteps: steps })}
               />
            }
          />
