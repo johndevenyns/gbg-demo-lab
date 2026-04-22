@@ -8,9 +8,10 @@ import { RetailPortalShell } from '@/components/preview/mockPortal/RetailPortalS
 import { GamingPortalShell } from '@/components/preview/mockPortal/GamingPortalShell';
 import { RentalCarPortalShell } from '@/components/preview/mockPortal/RentalCarPortalShell';
 import { InsurancePortalShell } from '@/components/preview/mockPortal/InsurancePortalShell';
-import { PortalConfig, DEFAULT_BANKING_CONFIG, DEFAULT_PHARMACY_CONFIG, DEFAULT_RETAIL_CONFIG, DEFAULT_GAMING_CONFIG, DEFAULT_RENTAL_CAR_CONFIG, DEFAULT_INSURANCE_CONFIG } from '@/types/portalConfig';
+import { HotelPortalShell } from '@/components/preview/mockPortal/HotelPortalShell';
+import { PortalConfig, DEFAULT_BANKING_CONFIG, DEFAULT_PHARMACY_CONFIG, DEFAULT_RETAIL_CONFIG, DEFAULT_GAMING_CONFIG, DEFAULT_RENTAL_CAR_CONFIG, DEFAULT_INSURANCE_CONFIG, DEFAULT_HOTEL_CONFIG } from '@/types/portalConfig';
 
-const SUPPORTED_PORTALS = ['banking', 'pharmacy', 'retail', 'gaming', 'rental_car', 'insurance'];
+const SUPPORTED_PORTALS = ['banking', 'pharmacy', 'retail', 'gaming', 'rental_car', 'insurance', 'hotel'];
 
 interface PortalPreviewDialogProps {
   open: boolean;

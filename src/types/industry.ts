@@ -21,6 +21,7 @@ export const PORTAL_TYPE_OPTIONS = [
   { value: 'retail', label: 'Online Retail', description: 'Online store with products, orders & account management' },
   { value: 'gaming', label: 'Gaming', description: 'Online sportsbook & casino portal with bets & responsible gaming' },
   { value: 'insurance', label: 'Insurance', description: 'Insurance portal with policies, claims & coverage management' },
+  { value: 'hotel', label: 'Hotel Management', description: 'Hotel booking portal with room reservations & checkout verification' },
   { value: 'healthcare', label: 'Healthcare', description: 'Patient portal (coming soon)' },
 ] as const;
 
