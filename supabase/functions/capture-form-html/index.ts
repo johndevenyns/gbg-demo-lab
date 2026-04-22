@@ -86,6 +86,31 @@ interface CapturedFormData {
   formScreenshot?: string;
   availableFormIds?: string[];
   detectedFrameworks?: DetectedFramework[];
+  extractedFields?: ExtractedField[];
+}
+
+/**
+ * A single field parsed out of the captured form HTML, with enough metadata
+ * to map it to one of our internal FormFieldType values.
+ */
+export interface ExtractedField {
+  /** Best-guess canonical type used by our form builder */
+  canonicalType: string;
+  /** Raw input type from the source (text, email, tel, password, select, textarea, checkbox, radio, date, ...) */
+  rawType: string;
+  /** Human label (from <label for>, aria-label, placeholder, or name fallback) */
+  label: string;
+  /** name attribute */
+  name: string;
+  /** id attribute */
+  id: string | null;
+  /** placeholder attribute */
+  placeholder: string | null;
+  required: boolean;
+  /** For select/radio — list of {value,label} options */
+  options?: Array<{ value: string; label: string }>;
+  /** Confidence 0-1 in the canonicalType mapping */
+  confidence: number;
 }
 
 Deno.serve(async (req) => {
