@@ -866,44 +866,157 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
         )}
 
         {/* Processing Screen */}
-        {step === 'processing' && (
-          <div className="py-6 space-y-6">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Progress</span>
-                <span className="font-medium">{progressPercent}%</span>
+        {step === 'processing' && (() => {
+          const activeTask = processingTasks.find(t => t.status === 'in_progress');
+          const lastCompleted = [...processingTasks].reverse().find(t => t.status === 'complete' || t.status === 'skipped' || t.status === 'error');
+          const headlineTask = activeTask || lastCompleted;
+          const ActiveIcon = headlineTask ? PHASE_META[headlineTask.phase].icon : Sparkles;
+          const activeTint = headlineTask ? PHASE_META[headlineTask.phase].tint : 'text-primary';
+          const elapsedSec = Math.floor(elapsedMs / 1000);
+          const elapsedLabel = elapsedSec < 60 ? `${elapsedSec}s` : `${Math.floor(elapsedSec / 60)}m ${elapsedSec % 60}s`;
+
+          // Group tasks by phase, only showing phases that have tasks
+          const phaseOrder: TaskPhase[] = ['foundation', 'branding', 'forms', 'workflow', 'finalize'];
+          const tasksByPhase = phaseOrder
+            .map(phase => ({ phase, tasks: processingTasks.filter(t => t.phase === phase) }))
+            .filter(g => g.tasks.length > 0);
+
+          return (
+            <div className="py-4 space-y-5">
+              {/* Hero status: animated icon + current task + elapsed */}
+              <div className="relative overflow-hidden rounded-xl border border-border bg-gradient-to-br from-primary/5 via-background to-muted/30 p-5">
+                <div className="absolute -top-12 -right-12 w-40 h-40 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
+                <div className="relative flex items-start gap-4">
+                  <div className={cn(
+                    "w-14 h-14 rounded-xl flex items-center justify-center bg-background border border-border shadow-sm shrink-0",
+                    activeTask && "animate-pulse",
+                  )}>
+                    <ActiveIcon className={cn("w-7 h-7", activeTint)} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                        {headlineTask ? PHASE_META[headlineTask.phase].title : 'Starting'}
+                      </span>
+                      <Badge variant="outline" className="text-[10px]">{elapsedLabel}</Badge>
+                    </div>
+                    <h3 className="text-base font-semibold mt-0.5 truncate">
+                      {activeTask ? activeTask.label : (processingError ? 'Stopped' : 'All done!')}
+                    </h3>
+                    <p className="text-sm text-muted-foreground mt-0.5 truncate">
+                      {activeTask?.detail || (activeTask ? FUN_MESSAGES[funMessageIndex] : 'Wrapping up your demo…')}
+                    </p>
+                  </div>
+                </div>
+                {/* Progress bar */}
+                <div className="mt-4 space-y-1">
+                  <Progress value={progressPercent} className="h-2" />
+                  <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                    <span>{processingTasks.filter(t => t.status === 'complete' || t.status === 'skipped').length} of {processingTasks.length} complete</span>
+                    <span className="font-medium">{progressPercent}%</span>
+                  </div>
+                </div>
               </div>
-              <Progress value={progressPercent} className="h-3" />
-            </div>
-            <div className="space-y-3">
-              {processingTasks.map((task) => (
-                <div
-                  key={task.id}
-                  className={cn(
-                    "flex items-center gap-3 p-3 rounded-lg transition-all",
-                    task.status === 'in_progress' && "bg-primary/5",
-                    task.status === 'complete' && "opacity-60"
-                  )}
-                >
-                  {task.status === 'pending' && <div className="w-5 h-5 rounded-full border-2 border-muted-foreground/30" />}
-                  {task.status === 'in_progress' && <Loader2 className="w-5 h-5 animate-spin text-primary" />}
-                  {task.status === 'complete' && <Check className="w-5 h-5 text-green-500" />}
-                  {task.status === 'error' && (
-                    <div className="w-5 h-5 rounded-full bg-destructive/20 flex items-center justify-center">
-                      <span className="text-destructive text-xs">!</span>
+
+              {/* Discovery highlights */}
+              {(discoveredFormUrl || discoveredFieldCount !== null) && (
+                <div className="rounded-lg border border-border bg-muted/30 p-3 text-xs space-y-1">
+                  {discoveredFormUrl && (
+                    <div className="flex items-center gap-2">
+                      <FileSearch className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                      <span className="text-muted-foreground">Form found at</span>
+                      <code className="font-mono text-foreground truncate">{discoveredFormUrl}</code>
                     </div>
                   )}
-                  <span className={cn("text-sm", task.status === 'in_progress' && "font-medium")}>{task.label}</span>
+                  {discoveredFieldCount !== null && discoveredFieldCount > 0 && (
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="w-3.5 h-3.5 text-primary shrink-0" />
+                      <span className="text-muted-foreground">{discoveredFieldCount} field{discoveredFieldCount === 1 ? '' : 's'} extracted and mapped to canonical types</span>
+                    </div>
+                  )}
                 </div>
-              ))}
-            </div>
-            {processingError && (
-              <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-sm text-destructive">
-                {processingError}
+              )}
+
+              {/* Phased task list */}
+              <div className="space-y-3">
+                {tasksByPhase.map(({ phase, tasks }) => {
+                  const PhaseIcon = PHASE_META[phase].icon;
+                  const phaseDone = tasks.every(t => t.status === 'complete' || t.status === 'skipped' || t.status === 'error');
+                  const phaseActive = tasks.some(t => t.status === 'in_progress');
+                  return (
+                    <div key={phase} className="rounded-lg border border-border overflow-hidden">
+                      <div className={cn(
+                        "flex items-center gap-2 px-3 py-2 border-b border-border bg-muted/20",
+                        phaseActive && "bg-primary/5",
+                      )}>
+                        <PhaseIcon className={cn("w-4 h-4", PHASE_META[phase].tint)} />
+                        <span className="text-xs font-semibold uppercase tracking-wider">{PHASE_META[phase].title}</span>
+                        {phaseDone && <Check className="w-3.5 h-3.5 text-emerald-500 ml-auto" />}
+                        {phaseActive && <Loader2 className="w-3.5 h-3.5 animate-spin text-primary ml-auto" />}
+                      </div>
+                      <div className="divide-y divide-border">
+                        {tasks.map(task => (
+                          <div
+                            key={task.id}
+                            className={cn(
+                              "flex items-start gap-3 px-3 py-2.5 transition-all",
+                              task.status === 'in_progress' && "bg-primary/5",
+                            )}
+                          >
+                            <div className="mt-0.5 shrink-0">
+                              {task.status === 'pending' && <div className="w-4 h-4 rounded-full border-2 border-muted-foreground/30" />}
+                              {task.status === 'in_progress' && <Loader2 className="w-4 h-4 animate-spin text-primary" />}
+                              {task.status === 'complete' && (
+                                <div className="w-4 h-4 rounded-full bg-emerald-500/15 flex items-center justify-center">
+                                  <Check className="w-3 h-3 text-emerald-600" />
+                                </div>
+                              )}
+                              {task.status === 'skipped' && (
+                                <div className="w-4 h-4 rounded-full bg-muted flex items-center justify-center">
+                                  <span className="text-muted-foreground text-[10px] font-bold">–</span>
+                                </div>
+                              )}
+                              {task.status === 'error' && (
+                                <div className="w-4 h-4 rounded-full bg-destructive/20 flex items-center justify-center">
+                                  <AlertTriangle className="w-2.5 h-2.5 text-destructive" />
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className={cn(
+                                "text-sm leading-tight",
+                                task.status === 'in_progress' && "font-medium",
+                                task.status === 'complete' && "text-muted-foreground",
+                                task.status === 'skipped' && "text-muted-foreground line-through decoration-muted-foreground/30",
+                              )}>
+                                {task.label}
+                              </p>
+                              {task.detail && (
+                                <p className={cn(
+                                  "text-xs mt-0.5 truncate",
+                                  task.status === 'error' ? "text-destructive" : "text-muted-foreground",
+                                )}>
+                                  {task.detail}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-            )}
-          </div>
-        )}
+
+              {processingError && (
+                <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-sm text-destructive flex items-start gap-2">
+                  <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+                  <span>{processingError}</span>
+                </div>
+              )}
+            </div>
+          );
+        })()}
 
         {/* Review Step - Compare captures side by side */}
         {step === 'review' && (
