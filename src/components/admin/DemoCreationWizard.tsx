@@ -34,11 +34,32 @@ interface DemoCreationWizardProps {
 
 type WizardStep = 'details' | 'industry' | 'portal' | 'use-cases' | 'processing' | 'review';
 
+type TaskPhase = 'foundation' | 'branding' | 'forms' | 'workflow' | 'finalize';
+
 interface ProcessingTask {
   id: string;
   label: string;
-  status: 'pending' | 'in_progress' | 'complete' | 'error';
+  phase: TaskPhase;
+  status: 'pending' | 'in_progress' | 'complete' | 'error' | 'skipped';
+  detail?: string;
 }
+
+const PHASE_META: Record<TaskPhase, { title: string; icon: React.ComponentType<{ className?: string }>; tint: string }> = {
+  foundation: { title: 'Foundation', icon: Database, tint: 'text-blue-500' },
+  branding: { title: 'Branding & Site Mirror', icon: Palette, tint: 'text-purple-500' },
+  forms: { title: 'Form Discovery', icon: FileSearch, tint: 'text-amber-500' },
+  workflow: { title: 'Workflow', icon: Workflow, tint: 'text-emerald-500' },
+  finalize: { title: 'Finishing Touches', icon: Rocket, tint: 'text-pink-500' },
+};
+
+const FUN_MESSAGES = [
+  'Mixing pixels and policies…',
+  'Teaching forms to behave…',
+  'Borrowing your customer\'s style…',
+  'Wiring up the workflow…',
+  'Polishing the demo to a shine…',
+  'Aligning the verification stars…',
+];
 
 // Helper to generate screenshot-based header/footer HTML
 function getScreenshotSrc(screenshot: string): string {
