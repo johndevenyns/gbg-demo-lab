@@ -521,6 +521,29 @@ export function ExactCaptureSection({
           )}
         </Button>
 
+        {/* Auto-Detect Form (site crawl) */}
+        <Button
+          onClick={handleAutoDetect}
+          disabled={!captureUrl || isDiscovering || isCapturing}
+          className="w-full"
+          variant="outline"
+        >
+          {isDiscovering ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Searching site for forms...
+            </>
+          ) : (
+            <>
+              <Search className="w-4 h-4 mr-2" />
+              Auto-Detect Form on Site
+            </>
+          )}
+        </Button>
+        <p className="text-xs text-muted-foreground -mt-2">
+          Crawls common pages (apply, contact, signup, quote) and picks the best application/contact form.
+        </p>
+
         {/* Capture Status Feedback */}
         {captureStatus !== 'idle' && captureMessage && (
           <Alert
@@ -566,6 +589,9 @@ export function ExactCaptureSection({
               <span className="font-medium text-green-700 dark:text-green-400">
                 Form Captured: <code className="text-xs">{formStyle.capturedFormId}</code>
               </span>
+              {refineScore !== null && (
+                <Badge variant="secondary" className="ml-auto">AI match: {refineScore}%</Badge>
+              )}
             </div>
             <p className="text-xs text-muted-foreground">
               From: {formStyle.capturedSourceUrl}
@@ -577,7 +603,42 @@ export function ExactCaptureSection({
               <div className="flex flex-wrap gap-2 mt-2">
                 <Badge variant="outline" className="text-xs">Labels: {formStyle.capturedPatterns.labelStyle}</Badge>
                 <Badge variant="outline" className="text-xs">Layout: {formStyle.capturedPatterns.fieldLayout}</Badge>
+                {capturedData?.extractedFields && (
+                  <Badge variant="outline" className="text-xs">Fields: {capturedData.extractedFields.length}</Badge>
+                )}
               </div>
+            )}
+
+            <div className="flex flex-wrap gap-2 pt-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleRefineWithAi}
+                disabled={isRefining || !originalScreenshot}
+              >
+                {isRefining ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                    Refining with AI...
+                  </>
+                ) : (
+                  <>
+                    <Wand2 className="w-3.5 h-3.5 mr-1.5" />
+                    Refine with AI
+                  </>
+                )}
+              </Button>
+              {onGenerateFormSteps && capturedData?.extractedFields && capturedData.extractedFields.length > 0 && (
+                <Button size="sm" variant="outline" onClick={handleGenerateSteps}>
+                  <ListPlus className="w-3.5 h-3.5 mr-1.5" />
+                  Generate Form Steps ({capturedData.extractedFields.length})
+                </Button>
+              )}
+            </div>
+            {onGenerateFormSteps && capturedData?.extractedFields && capturedData.extractedFields.length > 0 && (
+              <p className="text-xs text-muted-foreground">
+                Generate Form Steps will replace your current workflow with one step containing the captured fields, mapped to canonical types (name, email, phone, address, etc.).
+              </p>
             )}
           </div>
         )}
