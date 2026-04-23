@@ -341,7 +341,19 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
           const cssKb = Math.round((scrapedData.cssContent?.length || 0) / 1024);
           updateTaskStatus('scrape-html', 'complete', `Header ${headerKb}KB · CSS ${cssKb}KB`);
         } else {
-          updateTaskStatus('scrape-html', 'error', response.error || 'Could not fetch site HTML');
+          // Edge function may return partialData (screenshot, logo, colors) even when
+          // HTML capture failed — use it so screenshot mirroring still works.
+          const partial = (response as { partialData?: typeof scrapedData }).partialData;
+          if (partial) {
+            scrapedData = partial;
+            updateTaskStatus(
+              'scrape-html',
+              'skipped',
+              'HTML capture blocked (likely SPA/bot protection) — using Screenshot method instead'
+            );
+          } else {
+            updateTaskStatus('scrape-html', 'error', response.error || 'Could not fetch site HTML');
+          }
         }
 
         // Generate screenshot-based capture
