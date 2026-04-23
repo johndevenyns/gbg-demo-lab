@@ -996,6 +996,188 @@ function makeAbsoluteUrl(url: string, baseUrl: URL): string {
   return baseUrl.origin + '/' + url;
 }
 
+// ============== LOGO EXTRACTION ==============
+
+/**
+ * Heuristically detect URLs that are almost certainly NOT a site logo
+ * (hero/banner/cover/social images). Used to filter out false positives
+ * from Firecrawl's branding payload and from ogImage fallbacks.
+ */
+function looksLikeHeroImage(url: string): boolean {
+  if (!url) return true;
+  const lower = url.toLowerCase();
+  // Common patterns for marketing / hero / social imagery
+  const heroSignals = [
+    'hero', 'banner', 'cover', 'background', 'bg-', '/bg/',
+    'og-image', 'og_image', 'opengraph', 'social', 'share-image',
+    'screenshot', 'preview', 'thumbnail-large', 'feature-image',
+    'masthead', 'splash',
+  ];
+  return heroSignals.some((s) => lower.includes(s));
+}
+
+/**
+ * Heuristically score a URL/alt/class combo for "logo-ness". Higher = more
+ * likely to be the actual logo. We prefer images explicitly labeled "logo",
+ * placed inside the home-link (`<a href="/">`), small file names like
+ * `logo.svg`, and SVG/PNG formats.
+ */
+function scoreLogoCandidate(opts: {
+  src: string;
+  alt?: string;
+  className?: string;
+  insideHomeLink?: boolean;
+  width?: number;
+  height?: number;
+}): number {
+  const src = (opts.src || '').toLowerCase();
+  const alt = (opts.alt || '').toLowerCase();
+  const cls = (opts.className || '').toLowerCase();
+  let score = 0;
+
+  if (looksLikeHeroImage(src)) return -100;
+
+  if (src.includes('logo')) score += 50;
+  if (alt.includes('logo')) score += 30;
+  if (cls.includes('logo')) score += 30;
+  if (alt.includes('home')) score += 5;
+
+  if (opts.insideHomeLink) score += 25;
+
+  // SVG and small PNGs are typical logo formats
+  if (src.endsWith('.svg')) score += 20;
+  if (src.endsWith('.png')) score += 5;
+
+  // Penalize obvious non-logo alts/srcs
+  if (alt.includes('hero') || alt.includes('banner')) score -= 50;
+
+  // Penalize huge images (likely hero/banner). Only applies if dimensions known.
+  if (opts.width && opts.width > 600) score -= 20;
+  if (opts.height && opts.height > 200) score -= 20;
+
+  return score;
+}
+
+/**
+ * Extract the most likely logo from the captured header HTML.
+ *
+ * Strategy:
+ *   1. Find every <img> in the header and score it (src/alt/class hints,
+ *      whether it's inside the site's home link, sane dimensions).
+ *   2. If no <img> wins, look for an inline <svg> inside the home link and
+ *      serialize it as a `data:image/svg+xml;base64,...` URL so the admin
+ *      preview still gets a real, accurate logo thumbnail (this is the
+ *      common case for sites built on Elementor/WordPress, including
+ *      stayntouch.com).
+ */
+function extractLogoFromHeader(headerHtml: string, baseUrl: URL): string | null {
+  if (!headerHtml) return null;
+
+  // Identify the "home link" (anchor pointing to "/" or the site's own root)
+  // so we can boost candidates inside it.
+  const homeHost = baseUrl.host.replace(/^www\./, '');
+  const homeLinkRanges: Array<[number, number]> = [];
+  const anchorRegex = /<a\b[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi;
+  let aMatch: RegExpExecArray | null;
+  while ((aMatch = anchorRegex.exec(headerHtml)) !== null) {
+    const href = (aMatch[1] || '').trim();
+    if (!href) continue;
+    let isHome = false;
+    if (href === '/' || href === '#' || href === baseUrl.origin || href === baseUrl.origin + '/') {
+      isHome = true;
+    } else {
+      try {
+        const u = new URL(href, baseUrl.origin);
+        const host = u.host.replace(/^www\./, '');
+        if (host === homeHost && (u.pathname === '/' || u.pathname === '')) {
+          isHome = true;
+        }
+      } catch { /* relative odd href, skip */ }
+    }
+    if (isHome) {
+      const start = aMatch.index;
+      const end = start + aMatch[0].length;
+      homeLinkRanges.push([start, end]);
+    }
+  }
+  const isInsideHomeLink = (idx: number) =>
+    homeLinkRanges.some(([s, e]) => idx >= s && idx <= e);
+
+  // ---- Pass 1: <img> candidates --------------------------------------------
+  const imgRegex = /<img\b[^>]*>/gi;
+  let best: { url: string; score: number } | null = null;
+  let imgMatch: RegExpExecArray | null;
+  while ((imgMatch = imgRegex.exec(headerHtml)) !== null) {
+    const tag = imgMatch[0];
+    const srcMatch = tag.match(/\bsrc=["']([^"']+)["']/i);
+    if (!srcMatch) continue;
+    const rawSrc = srcMatch[1];
+    if (!rawSrc || rawSrc.startsWith('data:image/gif')) continue;
+    const altMatch = tag.match(/\balt=["']([^"']*)["']/i);
+    const classMatch = tag.match(/\bclass=["']([^"']*)["']/i);
+    const widthMatch = tag.match(/\bwidth=["']?(\d+)/i);
+    const heightMatch = tag.match(/\bheight=["']?(\d+)/i);
+    const absSrc = makeAbsoluteUrl(rawSrc, baseUrl);
+
+    const score = scoreLogoCandidate({
+      src: absSrc,
+      alt: altMatch?.[1],
+      className: classMatch?.[1],
+      insideHomeLink: isInsideHomeLink(imgMatch.index),
+      width: widthMatch ? parseInt(widthMatch[1], 10) : undefined,
+      height: heightMatch ? parseInt(heightMatch[1], 10) : undefined,
+    });
+
+    if (score > 0 && (!best || score > best.score)) {
+      best = { url: absSrc, score };
+    }
+  }
+
+  if (best) return best.url;
+
+  // ---- Pass 2: inline <svg> inside the home link ---------------------------
+  // Many modern site builders (Elementor, Webflow, Framer) ship the logo as an
+  // inline SVG — there is no <img> at all. Serialize the first <svg> inside
+  // the home link as a base64 data URL so the admin still sees the right mark.
+  for (const [s, e] of homeLinkRanges) {
+    const linkBody = headerHtml.slice(s, e);
+    const svgMatch = linkBody.match(/<svg\b[\s\S]*?<\/svg>/i);
+    if (svgMatch) {
+      const svg = svgMatch[0];
+      try {
+        // Encode as UTF-8 base64 (Deno supports btoa on Latin1; we go via TextEncoder)
+        const bytes = new TextEncoder().encode(svg);
+        let bin = '';
+        for (const b of bytes) bin += String.fromCharCode(b);
+        const b64 = btoa(bin);
+        return `data:image/svg+xml;base64,${b64}`;
+      } catch (e) {
+        console.warn('Failed to serialize inline SVG logo:', e);
+      }
+    }
+  }
+
+  // ---- Pass 3: any inline <svg> at the top of the header (last resort) ----
+  // Only consider the FIRST SVG in the header — later ones tend to be
+  // hamburger icons, search glyphs, etc.
+  const firstSvgMatch = headerHtml.match(/<svg\b[\s\S]*?<\/svg>/i);
+  if (firstSvgMatch) {
+    const svg = firstSvgMatch[0];
+    // Skip obvious icon SVGs (very small viewBoxes / icon class names)
+    const isLikelyIcon = /\bclass=["'][^"']*(icon|menu|toggle|hamburger|search|caret|chevron|arrow)[^"']*["']/i.test(svg);
+    if (!isLikelyIcon) {
+      try {
+        const bytes = new TextEncoder().encode(svg);
+        let bin = '';
+        for (const b of bytes) bin += String.fromCharCode(b);
+        return `data:image/svg+xml;base64,${btoa(bin)}`;
+      } catch { /* ignore */ }
+    }
+  }
+
+  return null;
+}
+
 // ============== CSS EXTRACTION (fallback + form styles) ==============
 
 async function extractAndInlineCss(html: string, baseUrl: URL): Promise<string> {
