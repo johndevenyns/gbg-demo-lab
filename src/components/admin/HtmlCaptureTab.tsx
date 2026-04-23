@@ -4,6 +4,7 @@ import { Globe, Loader2, ExternalLink, X, Eye, Paintbrush, Check, Ban, Code, Che
  import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Textarea } from "@/components/ui/textarea";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Badge } from "@/components/ui/badge";
@@ -61,6 +62,7 @@ export function HtmlCaptureTab({ demo, url, onUrlChange, onApply, isConfigured, 
     const [refinementScore, setRefinementScore] = useState<number | null>(null);
     const [fetchProgress, setFetchProgress] = useState<string>('');
     const [scrapedData, setScrapedData] = useState<ScrapedBranding | null>(null);
+    const [fetchFeedback, setFetchFeedback] = useState<{ title: string; description: string; destructive?: boolean } | null>(null);
     const abortControllerRef = useRef<AbortController | null>(null);
     
     // Editable HTML/CSS state (for fresh fetch)
@@ -146,6 +148,7 @@ export function HtmlCaptureTab({ demo, url, onUrlChange, onApply, isConfigured, 
       setIsLoading(true);
       setFetchProgress('Fetching site content...');
       setRefinementScore(null);
+      setFetchFeedback(null);
       try {
       const response = await scrapingApi.scrapeSiteBranding(url, controller.signal);
         if (controller.signal.aborted) return;
@@ -184,7 +187,41 @@ export function HtmlCaptureTab({ demo, url, onUrlChange, onApply, isConfigured, 
               title: "Site Fetched",
               description: `Extracted ${parts.join(", ")}. Use 'Refine with AI' on the live preview to polish the capture.`,
             });
+            if (!hasHeader || !hasFooter || !hasCss) {
+              const missingParts = [
+                !hasHeader ? 'header' : null,
+                !hasFooter ? 'footer' : null,
+                !hasCss ? 'CSS' : null,
+              ].filter(Boolean).join(', ');
+              setFetchFeedback({
+                title: 'Partial HTML capture',
+                description: `The fetch completed, but ${missingParts} could not be fully extracted from this site. Review the preview before applying, or use Screenshot Setup if the HTML version looks wrong.`,
+              });
+            } else {
+              setFetchFeedback({
+                title: 'HTML capture ready',
+                description: 'Header, footer, and CSS were extracted and are ready to review.',
+              });
+            }
           }
+        } else if (response.partialData) {
+          const partial = response.partialData;
+          onUnifiedFetchComplete?.(partial);
+          setScrapedData(null);
+          const hasScreenshot = !!(partial.screenshot || partial.screenshots?.desktop);
+          const description = response.error || (hasScreenshot
+            ? 'The site did not yield usable HTML header/footer content, but a screenshot fallback is available in Screenshot Setup.'
+            : 'The site did not yield usable HTML header/footer content.');
+          setFetchFeedback({
+            title: 'HTML capture unavailable',
+            description,
+            destructive: true,
+          });
+          toast({
+            title: 'HTML Capture Unavailable',
+            description,
+            variant: 'destructive',
+          });
         } else {
           const errMsg = response.error || "Could not extract content";
           const isBlocked = errMsg.toLowerCase().includes('403') || errMsg.toLowerCase().includes('blocked') || errMsg.toLowerCase().includes('forbidden');
@@ -195,6 +232,7 @@ export function HtmlCaptureTab({ demo, url, onUrlChange, onApply, isConfigured, 
           } else if (isTimeout) {
             description = `The request timed out. The site may be slow or blocking automated access. Try again or use the Screenshot method.`;
           }
+          setFetchFeedback({ title: 'Fetch failed', description, destructive: true });
           toast({ title: "Fetch Failed", description, variant: "destructive" });
         }
       } catch (error: any) {
@@ -202,6 +240,13 @@ export function HtmlCaptureTab({ demo, url, onUrlChange, onApply, isConfigured, 
         console.error("Error fetching:", error);
         const msg = error?.message || '';
         const isCors = msg.includes('CORS') || msg.includes('NetworkError') || msg.includes('Failed to fetch');
+        setFetchFeedback({
+          title: 'Connection error',
+          description: isCors
+            ? "Could not reach the site — the connection may have been blocked by the site's security settings. Try the Screenshot method instead."
+            : `Failed to fetch site: ${msg || 'Unknown error'}. Ensure the Firecrawl connector is configured.`,
+          destructive: true,
+        });
         toast({
           title: "Connection Error",
           description: isCors
@@ -326,6 +371,12 @@ export function HtmlCaptureTab({ demo, url, onUrlChange, onApply, isConfigured, 
                 </Button>
               )}
             </div>
+            {fetchFeedback && (
+              <Alert variant={fetchFeedback.destructive ? 'destructive' : 'default'}>
+                <AlertTitle>{fetchFeedback.title}</AlertTitle>
+                <AlertDescription>{fetchFeedback.description}</AlertDescription>
+              </Alert>
+            )}
             {(isLoading || isRefining) && fetchProgress && (
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
