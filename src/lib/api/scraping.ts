@@ -160,6 +160,7 @@ export interface ScrapeResponse {
   success: boolean;
   error?: string;
   data?: ScrapedBranding;
+  partialData?: ScrapedBranding;
 }
 
 export interface ScrapeFormStylesResponse {

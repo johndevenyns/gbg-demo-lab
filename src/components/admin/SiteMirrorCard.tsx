@@ -395,6 +395,9 @@ interface SiteMirrorCardProps {
      const updates: Partial<DemoEnvironment> = {
        customerSiteUrl: url,
      };
+      const hasHtmlCapture = Boolean(
+        data.headerHtml?.trim() || data.footerHtml?.trim() || data.cssContent?.trim()
+      );
 
      // Populate screenshot data if we got screenshots
      if (data.screenshot || data.screenshots?.desktop) {
@@ -405,7 +408,12 @@ interface SiteMirrorCardProps {
            ? desktopScreenshot
            : `data:image/png;base64,${desktopScreenshot}`;
          updates.mirrorScreenshotHeaderHtml = `<div style="width:100%;overflow:hidden;"><img src="${screenshotSrc}" style="width:100%;height:auto;display:block;object-fit:cover;object-position:top;max-height:200px;" alt="Site header" /></div>`;
+          updates.mirrorScreenshotFooterHtml = `<div style="width:100%;overflow:hidden;"><img src="${screenshotSrc}" style="width:100%;height:auto;display:block;object-fit:cover;object-position:bottom;max-height:200px;" alt="Site footer" /></div>`;
          updates.mirrorScreenshotCss = '';
+          if (!hasHtmlCapture) {
+            updates.mirrorActiveMethod = 'screenshot';
+            setActiveMethod('screenshot');
+          }
        }
      }
 
