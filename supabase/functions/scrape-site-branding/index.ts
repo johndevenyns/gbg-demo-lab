@@ -874,6 +874,7 @@ Deno.serve(async (req) => {
           headerHeight: jsExtracted?.headerHeight || 0,
           logoUrl,
           logoFoundAt,
+          logoIsFallback,
           fetchedUrls,
           screenshot: desktopScreenshot,
           screenshots: {
