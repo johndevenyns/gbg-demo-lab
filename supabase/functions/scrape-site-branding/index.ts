@@ -787,6 +787,50 @@ Deno.serve(async (req) => {
 
     console.log('Scrape successful. Inline method:', usedInlineMethod);
 
+    // Detect "empty capture" — Firecrawl returned 200 but the page yielded
+    // no usable header/footer/CSS. This typically happens on heavy SPAs
+    // (Angular/React shells like citi.com) where content is rendered
+    // entirely client-side AFTER our wait window, or behind bot detection.
+    // We still return the screenshot + colors so the wizard can fall back
+    // to the Screenshot mirroring method, but flag it clearly so the UI
+    // can surface a useful error + retry instead of silently saving blanks.
+    const headerLen = (headerHtml || '').trim().length;
+    const footerLen = (footerHtml || '').trim().length;
+    const cssLen = (cssContent || '').trim().length;
+    const captureIsEmpty = headerLen === 0 && footerLen === 0 && cssLen === 0;
+
+    if (captureIsEmpty) {
+      console.warn('Empty HTML capture for', formattedUrl, '— likely SPA / bot protection');
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error:
+            `We could not capture the HTML structure of ${baseUrl.hostname}. ` +
+            `This usually happens on JavaScript-heavy sites (SPAs) or sites with bot protection ` +
+            `that render content after our capture window. ` +
+            `Try the Screenshot mirroring method instead, or retry — the screenshot capture may still have succeeded.`,
+          partialData: {
+            screenshot: desktopScreenshot,
+            screenshots: {
+              desktop: desktopScreenshot,
+              tablet: tabletScreenshot,
+              mobile: mobileScreenshot,
+            },
+            logoUrl,
+            logoFoundAt,
+            colors: {
+              headerBgColor: colors.background || colors.primary || '#1a1a2e',
+              headerTextColor: colors.textPrimary || '#ffffff',
+              buttonColor: colors.primary || colors.accent || '#6366f1',
+            },
+            branding,
+            sourceUrl: formattedUrl,
+          },
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
