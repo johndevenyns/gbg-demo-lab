@@ -753,10 +753,28 @@ Deno.serve(async (req) => {
     // Logo extraction
     const fetchedUrls: string[] = [formattedUrl];
     let logoFoundAt: string | null = null;
-    let logoUrl = branding?.images?.logo || branding?.logo || metadata.ogImage || null;
+    let logoUrl: string | null = null;
 
-    if (logoUrl) {
+    // 1) PREFERRED: pull the actual logo straight out of the captured header HTML.
+    //    This is the most reliable source because it's exactly what visitors see
+    //    in the chrome of the site. Firecrawl's `branding.images.logo` and
+    //    `metadata.ogImage` are unreliable — ogImage in particular is the social
+    //    share image (often a hero/marketing graphic), not the site logo.
+    const logoFromHeader = extractLogoFromHeader(headerHtml, baseUrl);
+    if (logoFromHeader) {
+      logoUrl = logoFromHeader;
       logoFoundAt = formattedUrl;
+      console.log('Logo extracted from captured header HTML');
+    }
+
+    // 2) Fall back to Firecrawl branding (only the explicit logo, NOT ogImage).
+    if (!logoUrl) {
+      const brandingLogo = branding?.images?.logo || branding?.logo || null;
+      if (brandingLogo && !looksLikeHeroImage(brandingLogo)) {
+        logoUrl = brandingLogo;
+        logoFoundAt = formattedUrl;
+        console.log('Logo from Firecrawl branding');
+      }
     }
 
     const rootUrl = `${baseUrl.protocol}//${baseUrl.host}`;
@@ -775,12 +793,24 @@ Deno.serve(async (req) => {
         if (rootResponse.ok) {
           const rootData = await rootResponse.json();
           const rootBranding = rootData.data?.branding || rootData.branding || null;
-          logoUrl = rootBranding?.images?.logo || rootBranding?.logo || null;
-          if (logoUrl) logoFoundAt = rootUrl;
+          const rootLogo = rootBranding?.images?.logo || rootBranding?.logo || null;
+          if (rootLogo && !looksLikeHeroImage(rootLogo)) {
+            logoUrl = rootLogo;
+            logoFoundAt = rootUrl;
+          }
         }
       } catch (rootError) {
         console.warn('Failed to fetch logo from root:', rootError);
       }
+    }
+
+    // 3) Last-resort fallback: ogImage. Flagged in the response so the UI can warn.
+    let logoIsFallback = false;
+    if (!logoUrl && metadata.ogImage) {
+      logoUrl = metadata.ogImage;
+      logoFoundAt = formattedUrl;
+      logoIsFallback = true;
+      console.log('Logo falling back to ogImage (may not be the actual site logo)');
     }
 
     const colors = branding?.colors || {};
