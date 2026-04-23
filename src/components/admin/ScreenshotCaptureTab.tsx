@@ -216,6 +216,12 @@ export function ScreenshotCaptureTab({ demo, url, onUrlChange, onApply, isConfig
          if (response.success && response.data) {
            setScrapedData(response.data);
            toast({ title: "Screenshots Fetched", description: "Site screenshots are ready for cropping" });
+          } else if (response.partialData && (response.partialData.screenshot || response.partialData.screenshots?.desktop)) {
+            setScrapedData(response.partialData);
+            toast({
+              title: "Screenshot Fallback Ready",
+              description: response.error || "HTML capture was limited, but screenshots are available for cropping.",
+            });
          } else {
            toast({ title: "Fetch Failed", description: response.error || "Could not fetch screenshots", variant: "destructive" });
          }
