@@ -416,6 +416,19 @@ export interface HostedJourneyStepConfig {
   height?: string;
   // Optional sandbox attribute override. Leave blank to allow defaults.
   allowFullScreen?: boolean;
+  // How to display the journey. Many hosted verification providers send
+  // X-Frame-Options: DENY or CSP frame-ancestors 'none', which prevents
+  // iframe embedding. In that case use 'popup' to launch the URL in a
+  // new window from a user click.
+  mode?: 'iframe' | 'popup';
+  // Popup-only: text shown on the launch button.
+  launchButtonLabel?: string;
+  // Popup-only: heading + description shown above the launch button.
+  launchTitle?: string;
+  launchDescription?: string;
+  // Popup-only: window.open features (defaults to a centered ~1024x768).
+  popupWidth?: number;
+  popupHeight?: number;
 }
 
 // Method Selection Step configuration (lets user choose between Doc Verification and mDL)
