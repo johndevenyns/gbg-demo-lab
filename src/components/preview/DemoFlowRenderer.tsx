@@ -2579,12 +2579,56 @@ export function DemoFlowRenderer({
         const resolvedUrl = rawUrl ? interpolateTemplate(rawUrl) : '';
         const iframeHeight = hjConfig?.height || '600px';
         const allowFullScreen = hjConfig?.allowFullScreen ?? true;
+        const mode = hjConfig?.mode || 'iframe';
 
         if (!resolvedUrl) {
           return (
             <div className="text-center py-12 text-muted-foreground">
               <p className="font-medium">Hosted Journey not configured</p>
               <p className="text-sm mt-1">Add a URL in the form builder to load it here.</p>
+            </div>
+          );
+        }
+
+        if (mode === 'popup') {
+          const launchTitle = hjConfig?.launchTitle || 'Continue your verification';
+          const launchDescription =
+            hjConfig?.launchDescription ||
+            'A new window will open to complete the next step. When you are finished, return here and click Next.';
+          const launchButtonLabel = hjConfig?.launchButtonLabel || 'Launch verification';
+          const popupW = hjConfig?.popupWidth || 1024;
+          const popupH = hjConfig?.popupHeight || 768;
+
+          const handleLaunch = () => {
+            const left = Math.max(0, Math.round((window.screen.width - popupW) / 2));
+            const top = Math.max(0, Math.round((window.screen.height - popupH) / 2));
+            const features = `popup=yes,width=${popupW},height=${popupH},left=${left},top=${top},resizable=yes,scrollbars=yes`;
+            const win = window.open(resolvedUrl, 'hosted-journey', features);
+            if (!win) {
+              toast.error('Popup blocked. Please allow popups for this site and try again.');
+            }
+          };
+
+          return (
+            <div className="w-full py-8 flex flex-col items-center text-center space-y-4">
+              <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
+                <ExternalLink className="w-7 h-7 text-primary" />
+              </div>
+              <div className="space-y-1 max-w-md">
+                <h3 className="text-lg font-semibold">{launchTitle}</h3>
+                <p className="text-sm text-muted-foreground">{launchDescription}</p>
+              </div>
+              <Button
+                onClick={handleLaunch}
+                style={buttonColor ? { backgroundColor: buttonColor } : undefined}
+                className="text-white"
+              >
+                <ExternalLink className="w-4 h-4 mr-2" />
+                {launchButtonLabel}
+              </Button>
+              <p className="text-xs text-muted-foreground break-all max-w-md">
+                Opens: {resolvedUrl}
+              </p>
             </div>
           );
         }
