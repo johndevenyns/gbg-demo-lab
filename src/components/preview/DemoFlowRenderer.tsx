@@ -2592,9 +2592,22 @@ export function DemoFlowRenderer({
 
         if (mode === 'popup') {
           const launchButtonLabel = hjConfig?.launchButtonLabel || 'Launch verification';
+          const showLaunchText = hjConfig?.showLaunchText ?? true;
+          const launchTitle = hjConfig?.launchTitle || 'Continue in a new window';
+          const launchDescription =
+            hjConfig?.launchDescription ||
+            'Click the button below to open the application in a new window.';
+          const showQrCode = hjConfig?.showQrCode ?? false;
+          const qrCodeLabel = hjConfig?.qrCodeLabel || 'Or scan to continue on your phone';
 
           return (
             <div className="w-full py-8 flex flex-col items-center text-center space-y-4">
+              {showLaunchText && (
+                <div className="space-y-1 max-w-md">
+                  <h3 className="text-lg font-semibold">{launchTitle}</h3>
+                  <p className="text-sm text-muted-foreground">{launchDescription}</p>
+                </div>
+              )}
               <Button
                 asChild
                 style={buttonColor ? { backgroundColor: buttonColor, color: getContrastTextColor(buttonColor) } : undefined}
@@ -2604,6 +2617,14 @@ export function DemoFlowRenderer({
                   {launchButtonLabel}
                 </a>
               </Button>
+              {showQrCode && (
+                <div className="flex flex-col items-center gap-2 pt-2">
+                  <QRCodeDisplay value={resolvedUrl} size={180} />
+                  {qrCodeLabel && (
+                    <p className="text-xs text-muted-foreground max-w-xs">{qrCodeLabel}</p>
+                  )}
+                </div>
+              )}
             </div>
           );
         }

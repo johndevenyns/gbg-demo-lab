@@ -429,6 +429,12 @@ export interface HostedJourneyStepConfig {
   // Popup-only: window.open features (defaults to a centered ~1024x768).
   popupWidth?: number;
   popupHeight?: number;
+  // Popup-only: show heading + description above the launch button.
+  showLaunchText?: boolean;
+  // Popup-only: also render a QR code of the URL so users can continue on mobile.
+  showQrCode?: boolean;
+  // Popup-only: QR code caption text.
+  qrCodeLabel?: string;
 }
 
 // Method Selection Step configuration (lets user choose between Doc Verification and mDL)
