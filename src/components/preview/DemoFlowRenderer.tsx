@@ -2974,7 +2974,9 @@ export function DemoFlowRenderer({
 
   // Don't show forward nav buttons for certain step types that handle their own navigation
   const stepTypesWithOwnNav = ['api', 'decision', 'unified_verification'];
-  const isOwnNavStep = stepTypesWithOwnNav.includes(currentStep?.stepType || '');
+  const isOwnNavStep =
+    stepTypesWithOwnNav.includes(currentStep?.stepType || '') ||
+    (currentStep?.stepType === 'hosted_journey' && (currentStep?.hostedJourneyConfig?.mode || 'iframe') === 'popup');
   const isAddressValidating = isLoading && currentStep?.addressValidationEnabled;
   const showNavButtons = !isOwnNavStep && (!isLoading || isAddressValidating);
   // Still show back button for own-nav steps when configured
