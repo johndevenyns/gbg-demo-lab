@@ -3172,7 +3172,7 @@ export function DemoFlowRenderer({
                 </button>
               )}
               
-              {buttonConfig.next.enabled && currentStep?.stepType !== 'page' && currentStep?.stepType !== 'hosted_journey' && (
+              {buttonConfig.next.enabled && currentStep?.stepType !== 'page' && (
                 <button 
                   onClick={goToNextStep} 
                   className="flex-1 inline-flex items-center justify-center gap-2 transition-all"
@@ -3189,7 +3189,7 @@ export function DemoFlowRenderer({
                 </button>
               )}
               
-              {buttonConfig.submit.enabled && currentStep?.stepType !== 'page' && currentStep?.stepType !== 'hosted_journey' && (
+              {buttonConfig.submit.enabled && currentStep?.stepType !== 'page' && (
                 <button 
                   onClick={goToNextStep}
                   className="flex-1 inline-flex items-center justify-center gap-2 transition-all"
