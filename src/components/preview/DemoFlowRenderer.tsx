@@ -3007,7 +3007,9 @@ export function DemoFlowRenderer({
   const stepTypesWithOwnNav = ['api', 'decision', 'unified_verification'];
   const isOwnNavStep =
     stepTypesWithOwnNav.includes(currentStep?.stepType || '') ||
-    (currentStep?.stepType === 'hosted_journey' && (currentStep?.hostedJourneyConfig?.mode || 'iframe') === 'popup');
+    (currentStep?.stepType === 'hosted_journey' &&
+      ((currentStep?.hostedJourneyConfig?.mode || 'iframe') === 'popup' ||
+        shouldForceHostedJourneyPopup(currentStep?.hostedJourneyConfig?.url || '')));
   const isAddressValidating = isLoading && currentStep?.addressValidationEnabled;
   const showNavButtons = !isOwnNavStep && (!isLoading || isAddressValidating);
   // Still show back button for own-nav steps when configured
