@@ -3096,7 +3096,7 @@ export function DemoFlowRenderer({
       </div>
 
       {/* Step title with Fill buttons aligned right — hidden for verification steps that render their own title */}
-      {(
+      {currentStep?.stepType !== 'hosted_journey' && (
       <div className="space-y-2">
         <h2 
           className="text-2xl font-semibold" 
