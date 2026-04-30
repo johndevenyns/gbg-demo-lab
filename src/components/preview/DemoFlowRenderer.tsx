@@ -2596,18 +2596,6 @@ export function DemoFlowRenderer({
             hjConfig?.launchDescription ||
             'A new window will open to complete the next step. When you are finished, return here and click Next.';
           const launchButtonLabel = hjConfig?.launchButtonLabel || 'Launch verification';
-          const popupW = hjConfig?.popupWidth || 1024;
-          const popupH = hjConfig?.popupHeight || 768;
-
-          const handleLaunch = () => {
-            const left = Math.max(0, Math.round((window.screen.width - popupW) / 2));
-            const top = Math.max(0, Math.round((window.screen.height - popupH) / 2));
-            const features = `popup=yes,width=${popupW},height=${popupH},left=${left},top=${top},resizable=yes,scrollbars=yes`;
-            const win = window.open(resolvedUrl, 'hosted-journey', features);
-            if (!win) {
-              toast.error('Popup blocked. Please allow popups for this site and try again.');
-            }
-          };
 
           return (
             <div className="w-full py-8 flex flex-col items-center text-center space-y-4">
@@ -2619,12 +2607,13 @@ export function DemoFlowRenderer({
                 <p className="text-sm text-muted-foreground">{launchDescription}</p>
               </div>
               <Button
-                onClick={handleLaunch}
-                style={buttonColor ? { backgroundColor: buttonColor } : undefined}
-                className="text-white"
+                asChild
+                style={buttonColor ? { backgroundColor: buttonColor, color: getContrastTextColor(buttonColor) } : undefined}
               >
-                <ExternalLink className="w-4 h-4 mr-2" />
-                {launchButtonLabel}
+                <a href={resolvedUrl} target="_blank" rel="noopener noreferrer">
+                  <ExternalLink className="w-4 h-4 mr-2" />
+                  {launchButtonLabel}
+                </a>
               </Button>
               <p className="text-xs text-muted-foreground break-all max-w-md">
                 Opens: {resolvedUrl}
