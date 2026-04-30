@@ -2591,21 +2591,10 @@ export function DemoFlowRenderer({
         }
 
         if (mode === 'popup') {
-          const launchTitle = hjConfig?.launchTitle || 'Continue your verification';
-          const launchDescription =
-            hjConfig?.launchDescription ||
-            'A new window will open to complete the next step. When you are finished, return here and click Next.';
           const launchButtonLabel = hjConfig?.launchButtonLabel || 'Launch verification';
 
           return (
             <div className="w-full py-8 flex flex-col items-center text-center space-y-4">
-              <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
-                <ExternalLink className="w-7 h-7 text-primary" />
-              </div>
-              <div className="space-y-1 max-w-md">
-                <h3 className="text-lg font-semibold">{launchTitle}</h3>
-                <p className="text-sm text-muted-foreground">{launchDescription}</p>
-              </div>
               <Button
                 asChild
                 style={buttonColor ? { backgroundColor: buttonColor, color: getContrastTextColor(buttonColor) } : undefined}
@@ -2615,9 +2604,6 @@ export function DemoFlowRenderer({
                   {launchButtonLabel}
                 </a>
               </Button>
-              <p className="text-xs text-muted-foreground break-all max-w-md">
-                Opens: {resolvedUrl}
-              </p>
             </div>
           );
         }
