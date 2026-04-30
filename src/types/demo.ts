@@ -506,6 +506,8 @@ export interface FormStep {
   verificationFlowConfig?: VerificationFlowConfig;
   // Page step configuration (only used when stepType = 'page')
   pageStepConfig?: PageStepConfig;
+  // Hosted journey step configuration (only used when stepType = 'hosted_journey')
+  hostedJourneyConfig?: HostedJourneyStepConfig;
   // Method selection step configuration (only used when stepType = 'method_selection')
   methodSelectionConfig?: MethodSelectionStepConfig;
   // Decision step configuration (only used when stepType = 'decision')
