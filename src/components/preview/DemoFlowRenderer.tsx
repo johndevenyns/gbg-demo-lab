@@ -2609,6 +2609,7 @@ export function DemoFlowRenderer({
             'Click the button below to open the application in a new window.';
           const showQrCode = hjConfig?.showQrCode ?? false;
           const qrCodeLabel = hjConfig?.qrCodeLabel || 'Or scan to continue on your phone';
+          const forceTopNavigation = shouldForceHostedJourneyPopup(resolvedUrl);
 
           return (
             <div className="w-full py-8 flex flex-col items-center text-center space-y-4">
@@ -2622,7 +2623,11 @@ export function DemoFlowRenderer({
                 asChild
                 style={buttonColor ? { backgroundColor: buttonColor, color: getContrastTextColor(buttonColor) } : undefined}
               >
-                <a href={resolvedUrl} target="_blank" rel="noopener noreferrer">
+                <a
+                  href={resolvedUrl}
+                  target={forceTopNavigation ? '_top' : '_blank'}
+                  rel={forceTopNavigation ? undefined : 'noopener noreferrer'}
+                >
                   <ExternalLink className="w-4 h-4 mr-2" />
                   {launchButtonLabel}
                 </a>
