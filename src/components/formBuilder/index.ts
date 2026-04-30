@@ -14,6 +14,7 @@ export { VerificationFlowConfig } from './VerificationFlowConfig';
 export { ApiStepConfig } from './ApiStepConfig';
 export { PathStepConfig } from './PathStepConfig';
 export { PageStepConfig } from './PageStepConfig';
+export { HostedJourneyStepConfig } from './HostedJourneyStepConfig';
 export { MethodSelectionStepConfig } from './MethodSelectionStepConfig';
 export { DecisionStepConfig } from './DecisionStepConfig';
 export { DecisionBranchesView } from './DecisionBranchesView';
