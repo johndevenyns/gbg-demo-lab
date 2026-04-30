@@ -2591,21 +2591,10 @@ export function DemoFlowRenderer({
         }
 
         if (mode === 'popup') {
-          const launchTitle = hjConfig?.launchTitle || 'Continue your verification';
-          const launchDescription =
-            hjConfig?.launchDescription ||
-            'A new window will open to complete the next step. When you are finished, return here and click Next.';
           const launchButtonLabel = hjConfig?.launchButtonLabel || 'Launch verification';
 
           return (
             <div className="w-full py-8 flex flex-col items-center text-center space-y-4">
-              <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
-                <ExternalLink className="w-7 h-7 text-primary" />
-              </div>
-              <div className="space-y-1 max-w-md">
-                <h3 className="text-lg font-semibold">{launchTitle}</h3>
-                <p className="text-sm text-muted-foreground">{launchDescription}</p>
-              </div>
               <Button
                 asChild
                 style={buttonColor ? { backgroundColor: buttonColor, color: getContrastTextColor(buttonColor) } : undefined}
@@ -2615,9 +2604,6 @@ export function DemoFlowRenderer({
                   {launchButtonLabel}
                 </a>
               </Button>
-              <p className="text-xs text-muted-foreground break-all max-w-md">
-                Opens: {resolvedUrl}
-              </p>
             </div>
           );
         }
@@ -2988,7 +2974,9 @@ export function DemoFlowRenderer({
 
   // Don't show forward nav buttons for certain step types that handle their own navigation
   const stepTypesWithOwnNav = ['api', 'decision', 'unified_verification'];
-  const isOwnNavStep = stepTypesWithOwnNav.includes(currentStep?.stepType || '');
+  const isOwnNavStep =
+    stepTypesWithOwnNav.includes(currentStep?.stepType || '') ||
+    (currentStep?.stepType === 'hosted_journey' && (currentStep?.hostedJourneyConfig?.mode || 'iframe') === 'popup');
   const isAddressValidating = isLoading && currentStep?.addressValidationEnabled;
   const showNavButtons = !isOwnNavStep && (!isLoading || isAddressValidating);
   // Still show back button for own-nav steps when configured
@@ -3108,7 +3096,7 @@ export function DemoFlowRenderer({
       </div>
 
       {/* Step title with Fill buttons aligned right — hidden for verification steps that render their own title */}
-      {(
+      {currentStep?.stepType !== 'hosted_journey' && (
       <div className="space-y-2">
         <h2 
           className="text-2xl font-semibold" 
