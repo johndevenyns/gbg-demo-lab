@@ -110,6 +110,19 @@ export function HostedJourneyStepConfig({ step, onUpdateStep }: Props) {
             </div>
           ) : (
             <div className="space-y-4">
+              <div className="flex items-center justify-between gap-4 rounded-md border bg-background p-3">
+                <div className="space-y-0.5">
+                  <Label className="text-sm">Show heading & description</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Display a title and short message above the launch button.
+                  </p>
+                </div>
+                <Switch
+                  checked={config.showLaunchText ?? true}
+                  onCheckedChange={(v) => update({ showLaunchText: v })}
+                />
+              </div>
+
               <div className="space-y-2">
                 <Label className="text-sm">Launch Screen Title</Label>
                 <Input
@@ -117,6 +130,7 @@ export function HostedJourneyStepConfig({ step, onUpdateStep }: Props) {
                   onChange={(e) => update({ launchTitle: e.target.value })}
                   placeholder="Continue your verification"
                   className="bg-background"
+                  disabled={config.showLaunchText === false}
                 />
               </div>
               <div className="space-y-2">
@@ -126,6 +140,7 @@ export function HostedJourneyStepConfig({ step, onUpdateStep }: Props) {
                   onChange={(e) => update({ launchDescription: e.target.value })}
                   placeholder="A new window will open to complete the next step."
                   className="bg-background"
+                  disabled={config.showLaunchText === false}
                 />
               </div>
               <div className="grid grid-cols-3 gap-4">
@@ -163,6 +178,31 @@ export function HostedJourneyStepConfig({ step, onUpdateStep }: Props) {
                   />
                 </div>
               </div>
+
+              <div className="flex items-center justify-between gap-4 rounded-md border bg-background p-3">
+                <div className="space-y-0.5">
+                  <Label className="text-sm">Show QR code</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Render a scannable QR of the journey URL so users can continue on mobile.
+                  </p>
+                </div>
+                <Switch
+                  checked={config.showQrCode ?? false}
+                  onCheckedChange={(v) => update({ showQrCode: v })}
+                />
+              </div>
+              {config.showQrCode && (
+                <div className="space-y-2">
+                  <Label className="text-sm">QR Code Caption</Label>
+                  <Input
+                    value={config.qrCodeLabel ?? ''}
+                    onChange={(e) => update({ qrCodeLabel: e.target.value })}
+                    placeholder="Or scan to continue on your phone"
+                    className="bg-background"
+                  />
+                </div>
+              )}
+
               <p className="text-xs text-muted-foreground">
                 The popup must be triggered by a user click (browser requirement). After the
                 user finishes in the popup, they can close it and click <em>Next</em> to
