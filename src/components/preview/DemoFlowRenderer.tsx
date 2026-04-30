@@ -2573,6 +2573,36 @@ export function DemoFlowRenderer({
           </div>
         );
 
+      case 'hosted_journey': {
+        const hjConfig = currentStep.hostedJourneyConfig;
+        const rawUrl = hjConfig?.url?.trim() || '';
+        const resolvedUrl = rawUrl ? interpolateTemplate(rawUrl) : '';
+        const iframeHeight = hjConfig?.height || '600px';
+        const allowFullScreen = hjConfig?.allowFullScreen ?? true;
+
+        if (!resolvedUrl) {
+          return (
+            <div className="text-center py-12 text-muted-foreground">
+              <p className="font-medium">Hosted Journey not configured</p>
+              <p className="text-sm mt-1">Add a URL in the form builder to load it here.</p>
+            </div>
+          );
+        }
+
+        return (
+          <div className="w-full">
+            <iframe
+              src={resolvedUrl}
+              title={currentStep.title || 'Hosted Journey'}
+              className="w-full rounded-lg border border-border bg-background"
+              style={{ height: iframeHeight }}
+              allow={allowFullScreen ? 'camera; microphone; geolocation; fullscreen' : 'camera; microphone; geolocation'}
+              allowFullScreen={allowFullScreen}
+            />
+          </div>
+        );
+      }
+
       case 'unified_verification':
         // New unified verification step
         const unifiedConfig = currentStep.unifiedVerificationConfig;

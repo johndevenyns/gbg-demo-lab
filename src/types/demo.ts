@@ -228,7 +228,7 @@ export interface VerificationStepConfig {
 
 // Step type enumeration
 // Note: 'verification' step type is deprecated - use 'unified_verification' for new implementations
-export type FormStepType = 'form' | 'verification' | 'api' | 'path' | 'verification_flow' | 'page' | 'method_selection' | 'decision' | 'unified_verification';
+export type FormStepType = 'form' | 'verification' | 'api' | 'path' | 'verification_flow' | 'page' | 'method_selection' | 'decision' | 'unified_verification' | 'hosted_journey';
 
 // Decision step choice destination types
 export type DecisionDestinationType = 'verification' | 'step' | 'next';
@@ -407,6 +407,17 @@ export interface PageStepConfig {
   autoAdvanceFieldValue?: string;
 }
 
+// Hosted Journey Step configuration — embeds an external URL inside an iframe
+export interface HostedJourneyStepConfig {
+  // The URL to load in the iframe. Supports {{fieldName}} interpolation
+  // from previous step / API response data.
+  url?: string;
+  // Optional iframe height (CSS value e.g. "600px", "80vh"). Defaults to 600px.
+  height?: string;
+  // Optional sandbox attribute override. Leave blank to allow defaults.
+  allowFullScreen?: boolean;
+}
+
 // Method Selection Step configuration (lets user choose between Doc Verification and mDL)
 export interface MethodSelectionStepConfig {
   // Title and description
@@ -495,6 +506,8 @@ export interface FormStep {
   verificationFlowConfig?: VerificationFlowConfig;
   // Page step configuration (only used when stepType = 'page')
   pageStepConfig?: PageStepConfig;
+  // Hosted journey step configuration (only used when stepType = 'hosted_journey')
+  hostedJourneyConfig?: HostedJourneyStepConfig;
   // Method selection step configuration (only used when stepType = 'method_selection')
   methodSelectionConfig?: MethodSelectionStepConfig;
   // Decision step configuration (only used when stepType = 'decision')

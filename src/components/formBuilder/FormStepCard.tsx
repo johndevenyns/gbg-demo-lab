@@ -18,6 +18,7 @@ import { ApiStepConfig } from './ApiStepConfig';
 import { PathStepConfig } from './PathStepConfig';
 import { VerificationFlowConfig } from './VerificationFlowConfig';
 import { PageStepConfig } from './PageStepConfig';
+import { HostedJourneyStepConfig } from './HostedJourneyStepConfig';
 import { MethodSelectionStepConfig } from './MethodSelectionStepConfig';
 import { DecisionStepConfig } from './DecisionStepConfig';
 import { UnifiedVerificationStepConfig } from './UnifiedVerificationStepConfig';
@@ -25,7 +26,7 @@ import {
   GripVertical, Trash2, ChevronDown, ChevronUp, Edit2, Check, X,
   User, Mail, Phone, Calendar, Hash, MapPin, Building, DollarSign, 
   FileText, Type, CheckSquare, MapPinCheck, Send, Smartphone, Database, FileCheck,
-  Plug, QrCode, Activity, Workflow, SplitSquareVertical, Shield, LogIn, KeyRound, CreditCard
+  Plug, QrCode, Activity, Workflow, SplitSquareVertical, Shield, LogIn, KeyRound, CreditCard, Globe
 } from 'lucide-react';
 
 const FIELD_ICONS: Record<string, React.ReactNode> = {
@@ -465,6 +466,12 @@ export function FormStepCard({
               Page
             </Badge>
           )}
+          {step.stepType === 'hosted_journey' && (
+            <Badge variant="outline" className="text-xs bg-sky-500/10 text-sky-600 border-sky-500/30">
+              <Globe className="w-3 h-3 mr-1" />
+              Hosted Journey
+            </Badge>
+          )}
           {step.stepType === 'decision' && (
             <Badge variant="outline" className="text-xs bg-amber-500/10 text-amber-600 border-amber-500/30">
               <SplitSquareVertical className="w-3 h-3 mr-1" />
@@ -645,6 +652,9 @@ export function FormStepCard({
           ) : step.stepType === 'page' ? (
             /* Page Step Type */
             <PageStepConfig step={step} onUpdateStep={onUpdateStep} />
+          ) : step.stepType === 'hosted_journey' ? (
+            /* Hosted Journey Step Type */
+            <HostedJourneyStepConfig step={step} onUpdateStep={onUpdateStep} />
           ) : step.stepType === 'method_selection' ? (
             /* Method Selection Step Type */
             <div className="space-y-4">
