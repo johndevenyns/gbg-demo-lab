@@ -434,6 +434,19 @@ export function FormBuilderCanvas({ steps, onUpdateSteps, demo }: FormBuilderCan
           ],
         },
       };
+    } else if (type === 'hosted_journey') {
+      newStep = {
+        id: stepId,
+        title,
+        order: steps.length + 1,
+        stepType: 'hosted_journey',
+        fields: [],
+        hostedJourneyConfig: {
+          url: '',
+          height: '600px',
+          allowFullScreen: true,
+        },
+      };
     } else if (type === 'decision') {
       newStep = {
         id: stepId,
