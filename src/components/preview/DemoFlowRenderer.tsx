@@ -41,6 +41,15 @@ const getContrastTextColor = (hexColor: string): string => {
 const ensureReadableColor = (textColor: string, bgColor: string): string => getReadableTextColor(textColor, bgColor);
 const SUPABASE_FUNCTIONS_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
 
+const shouldForceHostedJourneyPopup = (url: string): boolean => {
+  try {
+    const hostname = new URL(url).hostname.toLowerCase();
+    return hostname === 'gbgplatforms.com' || hostname.endsWith('.gbgplatforms.com');
+  } catch {
+    return false;
+  }
+};
+
 export interface SubmissionLogData {
   type: 'request' | 'response';
   endpoint: string;
@@ -2579,7 +2588,8 @@ export function DemoFlowRenderer({
         const resolvedUrl = rawUrl ? interpolateTemplate(rawUrl) : '';
         const iframeHeight = hjConfig?.height || '600px';
         const allowFullScreen = hjConfig?.allowFullScreen ?? true;
-        const mode = hjConfig?.mode || 'iframe';
+        const configuredMode = hjConfig?.mode || 'iframe';
+        const mode = shouldForceHostedJourneyPopup(resolvedUrl) ? 'popup' : configuredMode;
 
         if (!resolvedUrl) {
           return (
@@ -2997,7 +3007,9 @@ export function DemoFlowRenderer({
   const stepTypesWithOwnNav = ['api', 'decision', 'unified_verification'];
   const isOwnNavStep =
     stepTypesWithOwnNav.includes(currentStep?.stepType || '') ||
-    (currentStep?.stepType === 'hosted_journey' && (currentStep?.hostedJourneyConfig?.mode || 'iframe') === 'popup');
+    (currentStep?.stepType === 'hosted_journey' &&
+      ((currentStep?.hostedJourneyConfig?.mode || 'iframe') === 'popup' ||
+        shouldForceHostedJourneyPopup(currentStep?.hostedJourneyConfig?.url || '')));
   const isAddressValidating = isLoading && currentStep?.addressValidationEnabled;
   const showNavButtons = !isOwnNavStep && (!isLoading || isAddressValidating);
   // Still show back button for own-nav steps when configured
