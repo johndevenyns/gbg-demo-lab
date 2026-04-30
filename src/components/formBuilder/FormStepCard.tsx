@@ -466,6 +466,12 @@ export function FormStepCard({
               Page
             </Badge>
           )}
+          {step.stepType === 'hosted_journey' && (
+            <Badge variant="outline" className="text-xs bg-sky-500/10 text-sky-600 border-sky-500/30">
+              <Globe className="w-3 h-3 mr-1" />
+              Hosted Journey
+            </Badge>
+          )}
           {step.stepType === 'decision' && (
             <Badge variant="outline" className="text-xs bg-amber-500/10 text-amber-600 border-amber-500/30">
               <SplitSquareVertical className="w-3 h-3 mr-1" />
