@@ -18,6 +18,7 @@ import { ApiStepConfig } from './ApiStepConfig';
 import { PathStepConfig } from './PathStepConfig';
 import { VerificationFlowConfig } from './VerificationFlowConfig';
 import { PageStepConfig } from './PageStepConfig';
+import { HostedJourneyStepConfig } from './HostedJourneyStepConfig';
 import { MethodSelectionStepConfig } from './MethodSelectionStepConfig';
 import { DecisionStepConfig } from './DecisionStepConfig';
 import { UnifiedVerificationStepConfig } from './UnifiedVerificationStepConfig';
@@ -25,7 +26,7 @@ import {
   GripVertical, Trash2, ChevronDown, ChevronUp, Edit2, Check, X,
   User, Mail, Phone, Calendar, Hash, MapPin, Building, DollarSign, 
   FileText, Type, CheckSquare, MapPinCheck, Send, Smartphone, Database, FileCheck,
-  Plug, QrCode, Activity, Workflow, SplitSquareVertical, Shield, LogIn, KeyRound, CreditCard
+  Plug, QrCode, Activity, Workflow, SplitSquareVertical, Shield, LogIn, KeyRound, CreditCard, Globe
 } from 'lucide-react';
 
 const FIELD_ICONS: Record<string, React.ReactNode> = {
