@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { 
-  LayoutList, Workflow, Plug, FileText, SplitSquareVertical
+  LayoutList, Workflow, Plug, FileText, SplitSquareVertical, Globe
 } from 'lucide-react';
 
 // 'verification' kept for backwards compatibility with existing steps
@@ -21,7 +21,8 @@ export type StepTypeOption =
   | 'unified_verification'
   | 'decision'
   | 'api' 
-  | 'page';
+  | 'page'
+  | 'hosted_journey';
 
 interface StepTypeInfo {
   id: StepTypeOption;
@@ -67,6 +68,13 @@ const STEP_TYPES: StepTypeInfo[] = [
     icon: <FileText className="w-5 h-5" />,
     category: 'other',
   },
+  {
+    id: 'hosted_journey',
+    label: 'Hosted Journey',
+    description: 'Embed an external hosted journey URL inside the demo flow',
+    icon: <Globe className="w-5 h-5" />,
+    category: 'verification',
+  },
 ];
 
 interface AddStepDialogProps {
@@ -87,6 +95,7 @@ export function AddStepDialog({ open, onOpenChange, onAddStep }: AddStepDialogPr
       decision: 'Choose Your Path',
       api: 'API Submission',
       page: 'Display Page',
+      hosted_journey: 'Hosted Journey',
     };
     
     const title = stepTitle.trim() || defaultTitles[selectedType];
