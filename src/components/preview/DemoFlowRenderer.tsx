@@ -2033,6 +2033,7 @@ export function DemoFlowRenderer({
             referenceIdPrefix,
             resourceId: stepResourceId || getResId(verificationType),
             logoUrl,
+            demoId,
             branding: { buttonColor, headerTextColor, headerBgColor },
           };
 
