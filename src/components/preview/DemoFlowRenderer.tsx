@@ -1708,6 +1708,7 @@ export function DemoFlowRenderer({
       referenceIdPrefix: referenceIdPrefix,
       resourceId: resourceIdOverride || getResourceIdForType(verificationType),
       logoUrl: logoUrl,
+      demoId,
       branding: {
         buttonColor: buttonColor,
         headerTextColor: headerTextColor,
