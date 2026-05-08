@@ -30,6 +30,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { SaveAsNewDemoDialog } from "@/components/admin/SaveAsNewDemoDialog";
 import { SaveAsIndustryDialog } from "@/components/admin/SaveAsIndustryDialog";
 import { ArchiveDemoDialog } from "@/components/admin/ArchiveDemoDialog";
+import { useDemoVerificationApiKey, useSaveDemoVerificationApiKey } from "@/hooks/useDemoVerificationApiKey";
+import { Key } from "lucide-react";
 
 // Navigation sections
 type ConfigSection = 'settings' | 'mirror' | 'branding' | 'use-cases' | 'users';
@@ -45,6 +47,11 @@ const sections: { id: ConfigSection; label: string; icon: React.ElementType; des
 // Site Settings Section
 function SiteSettingsSection({ demo, onUpdate, portalTypes }: { demo: DemoEnvironment; onUpdate: (updates: Partial<DemoEnvironment>) => void; portalTypes: { typeKey: string; displayName: string; description?: string }[] }) {
   const { toast } = useToast();
+  const { data: savedApiKey = '', isLoading: apiKeyLoading } = useDemoVerificationApiKey(demo.id);
+  const saveApiKey = useSaveDemoVerificationApiKey();
+  const [apiKeyInput, setApiKeyInput] = useState('');
+  useEffect(() => { setApiKeyInput(savedApiKey); }, [savedApiKey]);
+  const apiKeyChanged = apiKeyInput !== savedApiKey;
   const formatDate = (dateStr?: string) => {
     if (!dateStr) return 'Unknown';
     return new Date(dateStr).toLocaleDateString('en-US', {
@@ -151,6 +158,46 @@ function SiteSettingsSection({ demo, onUpdate, portalTypes }: { demo: DemoEnviro
               <span className="text-foreground font-medium">{formatDate(demo.createdAt)}</span>
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Verification API Key (per-demo override) */}
+      <Card className="glass-card">
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Key className="w-4 h-4 text-muted-foreground" />
+            <div>
+              <CardTitle className="text-base">Verification API Key</CardTitle>
+              <CardDescription>
+                Optional. If set, this key is used for verification calls in this demo. Otherwise the platform's global key is used.
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-end gap-2">
+            <div className="flex-1 space-y-1">
+              <Label className="text-xs">API Key</Label>
+              <Input
+                type="password"
+                autoComplete="off"
+                placeholder={apiKeyLoading ? "Loading…" : "Leave empty to use the global key"}
+                value={apiKeyInput}
+                onChange={(e) => setApiKeyInput(e.target.value)}
+                className="font-mono text-sm"
+              />
+            </div>
+            <Button
+              size="sm"
+              onClick={() => saveApiKey.mutate({ demoId: demo.id, apiKey: apiKeyInput })}
+              disabled={!apiKeyChanged || saveApiKey.isPending}
+            >
+              <Save className="w-4 h-4 mr-1" />Save
+            </Button>
+          </div>
+          {savedApiKey && (
+            <p className="text-xs text-muted-foreground mt-2">A demo-specific key is currently active. Clear the field and save to revert to the global key.</p>
+          )}
         </CardContent>
       </Card>
     </div>
