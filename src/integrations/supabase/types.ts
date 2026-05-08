@@ -126,7 +126,6 @@ export type Database = {
           updated_at: string | null
           uploaded_logo_url: string | null
           use_uploaded_logo: boolean | null
-          verification_api_key: string | null
           verification_type: Database["public"]["Enums"]["verification_type"]
         }
         Insert: {
@@ -174,7 +173,6 @@ export type Database = {
           updated_at?: string | null
           uploaded_logo_url?: string | null
           use_uploaded_logo?: boolean | null
-          verification_api_key?: string | null
           verification_type?: Database["public"]["Enums"]["verification_type"]
         }
         Update: {
@@ -222,7 +220,6 @@ export type Database = {
           updated_at?: string | null
           uploaded_logo_url?: string | null
           use_uploaded_logo?: boolean | null
-          verification_api_key?: string | null
           verification_type?: Database["public"]["Enums"]["verification_type"]
         }
         Relationships: [
@@ -411,6 +408,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      demo_verification_api_keys: {
+        Row: {
+          api_key: string
+          created_at: string
+          demo_id: string
+          updated_at: string
+        }
+        Insert: {
+          api_key: string
+          created_at?: string
+          demo_id: string
+          updated_at?: string
+        }
+        Update: {
+          api_key?: string
+          created_at?: string
+          demo_id?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       form_templates: {
         Row: {
