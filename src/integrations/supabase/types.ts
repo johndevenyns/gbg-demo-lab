@@ -409,6 +409,27 @@ export type Database = {
           },
         ]
       }
+      demo_verification_api_keys: {
+        Row: {
+          api_key: string
+          created_at: string
+          demo_id: string
+          updated_at: string
+        }
+        Insert: {
+          api_key: string
+          created_at?: string
+          demo_id: string
+          updated_at?: string
+        }
+        Update: {
+          api_key?: string
+          created_at?: string
+          demo_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       form_templates: {
         Row: {
           category: string | null

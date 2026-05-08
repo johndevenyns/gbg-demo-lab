@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -40,6 +41,7 @@ interface CreateSessionRequest {
   includeQr?: boolean;
   referenceIdPrefix?: string;
   logoUrl?: string;
+  demoId?: string;
   branding?: {
     headerTextColor?: string;
     headerBgColor?: string;
@@ -153,17 +155,42 @@ serve(async (req) => {
   }
 
   try {
-    const API_KEY = Deno.env.get('VERIFICATION_API_KEY');
+    const GLOBAL_API_KEY =
+      Deno.env.get('VERIFICATION_API_KEY_GLOBAL') ||
+      Deno.env.get('VERIFICATION_API_KEY');
+
+    const requestData: CreateSessionRequest = await req.json();
+
+    // Resolve demo-specific override (if any) using service role
+    let API_KEY: string | undefined = GLOBAL_API_KEY;
+    let keySource: 'demo' | 'global' = 'global';
+    if (requestData.demoId) {
+      try {
+        const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+        const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+        const admin = createClient(supabaseUrl, serviceKey);
+        const { data: row } = await admin
+          .from('demo_verification_api_keys')
+          .select('api_key')
+          .eq('demo_id', requestData.demoId)
+          .maybeSingle();
+        if (row?.api_key) {
+          API_KEY = row.api_key;
+          keySource = 'demo';
+        }
+      } catch (e) {
+        console.error('Failed to resolve per-demo API key, falling back to global:', e);
+      }
+    }
 
     if (!API_KEY) {
-      console.error('VERIFICATION_API_KEY not configured');
+      console.error('No verification API key configured (demo or global)');
       return new Response(
         JSON.stringify({ success: false, error: 'Service configuration error' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-
-    const requestData: CreateSessionRequest = await req.json();
+    console.log('Verification API key source:', keySource);
 
     console.log('=== CREATE VERIFICATION SESSION REQUEST ===');
     console.log('verificationType:', requestData.verificationType);

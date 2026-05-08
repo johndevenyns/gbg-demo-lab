@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -14,26 +15,19 @@ serve(async (req) => {
   }
 
   try {
-    const API_KEY = Deno.env.get('VERIFICATION_API_KEY');
-    
-    if (!API_KEY) {
-      console.error('VERIFICATION_API_KEY not configured');
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: 'Service configuration error' 
-        }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+    const GLOBAL_API_KEY =
+      Deno.env.get('VERIFICATION_API_KEY_GLOBAL') ||
+      Deno.env.get('VERIFICATION_API_KEY');
 
     // Get sessionId from query params or body
     const url = new URL(req.url);
     let sessionId = url.searchParams.get('sessionId');
-    
+    let demoId: string | undefined;
+
     if (!sessionId && req.method === 'POST') {
       const body = await req.json();
       sessionId = body.sessionId;
+      demoId = body.demoId;
     }
     
     if (!sessionId) {
@@ -43,6 +37,32 @@ serve(async (req) => {
           error: 'sessionId is required' 
         }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Resolve demo-specific override (if any)
+    let API_KEY: string | undefined = GLOBAL_API_KEY;
+    if (demoId) {
+      try {
+        const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+        const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+        const admin = createClient(supabaseUrl, serviceKey);
+        const { data: row } = await admin
+          .from('demo_verification_api_keys')
+          .select('api_key')
+          .eq('demo_id', demoId)
+          .maybeSingle();
+        if (row?.api_key) API_KEY = row.api_key;
+      } catch (e) {
+        console.error('Failed to resolve per-demo API key, falling back to global:', e);
+      }
+    }
+
+    if (!API_KEY) {
+      console.error('No verification API key configured (demo or global)');
+      return new Response(
+        JSON.stringify({ success: false, error: 'Service configuration error' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 

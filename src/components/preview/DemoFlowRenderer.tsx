@@ -1708,6 +1708,7 @@ export function DemoFlowRenderer({
       referenceIdPrefix: referenceIdPrefix,
       resourceId: resourceIdOverride || getResourceIdForType(verificationType),
       logoUrl: logoUrl,
+      demoId,
       branding: {
         buttonColor: buttonColor,
         headerTextColor: headerTextColor,
@@ -1840,7 +1841,7 @@ export function DemoFlowRenderer({
     try {
       const startTime = Date.now();
       const { data, error: invokeError } = await supabase.functions.invoke('get-verification-status', {
-        body: { sessionId: verificationSessionId },
+        body: { sessionId: verificationSessionId, demoId },
       });
       const duration = Date.now() - startTime;
 
@@ -2032,6 +2033,7 @@ export function DemoFlowRenderer({
             referenceIdPrefix,
             resourceId: stepResourceId || getResId(verificationType),
             logoUrl,
+            demoId,
             branding: { buttonColor, headerTextColor, headerBgColor },
           };
 
@@ -2067,7 +2069,7 @@ export function DemoFlowRenderer({
         try {
           const { data: statusData } = await supabase.functions.invoke(
             'get-verification-status',
-            { body: { sessionId: result.sessionId } }
+            { body: { sessionId: result.sessionId, demoId } }
           );
           const status = (statusData?.status || '').toLowerCase();
           success = status === 'completed' || status === 'success' || status === 'approved';
