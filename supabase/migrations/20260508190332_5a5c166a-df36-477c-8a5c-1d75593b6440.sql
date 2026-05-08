@@ -1,0 +1,1 @@
+ALTER TABLE public.demo_environments ADD COLUMN verification_api_key text;

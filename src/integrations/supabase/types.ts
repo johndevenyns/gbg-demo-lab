@@ -126,6 +126,7 @@ export type Database = {
           updated_at: string | null
           uploaded_logo_url: string | null
           use_uploaded_logo: boolean | null
+          verification_api_key: string | null
           verification_type: Database["public"]["Enums"]["verification_type"]
         }
         Insert: {
@@ -173,6 +174,7 @@ export type Database = {
           updated_at?: string | null
           uploaded_logo_url?: string | null
           use_uploaded_logo?: boolean | null
+          verification_api_key?: string | null
           verification_type?: Database["public"]["Enums"]["verification_type"]
         }
         Update: {
@@ -220,6 +222,7 @@ export type Database = {
           updated_at?: string | null
           uploaded_logo_url?: string | null
           use_uploaded_logo?: boolean | null
+          verification_api_key?: string | null
           verification_type?: Database["public"]["Enums"]["verification_type"]
         }
         Relationships: [
