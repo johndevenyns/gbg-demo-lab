@@ -1038,7 +1038,7 @@ export function DemoFlowRenderer({
     try {
       // Check if user already exists
       const { data: existing } = await supabase
-        .from('portal_users')
+        .from('portal_users_public')
         .select('id')
         .eq('email', email)
         .maybeSingle();
@@ -1302,7 +1302,7 @@ export function DemoFlowRenderer({
 
       // Find portal user by registration code
       const { data: portalUser, error: queryError } = await supabase
-        .from('portal_users')
+        .from('portal_users_public')
         .select('id, email, registration_code, registration_code_expires_at, is_active, is_default, profile_data')
         .eq('registration_code', code)
         .eq('is_active', true)
@@ -1396,7 +1396,7 @@ export function DemoFlowRenderer({
       const assignedIds = (assignments || []).map(a => a.portal_user_id);
 
       const { data: users } = await supabase
-        .from('portal_users')
+        .from('portal_users_public')
         .select('id, email, display_name, profile_data, is_default, is_active')
         .eq('is_active', true);
 

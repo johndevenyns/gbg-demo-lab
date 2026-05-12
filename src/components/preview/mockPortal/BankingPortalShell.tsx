@@ -57,7 +57,7 @@ export function BankingPortalShell({
       savingRef.current = true;
       try {
         const { data: users } = await supabase
-          .from('portal_users')
+          .from('portal_users_public')
           .select('id, profile_data')
           .eq('email', userEmail.toLowerCase())
           .eq('is_active', true)
