@@ -3,13 +3,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
   VerificationTypeConfig,
-  MdlProvider,
+  DidProvider,
   VerificationTypeConfigRow,
-  MdlProviderRow,
+  DidProviderRow,
   VerificationTypeFormData,
-  MdlProviderFormData,
+  DidProviderFormData,
   transformVerificationTypeRow,
-  transformMdlProviderRow,
+  transformDidProviderRow,
 } from "@/types/verification";
 
 // ============ Verification Types ============
@@ -133,14 +133,14 @@ export function useDeleteVerificationType() {
   });
 }
 
-// ============ mDL Providers ============
+// ============ DiD Providers ============
 
-export function useMdlProviders(enabledOnly = false) {
+export function useDidProviders(enabledOnly = false) {
   return useQuery({
     queryKey: ['mdl-providers', enabledOnly],
-    queryFn: async (): Promise<MdlProvider[]> => {
+    queryFn: async (): Promise<DidProvider[]> => {
       let query = supabase
-        .from('mdl_providers')
+        .from('did_providers')
         .select('*')
         .order('display_order', { ascending: true });
       
@@ -151,16 +151,16 @@ export function useMdlProviders(enabledOnly = false) {
       const { data, error } = await query;
       
       if (error) throw error;
-      return (data as MdlProviderRow[]).map(transformMdlProviderRow);
+      return (data as DidProviderRow[]).map(transformDidProviderRow);
     },
   });
 }
 
-export function useUpdateMdlProvider() {
+export function useUpdateDidProvider() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async ({ id, updates }: { id: string; updates: Partial<MdlProviderFormData> }) => {
+    mutationFn: async ({ id, updates }: { id: string; updates: Partial<DidProviderFormData> }) => {
       // Build update object without config_options to avoid type issues
       const dbUpdates: Record<string, unknown> = {};
       
@@ -175,14 +175,14 @@ export function useUpdateMdlProvider() {
       if (updates.displayOrder !== undefined) dbUpdates.display_order = updates.displayOrder;
       
       const { data, error } = await supabase
-        .from('mdl_providers')
+        .from('did_providers')
         .update(dbUpdates)
         .eq('id', id)
         .select()
         .single();
       
       if (error) throw error;
-      return transformMdlProviderRow(data as MdlProviderRow);
+      return transformDidProviderRow(data as DidProviderRow);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['mdl-providers'] });
@@ -194,11 +194,11 @@ export function useUpdateMdlProvider() {
   });
 }
 
-export function useCreateMdlProvider() {
+export function useCreateDidProvider() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async (data: MdlProviderFormData) => {
+    mutationFn: async (data: DidProviderFormData) => {
       const dbData = {
         provider_key: data.providerKey,
         display_name: data.displayName,
@@ -212,13 +212,13 @@ export function useCreateMdlProvider() {
       };
       
       const { data: result, error } = await supabase
-        .from('mdl_providers')
+        .from('did_providers')
         .insert(dbData)
         .select()
         .single();
       
       if (error) throw error;
-      return transformMdlProviderRow(result as MdlProviderRow);
+      return transformDidProviderRow(result as DidProviderRow);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['mdl-providers'] });
@@ -230,13 +230,13 @@ export function useCreateMdlProvider() {
   });
 }
 
-export function useDeleteMdlProvider() {
+export function useDeleteDidProvider() {
   const queryClient = useQueryClient();
   
   return useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase
-        .from('mdl_providers')
+        .from('did_providers')
         .delete()
         .eq('id', id);
       

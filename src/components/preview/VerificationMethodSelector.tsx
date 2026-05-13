@@ -1,4 +1,4 @@
-import { MdlProvider, MethodSelectionStepConfig, AVAILABLE_MDL_PROVIDERS } from '@/types/demo';
+import { DidProvider, MethodSelectionStepConfig, AVAILABLE_DID_PROVIDERS } from '@/types/demo';
 import { FormStyleConfig, DEFAULT_FORM_STYLE } from '@/types/formStyle';
 import { ChevronRight, FileText, Smartphone } from 'lucide-react';
 
@@ -6,7 +6,7 @@ interface VerificationMethodSelectorProps {
   config: MethodSelectionStepConfig;
   formStyle?: FormStyleConfig;
   onSelectDocumentScan: () => void;
-  onSelectProvider: (provider: MdlProvider) => void;
+  onSelectProvider: (provider: DidProvider) => void;
 }
 
 const DEFAULT_CONFIG: MethodSelectionStepConfig = {
@@ -17,7 +17,7 @@ const DEFAULT_CONFIG: MethodSelectionStepConfig = {
   documentScanDescription: 'Scan your driver\'s license or ID and take a selfie',
   documentScanPath: 'docbio',
   mobileIdEnabled: true,
-  mobileIdProviders: AVAILABLE_MDL_PROVIDERS,
+  mobileIdProviders: AVAILABLE_DID_PROVIDERS,
 };
 
 export function VerificationMethodSelector({

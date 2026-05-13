@@ -124,8 +124,8 @@ export interface StepApiResponse {
 // Verification step configuration
 export type VerificationStatus = 'pending' | 'in_progress' | 'completed' | 'failed' | 'expired';
 
-// mDL Provider definition
-export interface MdlProvider {
+// DiD Provider definition
+export interface DidProvider {
   id: string;
   name: string;
   domain: string;
@@ -134,8 +134,8 @@ export interface MdlProvider {
   enabled: boolean;
 }
 
-// Available mDL providers (from the reference HTML)
-export const AVAILABLE_MDL_PROVIDERS: MdlProvider[] = [
+// Available DiD providers (from the reference HTML)
+export const AVAILABLE_DID_PROVIDERS: DidProvider[] = [
   {
     id: 'clear',
     name: 'Clear',
@@ -208,12 +208,12 @@ export interface VerificationStepConfig {
   
   // Mobile ID path URL placeholder
   mobileIdEnabled: boolean;
-  mobileIdUrlField?: string; // API response field containing mDL URL
+  mobileIdUrlField?: string; // API response field containing DiD URL
   mobileIdTitle?: string;
   mobileIdInstructions?: string;
   
-  // mDL Provider configuration - which providers are available for selection
-  mobileIdProviders?: MdlProvider[];
+  // DiD Provider configuration - which providers are available for selection
+  mobileIdProviders?: DidProvider[];
   
   // Completion behavior
   autoAdvanceOnComplete?: boolean;
@@ -248,10 +248,10 @@ export interface DecisionChoice {
   destinationType: DecisionDestinationType;
   
   // For verification destination
-  verificationType?: 'docbio' | 'databio' | 'dataonly' | 'mdl';
+  verificationType?: 'docbio' | 'databio' | 'dataonly' | 'did';
   
-  // For mDL verification - which providers are available
-  mobileIdProviders?: MdlProvider[];
+  // For DiD verification - which providers are available
+  mobileIdProviders?: DidProvider[];
   
   // For step destination - target step ID
   targetStepId?: string;
@@ -303,7 +303,7 @@ export interface ApiStepConfig {
 // DEPRECATED: Use VerificationFlowConfig instead
 export interface PathStepConfig {
   // The verification path type
-  pathType: 'docbio' | 'databio' | 'dataonly' | 'mdl';
+  pathType: 'docbio' | 'databio' | 'dataonly' | 'did';
   
   // Resource ID for this path
   resourceId?: string;
@@ -319,7 +319,7 @@ export interface PathStepConfig {
 // Verification Flow configuration (combines path selection with verification display)
 export interface VerificationFlowConfig {
   // The verification path type
-  pathType: 'docbio' | 'databio' | 'dataonly' | 'mdl';
+  pathType: 'docbio' | 'databio' | 'dataonly' | 'did';
   
   // Resource ID for this path (overrides the demo's default resource ID)
   resourceId?: string;
@@ -337,11 +337,11 @@ export interface VerificationFlowConfig {
   statusEnabled: boolean;
   statusPollingInterval?: number; // seconds
   
-  // Mobile ID path settings (for mDL path type)
+  // Mobile ID path settings (for DiD path type)
   mobileIdEnabled: boolean;
   mobileIdTitle?: string;
   mobileIdInstructions?: string;
-  mobileIdProviders?: MdlProvider[];
+  mobileIdProviders?: DidProvider[];
   
   // Completion behavior
   autoAdvanceOnComplete?: boolean;
@@ -437,7 +437,7 @@ export interface HostedJourneyStepConfig {
   qrCodeLabel?: string;
 }
 
-// Method Selection Step configuration (lets user choose between Doc Verification and mDL)
+// Method Selection Step configuration (lets user choose between Doc Verification and DiD)
 export interface MethodSelectionStepConfig {
   // Title and description
   title?: string;
@@ -451,7 +451,7 @@ export interface MethodSelectionStepConfig {
   
   // Mobile ID Providers option
   mobileIdEnabled: boolean;
-  mobileIdProviders?: MdlProvider[];
+  mobileIdProviders?: DidProvider[];
 }
 
 export type FormStepSubmitAction = 'login' | 'register' | 'validate_code' | 'verify_cc' | undefined;
@@ -510,7 +510,7 @@ export interface FormStep {
   addressValidationEnabled?: boolean;
   addressValidationLabel?: string; // Custom label for the loading button during address validation
   submitButton?: boolean;
-  verificationPath?: 'docbio' | 'databio' | 'dataonly' | 'mdl';
+  verificationPath?: 'docbio' | 'databio' | 'dataonly' | 'did';
   // Button configuration
   buttons?: StepButton[];
   // API configuration (for form steps with inline API calls)

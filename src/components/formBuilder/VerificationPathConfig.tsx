@@ -18,7 +18,7 @@ const PATH_ICONS: Record<string, React.ReactNode> = {
 
 const CONDITION_LABELS: Record<PathCondition, string> = {
   always: 'Always available',
-  mobile_detected: 'When mobile device detected',
+  digital_id_detected: 'When mobile device detected',
   document_available: 'When document is uploaded',
   high_risk_score: 'When risk score is high',
   user_preference: 'User selects preference',

@@ -8,9 +8,9 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { FormStep, DecisionStepConfig as DecisionStepConfigType, DecisionChoice, DecisionChoiceIcon, DecisionDestinationType, AVAILABLE_MDL_PROVIDERS } from '@/types/demo';
+import { FormStep, DecisionStepConfig as DecisionStepConfigType, DecisionChoice, DecisionChoiceIcon, DecisionDestinationType, AVAILABLE_DID_PROVIDERS } from '@/types/demo';
 import { ResultPageConfig } from '@/components/preview/ResultPage';
-import { MdlProviderConfig } from './MdlProviderConfig';
+import { DidProviderConfig } from './DidProviderConfig';
 import { 
   Plus, Trash2, ChevronDown, ChevronUp, GripVertical, 
   FileCheck, Smartphone, Database, Shield, User, Fingerprint, Camera, CreditCard,
@@ -32,7 +32,7 @@ const VERIFICATION_TYPES = [
   { id: 'docbio', label: 'Document + Biometric', description: 'ID scan and selfie' },
   { id: 'databio', label: 'Data + Biometric', description: 'Data verification with selfie' },
   { id: 'dataonly', label: 'Data Only', description: 'Backend data verification' },
-  { id: 'mdl', label: 'Digital ID', description: 'Digital ID verification' },
+  { id: 'did', label: 'Digital ID', description: 'Digital ID verification' },
 ];
 
 const getIconComponent = (iconId?: DecisionChoiceIcon) => {
@@ -327,10 +327,10 @@ export function DecisionStepConfig({ step, allSteps, onUpdateStep }: DecisionSte
                       <Select
                         value={choice.verificationType || 'docbio'}
                         onValueChange={(v) => handleUpdateChoice(choice.id, { 
-                          verificationType: v as 'docbio' | 'databio' | 'dataonly' | 'mdl',
+                          verificationType: v as 'docbio' | 'databio' | 'dataonly' | 'did',
                           // Initialize dID providers with all available when switching to dID
-                          ...(v === 'mdl' && !choice.mobileIdProviders?.length ? {
-                            mobileIdProviders: AVAILABLE_MDL_PROVIDERS.map(p => ({ ...p, enabled: true }))
+                          ...(v === 'did' && !choice.mobileIdProviders?.length ? {
+                            mobileIdProviders: AVAILABLE_DID_PROVIDERS.map(p => ({ ...p, enabled: true }))
                           } : {})
                         })}
                       >
@@ -351,9 +351,9 @@ export function DecisionStepConfig({ step, allSteps, onUpdateStep }: DecisionSte
                     )}
 
                     {/* dID Provider Selection - show when dID is selected */}
-                    {choice.destinationType === 'verification' && choice.verificationType === 'mdl' && (
+                    {choice.destinationType === 'verification' && choice.verificationType === 'did' && (
                       <div className="mt-2">
-                        <MdlProviderConfig
+                        <DidProviderConfig
                           enabledProviders={choice.mobileIdProviders || []}
                           onChange={(providers) => handleUpdateChoice(choice.id, { mobileIdProviders: providers })}
                         />

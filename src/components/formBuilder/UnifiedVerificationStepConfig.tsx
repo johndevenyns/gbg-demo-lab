@@ -19,12 +19,12 @@ import {
   VerificationTypeOverride, 
   VerificationMethodSelection,
   VerificationTypeConfig,
-  MdlProvider,
+  DidProvider,
   UserSelectionChoice,
   SelectionIconType,
   UserSelectionScreen,
 } from '@/types/verification';
-import { useVerificationTypes, useMdlProviders } from '@/hooks/useVerificationAdmin';
+import { useVerificationTypes, useDidProviders } from '@/hooks/useVerificationAdmin';
 import { 
   FileText, UserCheck, Database, Smartphone, QrCode, Activity, Clock, Settings2,
   ChevronRight, Check, AlertCircle, Loader2, ChevronDown, ChevronUp, GripVertical,
@@ -95,7 +95,7 @@ interface UnifiedVerificationStepConfigProps {
 
 export function UnifiedVerificationStepConfig({ step, onUpdateStep, demo }: UnifiedVerificationStepConfigProps) {
   const { data: verificationTypes = [], isLoading: typesLoading } = useVerificationTypes(true);
-  const { data: mdlProviders = [], isLoading: providersLoading } = useMdlProviders(true);
+  const { data: didProviders = [], isLoading: providersLoading } = useDidProviders(true);
   const { data: adminResourceIds = [] } = useAdminResourceIdsForUser(demo?.createdBy);
   
   // Get config from step or use defaults, ensuring all required arrays exist
@@ -166,7 +166,7 @@ export function UnifiedVerificationStepConfig({ step, onUpdateStep, demo }: Unif
       case 'docbio': return 'document';
       case 'databio': return 'fingerprint';
       case 'dataonly': return 'database';
-      case 'mdl': return 'smartphone';
+      case 'did': return 'smartphone';
       default: return 'document';
     }
   };
@@ -502,7 +502,7 @@ export function UnifiedVerificationStepConfig({ step, onUpdateStep, demo }: Unif
                       typeKey={typeKey}
                       globalType={globalType}
                       typeConfig={typeConfig}
-                      mdlProviders={mdlProviders}
+                      didProviders={didProviders}
                       demo={demo}
                       adminResourceIds={adminResourceIds}
                       onUpdate={(updates) => handleTypeConfigUpdate(typeKey, updates)}
@@ -585,7 +585,7 @@ interface VerificationTypePanelProps {
   typeKey: string;
   globalType: VerificationTypeConfig;
   typeConfig: VerificationTypeOverride;
-  mdlProviders: MdlProvider[];
+  didProviders: DidProvider[];
   demo?: DemoEnvironment;
   adminResourceIds: import('@/hooks/useAdminResourceIds').AdminResourceId[];
   onUpdate: (updates: Partial<VerificationTypeOverride>) => void;
@@ -595,12 +595,12 @@ function VerificationTypePanel({
   typeKey, 
   globalType, 
   typeConfig, 
-  mdlProviders,
+  didProviders,
   demo,
   adminResourceIds,
   onUpdate 
 }: VerificationTypePanelProps) {
-  const isMdlType = typeKey === 'mdl';
+  const isDidType = typeKey === 'did';
   const isDataOnly = typeKey === 'dataonly';
 
   // Local state for resource ID to prevent overwriting while typing
@@ -835,15 +835,15 @@ function VerificationTypePanel({
         </div>
       )}
 
-      {/* mDL Provider selection */}
-      {isMdlType && mdlProviders.length > 0 && (
+      {/* DiD Provider selection */}
+      {isDidType && didProviders.length > 0 && (
         <div className="space-y-3 p-3 rounded-lg border border-green-500/30 bg-green-500/5">
           <Label className="text-sm font-medium flex items-center gap-2">
             <Smartphone className="w-4 h-4" />
             Available Providers
           </Label>
           <div className="grid grid-cols-2 gap-2">
-            {mdlProviders.map((provider) => {
+            {didProviders.map((provider) => {
               const isEnabled = typeConfig.enabledProviderKeys?.includes(provider.providerKey) ?? true;
               
               return (
@@ -857,7 +857,7 @@ function VerificationTypePanel({
                     }
                   `}
                   onClick={() => {
-                    const currentEnabled = typeConfig.enabledProviderKeys || mdlProviders.map(p => p.providerKey);
+                    const currentEnabled = typeConfig.enabledProviderKeys || didProviders.map(p => p.providerKey);
                     const newEnabled = isEnabled
                       ? currentEnabled.filter(k => k !== provider.providerKey)
                       : [...currentEnabled, provider.providerKey];

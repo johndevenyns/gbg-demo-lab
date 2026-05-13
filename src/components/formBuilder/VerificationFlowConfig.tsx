@@ -7,9 +7,9 @@ import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { FormStep, VerificationFlowConfig as VerificationFlowConfigType, AVAILABLE_MDL_PROVIDERS, DemoEnvironment } from '@/types/demo';
+import { FormStep, VerificationFlowConfig as VerificationFlowConfigType, AVAILABLE_DID_PROVIDERS, DemoEnvironment } from '@/types/demo';
 import { VERIFICATION_PATHS } from '@/types/formBuilder';
-import { MdlProviderConfig } from './MdlProviderConfig';
+import { DidProviderConfig } from './DidProviderConfig';
 import { StepCompletionActionsConfig } from './StepCompletionActionsConfig';
 import { 
   QrCode, Activity, Smartphone, ChevronDown, ChevronUp, Settings2, 
@@ -40,7 +40,7 @@ const DEFAULT_CONFIG: VerificationFlowConfigType = {
   mobileIdEnabled: false,
   mobileIdTitle: 'Digital ID Verification',
   mobileIdInstructions: 'Use your Digital ID for faster verification',
-  mobileIdProviders: AVAILABLE_MDL_PROVIDERS.map(p => ({ ...p, enabled: true })),
+  mobileIdProviders: AVAILABLE_DID_PROVIDERS.map(p => ({ ...p, enabled: true })),
   autoAdvanceOnComplete: true,
   showBackButton: true,
   backButtonLabel: 'Back',
@@ -69,7 +69,7 @@ export function VerificationFlowConfig({ step, onUpdateStep, demo }: Verificatio
 
   // Determine which display options are relevant based on path type
   const isDataOnlyPath = config.pathType === 'dataonly';
-  const isMdlPath = config.pathType === 'mdl';
+  const isDidPath = config.pathType === 'did';
 
   return (
     <div className="space-y-4">
@@ -111,7 +111,7 @@ export function VerificationFlowConfig({ step, onUpdateStep, demo }: Verificatio
                 <p className="text-xs text-blue-600 font-medium">Status</p>
               </div>
             )}
-            {isMdlPath && config.mobileIdEnabled && (
+            {isDidPath && config.mobileIdEnabled && (
               <div className="text-center">
                 <div className="w-16 h-16 mx-auto mb-1 bg-muted rounded-lg flex items-center justify-center border border-dashed border-muted-foreground/30">
                   <Smartphone className="w-8 h-8 text-muted-foreground/50" />
@@ -134,10 +134,10 @@ export function VerificationFlowConfig({ step, onUpdateStep, demo }: Verificatio
             <Select
               value={config.pathType}
               onValueChange={(v) => handleConfigUpdate({ 
-                pathType: v as 'docbio' | 'databio' | 'dataonly' | 'mdl',
+                pathType: v as 'docbio' | 'databio' | 'dataonly' | 'did',
                 // Auto-enable relevant options based on path type
                 qrCodeEnabled: v !== 'dataonly',
-                mobileIdEnabled: v === 'mdl',
+                mobileIdEnabled: v === 'did',
               })}
             >
               <SelectTrigger className="bg-background">
@@ -217,7 +217,7 @@ export function VerificationFlowConfig({ step, onUpdateStep, demo }: Verificatio
                       Status
                     </Badge>
                   )}
-                  {isMdlPath && config.mobileIdEnabled && (
+                  {isDidPath && config.mobileIdEnabled && (
                     <Badge variant="outline" className="text-xs bg-green-500/10 text-green-600 border-green-500/30">
                       <Smartphone className="w-3 h-3 mr-1" />
                       dID
@@ -308,7 +308,7 @@ export function VerificationFlowConfig({ step, onUpdateStep, demo }: Verificatio
             </div>
 
             {/* Digital ID Configuration - Only for dID path */}
-            {isMdlPath && (
+            {isDidPath && (
               <div className="space-y-3 pt-2 border-t border-border">
                 <div className="flex items-center justify-between">
                   <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
@@ -347,7 +347,7 @@ export function VerificationFlowConfig({ step, onUpdateStep, demo }: Verificatio
 
                     {/* dID Provider Selection */}
                     <div className="pt-2 border-t border-green-500/20">
-                      <MdlProviderConfig
+                      <DidProviderConfig
                         enabledProviders={config.mobileIdProviders || []}
                         onChange={(providers) => handleConfigUpdate({ mobileIdProviders: providers })}
                       />

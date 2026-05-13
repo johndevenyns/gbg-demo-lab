@@ -1,9 +1,9 @@
-// Verification Types and mDL Provider Types
-// These types map to the verification_type_configs and mdl_providers database tables
+// Verification Types and DiD Provider Types
+// These types map to the verification_type_configs and did_providers database tables
 
 export interface VerificationTypeConfig {
   id: string;
-  typeKey: string; // 'docbio', 'databio', 'dataonly', 'mdl'
+  typeKey: string; // 'docbio', 'databio', 'dataonly', 'did'
   displayName: string;
   description: string | null;
   iconName: string | null; // Lucide icon name
@@ -18,7 +18,7 @@ export interface VerificationTypeConfig {
   updatedAt: string;
 }
 
-export interface MdlProvider {
+export interface DidProvider {
   id: string;
   providerKey: string; // 'mitid', 'bankid_se', etc.
   displayName: string;
@@ -48,8 +48,8 @@ export interface VerificationTypeFormData {
   displayOrder: number;
 }
 
-// Form for creating/updating mDL providers
-export interface MdlProviderFormData {
+// Form for creating/updating DiD providers
+export interface DidProviderFormData {
   providerKey: string;
   displayName: string;
   description?: string;
@@ -90,7 +90,7 @@ export interface UnifiedVerificationConfig {
   methodSelection: VerificationMethodSelection;
   
   // Enabled verification types (keys from verification_type_configs)
-  enabledTypes: string[]; // e.g., ['docbio', 'databio', 'mdl']
+  enabledTypes: string[]; // e.g., ['docbio', 'databio', 'did']
   
   // Per-type configuration overrides
   typeConfigs: Record<string, VerificationTypeOverride>;
@@ -126,7 +126,7 @@ export interface VerificationTypeOverride {
   // the demo's approved/rejected URL based on the result.
   popupMode?: boolean;
   
-  // mDL-specific: which providers are enabled for this demo
+  // DiD-specific: which providers are enabled for this demo
   enabledProviderKeys?: string[];
   
   // Status polling
@@ -160,7 +160,7 @@ export interface VerificationTypeConfigRow {
   updated_at: string;
 }
 
-export interface MdlProviderRow {
+export interface DidProviderRow {
   id: string;
   provider_key: string;
   display_name: string;
@@ -196,7 +196,7 @@ export function transformVerificationTypeRow(row: VerificationTypeConfigRow): Ve
   };
 }
 
-export function transformMdlProviderRow(row: MdlProviderRow): MdlProvider {
+export function transformDidProviderRow(row: DidProviderRow): DidProvider {
   return {
     id: row.id,
     providerKey: row.provider_key,

@@ -1,20 +1,20 @@
-import { MdlProvider } from '@/types/demo';
+import { DidProvider } from '@/types/demo';
 import { FormStyleConfig, DEFAULT_FORM_STYLE } from '@/types/formStyle';
 import { ChevronRight } from 'lucide-react';
 
-interface MdlProviderSelectorProps {
-  providers: MdlProvider[];
+interface DidProviderSelectorProps {
+  providers: DidProvider[];
   formStyle?: FormStyleConfig;
-  onSelectProvider: (provider: MdlProvider) => void;
+  onSelectProvider: (provider: DidProvider) => void;
   title?: string;
 }
 
-export function MdlProviderSelector({
+export function DidProviderSelector({
   providers,
   formStyle = DEFAULT_FORM_STYLE,
   onSelectProvider,
   title = 'Choose your ID provider',
-}: MdlProviderSelectorProps) {
+}: DidProviderSelectorProps) {
   // Filter to only enabled providers
   const enabledProviders = providers.filter(p => p.enabled);
 

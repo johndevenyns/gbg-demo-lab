@@ -6,15 +6,15 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Button } from '@/components/ui/button';
-import { MdlProvider, AVAILABLE_MDL_PROVIDERS } from '@/types/demo';
+import { DidProvider, AVAILABLE_DID_PROVIDERS } from '@/types/demo';
 import { ChevronDown, ChevronUp, Smartphone, Globe } from 'lucide-react';
 
-interface MdlProviderConfigProps {
-  enabledProviders: MdlProvider[];
-  onChange: (providers: MdlProvider[]) => void;
+interface DidProviderConfigProps {
+  enabledProviders: DidProvider[];
+  onChange: (providers: DidProvider[]) => void;
 }
 
-export function MdlProviderConfig({ enabledProviders, onChange }: MdlProviderConfigProps) {
+export function DidProviderConfig({ enabledProviders, onChange }: DidProviderConfigProps) {
   const [isOpen, setIsOpen] = useState(true);
 
   // Check if a provider is currently enabled
@@ -23,7 +23,7 @@ export function MdlProviderConfig({ enabledProviders, onChange }: MdlProviderCon
   };
 
   // Toggle a provider's enabled state
-  const toggleProvider = (provider: MdlProvider) => {
+  const toggleProvider = (provider: DidProvider) => {
     if (isProviderEnabled(provider.id)) {
       // Remove from enabled list
       onChange(enabledProviders.filter(p => p.id !== provider.id));
@@ -36,7 +36,7 @@ export function MdlProviderConfig({ enabledProviders, onChange }: MdlProviderCon
   // Toggle all providers
   const toggleAll = (enable: boolean) => {
     if (enable) {
-      onChange(AVAILABLE_MDL_PROVIDERS.map(p => ({ ...p, enabled: true })));
+      onChange(AVAILABLE_DID_PROVIDERS.map(p => ({ ...p, enabled: true })));
     } else {
       onChange([]);
     }
@@ -52,7 +52,7 @@ export function MdlProviderConfig({ enabledProviders, onChange }: MdlProviderCon
             <Smartphone className="w-4 h-4 text-muted-foreground" />
             <span className="text-sm font-medium">Available ID Providers</span>
             <Badge variant="outline" className="text-xs">
-              {enabledCount} / {AVAILABLE_MDL_PROVIDERS.length}
+              {enabledCount} / {AVAILABLE_DID_PROVIDERS.length}
             </Badge>
           </div>
           {isOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -85,7 +85,7 @@ export function MdlProviderConfig({ enabledProviders, onChange }: MdlProviderCon
 
         {/* Provider list */}
         <div className="space-y-2">
-          {AVAILABLE_MDL_PROVIDERS.map((provider) => (
+          {AVAILABLE_DID_PROVIDERS.map((provider) => (
             <div
               key={provider.id}
               className={`flex items-center gap-3 p-3 rounded-lg border transition-colors cursor-pointer ${

@@ -1,7 +1,7 @@
 // Form Builder Components Index
 export { FormBuilderSection } from './FormBuilderSection';
 export { FormStyleSection } from './FormStyleSection';
-export { MdlProviderConfig } from './MdlProviderConfig';
+export { DidProviderConfig } from './DidProviderConfig';
 export { FormBuilderCanvas } from './FormBuilderCanvas';
 export { FormStepCard } from './FormStepCard';
 export { FieldPalette } from './FieldPalette';

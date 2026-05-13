@@ -30,7 +30,7 @@ const VERIFICATION_TYPES = [
   { id: 'docbio', label: 'Document + Biometric', description: 'ID scan and selfie' },
   { id: 'databio', label: 'Data + Biometric', description: 'Data verification with selfie' },
   { id: 'dataonly', label: 'Data Only', description: 'Backend data verification' },
-  { id: 'mdl', label: 'Digital ID', description: 'Digital ID verification' },
+  { id: 'did', label: 'Digital ID', description: 'Digital ID verification' },
 ];
 
 const getIconComponent = (iconId?: DecisionChoiceIcon) => {
@@ -491,7 +491,7 @@ export function BranchCanvas({
                   <Select
                     value={choice.verificationType || 'docbio'}
                     onValueChange={(v) => onUpdateChoice({ 
-                      verificationType: v as 'docbio' | 'databio' | 'dataonly' | 'mdl'
+                      verificationType: v as 'docbio' | 'databio' | 'dataonly' | 'did'
                     })}
                   >
                     <SelectTrigger className="bg-background">

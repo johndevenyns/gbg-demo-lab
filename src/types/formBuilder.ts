@@ -5,7 +5,7 @@ import { FormStep, FormField, VerificationType } from './demo';
 // Verification path condition types
 export type PathCondition = 
   | 'always' 
-  | 'mobile_detected' 
+  | 'digital_id_detected' 
   | 'document_available' 
   | 'high_risk_score'
   | 'user_preference';
@@ -49,11 +49,11 @@ export const VERIFICATION_PATHS: VerificationPath[] = [
     resourceIdField: 'resourceIdDataOnly',
   },
   {
-    id: 'mdl',
+    id: 'did',
     name: 'Digital ID',
     type: 'dataBio',
     description: 'Digital ID credential verification (iOS/Android)',
-    condition: 'mobile_detected',
+    condition: 'digital_id_detected',
     priority: 1,
     resourceIdField: 'resourceIdDataBio',
   },

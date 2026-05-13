@@ -69,7 +69,7 @@ export function PathStepConfig({ step, onUpdateStep }: PathStepConfigProps) {
             <Label className="text-sm font-medium">Verification Path</Label>
             <Select
               value={config.pathType}
-              onValueChange={(v) => handleConfigChange({ pathType: v as 'docbio' | 'databio' | 'dataonly' | 'mdl' })}
+              onValueChange={(v) => handleConfigChange({ pathType: v as 'docbio' | 'databio' | 'dataonly' | 'did' })}
             >
               <SelectTrigger className="bg-background">
                 <SelectValue />

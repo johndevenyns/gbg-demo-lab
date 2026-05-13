@@ -456,7 +456,7 @@ export function FormStepCard({
               {step.verificationFlowConfig?.pathType === 'docbio' && 'Doc + Bio'}
               {step.verificationFlowConfig?.pathType === 'databio' && 'Data + Bio'}
               {step.verificationFlowConfig?.pathType === 'dataonly' && 'Data Only'}
-              {step.verificationFlowConfig?.pathType === 'mdl' && 'Digital ID'}
+              {step.verificationFlowConfig?.pathType === 'did' && 'Digital ID'}
               {!step.verificationFlowConfig?.pathType && 'Verification'}
             </Badge>
           )}

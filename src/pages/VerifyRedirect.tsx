@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { signalRedirectFromPopup } from '@trinsic/web-ui';
-import { useMdlPageHtml, MDL_REDIRECT_HTML_KEY, DEFAULT_REDIRECT_HTML } from '@/components/admin/MdlPageHtmlEditor';
+import { useDidPageHtml, DID_REDIRECT_HTML_KEY, DEFAULT_REDIRECT_HTML } from '@/components/admin/DidPageHtmlEditor';
 
 /**
  * Redirect landing page for the Trinsic mobile verification popup flow.
@@ -9,11 +9,11 @@ import { useMdlPageHtml, MDL_REDIRECT_HTML_KEY, DEFAULT_REDIRECT_HTML } from '@/
  * result to the opener window via `signalRedirectFromPopup` and close ourselves.
  *
  * The visible HTML is configurable at the Global Settings → Verification → Digital ID
- * level (key: `mdl_redirect_html`). The signalling logic always runs.
+ * level (key: `did_redirect_html`). The signalling logic always runs.
  */
 export default function VerifyRedirect() {
   const [error, setError] = useState<string | null>(null);
-  const { data: customHtml, isLoading } = useMdlPageHtml(MDL_REDIRECT_HTML_KEY);
+  const { data: customHtml, isLoading } = useDidPageHtml(DID_REDIRECT_HTML_KEY);
 
   useEffect(() => {
     try {

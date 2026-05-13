@@ -18,13 +18,13 @@ import {
 } from "@/components/ui/alert-dialog";
 import {
   useVerificationTypes, useUpdateVerificationType,
-  useMdlProviders, useUpdateMdlProvider, useCreateMdlProvider, useDeleteMdlProvider,
+  useDidProviders, useUpdateDidProvider, useCreateDidProvider, useDeleteDidProvider,
 } from "@/hooks/useVerificationAdmin";
 import {
   useMyAdminResourceIds, useUpsertAdminResourceId, useDeleteAdminResourceId,
 } from "@/hooks/useAdminResourceIds";
-import { VerificationTypeConfig, MdlProvider, MdlProviderFormData } from "@/types/verification";
-import { MdlPageHtmlEditor } from "./MdlPageHtmlEditor";
+import { VerificationTypeConfig, DidProvider, DidProviderFormData } from "@/types/verification";
+import { DidPageHtmlEditor } from "./DidPageHtmlEditor";
 
 // Icon mapping
 const iconMap: Record<string, React.ReactNode> = {
@@ -35,9 +35,9 @@ const iconMap: Record<string, React.ReactNode> = {
 };
 
 // ── Digital ID Provider Card (inline) ──────────────────────────────────────
-function MdlProviderCard({ provider, onUpdate, onDelete }: {
-  provider: MdlProvider;
-  onUpdate: (updates: Partial<MdlProvider>) => void;
+function DidProviderCard({ provider, onUpdate, onDelete }: {
+  provider: DidProvider;
+  onUpdate: (updates: Partial<DidProvider>) => void;
   onDelete: () => void;
 }) {
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -92,9 +92,9 @@ function MdlProviderCard({ provider, onUpdate, onDelete }: {
 function AddProviderDialog({ open, onOpenChange, onAdd }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAdd: (data: MdlProviderFormData) => void;
+  onAdd: (data: DidProviderFormData) => void;
 }) {
-  const [formData, setFormData] = useState<MdlProviderFormData>({
+  const [formData, setFormData] = useState<DidProviderFormData>({
     providerKey: '', displayName: '', description: '', logoUrl: '',
     domain: '', countryCode: '', scope: [], isEnabled: true, displayOrder: 99,
   });
@@ -161,12 +161,12 @@ function AddProviderDialog({ open, onOpenChange, onAdd }: {
 }
 
 // ── Verification Type Card (expandable) ─────────────────────────────
-function VerificationTypeCard({ type, onUpdate, isMdl, mdlProviders, onUpdateProvider, onDeleteProvider, onAddProvider, isGlobalAdmin }: {
+function VerificationTypeCard({ type, onUpdate, isDid, didProviders, onUpdateProvider, onDeleteProvider, onAddProvider, isGlobalAdmin }: {
   type: VerificationTypeConfig;
   onUpdate: (updates: Partial<VerificationTypeConfig>) => void;
-  isMdl: boolean;
-  mdlProviders: MdlProvider[];
-  onUpdateProvider: (id: string, updates: Partial<MdlProvider>) => void;
+  isDid: boolean;
+  didProviders: DidProvider[];
+  onUpdateProvider: (id: string, updates: Partial<DidProvider>) => void;
   onDeleteProvider: (id: string) => void;
   onAddProvider: () => void;
   isGlobalAdmin: boolean;
@@ -243,7 +243,7 @@ function VerificationTypeCard({ type, onUpdate, isMdl, mdlProviders, onUpdatePro
                 {type.requiresDocument && <Badge variant="outline" className="text-xs">Requires Document</Badge>}
                 {type.requiresBiometric && <Badge variant="outline" className="text-xs">Requires Biometric</Badge>}
                 {type.supportsQrCode && <Badge variant="outline" className="text-xs">QR Code</Badge>}
-                {isMdl && <Badge variant="outline" className="text-xs">{mdlProviders.length} provider{mdlProviders.length !== 1 ? 's' : ''}</Badge>}
+                {isDid && <Badge variant="outline" className="text-xs">{didProviders.length} provider{didProviders.length !== 1 ? 's' : ''}</Badge>}
               </div>
               {type.defaultResourceId && (
                 <p className="text-xs text-muted-foreground font-mono mt-2">
@@ -284,7 +284,7 @@ function VerificationTypeCard({ type, onUpdate, isMdl, mdlProviders, onUpdatePro
           )}
 
           {/* Digital ID Providers subsection */}
-          {isMdl && isGlobalAdmin && (
+          {isDid && isGlobalAdmin && (
             <div className="px-6 pb-6">
               <Separator className="mb-4" />
               <div className="flex items-center justify-between mb-3">
@@ -296,12 +296,12 @@ function VerificationTypeCard({ type, onUpdate, isMdl, mdlProviders, onUpdatePro
                   <Plus className="w-3.5 h-3.5 mr-1" />Add
                 </Button>
               </div>
-              {mdlProviders.length === 0 ? (
+              {didProviders.length === 0 ? (
                 <p className="text-sm text-muted-foreground text-center py-4">No providers configured.</p>
               ) : (
                 <div className="space-y-2">
-                  {mdlProviders.map(p => (
-                    <MdlProviderCard
+                  {didProviders.map(p => (
+                    <DidProviderCard
                       key={p.id}
                       provider={p}
                       onUpdate={(updates) => onUpdateProvider(p.id, updates)}
@@ -314,10 +314,10 @@ function VerificationTypeCard({ type, onUpdate, isMdl, mdlProviders, onUpdatePro
           )}
 
           {/* Launch Page + Redirect Page editors (Digital ID only) */}
-          {isMdl && isGlobalAdmin && (
+          {isDid && isGlobalAdmin && (
             <div className="px-6 pb-6">
               <Separator className="mb-4" />
-              <MdlPageHtmlEditor />
+              <DidPageHtmlEditor />
             </div>
           )}
         </CollapsibleContent>
@@ -329,13 +329,13 @@ function VerificationTypeCard({ type, onUpdate, isMdl, mdlProviders, onUpdatePro
 // ── Main Component ──────────────────────────────────────────────────
 export function UnifiedVerificationSettings({ isGlobalAdmin }: { isGlobalAdmin: boolean }) {
   const { data: verificationTypes = [], isLoading: typesLoading } = useVerificationTypes();
-  const { data: mdlProviders = [], isLoading: providersLoading } = useMdlProviders();
+  const { data: didProviders = [], isLoading: providersLoading } = useDidProviders();
   const { data: myResourceIds = [], isLoading: idsLoading } = useMyAdminResourceIds();
 
   const updateType = useUpdateVerificationType();
-  const updateProvider = useUpdateMdlProvider();
-  const createProvider = useCreateMdlProvider();
-  const deleteProvider = useDeleteMdlProvider();
+  const updateProvider = useUpdateDidProvider();
+  const createProvider = useCreateDidProvider();
+  const deleteProvider = useDeleteDidProvider();
   const upsertResourceId = useUpsertAdminResourceId();
   const deleteResourceId = useDeleteAdminResourceId();
 
@@ -370,7 +370,7 @@ export function UnifiedVerificationSettings({ isGlobalAdmin }: { isGlobalAdmin: 
     }});
   };
 
-  const handleUpdateProvider = (id: string, updates: Partial<MdlProvider>) => {
+  const handleUpdateProvider = (id: string, updates: Partial<DidProvider>) => {
     updateProvider.mutate({ id, updates: {
       displayName: updates.displayName,
       description: updates.description || undefined,
@@ -410,8 +410,8 @@ export function UnifiedVerificationSettings({ isGlobalAdmin }: { isGlobalAdmin: 
                 key={type.id}
                 type={type}
                 onUpdate={(updates) => handleUpdateType(type.id, updates)}
-                isMdl={type.typeKey === 'mdl'}
-                mdlProviders={mdlProviders}
+                isDid={type.typeKey === 'did'}
+                didProviders={didProviders}
                 onUpdateProvider={handleUpdateProvider}
                 onDeleteProvider={(id) => deleteProvider.mutate(id)}
                 onAddProvider={() => setAddProviderOpen(true)}
