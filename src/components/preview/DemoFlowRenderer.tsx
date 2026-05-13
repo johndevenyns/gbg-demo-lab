@@ -2102,7 +2102,7 @@ export function DemoFlowRenderer({
       if (popup && !popup.closed) popup.close();
 
       logPortalActivity({
-        action: success ? 'verification_passed' : 'verification_failed',
+        action: success ? 'verification_completed' : 'verification_failed',
         demoId,
         demoName: customerName,
         portalUserEmail: formData.email || undefined,
