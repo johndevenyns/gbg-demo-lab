@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { FormStyleConfig, DEFAULT_FORM_STYLE } from '@/types/formStyle';
-import { UnifiedVerificationConfig, UserSelectionChoice, SelectionIconType, MdlProvider } from '@/types/verification';
+import { UnifiedVerificationConfig, UserSelectionChoice, SelectionIconType, DidProvider } from '@/types/verification';
 import { VerificationType } from '@/types/demo';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -26,8 +26,8 @@ const TYPE_KEY_MAP: Record<string, VerificationType> = {
   'docbio': 'docBio',
   'databio': 'dataBio',
   'dataonly': 'dataOnly',
-  // mDL currently falls back to dataBio
-  'mdl': 'dataBio',
+  // DiD currently falls back to dataBio
+  'did': 'dataBio',
 };
 
 interface UnifiedVerificationRendererProps {
@@ -36,7 +36,7 @@ interface UnifiedVerificationRendererProps {
   buttonColor: string;
   isFirstStep: boolean;
   isLoading?: boolean;
-  mdlProviders?: MdlProvider[];
+  didProviders?: DidProvider[];
   onSelectType: (verificationType: VerificationType, typeKey: string, providerId?: string) => void;
   onBack: () => void;
 }
@@ -47,7 +47,7 @@ export function UnifiedVerificationRenderer({
   buttonColor,
   isFirstStep,
   isLoading = false,
-  mdlProviders = [],
+  didProviders = [],
   onSelectType,
   onBack,
 }: UnifiedVerificationRendererProps) {
@@ -72,20 +72,20 @@ export function UnifiedVerificationRenderer({
 
   const buttonTextColor = getContrastTextColor(buttonColor);
 
-  // Get enabled mDL providers for a specific choice
-  const getEnabledMdlProviders = useCallback((typeKey: string): MdlProvider[] => {
-    if (typeKey !== 'mdl') return [];
+  // Get enabled DiD providers for a specific choice
+  const getEnabledDidProviders = useCallback((typeKey: string): DidProvider[] => {
+    if (typeKey !== 'did') return [];
     
     const typeConfig = config.typeConfigs?.[typeKey];
     const enabledKeys = typeConfig?.enabledProviderKeys;
     
     if (!enabledKeys || enabledKeys.length === 0) {
       // All providers enabled by default
-      return mdlProviders.filter(p => p.isEnabled);
+      return didProviders.filter(p => p.isEnabled);
     }
     
-    return mdlProviders.filter(p => p.isEnabled && enabledKeys.includes(p.providerKey));
-  }, [config.typeConfigs, mdlProviders]);
+    return didProviders.filter(p => p.isEnabled && enabledKeys.includes(p.providerKey));
+  }, [config.typeConfigs, didProviders]);
 
   const handleChoiceSelect = useCallback((choice: UserSelectionChoice, providerId?: string) => {
     // Prevent double-triggering
@@ -102,7 +102,7 @@ export function UnifiedVerificationRenderer({
     }, 1000);
   }, [onSelectType, isLoading]);
 
-  const handleMdlProviderSelect = useCallback((choice: UserSelectionChoice, provider: MdlProvider) => {
+  const handleDidProviderSelect = useCallback((choice: UserSelectionChoice, provider: DidProvider) => {
     handleChoiceSelect(choice, provider.providerKey);
   }, [handleChoiceSelect]);
 
@@ -163,9 +163,9 @@ export function UnifiedVerificationRenderer({
         {choices.map((choice) => {
           const IconComponent = ICON_MAP[choice.icon] || Shield;
           const isSelected = selectedChoice === choice.typeKey;
-          const isMdl = choice.typeKey === 'mdl';
-          const enabledProviders = getEnabledMdlProviders(choice.typeKey);
-          const showProviderList = isMdl && enabledProviders.length > 0;
+          const isDid = choice.typeKey === 'did';
+          const enabledProviders = getEnabledDidProviders(choice.typeKey);
+          const showProviderList = isDid && enabledProviders.length > 0;
 
           return (
             <Card 
@@ -180,7 +180,7 @@ export function UnifiedVerificationRenderer({
                 ...(isSelected ? { '--tw-ring-color': buttonColor } as React.CSSProperties : {}),
               }}
               onClick={() => {
-                // Only trigger directly if not an mDL choice with providers
+                // Only trigger directly if not an DiD choice with providers
                 if (!showProviderList) {
                   handleChoiceSelect(choice);
                 }
@@ -206,7 +206,7 @@ export function UnifiedVerificationRenderer({
                     </div>
                   </div>
                   
-                  {/* Arrow indicator for non-mDL choices */}
+                  {/* Arrow indicator for non-DiD choices */}
                   {!showProviderList && (
                     <div 
                       className="p-1.5 rounded-full transition-colors"
@@ -222,7 +222,7 @@ export function UnifiedVerificationRenderer({
                 </div>
               </CardHeader>
 
-              {/* mDL Provider List */}
+              {/* DiD Provider List */}
               {showProviderList && (
                 <CardContent className="pt-0 pb-3">
                   <div className="space-y-2 mt-2">
@@ -231,7 +231,7 @@ export function UnifiedVerificationRenderer({
                         key={provider.providerKey}
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleMdlProviderSelect(choice, provider);
+                          handleDidProviderSelect(choice, provider);
                         }}
                         disabled={isLoading}
                         className={`

@@ -43,7 +43,7 @@ const STEP_TYPES: StepTypeInfo[] = [
   {
     id: 'unified_verification',
     label: 'Verification',
-    description: 'Identity verification with configurable types (Doc+Bio, Data+Bio, Data Only, mDL)',
+    description: 'Identity verification with configurable types (Doc+Bio, Data+Bio, Data Only, DiD)',
     icon: <Workflow className="w-5 h-5" />,
     category: 'verification',
   },

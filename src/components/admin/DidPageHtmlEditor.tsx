@@ -9,8 +9,8 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 
-export const MDL_LAUNCH_HTML_KEY = "mdl_launch_html";
-export const MDL_REDIRECT_HTML_KEY = "mdl_redirect_html";
+export const DID_LAUNCH_HTML_KEY = "did_launch_html";
+export const DID_REDIRECT_HTML_KEY = "did_redirect_html";
 
 export const DEFAULT_LAUNCH_HTML = `<div style="text-align:center;padding:2rem;font-family:system-ui,sans-serif;">
   <h2 style="margin:0 0 .5rem 0;">Mobile Verification</h2>
@@ -32,9 +32,9 @@ export const DEFAULT_REDIRECT_HTML = `<main style="min-height:100vh;display:flex
   </div>
 </main>`;
 
-type PageKey = typeof MDL_LAUNCH_HTML_KEY | typeof MDL_REDIRECT_HTML_KEY;
+type PageKey = typeof DID_LAUNCH_HTML_KEY | typeof DID_REDIRECT_HTML_KEY;
 
-export function useMdlPageHtml(key: PageKey) {
+export function useDidPageHtml(key: PageKey) {
   return useQuery({
     queryKey: ["global_settings", key],
     queryFn: async () => {
@@ -59,7 +59,7 @@ function HtmlEditorDialog({
   defaultHtml: string;
 }) {
   const queryClient = useQueryClient();
-  const { data: current, isLoading } = useMdlPageHtml(settingKey);
+  const { data: current, isLoading } = useDidPageHtml(settingKey);
   const [html, setHtml] = useState("");
 
   useEffect(() => {
@@ -116,7 +116,7 @@ function HtmlEditorDialog({
               spellCheck={false}
             />
             <p className="text-xs text-muted-foreground">
-              {settingKey === MDL_LAUNCH_HTML_KEY ? (
+              {settingKey === DID_LAUNCH_HTML_KEY ? (
                 <>
                   Add <code className="px-1 py-0.5 rounded bg-muted">data-popup-launch-button</code> to any
                   element you want to trigger the popup launch (e.g. <code className="px-1 py-0.5 rounded bg-muted">&lt;button data-popup-launch-button&gt;…&lt;/button&gt;</code>).
@@ -152,7 +152,7 @@ function HtmlEditorDialog({
   );
 }
 
-export function MdlPageHtmlEditor() {
+export function DidPageHtmlEditor() {
   const [launchOpen, setLaunchOpen] = useState(false);
   const [redirectOpen, setRedirectOpen] = useState(false);
 
@@ -178,7 +178,7 @@ export function MdlPageHtmlEditor() {
       <HtmlEditorDialog
         open={launchOpen}
         onOpenChange={setLaunchOpen}
-        settingKey={MDL_LAUNCH_HTML_KEY}
+        settingKey={DID_LAUNCH_HTML_KEY}
         title="Launch Page"
         description="Shown inside the verification step before the user clicks to open the mobile popup."
         defaultHtml={DEFAULT_LAUNCH_HTML}
@@ -186,7 +186,7 @@ export function MdlPageHtmlEditor() {
       <HtmlEditorDialog
         open={redirectOpen}
         onOpenChange={setRedirectOpen}
-        settingKey={MDL_REDIRECT_HTML_KEY}
+        settingKey={DID_REDIRECT_HTML_KEY}
         title="Redirect Page"
         description="Shown on /verify/redirect — the page the popup lands on before signalling back to the opener and closing."
         defaultHtml={DEFAULT_REDIRECT_HTML}

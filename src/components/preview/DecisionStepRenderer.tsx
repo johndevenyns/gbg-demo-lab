@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { DecisionStepConfig, DecisionChoice, DecisionChoiceIcon, MdlProvider } from '@/types/demo';
+import { DecisionStepConfig, DecisionChoice, DecisionChoiceIcon, DidProvider } from '@/types/demo';
 import { FormStyleConfig } from '@/types/formStyle';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -27,7 +27,7 @@ interface DecisionStepRendererProps {
   formStyle: FormStyleConfig;
   buttonColor: string;
   isFirstStep: boolean;
-  onSelectChoice: (choice: DecisionChoice, provider?: MdlProvider) => void;
+  onSelectChoice: (choice: DecisionChoice, provider?: DidProvider) => void;
   onBack: () => void;
 }
 
@@ -47,8 +47,8 @@ export function DecisionStepRenderer({
     return new Set(config.choices.filter(c => !c.collapsedByDefault).map(c => c.id));
   });
 
-  // Track if we're showing mDL provider selection for a specific choice
-  const [showingMdlProvidersFor, setShowingMdlProvidersFor] = useState<DecisionChoice | null>(null);
+  // Track if we're showing DiD provider selection for a specific choice
+  const [showingDidProvidersFor, setShowingDidProvidersFor] = useState<DecisionChoice | null>(null);
 
   const toggleExpanded = (choiceId: string) => {
     setExpandedChoices(prev => {
@@ -63,26 +63,26 @@ export function DecisionStepRenderer({
   };
 
   const handleChoiceClick = (choice: DecisionChoice) => {
-    // If mDL and has providers, show provider selection
-    if (choice.verificationType === 'mdl' && choice.mobileIdProviders && choice.mobileIdProviders.length > 0) {
-      setShowingMdlProvidersFor(choice);
+    // If DiD and has providers, show provider selection
+    if (choice.verificationType === 'did' && choice.mobileIdProviders && choice.mobileIdProviders.length > 0) {
+      setShowingDidProvidersFor(choice);
     } else {
       // Direct selection
       onSelectChoice(choice);
     }
   };
 
-  const handleProviderSelect = (provider: MdlProvider) => {
-    if (showingMdlProvidersFor) {
-      onSelectChoice(showingMdlProvidersFor, provider);
+  const handleProviderSelect = (provider: DidProvider) => {
+    if (showingDidProvidersFor) {
+      onSelectChoice(showingDidProvidersFor, provider);
     }
   };
 
   const showBackButton = config.showBackButton !== false && !isFirstStep;
 
-  // If showing mDL providers, render that view
-  if (showingMdlProvidersFor) {
-    const enabledProviders = showingMdlProvidersFor.mobileIdProviders?.filter(p => p.enabled) || [];
+  // If showing DiD providers, render that view
+  if (showingDidProvidersFor) {
+    const enabledProviders = showingDidProvidersFor.mobileIdProviders?.filter(p => p.enabled) || [];
 
     return (
       <div className="space-y-6" style={{ fontFamily: formStyle.fontFamily }}>
@@ -142,7 +142,7 @@ export function DecisionStepRenderer({
 
         {/* Back Button */}
         <div className="pt-4">
-          <Button variant="outline" onClick={() => setShowingMdlProvidersFor(null)} className="w-full">
+          <Button variant="outline" onClick={() => setShowingDidProvidersFor(null)} className="w-full">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Options
           </Button>

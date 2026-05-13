@@ -430,6 +430,54 @@ export type Database = {
         }
         Relationships: []
       }
+      did_providers: {
+        Row: {
+          config_options: Json | null
+          country_code: string | null
+          created_at: string
+          description: string | null
+          display_name: string
+          display_order: number
+          domain: string | null
+          id: string
+          is_enabled: boolean
+          logo_url: string | null
+          provider_key: string
+          scope: string[] | null
+          updated_at: string
+        }
+        Insert: {
+          config_options?: Json | null
+          country_code?: string | null
+          created_at?: string
+          description?: string | null
+          display_name: string
+          display_order?: number
+          domain?: string | null
+          id?: string
+          is_enabled?: boolean
+          logo_url?: string | null
+          provider_key: string
+          scope?: string[] | null
+          updated_at?: string
+        }
+        Update: {
+          config_options?: Json | null
+          country_code?: string | null
+          created_at?: string
+          description?: string | null
+          display_name?: string
+          display_order?: number
+          domain?: string | null
+          id?: string
+          is_enabled?: boolean
+          logo_url?: string | null
+          provider_key?: string
+          scope?: string[] | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       form_templates: {
         Row: {
           category: string | null
@@ -660,54 +708,6 @@ export type Database = {
           is_default?: boolean
           name?: string
           subject?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      mdl_providers: {
-        Row: {
-          config_options: Json | null
-          country_code: string | null
-          created_at: string
-          description: string | null
-          display_name: string
-          display_order: number
-          domain: string | null
-          id: string
-          is_enabled: boolean
-          logo_url: string | null
-          provider_key: string
-          scope: string[] | null
-          updated_at: string
-        }
-        Insert: {
-          config_options?: Json | null
-          country_code?: string | null
-          created_at?: string
-          description?: string | null
-          display_name: string
-          display_order?: number
-          domain?: string | null
-          id?: string
-          is_enabled?: boolean
-          logo_url?: string | null
-          provider_key: string
-          scope?: string[] | null
-          updated_at?: string
-        }
-        Update: {
-          config_options?: Json | null
-          country_code?: string | null
-          created_at?: string
-          description?: string | null
-          display_name?: string
-          display_order?: number
-          domain?: string | null
-          id?: string
-          is_enabled?: boolean
-          logo_url?: string | null
-          provider_key?: string
-          scope?: string[] | null
           updated_at?: string
         }
         Relationships: []

@@ -38,7 +38,7 @@ export function FormBuilderSection({ demo, onUpdate }: FormBuilderSectionProps) 
     docbio: 'always',
     databio: 'document_available',
     dataonly: 'always',
-    mdl: 'mobile_detected',
+    did: 'digital_id_detected',
   });
   const [defaultPath, setDefaultPath] = useState<string>('docbio');
 

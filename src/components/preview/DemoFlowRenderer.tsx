@@ -1,10 +1,10 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { FormStep, PageElement, StepApiResponse, MdlProvider, VerificationType, StoredTestData, FormField, VerificationFlowConfig as VerificationFlowConfigType, DecisionChoice } from '@/types/demo';
+import { FormStep, PageElement, StepApiResponse, DidProvider, VerificationType, StoredTestData, FormField, VerificationFlowConfig as VerificationFlowConfigType, DecisionChoice } from '@/types/demo';
 import { logPortalActivity } from '@/lib/auditLog';
 import { FormStyleConfig, DEFAULT_FORM_STYLE } from '@/types/formStyle';
 import { getButtonPadding, getButtonBorderRadius, getButtonFontWeight, getButtonShadow, getReadableTextColor } from '@/lib/formStyleUtils';
-import { UnifiedVerificationConfig, MdlProvider as MdlProviderVerification, transformMdlProviderRow } from '@/types/verification';
-import { useMdlProviders } from '@/hooks/useVerificationAdmin';
+import { UnifiedVerificationConfig, DidProvider as DidProviderVerification, transformDidProviderRow } from '@/types/verification';
+import { useDidProviders } from '@/hooks/useVerificationAdmin';
 import { useResolvedResourceIds } from '@/hooks/useAdminResourceIds';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -16,7 +16,7 @@ import { VerificationMethodSelector } from './VerificationMethodSelector';
 import { AddressValidationDialog } from './AddressValidationDialog';
 import { DecisionStepRenderer } from './DecisionStepRenderer';
 import { UnifiedVerificationRenderer } from './UnifiedVerificationRenderer';
-import { useMdlPageHtml, MDL_LAUNCH_HTML_KEY } from '@/components/admin/MdlPageHtmlEditor';
+import { useDidPageHtml, DID_LAUNCH_HTML_KEY } from '@/components/admin/DidPageHtmlEditor';
 
 // Helper to determine if a color is light or dark and return contrasting text color
 const getContrastTextColor = (hexColor: string): string => {
@@ -713,15 +713,15 @@ export function DemoFlowRenderer({
   const lastLoginUserData = useRef<Record<string, unknown> | undefined>(undefined);
   const pollingRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Fetch mDL providers for unified verification step
-  const { data: mdlProvidersData } = useMdlProviders(true);
-  const mdlProviders: MdlProviderVerification[] = useMemo(() => {
-    return mdlProvidersData || [];
+  // Fetch DiD providers for unified verification step
+  const { data: didProvidersData } = useDidProviders(true);
+  const didProviders: DidProviderVerification[] = useMemo(() => {
+    return didProvidersData || [];
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mdlProvidersData]);
+  }, [didProvidersData]);
 
-  // Custom HTML for the mobile-popup launch screen (configured at Global → Verification → mDL)
-  const { data: customLaunchHtml } = useMdlPageHtml(MDL_LAUNCH_HTML_KEY);
+  // Custom HTML for the mobile-popup launch screen (configured at Global → Verification → DiD)
+  const { data: customLaunchHtml } = useDidPageHtml(DID_LAUNCH_HTML_KEY);
 
 
   // Resolve resource IDs using 3-tier hierarchy: Customer → Admin → Global
@@ -1548,7 +1548,7 @@ export function DemoFlowRenderer({
           status: 'pending',
           verificationUrl: `https://verify.example.com/${crypto.randomUUID()}`,
           qrCodeUrl: `https://verify.example.com/qr/${crypto.randomUUID()}`,
-          mobileIdUrl: `https://verify.example.com/mdl/${crypto.randomUUID()}`,
+          mobileIdUrl: `https://verify.example.com/did/${crypto.randomUUID()}`,
           transactionId: crypto.randomUUID(),
         },
       };
@@ -1930,9 +1930,9 @@ export function DemoFlowRenderer({
     createVerificationSession(path === 'databio' ? 'dataBio' : 'docBio');
   }, [currentStep?.methodSelectionConfig?.documentScanPath, createVerificationSession]);
 
-  const handleMdlProviderSelected = useCallback((provider: MdlProvider) => {
-    console.log('mDL provider selected:', provider);
-    // For mDL, we would typically redirect to the provider's flow
+  const handleDidProviderSelected = useCallback((provider: DidProvider) => {
+    console.log('DiD provider selected:', provider);
+    // For DiD, we would typically redirect to the provider's flow
     // For now, we'll create a dataBio session as a fallback
     setSelectedVerificationType('dataBio');
     toast.info(`${provider.name} selected - starting verification...`);
@@ -1940,7 +1940,7 @@ export function DemoFlowRenderer({
   }, [createVerificationSession]);
 
   // Handle decision step choice selection
-  const handleDecisionChoice = useCallback((choice: DecisionChoice, provider?: MdlProvider) => {
+  const handleDecisionChoice = useCallback((choice: DecisionChoice, provider?: DidProvider) => {
     console.log('Decision choice selected:', choice, 'provider:', provider);
     setSelectedDecisionChoice(choice);
     
@@ -1950,14 +1950,14 @@ export function DemoFlowRenderer({
         'docbio': 'docBio',
         'databio': 'dataBio',
         'dataonly': 'dataOnly',
-        'mdl': 'dataBio', // mDL falls back to dataBio for now
+        'did': 'dataBio', // DiD falls back to dataBio for now
       };
       const vType = verificationTypeMap[choice.verificationType || 'docbio'] || 'docBio';
       setSelectedVerificationType(vType);
       
-      // Log the selected provider for mDL if provided
+      // Log the selected provider for DiD if provided
       if (provider) {
-        console.log('mDL provider selected:', provider.name, provider.providerKey);
+        console.log('DiD provider selected:', provider.name, provider.providerKey);
         toast.info(`${provider.name} selected - starting verification...`);
       }
       
@@ -1992,7 +1992,7 @@ export function DemoFlowRenderer({
         demoId,
         demoName: customerName,
         portalUserEmail: formData.email || undefined,
-        verificationType: 'mdl' as unknown as VerificationType,
+        verificationType: 'did' as unknown as VerificationType,
       });
 
       const requestBody = {
@@ -2106,7 +2106,7 @@ export function DemoFlowRenderer({
         demoId,
         demoName: customerName,
         portalUserEmail: formData.email || undefined,
-        verificationType: 'mdl' as unknown as VerificationType,
+        verificationType: 'did' as unknown as VerificationType,
         verificationResult: terminalStatus,
       });
 
@@ -2149,8 +2149,8 @@ export function DemoFlowRenderer({
       typeConfigs[typeKey?.toLowerCase?.() || '']?.resourceId ||
       typeConfigs[canonicalTypeKey]?.resourceId;
 
-    // Digital ID (mDL) → dedicated DiD endpoint with provider scope.
-    if (typeKey === 'mdl' && providerId) {
+    // Digital ID (DiD) → dedicated DiD endpoint with provider scope.
+    if (typeKey === 'did' && providerId) {
       console.log('Starting Digital ID verification with scope:', providerId);
       launchDigitalIdFlow(providerId, stepResourceId || undefined);
       return;
@@ -2707,7 +2707,7 @@ export function DemoFlowRenderer({
             }}
             formStyle={style}
             onSelectDocumentScan={handleDocumentScanSelected}
-            onSelectProvider={handleMdlProviderSelected}
+            onSelectProvider={handleDidProviderSelected}
           />
         );
 
@@ -2938,13 +2938,13 @@ export function DemoFlowRenderer({
               docbio: 'docBio',
               databio: 'dataBio',
               dataonly: 'dataOnly',
-              mdl: 'dataBio',
+              did: 'dataBio',
             };
             const vType = TYPE_KEY_TO_VTYPE[activeTypeKey] || 'docBio';
             const stepResId = activeTypeConfig?.resourceId;
             const onLaunch = () => launchTrinsicPopup(vType, stepResId);
 
-            // If admin configured custom HTML in Global → Verification → mDL,
+            // If admin configured custom HTML in Global → Verification → DiD,
             // render it and delegate clicks on [data-popup-launch-button] to onLaunch.
             if (customLaunchHtml) {
               return (
@@ -2997,7 +2997,7 @@ export function DemoFlowRenderer({
             buttonColor={buttonColor}
             isFirstStep={isFirstStep}
             isLoading={isLoading}
-            mdlProviders={mdlProviders}
+            didProviders={didProviders}
             onSelectType={handleUnifiedVerificationSelect}
             onBack={goToPrevStep}
           />

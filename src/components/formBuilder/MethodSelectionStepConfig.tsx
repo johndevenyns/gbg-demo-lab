@@ -6,8 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { FormStep, MethodSelectionStepConfig as MethodSelectionConfig, AVAILABLE_MDL_PROVIDERS } from '@/types/demo';
-import { MdlProviderConfig } from './MdlProviderConfig';
+import { FormStep, MethodSelectionStepConfig as MethodSelectionConfig, AVAILABLE_DID_PROVIDERS } from '@/types/demo';
+import { DidProviderConfig } from './DidProviderConfig';
 import { 
   FileText, Smartphone, ChevronDown, ChevronUp, Settings2, SplitSquareVertical
 } from 'lucide-react';
@@ -20,7 +20,7 @@ const DEFAULT_CONFIG: MethodSelectionConfig = {
   documentScanDescription: 'Scan your driver\'s license or ID and take a selfie',
   documentScanPath: 'docbio',
   mobileIdEnabled: true,
-  mobileIdProviders: AVAILABLE_MDL_PROVIDERS.map(p => ({ ...p, enabled: true })),
+  mobileIdProviders: AVAILABLE_DID_PROVIDERS.map(p => ({ ...p, enabled: true })),
 };
 
 interface MethodSelectionStepConfigProps {
@@ -168,7 +168,7 @@ export function MethodSelectionStepConfig({ step, onUpdateStep }: MethodSelectio
           
           {config.mobileIdEnabled && (
             <div className="space-y-3 p-3 rounded-lg border border-green-500/30 bg-green-500/5">
-              <MdlProviderConfig
+              <DidProviderConfig
                 enabledProviders={config.mobileIdProviders || []}
                 onChange={(providers) => handleConfigUpdate({ mobileIdProviders: providers })}
               />

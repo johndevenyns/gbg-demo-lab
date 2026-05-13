@@ -230,7 +230,7 @@ export function FormBuilderCanvas({ steps, onUpdateSteps, demo }: FormBuilderCan
 
     if (activeData?.fromPalette && activeData?.type === 'verification_path' && overData?.type === 'step') {
       const targetStepId = overData.stepId;
-      const pathId = activeData.pathId as 'docbio' | 'databio' | 'dataonly' | 'mdl';
+      const pathId = activeData.pathId as 'docbio' | 'databio' | 'dataonly' | 'did';
       onUpdateSteps(steps.map(step => 
         step.id === targetStepId 
           ? { ...step, verificationPath: pathId }
@@ -475,7 +475,7 @@ export function FormBuilderCanvas({ steps, onUpdateSteps, demo }: FormBuilderCan
               icon: 'smartphone',
               collapsedByDefault: false,
               destinationType: 'verification',
-              verificationType: 'mdl',
+              verificationType: 'did',
               useCustomResultPages: false,
             },
           ],

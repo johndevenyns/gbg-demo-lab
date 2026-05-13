@@ -6,8 +6,8 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Button } from '@/components/ui/button';
-import { FormStep, VerificationStepConfig as VerificationConfig, AVAILABLE_MDL_PROVIDERS } from '@/types/demo';
-import { MdlProviderConfig } from './MdlProviderConfig';
+import { FormStep, VerificationStepConfig as VerificationConfig, AVAILABLE_DID_PROVIDERS } from '@/types/demo';
+import { DidProviderConfig } from './DidProviderConfig';
 import { 
   QrCode, Activity, Smartphone, ChevronDown, ChevronUp, Settings2, 
   Link, Clock, ArrowRight
@@ -22,7 +22,7 @@ const DEFAULT_CONFIG: VerificationConfig = {
   mobileIdEnabled: false,
   mobileIdTitle: 'Digital ID Verification',
   mobileIdInstructions: 'Use your Digital ID for faster verification',
-  mobileIdProviders: AVAILABLE_MDL_PROVIDERS.map(p => ({ ...p, enabled: true })),
+  mobileIdProviders: AVAILABLE_DID_PROVIDERS.map(p => ({ ...p, enabled: true })),
   autoAdvanceOnComplete: true,
   showBackButton: true,
   backButtonLabel: 'Back',
@@ -206,7 +206,7 @@ export function VerificationStepConfig({ step, onUpdateStep }: VerificationStepC
                 <Input
                   value={config.mobileIdUrlField || ''}
                   onChange={(e) => handleConfigUpdate({ mobileIdUrlField: e.target.value })}
-                  placeholder="e.g., mobileIdUrl, mdlUrl"
+                  placeholder="e.g., mobileIdUrl, didUrl"
                   className="h-8 text-sm font-mono"
                 />
                 <p className="text-xs text-muted-foreground">
@@ -237,7 +237,7 @@ export function VerificationStepConfig({ step, onUpdateStep }: VerificationStepC
 
               {/* dID Provider Selection */}
               <div className="pt-2 border-t border-green-500/20">
-                <MdlProviderConfig
+                <DidProviderConfig
                   enabledProviders={config.mobileIdProviders || []}
                   onChange={(providers) => handleConfigUpdate({ mobileIdProviders: providers })}
                 />
