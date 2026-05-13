@@ -1977,10 +1977,163 @@ export function DemoFlowRenderer({
   }, [createVerificationSession, steps, goToNextStep]);
 
   // Handle unified verification type selection
+  // Launch a Digital ID (DiD) flow: POST /api/verification/did, open launchUrl in a popup,
+  // poll status, then route to approvedUrl/rejectedUrl on terminal status.
+  const launchDigitalIdFlow = useCallback(async (providerScope: string, stepResourceId?: string) => {
+    setIsLoading(true);
+    setError(null);
+
+    // Open popup synchronously inside the user gesture so it isn't blocked.
+    const popup = window.open('about:blank', 'gbg-did', 'width=480,height=720');
+
+    try {
+      logPortalActivity({
+        action: 'verification_started',
+        demoId,
+        demoName: customerName,
+        portalUserEmail: formData.email || undefined,
+        verificationType: 'mdl' as unknown as VerificationType,
+      });
+
+      const requestBody = {
+        scope: providerScope,
+        resourceId: stepResourceId || undefined,
+        referenceIdPrefix,
+        customerName: customerName || 'Verification Demo',
+        demoId,
+        branding: {
+          headerBgColor,
+          headerTextColor,
+          buttonColor,
+          logoUrl,
+        },
+      };
+
+      onSubmissionLog?.({
+        type: 'request',
+        endpoint: `${SUPABASE_FUNCTIONS_URL}/create-did-verification`,
+        method: 'POST',
+        data: requestBody,
+      });
+
+      const { data, error: invokeError } = await supabase.functions.invoke(
+        'create-did-verification',
+        { body: requestBody }
+      );
+
+      if (invokeError) throw new Error(invokeError.message);
+      if (!data?.success || !data?.verificationId) {
+        throw new Error(data?.error || 'Failed to start Digital ID verification');
+      }
+
+      const verificationId: string = data.verificationId;
+      let launchUrl: string | null = data.launchUrl ?? null;
+
+      onSubmissionLog?.({
+        type: 'response',
+        endpoint: `${SUPABASE_FUNCTIONS_URL}/create-did-verification`,
+        method: 'POST',
+        status: 200,
+        data,
+      });
+
+      setReferenceId(data.referenceId || null);
+
+      // If launchUrl wasn't ready, poll for it (~1.5s intervals up to ~10s).
+      const pollLaunchUrl = async () => {
+        for (let i = 0; i < 7 && !launchUrl; i++) {
+          await new Promise(r => setTimeout(r, 1500));
+          const { data: s } = await supabase.functions.invoke('get-did-verification', {
+            body: { verificationId, demoId },
+          });
+          if (s?.launchUrl) { launchUrl = s.launchUrl; break; }
+        }
+      };
+      await pollLaunchUrl();
+
+      if (!launchUrl) {
+        if (popup && !popup.closed) popup.close();
+        throw new Error('Digital ID provider did not return a launch URL in time');
+      }
+
+      // Hand the popup off to the provider's launch URL.
+      if (popup && !popup.closed) {
+        popup.location.href = launchUrl;
+      } else {
+        // Popup blocked — fall back to redirecting the current window.
+        window.location.href = launchUrl;
+        return;
+      }
+
+      // Poll status every 2s until terminal or popup closed.
+      let success = false;
+      let terminalStatus = 'InProgress';
+      const startedAt = Date.now();
+      const MAX_MS = 10 * 60 * 1000; // 10 minutes safety cap
+      while (Date.now() - startedAt < MAX_MS) {
+        await new Promise(r => setTimeout(r, 2000));
+        try {
+          const { data: s } = await supabase.functions.invoke('get-did-verification', {
+            body: { verificationId, demoId },
+          });
+          if (s?.isComplete) {
+            success = !!s.isPassed;
+            terminalStatus = s.status || 'Completed';
+            break;
+          }
+        } catch (pollErr) {
+          console.error('DiD poll error:', pollErr);
+        }
+        if (popup?.closed) {
+          // Final check after user closes the popup.
+          try {
+            const { data: s } = await supabase.functions.invoke('get-did-verification', {
+              body: { verificationId, demoId },
+            });
+            if (s?.isComplete) {
+              success = !!s.isPassed;
+              terminalStatus = s.status || 'Completed';
+            }
+          } catch {}
+          break;
+        }
+      }
+
+      if (popup && !popup.closed) popup.close();
+
+      logPortalActivity({
+        action: success ? 'verification_completed' : 'verification_failed',
+        demoId,
+        demoName: customerName,
+        portalUserEmail: formData.email || undefined,
+        verificationType: 'mdl' as unknown as VerificationType,
+        verificationResult: terminalStatus,
+      });
+
+      const target = success ? approvedUrl : rejectedUrl;
+      if (target) {
+        window.location.href = target;
+      } else {
+        toast.message(success ? 'Verification approved' : `Verification ${terminalStatus}`);
+      }
+    } catch (err) {
+      if (popup && !popup.closed) popup.close();
+      console.error('Digital ID flow failed:', err);
+      const msg = err instanceof Error ? err.message : 'Failed to start Digital ID verification';
+      setError(msg);
+      toast.error(msg);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [
+    demoId, customerName, formData, referenceIdPrefix, logoUrl,
+    buttonColor, headerTextColor, headerBgColor, approvedUrl, rejectedUrl, onSubmissionLog,
+  ]);
+
   const handleUnifiedVerificationSelect = useCallback((verificationType: VerificationType, typeKey: string, providerId?: string) => {
     console.log('Unified verification selected:', verificationType, typeKey, 'provider:', providerId);
     setSelectedVerificationType(verificationType);
-    
+
     // Resolve step-level resource ID override robustly across key formats
     const typeConfigs = currentStep?.unifiedVerificationConfig?.typeConfigs || {};
     const canonicalTypeKey = verificationType === 'docBio'
@@ -1996,14 +2149,16 @@ export function DemoFlowRenderer({
       typeConfigs[typeKey?.toLowerCase?.() || '']?.resourceId ||
       typeConfigs[canonicalTypeKey]?.resourceId;
 
-    // TODO: If mDL with providerId, use the provider-specific flow
+    // Digital ID (mDL) → dedicated DiD endpoint with provider scope.
     if (typeKey === 'mdl' && providerId) {
-      console.log('Starting mDL verification with provider:', providerId);
+      console.log('Starting Digital ID verification with scope:', providerId);
+      launchDigitalIdFlow(providerId, stepResourceId || undefined);
+      return;
     }
 
-    // Create verification session with step-level resource ID override if configured
+    // All other verification types use the shared session creation flow.
     createVerificationSession(verificationType, true, stepResourceId || undefined);
-  }, [createVerificationSession, currentStep?.unifiedVerificationConfig]);
+  }, [createVerificationSession, launchDigitalIdFlow, currentStep?.unifiedVerificationConfig]);
 
   // Trinsic mobile popup launcher — MUST be called from a user gesture (e.g. onClick)
   // so the browser allows window.open(). The session is created inside
