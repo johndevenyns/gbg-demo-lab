@@ -137,7 +137,7 @@ export function useDeleteVerificationType() {
 
 export function useDidProviders(enabledOnly = false) {
   return useQuery({
-    queryKey: ['mdl-providers', enabledOnly],
+    queryKey: ['did-providers', enabledOnly],
     queryFn: async (): Promise<DidProvider[]> => {
       let query = supabase
         .from('did_providers')
@@ -185,7 +185,7 @@ export function useUpdateDidProvider() {
       return transformDidProviderRow(data as DidProviderRow);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['mdl-providers'] });
+      queryClient.invalidateQueries({ queryKey: ['did-providers'] });
       toast.success("Provider updated");
     },
     onError: (error) => {
@@ -221,7 +221,7 @@ export function useCreateDidProvider() {
       return transformDidProviderRow(result as DidProviderRow);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['mdl-providers'] });
+      queryClient.invalidateQueries({ queryKey: ['did-providers'] });
       toast.success("Provider created");
     },
     onError: (error) => {
@@ -243,7 +243,7 @@ export function useDeleteDidProvider() {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['mdl-providers'] });
+      queryClient.invalidateQueries({ queryKey: ['did-providers'] });
       toast.success("Provider deleted");
     },
     onError: (error) => {

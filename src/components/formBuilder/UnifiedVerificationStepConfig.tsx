@@ -36,21 +36,21 @@ const TYPE_ICONS: Record<string, React.ReactNode> = {
   docbio: <FileText className="w-5 h-5" />,
   databio: <UserCheck className="w-5 h-5" />,
   dataonly: <Database className="w-5 h-5" />,
-  mdl: <Smartphone className="w-5 h-5" />,
+  did: <Smartphone className="w-5 h-5" />,
 };
 
 const TYPE_COLORS: Record<string, string> = {
   docbio: 'data-[state=on]:bg-purple-500/20 data-[state=on]:text-purple-700 data-[state=on]:border-purple-500',
   databio: 'data-[state=on]:bg-blue-500/20 data-[state=on]:text-blue-700 data-[state=on]:border-blue-500',
   dataonly: 'data-[state=on]:bg-cyan-500/20 data-[state=on]:text-cyan-700 data-[state=on]:border-cyan-500',
-  mdl: 'data-[state=on]:bg-green-500/20 data-[state=on]:text-green-700 data-[state=on]:border-green-500',
+  did: 'data-[state=on]:bg-green-500/20 data-[state=on]:text-green-700 data-[state=on]:border-green-500',
 };
 
 const ACCORDION_COLORS: Record<string, string> = {
   docbio: 'border-purple-500/30 bg-purple-500/5',
   databio: 'border-blue-500/30 bg-blue-500/5',
   dataonly: 'border-cyan-500/30 bg-cyan-500/5',
-  mdl: 'border-green-500/30 bg-green-500/5',
+  did: 'border-green-500/30 bg-green-500/5',
 };
 
 const ICON_OPTIONS: { id: DecisionChoiceIcon; label: string; icon: React.ReactNode }[] = [

@@ -13,7 +13,7 @@ const PATH_ICONS: Record<string, React.ReactNode> = {
   docbio: <FileCheck className="w-5 h-5" />,
   databio: <Database className="w-5 h-5" />,
   dataonly: <Database className="w-5 h-5" />,
-  mdl: <Smartphone className="w-5 h-5" />,
+  did: <Smartphone className="w-5 h-5" />,
 };
 
 const CONDITION_LABELS: Record<PathCondition, string> = {

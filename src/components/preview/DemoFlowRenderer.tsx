@@ -1548,7 +1548,7 @@ export function DemoFlowRenderer({
           status: 'pending',
           verificationUrl: `https://verify.example.com/${crypto.randomUUID()}`,
           qrCodeUrl: `https://verify.example.com/qr/${crypto.randomUUID()}`,
-          mobileIdUrl: `https://verify.example.com/mdl/${crypto.randomUUID()}`,
+          mobileIdUrl: `https://verify.example.com/did/${crypto.randomUUID()}`,
           transactionId: crypto.randomUUID(),
         },
       };
@@ -2938,7 +2938,7 @@ export function DemoFlowRenderer({
               docbio: 'docBio',
               databio: 'dataBio',
               dataonly: 'dataOnly',
-              mdl: 'dataBio',
+              did: 'dataBio',
             };
             const vType = TYPE_KEY_TO_VTYPE[activeTypeKey] || 'docBio';
             const stepResId = activeTypeConfig?.resourceId;

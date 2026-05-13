@@ -62,14 +62,14 @@ const PATH_ICONS: Record<string, React.ReactNode> = {
   docbio: <FileCheck className="w-4 h-4" />,
   databio: <Database className="w-4 h-4" />,
   dataonly: <Database className="w-4 h-4" />,
-  mdl: <Smartphone className="w-4 h-4" />,
+  did: <Smartphone className="w-4 h-4" />,
 };
 
 const PATH_LABELS: Record<string, string> = {
   docbio: 'Document + Biometric',
   databio: 'Data + Biometric',
   dataonly: 'Data Only',
-  mdl: 'Digital ID',
+  did: 'Digital ID',
 };
 
 interface SortableFieldProps {

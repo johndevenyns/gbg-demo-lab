@@ -11,14 +11,14 @@ const PATH_ICONS: Record<string, React.ReactNode> = {
   docbio: <FileCheck className="w-6 h-6" />,
   databio: <Database className="w-6 h-6" />,
   dataonly: <Database className="w-6 h-6" />,
-  mdl: <Smartphone className="w-6 h-6" />,
+  did: <Smartphone className="w-6 h-6" />,
 };
 
 const PATH_COLORS: Record<string, string> = {
   docbio: 'text-purple-600 bg-purple-500/20',
   databio: 'text-blue-600 bg-blue-500/20',
   dataonly: 'text-cyan-600 bg-cyan-500/20',
-  mdl: 'text-green-600 bg-green-500/20',
+  did: 'text-green-600 bg-green-500/20',
 };
 
 interface PathStepConfigProps {

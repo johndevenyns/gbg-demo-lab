@@ -206,7 +206,7 @@ export function VerificationStepConfig({ step, onUpdateStep }: VerificationStepC
                 <Input
                   value={config.mobileIdUrlField || ''}
                   onChange={(e) => handleConfigUpdate({ mobileIdUrlField: e.target.value })}
-                  placeholder="e.g., mobileIdUrl, mdlUrl"
+                  placeholder="e.g., mobileIdUrl, didUrl"
                   className="h-8 text-sm font-mono"
                 />
                 <p className="text-xs text-muted-foreground">
