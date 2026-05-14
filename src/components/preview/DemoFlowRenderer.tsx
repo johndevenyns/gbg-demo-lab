@@ -2767,6 +2767,22 @@ export function DemoFlowRenderer({
           const showQrCode = hjConfig?.showQrCode ?? false;
           const qrCodeLabel = hjConfig?.qrCodeLabel || 'Or scan to continue on your phone';
           const forceTopNavigation = shouldForceHostedJourneyPopup(resolvedUrl);
+          const popupW = hjConfig?.popupWidth || 1024;
+          const popupH = hjConfig?.popupHeight || 768;
+          const handleLaunchClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+            e.preventDefault();
+            const features = `width=${popupW},height=${popupH},noopener,noreferrer`;
+            const win = window.open(resolvedUrl, '_blank', features);
+            if (!win) {
+              // Popup blocked — fall back to top-level navigation so we still
+              // escape any embedding iframe (e.g. preview).
+              if (forceTopNavigation && window.top) {
+                window.top.location.href = resolvedUrl;
+              } else {
+                window.location.href = resolvedUrl;
+              }
+            }
+          };
 
           return (
             <div className="w-full py-8 flex flex-col items-center text-center space-y-4">
@@ -2782,8 +2798,9 @@ export function DemoFlowRenderer({
               >
                 <a
                   href={resolvedUrl}
-                  target={forceTopNavigation ? '_top' : '_blank'}
-                  rel={forceTopNavigation ? undefined : 'noopener noreferrer'}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={handleLaunchClick}
                 >
                   <ExternalLink className="w-4 h-4 mr-2" />
                   {launchButtonLabel}
