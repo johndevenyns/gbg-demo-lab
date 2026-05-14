@@ -210,6 +210,60 @@ export function HostedJourneyStepConfig({ step, onUpdateStep }: Props) {
               </p>
             </div>
           )}
+
+          {/* Auto-complete after delay */}
+          <div className="space-y-3 rounded-md border border-emerald-500/30 bg-emerald-500/5 p-3">
+            <div className="flex items-center justify-between gap-4">
+              <div className="space-y-0.5">
+                <Label className="text-sm">Auto-complete after delay</Label>
+                <p className="text-xs text-muted-foreground">
+                  Simulate a successful verification after a set delay. In iframe mode the
+                  timer starts when the step loads; in popup mode it starts after the user
+                  clicks the launch button.
+                </p>
+              </div>
+              <Switch
+                checked={(config.autoCompleteAfterSeconds ?? 0) > 0}
+                onCheckedChange={(v) =>
+                  update({ autoCompleteAfterSeconds: v ? 10 : undefined })
+                }
+              />
+            </div>
+            {(config.autoCompleteAfterSeconds ?? 0) > 0 && (
+              <div className="space-y-3">
+                <div className="space-y-2">
+                  <Label className="text-sm">Delay (seconds)</Label>
+                  <Input
+                    type="number"
+                    min={1}
+                    value={config.autoCompleteAfterSeconds ?? 10}
+                    onChange={(e) =>
+                      update({
+                        autoCompleteAfterSeconds: e.target.value
+                          ? Math.max(1, Number(e.target.value))
+                          : undefined,
+                      })
+                    }
+                    className="bg-background w-32"
+                  />
+                </div>
+                <div className="flex items-center justify-between gap-4 rounded-md border bg-background p-2">
+                  <Label className="text-sm">Create user account</Label>
+                  <Switch
+                    checked={config.autoCreateAccount ?? false}
+                    onCheckedChange={(v) => update({ autoCreateAccount: v })}
+                  />
+                </div>
+                <div className="flex items-center justify-between gap-4 rounded-md border bg-background p-2">
+                  <Label className="text-sm">Log in to portal</Label>
+                  <Switch
+                    checked={config.autoLoginToPortal ?? false}
+                    onCheckedChange={(v) => update({ autoLoginToPortal: v })}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
     </div>
