@@ -435,6 +435,16 @@ export interface HostedJourneyStepConfig {
   showQrCode?: boolean;
   // Popup-only: QR code caption text.
   qrCodeLabel?: string;
+  // Auto-complete: after N seconds (from step mount in iframe mode, or from
+  // launch button click in popup mode), simulate verification success and
+  // optionally create the user account and log them into the mock portal.
+  autoCompleteAfterSeconds?: number;
+  // When auto-complete fires, upsert a portal_users record from formData
+  // (mirrors the create_account step completion action).
+  autoCreateAccount?: boolean;
+  // When auto-complete fires, navigate to the mock portal as the user
+  // (mirrors the login_portal step completion action).
+  autoLoginToPortal?: boolean;
 }
 
 // Method Selection Step configuration (lets user choose between Doc Verification and DiD)
