@@ -1141,6 +1141,40 @@ export function DemoFlowRenderer({
     setFlowComplete(success ? 'success' : 'failure');
   }, [onComplete, currentStep, executeCreateAccount, formData, onNavigateToPortal, isLastStep, demoId, customerName]);
 
+  // Hosted Journey: auto-complete after a configured delay.
+  useEffect(() => {
+    if (!currentStep || currentStep.type !== 'hosted_journey') return;
+    const cfg = currentStep.hostedJourneyConfig;
+    const delay = cfg?.autoCompleteAfterSeconds;
+    if (!delay || delay <= 0) return;
+    const mode = cfg?.mode || 'iframe';
+    // In popup mode we wait for the user to click the launch button.
+    if (mode === 'popup' && hostedJourneyLaunchedStepId !== currentStep.id) return;
+
+    const timer = setTimeout(async () => {
+      if (cfg?.autoCreateAccount) {
+        await executeCreateAccount(true);
+      }
+      if (cfg?.autoLoginToPortal) {
+        const email = (formData.email || '').trim().toLowerCase();
+        const profileData: Record<string, unknown> = {};
+        for (const [key, val] of Object.entries(formData)) {
+          if (val && key !== 'email' && key !== 'password') profileData[key] = val;
+        }
+        onNavigateToPortal?.({
+          email: email || 'verified@demo.portal',
+          profileData,
+          isNewAccount: !!cfg?.autoCreateAccount,
+        });
+        return;
+      }
+      // Otherwise advance using the standard completion flow.
+      completeFlow(true);
+    }, delay * 1000);
+
+    return () => clearTimeout(timer);
+  }, [currentStep, hostedJourneyLaunchedStepId, executeCreateAccount, formData, onNavigateToPortal, completeFlow]);
+
   // Handle address validation dialog proceed
   const handleAddressValidationProceed = useCallback((useOriginal: boolean) => {
     if (!useOriginal && addressValidation?.suggestedAddress) {
