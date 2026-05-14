@@ -2805,6 +2805,7 @@ export function DemoFlowRenderer({
           const isEmbedded = typeof window !== 'undefined' && window.self !== window.top;
           const linkTarget = forceTopNavigation && isEmbedded ? '_top' : '_blank';
           const handleLaunchClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+            setHostedJourneyLaunchedStepId(currentStep.id);
             if (!forceTopNavigation || !isEmbedded) return;
             e.preventDefault();
             window.top!.location.href = resolvedUrl;
