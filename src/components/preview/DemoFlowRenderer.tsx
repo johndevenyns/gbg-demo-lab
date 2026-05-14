@@ -2766,6 +2766,14 @@ export function DemoFlowRenderer({
             'Click the button below to open the application in a new window.';
           const showQrCode = hjConfig?.showQrCode ?? false;
           const qrCodeLabel = hjConfig?.qrCodeLabel || 'Or scan to continue on your phone';
+          const forceTopNavigation = shouldForceHostedJourneyPopup(resolvedUrl);
+          const isEmbedded = typeof window !== 'undefined' && window.self !== window.top;
+          const linkTarget = forceTopNavigation && isEmbedded ? '_top' : '_blank';
+          const handleLaunchClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+            if (!forceTopNavigation || !isEmbedded) return;
+            e.preventDefault();
+            window.top!.location.href = resolvedUrl;
+          };
 
           return (
             <div className="w-full py-8 flex flex-col items-center text-center space-y-4">
@@ -2781,8 +2789,9 @@ export function DemoFlowRenderer({
               >
                 <a
                   href={resolvedUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  target={linkTarget}
+                  rel={linkTarget === '_blank' ? 'noopener noreferrer' : undefined}
+                  onClick={handleLaunchClick}
                 >
                   <ExternalLink className="w-4 h-4 mr-2" />
                   {launchButtonLabel}
