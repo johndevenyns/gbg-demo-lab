@@ -2771,8 +2771,19 @@ export function DemoFlowRenderer({
           const popupH = hjConfig?.popupHeight || 768;
           const handleLaunchClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
             e.preventDefault();
-            const features = `width=${popupW},height=${popupH},noopener,noreferrer`;
-            const win = window.open(resolvedUrl, '_blank', features);
+            const features = `width=${popupW},height=${popupH},popup=yes`;
+            const win = window.open('about:blank', '_blank', features);
+            if (win) {
+              try {
+                win.opener = null;
+                win.location.replace(resolvedUrl);
+                win.focus();
+              } catch {
+                win.location.href = resolvedUrl;
+              }
+              return;
+            }
+
             if (!win) {
               // Popup blocked — fall back to top-level navigation so we still
               // escape any embedding iframe (e.g. preview).
