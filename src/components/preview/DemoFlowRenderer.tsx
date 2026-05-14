@@ -702,6 +702,7 @@ export function DemoFlowRenderer({
   const [selectedDecisionChoice, setSelectedDecisionChoice] = useState<DecisionChoice | null>(null);
   const [verificationSessionId, setVerificationSessionId] = useState<string | null>(null);
   const [pollingStatus, setPollingStatus] = useState<string | null>(null);
+  const [hostedJourneyLaunchedStepId, setHostedJourneyLaunchedStepId] = useState<string | null>(null);
   // Use ref for verification session data to avoid race condition with state updates
   const verificationSessionDataRef = useRef<{
     qrCodeUrl?: string;
