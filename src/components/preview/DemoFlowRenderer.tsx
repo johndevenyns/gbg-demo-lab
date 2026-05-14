@@ -702,6 +702,7 @@ export function DemoFlowRenderer({
   const [selectedDecisionChoice, setSelectedDecisionChoice] = useState<DecisionChoice | null>(null);
   const [verificationSessionId, setVerificationSessionId] = useState<string | null>(null);
   const [pollingStatus, setPollingStatus] = useState<string | null>(null);
+  const [hostedJourneyLaunchedStepId, setHostedJourneyLaunchedStepId] = useState<string | null>(null);
   // Use ref for verification session data to avoid race condition with state updates
   const verificationSessionDataRef = useRef<{
     qrCodeUrl?: string;
@@ -1139,6 +1140,40 @@ export function DemoFlowRenderer({
     // Default: show result page
     setFlowComplete(success ? 'success' : 'failure');
   }, [onComplete, currentStep, executeCreateAccount, formData, onNavigateToPortal, isLastStep, demoId, customerName]);
+
+  // Hosted Journey: auto-complete after a configured delay.
+  useEffect(() => {
+    if (!currentStep || currentStep.stepType !== 'hosted_journey') return;
+    const cfg = currentStep.hostedJourneyConfig;
+    const delay = cfg?.autoCompleteAfterSeconds;
+    if (!delay || delay <= 0) return;
+    const mode = cfg?.mode || 'iframe';
+    // In popup mode we wait for the user to click the launch button.
+    if (mode === 'popup' && hostedJourneyLaunchedStepId !== currentStep.id) return;
+
+    const timer = setTimeout(async () => {
+      if (cfg?.autoCreateAccount) {
+        await executeCreateAccount(true);
+      }
+      if (cfg?.autoLoginToPortal) {
+        const email = (formData.email || '').trim().toLowerCase();
+        const profileData: Record<string, unknown> = {};
+        for (const [key, val] of Object.entries(formData)) {
+          if (val && key !== 'email' && key !== 'password') profileData[key] = val;
+        }
+        onNavigateToPortal?.({
+          email: email || 'verified@demo.portal',
+          profileData,
+          isNewAccount: !!cfg?.autoCreateAccount,
+        });
+        return;
+      }
+      // Otherwise advance using the standard completion flow.
+      completeFlow(true);
+    }, delay * 1000);
+
+    return () => clearTimeout(timer);
+  }, [currentStep, hostedJourneyLaunchedStepId, executeCreateAccount, formData, onNavigateToPortal, completeFlow]);
 
   // Handle address validation dialog proceed
   const handleAddressValidationProceed = useCallback((useOriginal: boolean) => {
@@ -2770,6 +2805,7 @@ export function DemoFlowRenderer({
           const isEmbedded = typeof window !== 'undefined' && window.self !== window.top;
           const linkTarget = forceTopNavigation && isEmbedded ? '_top' : '_blank';
           const handleLaunchClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+            setHostedJourneyLaunchedStepId(currentStep.id);
             if (!forceTopNavigation || !isEmbedded) return;
             e.preventDefault();
             window.top!.location.href = resolvedUrl;
