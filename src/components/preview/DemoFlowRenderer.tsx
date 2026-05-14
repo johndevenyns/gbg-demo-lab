@@ -1143,7 +1143,7 @@ export function DemoFlowRenderer({
 
   // Hosted Journey: auto-complete after a configured delay.
   useEffect(() => {
-    if (!currentStep || currentStep.type !== 'hosted_journey') return;
+    if (!currentStep || currentStep.stepType !== 'hosted_journey') return;
     const cfg = currentStep.hostedJourneyConfig;
     const delay = cfg?.autoCompleteAfterSeconds;
     if (!delay || delay <= 0) return;
