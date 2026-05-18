@@ -101,7 +101,7 @@ Deno.serve(async (req) => {
         success: false,
         error: 'No forms found on this site. Try entering a specific page URL with the form (e.g., /apply or /contact).',
         searchedUrls: topCandidates.map((c) => c.url),
-      }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     // Step 4: Apply formType bias and pick the best.
