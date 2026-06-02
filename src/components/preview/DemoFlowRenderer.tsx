@@ -2813,11 +2813,28 @@ export function DemoFlowRenderer({
             }
             if (linkTarget === '_blank') {
               e.preventDefault();
-              const width = hjConfig?.popupWidth ?? 1024;
-              const height = hjConfig?.popupHeight ?? 768;
-              const left = window.screenX + (window.outerWidth - width) / 2;
-              const top = window.screenY + (window.outerHeight - height) / 2;
-              const features = `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`;
+              // Validate & clamp configured dimensions (numeric, min 320, max 2560/1440)
+              const MIN_W = 320, MIN_H = 400, MAX_W = 2560, MAX_H = 1440;
+              const rawW = Number(hjConfig?.popupWidth);
+              const rawH = Number(hjConfig?.popupHeight);
+              let width = Number.isFinite(rawW) && rawW > 0 ? Math.min(MAX_W, Math.max(MIN_W, Math.floor(rawW))) : 1024;
+              let height = Number.isFinite(rawH) && rawH > 0 ? Math.min(MAX_H, Math.max(MIN_H, Math.floor(rawH))) : 768;
+
+              // Responsive: on small screens, shrink to fit or go fullscreen on mobile
+              const availW = window.screen?.availWidth ?? window.innerWidth;
+              const availH = window.screen?.availHeight ?? window.innerHeight;
+              const isMobile = availW < 768;
+              let features: string;
+              if (isMobile) {
+                // Fullscreen on mobile — open as a new tab; popup features don't help on phones
+                window.open(resolvedUrl, 'hosted-journey', 'noopener,noreferrer');
+                return;
+              }
+              width = Math.min(width, Math.floor(availW * 0.95));
+              height = Math.min(height, Math.floor(availH * 0.95));
+              const left = Math.max(0, window.screenX + (window.outerWidth - width) / 2);
+              const top = Math.max(0, window.screenY + (window.outerHeight - height) / 2);
+              features = `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`;
               window.open(resolvedUrl, 'hosted-journey', features);
             }
           };
