@@ -2806,9 +2806,20 @@ export function DemoFlowRenderer({
           const linkTarget = forceTopNavigation && isEmbedded ? '_top' : '_blank';
           const handleLaunchClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
             setHostedJourneyLaunchedStepId(currentStep.id);
-            if (!forceTopNavigation || !isEmbedded) return;
-            e.preventDefault();
-            window.top!.location.href = resolvedUrl;
+            if (forceTopNavigation && isEmbedded) {
+              e.preventDefault();
+              window.top!.location.href = resolvedUrl;
+              return;
+            }
+            if (linkTarget === '_blank') {
+              e.preventDefault();
+              const width = hjConfig?.popupWidth ?? 1024;
+              const height = hjConfig?.popupHeight ?? 768;
+              const left = window.screenX + (window.outerWidth - width) / 2;
+              const top = window.screenY + (window.outerHeight - height) / 2;
+              const features = `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`;
+              window.open(resolvedUrl, 'hosted-journey', features);
+            }
           };
 
           return (
