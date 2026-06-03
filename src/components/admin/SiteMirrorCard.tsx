@@ -601,7 +601,12 @@ interface SiteMirrorCardProps {
                           // Badge value is a FLOOR, not a ceiling — let the
                           // captured header reveal mega-menus / top bars
                           // without being clipped to the default height.
-                          height: `${Math.max(headerHeight, headerNaturalHeight)}px`,
+                          // In screenshot mode the captured header is a single
+                          // image; ignore the floor so the wrapper hugs the
+                          // image and there's no empty gap below it.
+                          height: activeMethod === 'screenshot'
+                            ? `${Math.max(headerNaturalHeight, 1)}px`
+                            : `${Math.max(headerHeight, headerNaturalHeight)}px`,
                           overflow: 'hidden',
                         }}
                       >
@@ -641,7 +646,11 @@ interface SiteMirrorCardProps {
                             </html>
                           `}
                           className="block w-full border-0"
-                          style={{ height: `${Math.max(headerHeight, headerNaturalHeight)}px` }}
+                          style={{
+                            height: activeMethod === 'screenshot'
+                              ? `${Math.max(headerNaturalHeight, 1)}px`
+                              : `${Math.max(headerHeight, headerNaturalHeight)}px`,
+                          }}
                           title="Live site header preview"
                           sandbox="allow-same-origin allow-scripts"
                           onLoad={(e) => {
