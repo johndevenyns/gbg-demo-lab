@@ -690,6 +690,7 @@ export default function DemoPreview() {
           paddingBottom: `${previewDocument?.formStyle?.contentAreaPaddingY ?? 16}px`,
           minHeight: `${previewDocument?.formStyle?.contentAreaMinHeight ?? 400}px`,
           justifyContent: ({ start: 'flex-start', center: 'center', end: 'flex-end' } as const)[previewDocument?.formStyle?.contentAreaJustify || 'start'],
+          border: '1px solid blue',
         }}
       >
         <div className="mx-auto px-4" style={{ maxWidth: previewDocument?.formStyle?.contentAreaMaxWidth ? `${previewDocument.formStyle.contentAreaMaxWidth}px` : '36rem', width: '100%' }}>
