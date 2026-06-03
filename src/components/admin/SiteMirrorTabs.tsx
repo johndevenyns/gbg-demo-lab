@@ -46,7 +46,11 @@ export function SiteMirrorTabs({
   onIframeBordersVisibleChange,
 }: SiteMirrorTabsProps) {
   const [appearanceTab, setAppearanceTab] = useState<AppearanceTab>('site');
-  const [siteSubTab, setSiteSubTab] = useState<'html' | 'screenshot'>('html');
+  const [siteSubTab, setSiteSubTab] = useState<'html' | 'screenshot'>(activeMethod);
+
+  useEffect(() => {
+    setSiteSubTab(activeMethod);
+  }, [activeMethod]);
   
   const siteConfigured = htmlConfigured || screenshotConfigured;
 
