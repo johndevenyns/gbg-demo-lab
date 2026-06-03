@@ -107,6 +107,7 @@ export type Database = {
           mirror_html_css: string | null
           mirror_html_footer_html: string | null
           mirror_html_header_html: string | null
+          mirror_iframe_borders_visible: boolean
           mirror_screenshot_css: string | null
           mirror_screenshot_footer_html: string | null
           mirror_screenshot_header_html: string | null
@@ -154,6 +155,7 @@ export type Database = {
           mirror_html_css?: string | null
           mirror_html_footer_html?: string | null
           mirror_html_header_html?: string | null
+          mirror_iframe_borders_visible?: boolean
           mirror_screenshot_css?: string | null
           mirror_screenshot_footer_html?: string | null
           mirror_screenshot_header_html?: string | null
@@ -201,6 +203,7 @@ export type Database = {
           mirror_html_css?: string | null
           mirror_html_footer_html?: string | null
           mirror_html_header_html?: string | null
+          mirror_iframe_borders_visible?: boolean
           mirror_screenshot_css?: string | null
           mirror_screenshot_footer_html?: string | null
           mirror_screenshot_header_html?: string | null
