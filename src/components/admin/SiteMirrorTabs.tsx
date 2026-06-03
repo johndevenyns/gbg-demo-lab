@@ -5,6 +5,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 
 export type CaptureTab = 'html' | 'screenshot' | 'form-styling';
@@ -24,6 +25,8 @@ interface SiteMirrorTabsProps {
   formStylingConfigured: boolean;
   sitePreviewContent?: React.ReactNode;
   embedFormContent?: React.ReactNode;
+  iframeBordersVisible?: boolean;
+  onIframeBordersVisibleChange?: (value: boolean) => void;
 }
 
 export function SiteMirrorTabs({
@@ -39,6 +42,8 @@ export function SiteMirrorTabs({
   formStylingConfigured,
   sitePreviewContent,
   embedFormContent,
+  iframeBordersVisible = false,
+  onIframeBordersVisibleChange,
 }: SiteMirrorTabsProps) {
   const [appearanceTab, setAppearanceTab] = useState<AppearanceTab>('site');
   const [siteSubTab, setSiteSubTab] = useState<'html' | 'screenshot'>('html');
@@ -130,6 +135,22 @@ export function SiteMirrorTabs({
                 </div>
               </label>
             </RadioGroup>
+
+            <div className="mt-4 pt-4 border-t border-border flex items-center justify-between gap-3">
+              <div>
+                <Label htmlFor="iframe-borders-visible" className="text-sm font-medium cursor-pointer">
+                  Iframe Borders Visible
+                </Label>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Show thin debug borders around the header, content, and footer iframes in the live demo.
+                </p>
+              </div>
+              <Switch
+                id="iframe-borders-visible"
+                checked={iframeBordersVisible}
+                onCheckedChange={(v) => onIframeBordersVisibleChange?.(v)}
+              />
+            </div>
           </div>
 
           {/* Sub-tabs for HTML/Screenshot Setup */}
