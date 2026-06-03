@@ -1059,6 +1059,23 @@ function scoreLogoCandidate(opts: {
 }
 
 /**
+ * Decode the small set of HTML entities that commonly appear inside attribute
+ * values when sites inline an SVG as a `data:` URL (e.g. `&#39;` for `'`).
+ * Without this, the captured `src` is not a valid data URL and won't render.
+ */
+function decodeHtmlEntities(s: string): string {
+  if (!s) return s;
+  return s
+    .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(parseInt(n, 10)))
+    .replace(/&#x([0-9a-fA-F]+);/g, (_, h) => String.fromCharCode(parseInt(h, 16)))
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&');
+}
+
+/**
  * Extract the most likely logo from the captured header HTML.
  *
  * Strategy:
@@ -1072,6 +1089,14 @@ function scoreLogoCandidate(opts: {
  */
 function extractLogoFromHeader(headerHtml: string, baseUrl: URL): string | null {
   if (!headerHtml) return null;
+
+  // Some sites (e.g. TaxAct) inline their logo as
+  // `<img src="data:image/svg+xml,%3csvg ... &#39;...&#39; ...">` where the
+  // SVG payload contains HTML entities like `&#39;` and `&amp;`. Browsers
+  // would normally decode those when parsing the HTML, but our regex sees
+  // the raw attribute text. Decode common entities so the resulting data
+  // URL is valid and renders in the preview.
+  // (helper declared below)
 
   // Identify the "home link" (anchor pointing to "/" or the site's own root)
   // so we can boost candidates inside it.
@@ -1111,7 +1136,7 @@ function extractLogoFromHeader(headerHtml: string, baseUrl: URL): string | null 
     const tag = imgMatch[0];
     const srcMatch = tag.match(/\bsrc=["']([^"']+)["']/i);
     if (!srcMatch) continue;
-    const rawSrc = srcMatch[1];
+    const rawSrc = decodeHtmlEntities(srcMatch[1]);
     if (!rawSrc || rawSrc.startsWith('data:image/gif')) continue;
     const altMatch = tag.match(/\balt=["']([^"']*)["']/i);
     const classMatch = tag.match(/\bclass=["']([^"']*)["']/i);
