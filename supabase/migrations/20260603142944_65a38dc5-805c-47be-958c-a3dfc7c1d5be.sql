@@ -1,0 +1,1 @@
+ALTER TABLE public.demo_environments ADD COLUMN IF NOT EXISTS mirror_iframe_borders_visible BOOLEAN NOT NULL DEFAULT false;

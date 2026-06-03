@@ -921,6 +921,10 @@ interface SiteMirrorCardProps {
               htmlConfigured={htmlConfigured}
               screenshotConfigured={screenshotConfigured}
               sitePreviewContent={getSitePreviewContent()}
+              iframeBordersVisible={demo.mirrorIframeBordersVisible ?? false}
+              onIframeBordersVisibleChange={(v) =>
+                onApplyBranding({ mirrorIframeBordersVisible: v }, true)
+              }
               htmlContent={
                 <HtmlCaptureTab
                   demo={demo}
