@@ -406,17 +406,25 @@ interface SiteMirrorCardProps {
         data.headerHtml?.trim() || data.footerHtml?.trim() || data.cssContent?.trim()
       );
 
-     // Populate screenshot data if we got screenshots
-     if (data.screenshot || data.screenshots?.desktop) {
-       const desktopScreenshot = data.screenshots?.desktop || data.screenshot;
-       if (desktopScreenshot) {
-         // Build screenshot-based header/footer HTML (image-based)
-         const screenshotSrc = desktopScreenshot.startsWith('data:') || desktopScreenshot.startsWith('http')
-           ? desktopScreenshot
-           : `data:image/png;base64,${desktopScreenshot}`;
-         updates.mirrorScreenshotHeaderHtml = `<div style="width:100%;overflow:hidden;"><img src="${screenshotSrc}" style="width:100%;height:auto;display:block;object-fit:cover;object-position:top;max-height:200px;" alt="Site header" /></div>`;
-          updates.mirrorScreenshotFooterHtml = `<div style="width:100%;overflow:hidden;"><img src="${screenshotSrc}" style="width:100%;height:auto;display:block;object-fit:cover;object-position:bottom;max-height:200px;" alt="Site footer" /></div>`;
-         updates.mirrorScreenshotCss = '';
+      // Populate screenshot data if we got screenshots
+      if (data.screenshot || data.screenshots?.desktop) {
+        const desktopScreenshot = data.screenshots?.desktop || data.screenshot;
+        if (desktopScreenshot) {
+          // Build screenshot-based header/footer HTML (image-based).
+          // Use a fixed-height wrapper with overflow:hidden and an absolute-
+          // positioned img so the crop is exact and the rest of the
+          // captured page (e.g. an embedded sign-in form on /auth) cannot
+          // bleed into the preview. The previous max-height approach left
+          // the wrapper sized to the full screenshot, which caused the
+          // middle of the page to show through behind the form.
+          const screenshotSrc = desktopScreenshot.startsWith('data:') || desktopScreenshot.startsWith('http')
+            ? desktopScreenshot
+            : `data:image/png;base64,${desktopScreenshot}`;
+          const headerCropPx = Math.max(40, Math.round(data.headerHeight ?? 120));
+          const footerCropPx = Math.max(60, Math.round(data.footerHeight ?? 180));
+          updates.mirrorScreenshotHeaderHtml = `<div style="width:100%;height:${headerCropPx}px;overflow:hidden;position:relative;"><img src="${screenshotSrc}" style="display:block;width:100%;height:auto;position:absolute;top:0;left:0;" alt="Site header" /></div>`;
+          updates.mirrorScreenshotFooterHtml = `<div style="width:100%;height:${footerCropPx}px;overflow:hidden;position:relative;"><img src="${screenshotSrc}" style="display:block;width:100%;height:auto;position:absolute;bottom:0;left:0;" alt="Site footer" /></div>`;
+          updates.mirrorScreenshotCss = '';
           if (!hasHtmlCapture) {
             updates.mirrorActiveMethod = 'screenshot';
             setActiveMethod('screenshot');
