@@ -701,7 +701,7 @@ export default function DemoPreview() {
             </html>
           `}
           className="w-full block"
-          style={{ height: 'auto', minHeight: '60px', display: 'block', border: debugBorder }}
+          style={{ height: 'auto', minHeight: isScreenshotMode ? 0 : '60px', display: 'block', border: debugBorder }}
           title="Site header"
           sandbox="allow-same-origin allow-scripts"
           onLoad={(e) => {
@@ -831,7 +831,7 @@ export default function DemoPreview() {
             </html>
           `}
           className="w-full block"
-          style={{ height: 'auto', minHeight: '60px', display: 'block', border: debugBorder }}
+          style={{ height: 'auto', minHeight: isScreenshotMode ? 0 : '60px', display: 'block', border: debugBorder }}
           title="Site footer"
           sandbox="allow-same-origin allow-scripts"
           onLoad={(e) => {
