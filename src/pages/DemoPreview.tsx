@@ -835,15 +835,10 @@ export default function DemoPreview() {
           title="Site footer"
           sandbox="allow-same-origin allow-scripts"
           onLoad={(e) => {
-            const iframe = e.target as HTMLIFrameElement;
-            try {
-              const body = iframe.contentDocument?.body;
-              const firstChild = body?.firstElementChild as HTMLElement;
-              const height = firstChild?.offsetHeight || body?.scrollHeight || 200;
-              iframe.style.height = `${height}px`;
-            } catch {
-              iframe.style.height = '200px';
-            }
+            fitIframeToContent(e.currentTarget, {
+              minHeight: 0,
+              fallbackHeight: isScreenshotMode ? 0 : 200,
+            });
           }}
         />
         );
