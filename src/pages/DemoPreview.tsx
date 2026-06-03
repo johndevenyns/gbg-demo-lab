@@ -312,6 +312,7 @@ export default function DemoPreview() {
 
   const hasMirroredHeader = Boolean(previewDocument?.headerHtml?.trim());
   const hasMirroredFooter = Boolean(previewDocument?.footerHtml?.trim());
+  const isScreenshotMode = (demo.mirrorActiveMethod || 'html') === 'screenshot';
   const debugBorder = demo.mirrorIframeBordersVisible
     ? '1px solid red'
     : 'none';
