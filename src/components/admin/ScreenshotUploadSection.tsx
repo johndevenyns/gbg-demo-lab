@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Upload, Trash2, Check, Image as ImageIcon } from "lucide-react";
+import { Upload, Trash2, Check, Image as ImageIcon, AlignLeft, AlignCenter, AlignRight, Maximize2, Minimize2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,21 +13,47 @@ interface ScreenshotUploadSectionProps {
   onApply: (updates: Partial<DemoEnvironment>) => void;
 }
 
+type Alignment = "left" | "center" | "right";
+type Sizing = "actual" | "stretch";
+
+const JUSTIFY: Record<Alignment, string> = {
+  left: "flex-start",
+  center: "center",
+  right: "flex-end",
+};
+
 function generateUploadedHtml(
   imageUrl: string,
   bgColor: string,
-  alt: string
+  alt: string,
+  align: Alignment,
+  sizing: Sizing,
 ): string {
-  return `<div style="width: 100%; background-color: ${bgColor}; display: flex; justify-content: center; align-items: center; padding: 0;"><img src="${imageUrl}" style="max-width: 100%; height: auto; display: block;" alt="${alt}" /></div>`;
+  const justify = JUSTIFY[align];
+  const imgStyle = sizing === "stretch"
+    ? "width: 100%; height: auto; display: block;"
+    : "max-width: 100%; height: auto; display: block;";
+  return `<div data-align="${align}" data-sizing="${sizing}" style="width: 100%; background-color: ${bgColor}; display: flex; justify-content: ${justify}; align-items: center; padding: 0;"><img src="${imageUrl}" style="${imgStyle}" alt="${alt}" /></div>`;
 }
 
-function parseUploadedHtml(html: string | null | undefined): { url: string | null; bgColor: string } {
-  if (!html) return { url: null, bgColor: "#ffffff" };
+function parseUploadedHtml(html: string | null | undefined): {
+  url: string | null;
+  bgColor: string;
+  align: Alignment;
+  sizing: Sizing;
+} {
+  if (!html) return { url: null, bgColor: "#ffffff", align: "center", sizing: "actual" };
   const imgMatch = html.match(/src="([^"]+)"/);
   const bgMatch = html.match(/background-color:\s*([^;]+)/);
+  const alignMatch = html.match(/data-align="(left|center|right)"/);
+  const sizingMatch = html.match(/data-sizing="(actual|stretch)"/);
+  // Back-compat: infer stretch from `width: 100%` on img (vs max-width)
+  const inferredSizing: Sizing = /<img[^>]*style="[^"]*\bwidth:\s*100%/.test(html) ? "stretch" : "actual";
   return {
     url: imgMatch?.[1] || null,
     bgColor: bgMatch?.[1]?.trim() || "#ffffff",
+    align: (alignMatch?.[1] as Alignment) || "center",
+    sizing: (sizingMatch?.[1] as Sizing) || inferredSizing,
   };
 }
 
@@ -43,6 +69,10 @@ export function ScreenshotUploadSection({ demo, onApply }: ScreenshotUploadSecti
   const [footerPreview, setFooterPreview] = useState<string | null>(existingFooter.url);
   const [headerBgColor, setHeaderBgColor] = useState(existingHeader.bgColor);
   const [footerBgColor, setFooterBgColor] = useState(existingFooter.bgColor);
+  const [headerAlign, setHeaderAlign] = useState<Alignment>(existingHeader.align);
+  const [footerAlign, setFooterAlign] = useState<Alignment>(existingFooter.align);
+  const [headerSizing, setHeaderSizing] = useState<Sizing>(existingHeader.sizing);
+  const [footerSizing, setFooterSizing] = useState<Sizing>(existingFooter.sizing);
   const [headerUploading, setHeaderUploading] = useState(false);
   const [footerUploading, setFooterUploading] = useState(false);
   const [headerUrl, setHeaderUrl] = useState<string | null>(existingHeader.url);
@@ -99,10 +129,10 @@ export function ScreenshotUploadSection({ demo, onApply }: ScreenshotUploadSecti
     const updates: Partial<DemoEnvironment> = {};
 
     if (headerUrl) {
-      updates.mirrorScreenshotHeaderHtml = generateUploadedHtml(headerUrl, headerBgColor, "Site header");
+      updates.mirrorScreenshotHeaderHtml = generateUploadedHtml(headerUrl, headerBgColor, "Site header", headerAlign, headerSizing);
     }
     if (footerUrl) {
-      updates.mirrorScreenshotFooterHtml = generateUploadedHtml(footerUrl, footerBgColor, "Site footer");
+      updates.mirrorScreenshotFooterHtml = generateUploadedHtml(footerUrl, footerBgColor, "Site footer", footerAlign, footerSizing);
     }
 
     if (!headerUrl && !footerUrl) {
