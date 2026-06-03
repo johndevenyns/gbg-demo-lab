@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Upload, Trash2, Check, Image as ImageIcon, AlignLeft, AlignCenter, AlignRight, Maximize2, Minimize2 } from "lucide-react";
+import { Upload, Trash2, Check, Image as ImageIcon, AlignLeft, AlignCenter, AlignRight, Maximize2, Minimize2, Crop, Square, Scan } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,6 +15,7 @@ interface ScreenshotUploadSectionProps {
 
 type Alignment = "left" | "center" | "right";
 type Sizing = "actual" | "stretch";
+type CropMode = "none" | "contain" | "cover";
 
 const JUSTIFY: Record<Alignment, string> = {
   left: "flex-start",
@@ -27,11 +28,15 @@ function AlignmentSizingControls({
   onAlignChange,
   sizing,
   onSizingChange,
+  crop,
+  onCropChange,
 }: {
   align: Alignment;
   onAlignChange: (a: Alignment) => void;
   sizing: Sizing;
   onSizingChange: (s: Sizing) => void;
+  crop: CropMode;
+  onCropChange: (c: CropMode) => void;
 }) {
   const alignBtn = (val: Alignment, Icon: typeof AlignLeft, label: string) => (
     <Button
@@ -57,6 +62,18 @@ function AlignmentSizingControls({
       <Icon className="w-3.5 h-3.5" /> {label}
     </Button>
   );
+  const cropBtn = (val: CropMode, Icon: typeof Crop, label: string) => (
+    <Button
+      type="button"
+      variant={crop === val ? "default" : "outline"}
+      size="sm"
+      className="h-8 px-2 gap-1 text-xs"
+      onClick={() => onCropChange(val)}
+      title={label}
+    >
+      <Icon className="w-3.5 h-3.5" /> {label}
+    </Button>
+  );
   return (
     <div className="flex items-center gap-4 flex-wrap">
       <div className="flex items-center gap-2">
@@ -74,6 +91,14 @@ function AlignmentSizingControls({
           {sizingBtn("stretch", Maximize2, "Stretch to fit")}
         </div>
       </div>
+      <div className="flex items-center gap-2">
+        <Label className="text-xs whitespace-nowrap">Crop</Label>
+        <div className="flex items-center gap-1">
+          {cropBtn("none", Square, "None")}
+          {cropBtn("contain", Scan, "Contain")}
+          {cropBtn("cover", Crop, "Cover")}
+        </div>
+      </div>
     </div>
   );
 }
@@ -84,12 +109,18 @@ function generateUploadedHtml(
   alt: string,
   align: Alignment,
   sizing: Sizing,
+  crop: CropMode,
 ): string {
   const justify = JUSTIFY[align];
-  const imgStyle = sizing === "stretch"
-    ? "width: 100%; height: auto; display: block;"
-    : "max-width: 100%; height: auto; display: block;";
-  return `<div data-align="${align}" data-sizing="${sizing}" style="width: 100%; background-color: ${bgColor}; display: flex; justify-content: ${justify}; align-items: center; padding: 0;"><img src="${imageUrl}" style="${imgStyle}" alt="${alt}" /></div>`;
+  let imgStyle: string;
+  if (crop === "contain" || crop === "cover") {
+    imgStyle = `width: 100%; height: 100%; object-fit: ${crop}; object-position: ${align === "left" ? "left center" : align === "right" ? "right center" : "center"}; display: block;`;
+  } else if (sizing === "stretch") {
+    imgStyle = "width: 100%; height: auto; display: block;";
+  } else {
+    imgStyle = "max-width: 100%; height: auto; display: block;";
+  }
+  return `<div data-align="${align}" data-sizing="${sizing}" data-crop="${crop}" style="width: 100%; background-color: ${bgColor}; display: flex; justify-content: ${justify}; align-items: center; padding: 0;"><img src="${imageUrl}" style="${imgStyle}" alt="${alt}" /></div>`;
 }
 
 function parseUploadedHtml(html: string | null | undefined): {
@@ -97,12 +128,14 @@ function parseUploadedHtml(html: string | null | undefined): {
   bgColor: string;
   align: Alignment;
   sizing: Sizing;
+  crop: CropMode;
 } {
-  if (!html) return { url: null, bgColor: "#ffffff", align: "center", sizing: "actual" };
+  if (!html) return { url: null, bgColor: "#ffffff", align: "center", sizing: "actual", crop: "none" };
   const imgMatch = html.match(/src="([^"]+)"/);
   const bgMatch = html.match(/background-color:\s*([^;]+)/);
   const alignMatch = html.match(/data-align="(left|center|right)"/);
   const sizingMatch = html.match(/data-sizing="(actual|stretch)"/);
+  const cropMatch = html.match(/data-crop="(none|contain|cover)"/);
   // Back-compat: infer stretch from `width: 100%` on img (vs max-width)
   const inferredSizing: Sizing = /<img[^>]*style="[^"]*\bwidth:\s*100%/.test(html) ? "stretch" : "actual";
   return {
@@ -110,6 +143,7 @@ function parseUploadedHtml(html: string | null | undefined): {
     bgColor: bgMatch?.[1]?.trim() || "#ffffff",
     align: (alignMatch?.[1] as Alignment) || "center",
     sizing: (sizingMatch?.[1] as Sizing) || inferredSizing,
+    crop: (cropMatch?.[1] as CropMode) || "none",
   };
 }
 
@@ -129,6 +163,8 @@ export function ScreenshotUploadSection({ demo, onApply }: ScreenshotUploadSecti
   const [footerAlign, setFooterAlign] = useState<Alignment>(existingFooter.align);
   const [headerSizing, setHeaderSizing] = useState<Sizing>(existingHeader.sizing);
   const [footerSizing, setFooterSizing] = useState<Sizing>(existingFooter.sizing);
+  const [headerCrop, setHeaderCrop] = useState<CropMode>(existingHeader.crop);
+  const [footerCrop, setFooterCrop] = useState<CropMode>(existingFooter.crop);
   const [headerUploading, setHeaderUploading] = useState(false);
   const [footerUploading, setFooterUploading] = useState(false);
   const [headerUrl, setHeaderUrl] = useState<string | null>(existingHeader.url);
@@ -185,10 +221,10 @@ export function ScreenshotUploadSection({ demo, onApply }: ScreenshotUploadSecti
     const updates: Partial<DemoEnvironment> = {};
 
     if (headerUrl) {
-      updates.mirrorScreenshotHeaderHtml = generateUploadedHtml(headerUrl, headerBgColor, "Site header", headerAlign, headerSizing);
+      updates.mirrorScreenshotHeaderHtml = generateUploadedHtml(headerUrl, headerBgColor, "Site header", headerAlign, headerSizing, headerCrop);
     }
     if (footerUrl) {
-      updates.mirrorScreenshotFooterHtml = generateUploadedHtml(footerUrl, footerBgColor, "Site footer", footerAlign, footerSizing);
+      updates.mirrorScreenshotFooterHtml = generateUploadedHtml(footerUrl, footerBgColor, "Site footer", footerAlign, footerSizing, footerCrop);
     }
 
     if (!headerUrl && !footerUrl) {
@@ -269,21 +305,35 @@ export function ScreenshotUploadSection({ demo, onApply }: ScreenshotUploadSecti
             onAlignChange={setHeaderAlign}
             sizing={headerSizing}
             onSizingChange={setHeaderSizing}
+            crop={headerCrop}
+            onCropChange={setHeaderCrop}
           />
           {headerPreview && (
             <div
               className="rounded-lg overflow-hidden border"
-              style={{ backgroundColor: headerBgColor, display: "flex", justifyContent: JUSTIFY[headerAlign] }}
+              style={{
+                backgroundColor: headerBgColor,
+                display: "flex",
+                justifyContent: JUSTIFY[headerAlign],
+                ...(headerCrop !== "none" ? { height: "160px" } : {}),
+              }}
             >
               <img
                 src={headerPreview}
                 alt="Header preview"
                 className="h-auto block"
                 style={{
-                  maxHeight: "200px",
-                  ...(headerSizing === "stretch"
-                    ? { width: "100%" }
-                    : { maxWidth: "100%" }),
+                  ...(headerCrop !== "none"
+                    ? {
+                        width: "100%",
+                        height: "100%",
+                        objectFit: headerCrop,
+                        objectPosition: headerAlign === "left" ? "left center" : headerAlign === "right" ? "right center" : "center",
+                      }
+                    : {
+                        maxHeight: "200px",
+                        ...(headerSizing === "stretch" ? { width: "100%" } : { maxWidth: "100%" }),
+                      }),
                 }}
               />
             </div>
@@ -334,21 +384,35 @@ export function ScreenshotUploadSection({ demo, onApply }: ScreenshotUploadSecti
             onAlignChange={setFooterAlign}
             sizing={footerSizing}
             onSizingChange={setFooterSizing}
+            crop={footerCrop}
+            onCropChange={setFooterCrop}
           />
           {footerPreview && (
             <div
               className="rounded-lg overflow-hidden border"
-              style={{ backgroundColor: footerBgColor, display: "flex", justifyContent: JUSTIFY[footerAlign] }}
+              style={{
+                backgroundColor: footerBgColor,
+                display: "flex",
+                justifyContent: JUSTIFY[footerAlign],
+                ...(footerCrop !== "none" ? { height: "160px" } : {}),
+              }}
             >
               <img
                 src={footerPreview}
                 alt="Footer preview"
                 className="h-auto block"
                 style={{
-                  maxHeight: "200px",
-                  ...(footerSizing === "stretch"
-                    ? { width: "100%" }
-                    : { maxWidth: "100%" }),
+                  ...(footerCrop !== "none"
+                    ? {
+                        width: "100%",
+                        height: "100%",
+                        objectFit: footerCrop,
+                        objectPosition: footerAlign === "left" ? "left center" : footerAlign === "right" ? "right center" : "center",
+                      }
+                    : {
+                        maxHeight: "200px",
+                        ...(footerSizing === "stretch" ? { width: "100%" } : { maxWidth: "100%" }),
+                      }),
                 }}
               />
             </div>
