@@ -656,7 +656,7 @@ export default function DemoPreview() {
             </html>
           `}
           className="w-full block"
-          style={{ height: 'auto', minHeight: '60px', display: 'block', border: '1px solid red' }}
+          style={{ height: 'auto', minHeight: '60px', display: 'block', border: debugBorder }}
           title="Site header"
           sandbox="allow-same-origin allow-scripts"
           onLoad={(e) => {
@@ -696,7 +696,7 @@ export default function DemoPreview() {
           paddingBottom: `${previewDocument?.formStyle?.contentAreaPaddingY ?? 16}px`,
           minHeight: `${previewDocument?.formStyle?.contentAreaMinHeight ?? 400}px`,
           justifyContent: ({ start: 'flex-start', center: 'center', end: 'flex-end' } as const)[previewDocument?.formStyle?.contentAreaJustify || 'start'],
-          border: '1px solid blue',
+          ...(debugBorderMain ? { border: debugBorderMain } : {}),
         }}
       >
         <div className="mx-auto px-4" style={{ maxWidth: previewDocument?.formStyle?.contentAreaMaxWidth ? `${previewDocument.formStyle.contentAreaMaxWidth}px` : '36rem', width: '100%' }}>
@@ -781,7 +781,7 @@ export default function DemoPreview() {
             </html>
           `}
           className="w-full block"
-          style={{ height: 'auto', minHeight: '60px', display: 'block', border: '1px solid red' }}
+          style={{ height: 'auto', minHeight: '60px', display: 'block', border: debugBorder }}
           title="Site footer"
           sandbox="allow-same-origin allow-scripts"
           onLoad={(e) => {
