@@ -649,8 +649,8 @@ export default function DemoPreview() {
               </body>
             </html>
           `}
-          className="w-full border-0 block"
-          style={{ height: 'auto', minHeight: '60px', display: 'block' }}
+          className="w-full block"
+          style={{ height: 'auto', minHeight: '60px', display: 'block', border: '1px solid red' }}
           title="Site header"
           sandbox="allow-same-origin allow-scripts"
           onLoad={(e) => {
@@ -773,8 +773,8 @@ export default function DemoPreview() {
               </body>
             </html>
           `}
-          className="w-full border-0 block"
-          style={{ height: 'auto', minHeight: '60px', display: 'block' }}
+          className="w-full block"
+          style={{ height: 'auto', minHeight: '60px', display: 'block', border: '1px solid red' }}
           title="Site footer"
           sandbox="allow-same-origin allow-scripts"
           onLoad={(e) => {
