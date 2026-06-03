@@ -37,11 +37,13 @@ function FooterPreviewFrame({
   cssContent,
   minHeight,
   onHeightChange,
+  isScreenshotMode = false,
 }: {
   footerHtml: string;
   cssContent?: string;
   minHeight: number;
   onHeightChange: (h: number) => void;
+  isScreenshotMode?: boolean;
 }) {
   const [naturalHeight, setNaturalHeight] = useState<number>(minHeight);
   const frameId = useRef<string>(`footer-${Math.random().toString(36).slice(2, 8)}`);
@@ -61,7 +63,12 @@ function FooterPreviewFrame({
   // The visible height is the larger of the user-set minimum and the
   // measured natural height. This means the badge effectively becomes a
   // floor, and the iframe expands to show the whole footer.
-  const displayHeight = Math.max(minHeight, naturalHeight);
+  // In screenshot mode the captured footer is a single image, so the
+  // minHeight floor would leave empty space below the image — ignore it
+  // and fit the iframe tightly to the natural content height.
+  const displayHeight = isScreenshotMode
+    ? Math.max(naturalHeight, 1)
+    : Math.max(minHeight, naturalHeight);
 
   const srcDoc = `
 <!DOCTYPE html>
