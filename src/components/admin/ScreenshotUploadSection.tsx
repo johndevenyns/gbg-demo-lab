@@ -208,16 +208,27 @@ export function ScreenshotUploadSection({ demo, onApply }: ScreenshotUploadSecti
               />
             </div>
           </div>
+          <AlignmentSizingControls
+            align={headerAlign}
+            onAlignChange={setHeaderAlign}
+            sizing={headerSizing}
+            onSizingChange={setHeaderSizing}
+          />
           {headerPreview && (
             <div
               className="rounded-lg overflow-hidden border"
-              style={{ backgroundColor: headerBgColor }}
+              style={{ backgroundColor: headerBgColor, display: "flex", justifyContent: JUSTIFY[headerAlign] }}
             >
               <img
                 src={headerPreview}
                 alt="Header preview"
-                className="max-w-full h-auto mx-auto block"
-                style={{ maxHeight: "200px" }}
+                className="h-auto block"
+                style={{
+                  maxHeight: "200px",
+                  ...(headerSizing === "stretch"
+                    ? { width: "100%" }
+                    : { maxWidth: "100%" }),
+                }}
               />
             </div>
           )}
@@ -262,16 +273,27 @@ export function ScreenshotUploadSection({ demo, onApply }: ScreenshotUploadSecti
               />
             </div>
           </div>
+          <AlignmentSizingControls
+            align={footerAlign}
+            onAlignChange={setFooterAlign}
+            sizing={footerSizing}
+            onSizingChange={setFooterSizing}
+          />
           {footerPreview && (
             <div
               className="rounded-lg overflow-hidden border"
-              style={{ backgroundColor: footerBgColor }}
+              style={{ backgroundColor: footerBgColor, display: "flex", justifyContent: JUSTIFY[footerAlign] }}
             >
               <img
                 src={footerPreview}
                 alt="Footer preview"
-                className="max-w-full h-auto mx-auto block"
-                style={{ maxHeight: "200px" }}
+                className="h-auto block"
+                style={{
+                  maxHeight: "200px",
+                  ...(footerSizing === "stretch"
+                    ? { width: "100%" }
+                    : { maxWidth: "100%" }),
+                }}
               />
             </div>
           )}
