@@ -303,6 +303,38 @@ const INLINE_STYLES_SCRIPT = `
     }
     applyStyles(clone, 0);
     
+    // Strip non-chrome content (forms, main content, articles) so we only
+    // keep header/footer chrome. On pages like /auth or /login the
+    // <header> or fallback selector can contain an actual sign-in form,
+    // which then bleeds into the preview behind our demo's overlay form.
+    // We capture form STYLING separately via the branding payload, so we
+    // never need the form markup itself inside the header/footer HTML.
+    var stripSelectors = [
+      'form',
+      'main', '[role="main"]',
+      'article', '[role="article"]',
+      '[class*="signin" i]', '[class*="sign-in" i]', '[class*="login" i]',
+      '[class*="signup" i]', '[class*="sign-up" i]', '[class*="register" i]',
+      '[id*="signin" i]', '[id*="sign-in" i]', '[id*="login" i]',
+      '[id*="signup" i]', '[id*="sign-up" i]', '[id*="register" i]',
+      'input[type="password"]'
+    ];
+    for (var ss = 0; ss < stripSelectors.length; ss++) {
+      try {
+        var matches = clone.querySelectorAll(stripSelectors[ss]);
+        for (var mm = 0; mm < matches.length; mm++) {
+          // For password inputs, remove the enclosing form ancestor too
+          var node = matches[mm];
+          var formAncestor = node.closest ? node.closest('form') : null;
+          if (formAncestor && formAncestor !== clone) {
+            formAncestor.parentNode && formAncestor.parentNode.removeChild(formAncestor);
+          } else if (node.parentNode && node !== clone) {
+            node.parentNode.removeChild(node);
+          }
+        }
+      } catch(e) { /* invalid selector in some browsers */ }
+    }
+
     // Make all links non-functional but keep href for CTA mapping
     var links = clone.querySelectorAll('a');
     for (var l = 0; l < links.length; l++) {
