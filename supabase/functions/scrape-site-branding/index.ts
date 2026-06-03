@@ -1111,7 +1111,7 @@ function extractLogoFromHeader(headerHtml: string, baseUrl: URL): string | null 
     const tag = imgMatch[0];
     const srcMatch = tag.match(/\bsrc=["']([^"']+)["']/i);
     if (!srcMatch) continue;
-    const rawSrc = srcMatch[1];
+    const rawSrc = decodeHtmlEntities(srcMatch[1]);
     if (!rawSrc || rawSrc.startsWith('data:image/gif')) continue;
     const altMatch = tag.match(/\balt=["']([^"']*)["']/i);
     const classMatch = tag.match(/\bclass=["']([^"']*)["']/i);
