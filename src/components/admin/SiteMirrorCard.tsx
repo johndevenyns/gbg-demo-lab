@@ -655,7 +655,7 @@ interface SiteMirrorCardProps {
                           sandbox="allow-same-origin allow-scripts"
                           onLoad={(e) => {
                             const iframe = e.currentTarget;
-                            enhanceHeaderPreviewIframe(iframe, 80);
+                            enhanceHeaderPreviewIframe(iframe, activeMethod === 'screenshot' ? 0 : 80);
                             // Set up click handler for HTML link mode
                             if (linkHeaderMode && activeMethod === 'html') {
                               try {
