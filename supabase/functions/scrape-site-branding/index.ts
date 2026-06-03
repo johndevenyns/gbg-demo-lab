@@ -1073,6 +1073,14 @@ function scoreLogoCandidate(opts: {
 function extractLogoFromHeader(headerHtml: string, baseUrl: URL): string | null {
   if (!headerHtml) return null;
 
+  // Some sites (e.g. TaxAct) inline their logo as
+  // `<img src="data:image/svg+xml,%3csvg ... &#39;...&#39; ...">` where the
+  // SVG payload contains HTML entities like `&#39;` and `&amp;`. Browsers
+  // would normally decode those when parsing the HTML, but our regex sees
+  // the raw attribute text. Decode common entities so the resulting data
+  // URL is valid and renders in the preview.
+  // (helper declared below)
+
   // Identify the "home link" (anchor pointing to "/" or the site's own root)
   // so we can boost candidates inside it.
   const homeHost = baseUrl.host.replace(/^www\./, '');
