@@ -855,6 +855,7 @@ interface SiteMirrorCardProps {
                         cssContent={cssContent}
                         minHeight={footerHeight}
                         onHeightChange={(v) => updateStyle({ footerHeight: v })}
+                        isScreenshotMode={activeMethod === 'screenshot'}
                       />
                     )}
                   </div>
