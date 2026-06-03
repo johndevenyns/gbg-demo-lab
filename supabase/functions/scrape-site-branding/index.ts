@@ -1059,6 +1059,23 @@ function scoreLogoCandidate(opts: {
 }
 
 /**
+ * Decode the small set of HTML entities that commonly appear inside attribute
+ * values when sites inline an SVG as a `data:` URL (e.g. `&#39;` for `'`).
+ * Without this, the captured `src` is not a valid data URL and won't render.
+ */
+function decodeHtmlEntities(s: string): string {
+  if (!s) return s;
+  return s
+    .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(parseInt(n, 10)))
+    .replace(/&#x([0-9a-fA-F]+);/g, (_, h) => String.fromCharCode(parseInt(h, 16)))
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&');
+}
+
+/**
  * Extract the most likely logo from the captured header HTML.
  *
  * Strategy:
