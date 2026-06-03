@@ -22,6 +22,62 @@ const JUSTIFY: Record<Alignment, string> = {
   right: "flex-end",
 };
 
+function AlignmentSizingControls({
+  align,
+  onAlignChange,
+  sizing,
+  onSizingChange,
+}: {
+  align: Alignment;
+  onAlignChange: (a: Alignment) => void;
+  sizing: Sizing;
+  onSizingChange: (s: Sizing) => void;
+}) {
+  const alignBtn = (val: Alignment, Icon: typeof AlignLeft, label: string) => (
+    <Button
+      type="button"
+      variant={align === val ? "default" : "outline"}
+      size="sm"
+      className="h-8 px-2"
+      onClick={() => onAlignChange(val)}
+      title={label}
+    >
+      <Icon className="w-4 h-4" />
+    </Button>
+  );
+  const sizingBtn = (val: Sizing, Icon: typeof Maximize2, label: string) => (
+    <Button
+      type="button"
+      variant={sizing === val ? "default" : "outline"}
+      size="sm"
+      className="h-8 px-2 gap-1 text-xs"
+      onClick={() => onSizingChange(val)}
+      title={label}
+    >
+      <Icon className="w-3.5 h-3.5" /> {label}
+    </Button>
+  );
+  return (
+    <div className="flex items-center gap-4 flex-wrap">
+      <div className="flex items-center gap-2">
+        <Label className="text-xs whitespace-nowrap">Alignment</Label>
+        <div className="flex items-center gap-1">
+          {alignBtn("left", AlignLeft, "Left")}
+          {alignBtn("center", AlignCenter, "Center")}
+          {alignBtn("right", AlignRight, "Right")}
+        </div>
+      </div>
+      <div className="flex items-center gap-2">
+        <Label className="text-xs whitespace-nowrap">Sizing</Label>
+        <div className="flex items-center gap-1">
+          {sizingBtn("actual", Minimize2, "Actual size")}
+          {sizingBtn("stretch", Maximize2, "Stretch to fit")}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function generateUploadedHtml(
   imageUrl: string,
   bgColor: string,
