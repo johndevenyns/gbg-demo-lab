@@ -268,6 +268,12 @@ export default function DemoPreview() {
 
   const hasMirroredHeader = Boolean(previewDocument?.headerHtml?.trim());
   const hasMirroredFooter = Boolean(previewDocument?.footerHtml?.trim());
+  const debugBorder = demo.mirrorIframeBordersVisible
+    ? '1px solid red'
+    : 'none';
+  const debugBorderMain = demo.mirrorIframeBordersVisible
+    ? '1px solid blue'
+    : undefined;
 
   // Determine which form steps to show
   const activeFormSteps = selectedUseCase
