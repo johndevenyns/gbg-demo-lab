@@ -37,11 +37,13 @@ function FooterPreviewFrame({
   cssContent,
   minHeight,
   onHeightChange,
+  isScreenshotMode = false,
 }: {
   footerHtml: string;
   cssContent?: string;
   minHeight: number;
   onHeightChange: (h: number) => void;
+  isScreenshotMode?: boolean;
 }) {
   const [naturalHeight, setNaturalHeight] = useState<number>(minHeight);
   const frameId = useRef<string>(`footer-${Math.random().toString(36).slice(2, 8)}`);
@@ -61,7 +63,12 @@ function FooterPreviewFrame({
   // The visible height is the larger of the user-set minimum and the
   // measured natural height. This means the badge effectively becomes a
   // floor, and the iframe expands to show the whole footer.
-  const displayHeight = Math.max(minHeight, naturalHeight);
+  // In screenshot mode the captured footer is a single image, so the
+  // minHeight floor would leave empty space below the image — ignore it
+  // and fit the iframe tightly to the natural content height.
+  const displayHeight = isScreenshotMode
+    ? Math.max(naturalHeight, 1)
+    : Math.max(minHeight, naturalHeight);
 
   const srcDoc = `
 <!DOCTYPE html>
@@ -594,7 +601,12 @@ interface SiteMirrorCardProps {
                           // Badge value is a FLOOR, not a ceiling — let the
                           // captured header reveal mega-menus / top bars
                           // without being clipped to the default height.
-                          height: `${Math.max(headerHeight, headerNaturalHeight)}px`,
+                          // In screenshot mode the captured header is a single
+                          // image; ignore the floor so the wrapper hugs the
+                          // image and there's no empty gap below it.
+                          height: activeMethod === 'screenshot'
+                            ? `${Math.max(headerNaturalHeight, 1)}px`
+                            : `${Math.max(headerHeight, headerNaturalHeight)}px`,
                           overflow: 'hidden',
                         }}
                       >
@@ -634,12 +646,16 @@ interface SiteMirrorCardProps {
                             </html>
                           `}
                           className="block w-full border-0"
-                          style={{ height: `${Math.max(headerHeight, headerNaturalHeight)}px` }}
+                          style={{
+                            height: activeMethod === 'screenshot'
+                              ? `${Math.max(headerNaturalHeight, 1)}px`
+                              : `${Math.max(headerHeight, headerNaturalHeight)}px`,
+                          }}
                           title="Live site header preview"
                           sandbox="allow-same-origin allow-scripts"
                           onLoad={(e) => {
                             const iframe = e.currentTarget;
-                            enhanceHeaderPreviewIframe(iframe, 80);
+                            enhanceHeaderPreviewIframe(iframe, activeMethod === 'screenshot' ? 0 : 80);
                             // Set up click handler for HTML link mode
                             if (linkHeaderMode && activeMethod === 'html') {
                               try {
@@ -839,6 +855,7 @@ interface SiteMirrorCardProps {
                         cssContent={cssContent}
                         minHeight={footerHeight}
                         onHeightChange={(v) => updateStyle({ footerHeight: v })}
+                        isScreenshotMode={activeMethod === 'screenshot'}
                       />
                     )}
                   </div>
