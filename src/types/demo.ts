@@ -67,6 +67,9 @@ export interface DemoEnvironment {
   mirrorScreenshotHeaderHtml?: string;
   mirrorScreenshotFooterHtml?: string;
   mirrorScreenshotCss?: string;
+
+  // Debug: show visible borders around header/main/footer iframes in preview
+  mirrorIframeBordersVisible?: boolean;
   
   // CTA element selector — CSS selector of a header element that links to a use case
   headerCtaSelector?: string;

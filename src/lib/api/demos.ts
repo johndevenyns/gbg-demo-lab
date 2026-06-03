@@ -85,6 +85,7 @@ const rowToDemo = (row: any): DemoEnvironment => {
     mirrorScreenshotHeaderHtml: row.mirror_screenshot_header_html || '',
     mirrorScreenshotFooterHtml: row.mirror_screenshot_footer_html || '',
     mirrorScreenshotCss: row.mirror_screenshot_css || '',
+    mirrorIframeBordersVisible: row.mirror_iframe_borders_visible ?? false,
     headerCtaSelector: row.header_cta_selector || '',
     headerCtaUseCaseId: row.header_cta_use_case_id || undefined,
     formStyle: formStyle ? { ...DEFAULT_FORM_STYLE, ...formStyle } : DEFAULT_FORM_STYLE,
@@ -137,6 +138,7 @@ const demoToRow = (demo: Partial<DemoEnvironment>) => {
   if (demo.mirrorScreenshotHeaderHtml !== undefined) row.mirror_screenshot_header_html = demo.mirrorScreenshotHeaderHtml;
   if (demo.mirrorScreenshotFooterHtml !== undefined) row.mirror_screenshot_footer_html = demo.mirrorScreenshotFooterHtml;
   if (demo.mirrorScreenshotCss !== undefined) row.mirror_screenshot_css = demo.mirrorScreenshotCss;
+  if (demo.mirrorIframeBordersVisible !== undefined) row.mirror_iframe_borders_visible = demo.mirrorIframeBordersVisible;
   if (demo.headerCtaSelector !== undefined) row.header_cta_selector = demo.headerCtaSelector;
   if (demo.headerCtaUseCaseId !== undefined) row.header_cta_use_case_id = demo.headerCtaUseCaseId || null;
   // Store result page configs inside form_style to avoid new DB columns
