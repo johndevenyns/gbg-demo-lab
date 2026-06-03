@@ -29,6 +29,50 @@ import { supabase } from "@/integrations/supabase/client";
 import { getFormBorderRadius, getFormShadow } from "@/lib/formStyleUtils";
 import { enhanceHeaderPreviewIframe } from "@/lib/iframeContrast";
 
+/**
+ * Resize an iframe so its height matches its content's true rendered height.
+ * In screenshot mode the content is an aspect-ratio wrapper holding an <img>,
+ * so we must wait for the image to load before measuring.
+ */
+function fitIframeToContent(iframe: HTMLIFrameElement, opts: { minHeight?: number; fallbackHeight?: number } = {}) {
+  const { minHeight = 0, fallbackHeight = 0 } = opts;
+  const measureAndSet = () => {
+    try {
+      const body = iframe.contentDocument?.body;
+      if (!body) return;
+      const firstChild = body.firstElementChild as HTMLElement | null;
+      const measured =
+        firstChild?.getBoundingClientRect().height ||
+        firstChild?.offsetHeight ||
+        body.scrollHeight ||
+        fallbackHeight;
+      const final = Math.max(measured, minHeight);
+      if (final > 0) iframe.style.height = `${final}px`;
+    } catch {
+      if (fallbackHeight > 0) iframe.style.height = `${fallbackHeight}px`;
+    }
+  };
+
+  // Initial measure
+  measureAndSet();
+
+  // Wait for any images to load, then re-measure
+  try {
+    const doc = iframe.contentDocument;
+    const imgs = doc ? Array.from(doc.images || []) : [];
+    imgs.forEach((img) => {
+      if (!img.complete) {
+        img.addEventListener('load', measureAndSet, { once: true });
+        img.addEventListener('error', measureAndSet, { once: true });
+      }
+    });
+  } catch { /* ignore */ }
+
+  // Re-measure after layout settles
+  window.setTimeout(measureAndSet, 160);
+  window.setTimeout(measureAndSet, 500);
+}
+
 export default function DemoPreview() {
   const { slug } = useParams<{ slug: string }>();
   const { isAdmin, isLoading: authLoading } = useAuth();
