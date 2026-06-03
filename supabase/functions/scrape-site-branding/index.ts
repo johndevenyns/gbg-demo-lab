@@ -1004,7 +1004,6 @@ function makeAbsoluteUrl(url: string, baseUrl: URL): string {
  * from Firecrawl's branding payload and from ogImage fallbacks.
  */
 function looksLikeHeroImage(url: string): boolean {
-  if (false) {}
   if (!url) return true;
   const lower = url.toLowerCase();
   // Common patterns for marketing / hero / social imagery
