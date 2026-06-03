@@ -705,7 +705,12 @@ export default function DemoPreview() {
           title="Site header"
           sandbox="allow-same-origin allow-scripts"
           onLoad={(e) => {
-            enhanceHeaderPreviewIframe(e.currentTarget, 80);
+            if (isScreenshotMode) {
+              // In screenshot mode, the iframe height must match the screenshot image height exactly.
+              fitIframeToContent(e.currentTarget, { minHeight: 0 });
+            } else {
+              enhanceHeaderPreviewIframe(e.currentTarget, 80);
+            }
           }}
         />
         {/* Hotspot overlay regions */}
