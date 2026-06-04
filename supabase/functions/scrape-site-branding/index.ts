@@ -925,9 +925,17 @@ Deno.serve(async (req) => {
 
     const rootUrl = `${baseUrl.protocol}//${baseUrl.host}`;
     const isRootUrl = formattedUrl.replace(/\/$/, '') === rootUrl.replace(/\/$/, '');
-    
-    if (!logoUrl && !isRootUrl) {
-      console.log('Trying root domain for logo:', rootUrl);
+
+    // A logo from the captured page may be a `data:` URI (e.g. TaxAct's
+    // /auth page inlines its mark as `data:image/svg+xml,...`). Data URIs
+    // are bulky, can't be forwarded to third-party verification providers,
+    // and don't render in mobile branding contexts that expect a real
+    // hosted URL. If we have a data URI and we're not already on root,
+    // try the homepage to prefer a hosted http(s) logo URL.
+    const logoIsDataUri = !!logoUrl && logoUrl.startsWith('data:');
+
+    if ((!logoUrl || logoIsDataUri) && !isRootUrl) {
+      console.log('Trying root domain for logo:', rootUrl, logoIsDataUri ? '(preferring hosted URL over data: URI)' : '');
       fetchedUrls.push(rootUrl);
       try {
         const rootResponse = await firecrawlScrape({
@@ -941,8 +949,14 @@ Deno.serve(async (req) => {
           const rootBranding = rootData.data?.branding || rootData.branding || null;
           const rootLogo = rootBranding?.images?.logo || rootBranding?.logo || null;
           if (rootLogo && !looksLikeHeroImage(rootLogo)) {
-            logoUrl = rootLogo;
-            logoFoundAt = rootUrl;
+            // Only replace an existing data: URI logo when root gives us a
+            // real hosted URL — never swap a hosted logo for a data URI.
+            const rootIsDataUri = rootLogo.startsWith('data:');
+            if (!logoUrl || (logoIsDataUri && !rootIsDataUri)) {
+              logoUrl = rootLogo;
+              logoFoundAt = rootUrl;
+              console.log('Logo from root domain branding', rootIsDataUri ? '(data URI)' : '(hosted)');
+            }
           }
         }
       } catch (rootError) {
