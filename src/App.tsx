@@ -17,7 +17,17 @@ import NotFound from "./pages/NotFound";
 import QrCodePreview from "./pages/QrCodePreview";
 import VerifyRedirect from "./pages/VerifyRedirect";
 
-const queryClient = new QueryClient();
+// Disable refetch-on-window-focus so returning to the tab doesn't trigger
+// query refetches that can cascade into parent re-renders and close open
+// dialogs/wizards (e.g. form builder, new demo creator).
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+    },
+  },
+});
 
 function AppContent() {
   useThemePreference();
