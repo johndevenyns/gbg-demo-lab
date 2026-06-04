@@ -45,7 +45,7 @@ function FooterPreviewFrame({
   onHeightChange: (h: number) => void;
   isScreenshotMode?: boolean;
 }) {
-  const [naturalHeight, setNaturalHeight] = useState<number>(minHeight);
+  const [naturalHeight, setNaturalHeight] = useState<number>(0);
   const frameId = useRef<string>(`footer-${Math.random().toString(36).slice(2, 8)}`);
 
   useEffect(() => {
@@ -66,9 +66,7 @@ function FooterPreviewFrame({
   // In screenshot mode the captured footer is a single image, so the
   // minHeight floor would leave empty space below the image — ignore it
   // and fit the iframe tightly to the natural content height.
-  const displayHeight = isScreenshotMode
-    ? Math.max(naturalHeight, 1)
-    : Math.max(minHeight, naturalHeight);
+  const displayHeight = Math.max(naturalHeight, 1);
 
   const srcDoc = `
 <!DOCTYPE html>
@@ -77,7 +75,7 @@ function FooterPreviewFrame({
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    html, body { margin: 0; padding: 0; background: transparent; }
+    html, body { margin: 0; padding: 0; background: transparent; overflow: hidden; }
     * { box-sizing: border-box; }
     a { pointer-events: none; }
   </style>
@@ -208,6 +206,17 @@ function buildHeightReporterScript(frameId: string, messageType: string): string
       } catch (e) {}
     })();
   </script>`;
+}
+
+function repairHeaderLogoHtml(headerHtml: string | undefined, logoUrl?: string, customerName?: string) {
+  if (!headerHtml || !logoUrl || logoUrl.startsWith('data:')) return headerHtml || '';
+  if (!/src\s*=\s*["']data:image\/svg\+xml/i.test(headerHtml)) return headerHtml;
+  const safeAlt = (customerName || 'Logo').replace(/"/g, '&quot;');
+  const safeLogoUrl = logoUrl.replace(/"/g, '%22');
+  return headerHtml.replace(
+    /<img\b[\s\S]*?src\s*=\s*["']data:image\/svg\+xml,[\s\S]*?(?:\/?>|(?=<\/a>))/i,
+    `<img alt="${safeAlt}" src="${safeLogoUrl}" style="display:block;height:auto;max-height:48px;max-width:220px;width:auto;" />`
+  );
 }
 
 
@@ -464,7 +473,9 @@ interface SiteMirrorCardProps {
 
      // Determine which content to show based on active method
      const showingMethod = activeMethod;
-     const headerHtml = showingMethod === 'html' ? demo.mirrorHtmlHeaderHtml : demo.mirrorScreenshotHeaderHtml;
+      const headerHtml = showingMethod === 'html'
+        ? repairHeaderLogoHtml(demo.mirrorHtmlHeaderHtml, demo.logoUrl, demo.customerName)
+        : demo.mirrorScreenshotHeaderHtml;
      const footerHtml = showingMethod === 'html' ? demo.mirrorHtmlFooterHtml : demo.mirrorScreenshotFooterHtml;
      const cssContent = showingMethod === 'html' ? demo.mirrorHtmlCss : demo.mirrorScreenshotCss;
      const hasContentForMethod = showingMethod === 'html' ? hasHtmlContent : hasScreenshotContent;
@@ -472,7 +483,7 @@ interface SiteMirrorCardProps {
       const vpConfig = viewportConfig[previewViewport];
 
       const formStyle = demo.formStyle || DEFAULT_FORM_STYLE;
-      const paddingY = formStyle.contentAreaPaddingY ?? 40;
+       const paddingY = formStyle.contentAreaPaddingY ?? 0;
       const minContentHeight = formStyle.contentAreaMinHeight ?? 400;
       const justifyMap: Record<string, string> = { start: 'flex-start', center: 'center', end: 'flex-end' };
       const justifyKey = (formStyle.contentAreaJustify || 'start') as 'start' | 'center' | 'end';
@@ -617,9 +628,7 @@ interface SiteMirrorCardProps {
                           // In screenshot mode the captured header is a single
                           // image; ignore the floor so the wrapper hugs the
                           // image and there's no empty gap below it.
-                          height: activeMethod === 'screenshot'
-                            ? `${Math.max(headerNaturalHeight, 1)}px`
-                            : `${Math.max(headerHeight, headerNaturalHeight)}px`,
+                          height: `${Math.max(headerNaturalHeight, 1)}px`,
                           overflow: 'hidden',
                         }}
                       >
@@ -660,15 +669,13 @@ interface SiteMirrorCardProps {
                           `}
                           className="block w-full border-0"
                           style={{
-                            height: activeMethod === 'screenshot'
-                              ? `${Math.max(headerNaturalHeight, 1)}px`
-                              : `${Math.max(headerHeight, headerNaturalHeight)}px`,
+                            height: `${Math.max(headerNaturalHeight, 1)}px`,
                           }}
                           title="Live site header preview"
                           sandbox="allow-same-origin allow-scripts"
                           onLoad={(e) => {
                             const iframe = e.currentTarget;
-                            enhanceHeaderPreviewIframe(iframe, activeMethod === 'screenshot' ? 0 : 80);
+                            enhanceHeaderPreviewIframe(iframe, 1);
                             // Set up click handler for HTML link mode
                             if (linkHeaderMode && activeMethod === 'html') {
                               try {
