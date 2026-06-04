@@ -206,7 +206,17 @@ export function UserManagement({ isGlobalAdmin = true }: UserManagementProps) {
       const { data, error } = await supabase.functions.invoke('manage-admin-users', {
         body: { action: 'resetPassword', userId: setPasswordUserId, newPassword: setPasswordValue },
       });
-      if (error) throw error;
+      if (error) {
+        let message = error.message || 'Failed to set password';
+        try {
+          const ctx: any = (error as any).context;
+          if (ctx && typeof ctx.json === 'function') {
+            const body = await ctx.json();
+            if (body?.error) message = body.error;
+          }
+        } catch { /* ignore */ }
+        throw new Error(message);
+      }
       if (data?.error) throw new Error(data.error);
       toast({ title: 'Password updated', description: `Password has been set for ${setPasswordEmail}.` });
       setSetPasswordDialogOpen(false);
