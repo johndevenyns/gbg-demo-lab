@@ -1128,18 +1128,23 @@ function normalizeImageSrcAttr(src: string): string {
     return decodeHtmlEntities(src);
   }
 
+  const encodeEntityChar = (char: string) =>
+    Array.from(new TextEncoder().encode(char))
+      .map((byte) => `%${byte.toString(16).toUpperCase().padStart(2, '0')}`)
+      .join('');
+
   // Data SVGs scraped from HTML often contain entity-encoded quotes in the
   // URL payload (`&#39;`). If we decode them to raw quotes and then store the
   // value in HTML again, the attribute can break. Percent-encode entities
   // instead so the URL stays valid for both <img src> and string previews.
   return src
-    .replace(/&#(\d+);/g, (_, n) => encodeURIComponent(String.fromCharCode(parseInt(n, 10))))
-    .replace(/&#x([0-9a-fA-F]+);/g, (_, h) => encodeURIComponent(String.fromCharCode(parseInt(h, 16))))
+    .replace(/&#(\d+);/g, (_, n) => encodeEntityChar(String.fromCharCode(parseInt(n, 10))))
+    .replace(/&#x([0-9a-fA-F]+);/g, (_, h) => encodeEntityChar(String.fromCharCode(parseInt(h, 16))))
     .replace(/&quot;/g, '%22')
     .replace(/&apos;/g, '%27')
     .replace(/&lt;/g, '%3C')
     .replace(/&gt;/g, '%3E')
-    .replace(/&amp;/g, '&');
+    .replace(/&amp;/g, '%26');
 }
 
 function getHtmlAttr(tag: string, attr: string): string | undefined {
