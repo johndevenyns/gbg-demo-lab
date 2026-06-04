@@ -1114,9 +1114,9 @@ function decodeHtmlEntities(s: string): string {
 
 function getHtmlAttr(tag: string, attr: string): string | undefined {
   const escaped = attr.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const quoted = tag.match(new RegExp('\\b' + escaped + '\\s*=\\s*(["\\'])([\\s\\S]*?)\\1', 'i'));
+  const quoted = tag.match(new RegExp(`\\b${escaped}\\s*=\\s*(["'])([\\s\\S]*?)\\1`, 'i'));
   if (quoted?.[2] !== undefined) return quoted[2];
-  const unquoted = tag.match(new RegExp('\\b' + escaped + '\\s*=\\s*([^\\s>]+)', 'i'));
+  const unquoted = tag.match(new RegExp(`\\b${escaped}\\s*=\\s*([^\\s>]+)`, 'i'));
   return unquoted?.[1];
 }
 
