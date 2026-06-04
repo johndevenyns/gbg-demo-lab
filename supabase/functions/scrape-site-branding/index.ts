@@ -95,10 +95,88 @@ const INLINE_STYLES_SCRIPT = `
       if (firstUrl && !sii.getAttribute('src')) sii.setAttribute('src', firstUrl);
     }
   }
-  var preHeaderEl = document.querySelector('header')
-    || document.querySelector('[role="banner"]')
-    || document.querySelector('[class*="site-header"], [class*="main-header"], [class*="page-header"]')
-    || document.querySelector('nav');
+  // Smart header detector. Many enterprise sites (AEM, Sitecore, custom CMS)
+  // don't use <header>/[role=banner] — e.g. dish.com renders its top chrome
+  // as <div class="cmp-experiencefragment--main-navigation">. Walk a layered
+  // selector list, then if nothing matches, score top-of-page candidates by
+  // position/size/content to find the real site header.
+  function findHeaderEl() {
+    var direct = document.querySelector('header[role="banner"]')
+      || document.querySelector('header')
+      || document.querySelector('[role="banner"]');
+    if (direct) return direct;
+
+    // Common CMS / framework patterns (AEM, Sitecore, WordPress, Bootstrap,
+    // Tailwind, design systems, etc.). Order matters — most specific first.
+    var patterns = [
+      '[class*="site-header" i]', '[class*="main-header" i]', '[class*="page-header" i]',
+      '[class*="global-header" i]', '[class*="app-header" i]',
+      '[class*="main-navigation" i]', '[class*="global-navigation" i]',
+      '[class*="primary-navigation" i]', '[class*="site-navigation" i]',
+      '[class*="top-navigation" i]', '[class*="top-nav" i]', '[class*="topnav" i]',
+      '[class*="main-nav" i]', '[class*="primary-nav" i]', '[class*="global-nav" i]',
+      '[class*="navbar" i]', '[class*="nav-bar" i]', '[class*="masthead" i]',
+      '[id*="site-header" i]', '[id*="main-header" i]', '[id*="masthead" i]',
+      '[id*="navigation" i]', '[id*="navbar" i]', '[id*="header" i]'
+    ];
+    for (var p = 0; p < patterns.length; p++) {
+      try {
+        var matches = document.querySelectorAll(patterns[p]);
+        for (var mi = 0; mi < matches.length; mi++) {
+          var cand = matches[mi];
+          var r = cand.getBoundingClientRect();
+          // Must be near the top of the page, span most of the width, and
+          // be a reasonable header height (not a 1px divider, not the body).
+          if (r.top <= 80 && r.width >= window.innerWidth * 0.6
+              && r.height >= 30 && r.height <= 400) {
+            return cand;
+          }
+        }
+      } catch (e) { /* invalid selector */ }
+    }
+
+    // Generic scoring fallback: scan direct children of <body> and known
+    // wrappers for the topmost wide block that contains an image (logo) and
+    // either nav links or a button.
+    var roots = [document.body];
+    var wrappers = document.querySelectorAll('body > div, body > div > div, #root > div, #__next > div');
+    for (var w = 0; w < wrappers.length && w < 50; w++) roots.push(wrappers[w]);
+    var best = null, bestScore = -1;
+    for (var ri = 0; ri < roots.length; ri++) {
+      var root = roots[ri];
+      if (!root || !root.children) continue;
+      for (var ci = 0; ci < root.children.length && ci < 6; ci++) {
+        var c = root.children[ci];
+        try {
+          var rect = c.getBoundingClientRect();
+          if (rect.top > 120 || rect.bottom < 20) continue;
+          if (rect.width < window.innerWidth * 0.6) continue;
+          if (rect.height < 30 || rect.height > 400) continue;
+          var hasImg = c.querySelector('img, svg, [class*="logo" i]');
+          var hasNav = c.querySelector('nav, a, button');
+          if (!hasImg && !hasNav) continue;
+          // Score: prefer closer to top, taller (real header vs thin bar),
+          // and presence of both a logo-ish image and nav links.
+          var score = (200 - Math.max(0, rect.top)) + Math.min(rect.height, 200)
+            + (hasImg ? 50 : 0) + (hasNav ? 30 : 0);
+          if (score > bestScore) { bestScore = score; best = c; }
+        } catch (e) { /* ignore */ }
+      }
+    }
+    if (best) return best;
+
+    // Last resort: a <nav>, but only if it's at the very top.
+    var navEl = document.querySelector('nav');
+    if (navEl) {
+      try {
+        var nr = navEl.getBoundingClientRect();
+        if (nr.top <= 80 && nr.width >= window.innerWidth * 0.5) return navEl;
+      } catch (e) {}
+    }
+    return null;
+  }
+  var preHeaderEl = findHeaderEl();
+  window.__siteMirrorHeaderEl = preHeaderEl;
   // Resolve header lazy images while we are still at scrollTop=0
   resolveLazyImagesIn(preHeaderEl);
 
@@ -414,13 +492,49 @@ const INLINE_STYLES_SCRIPT = `
     fontLinks.push(allLinks[fl].outerHTML);
   }
 
-  var headerHtml = extractWithInlinedStyles('header', [
-    '[class*="site-header"]', '[class*="main-header"]', '[class*="page-header"]',
-    '[id*="header"]', '[role="banner"]', 'nav'
-  ], true);
+  // Build a unique selector path for the detected header so the existing
+  // extractWithInlinedStyles helper can re-find the same element.
+  function buildPathFor(el) {
+    if (!el || el === document.documentElement) return '';
+    if (el.id) return '#' + CSS.escape(el.id);
+    var parts = [];
+    var node = el;
+    while (node && node.nodeType === 1 && node !== document.body && parts.length < 8) {
+      var sel = node.tagName.toLowerCase();
+      if (node.id) { parts.unshift('#' + CSS.escape(node.id)); break; }
+      var parent = node.parentElement;
+      if (parent) {
+        var siblings = parent.children;
+        var idx = 1, same = 0;
+        for (var i = 0; i < siblings.length; i++) {
+          if (siblings[i].tagName === node.tagName) {
+            same++;
+            if (siblings[i] === node) idx = same;
+          }
+        }
+        if (same > 1) sel += ':nth-of-type(' + idx + ')';
+      }
+      parts.unshift(sel);
+      node = parent;
+    }
+    return parts.join(' > ');
+  }
+  var headerSelector = preHeaderEl ? buildPathFor(preHeaderEl) : '';
+  var headerHtml = '';
+  if (headerSelector) {
+    try { headerHtml = extractWithInlinedStyles(headerSelector, [], true); } catch (e) { headerHtml = ''; }
+  }
+  if (!headerHtml) {
+    headerHtml = extractWithInlinedStyles('header', [
+      '[role="banner"]',
+      '[class*="site-header" i]', '[class*="main-header" i]', '[class*="page-header" i]',
+      '[class*="main-navigation" i]', '[class*="navbar" i]', '[class*="masthead" i]',
+      '[id*="header" i]', 'nav'
+    ], true);
+  }
   
   // Check for announcement/top bar above header
-  var header = document.querySelector('header') || document.querySelector('[role="banner"]');
+  var header = preHeaderEl;
   var topBarHtml = '';
   if (header && header.previousElementSibling) {
     var prev = header.previousElementSibling;
@@ -456,7 +570,7 @@ const INLINE_STYLES_SCRIPT = `
   // Extract actual header background color from computed style
   var headerBgColor = '';
   var headerTextColor = '';
-  var headerEl = document.querySelector('header') || document.querySelector('[role="banner"]') || document.querySelector('nav');
+  var headerEl = preHeaderEl;
   if (headerEl) {
     var hcs = window.getComputedStyle(headerEl);
     headerBgColor = hcs.backgroundColor || '';
