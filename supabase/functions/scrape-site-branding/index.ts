@@ -1120,6 +1120,23 @@ function getHtmlAttr(tag: string, attr: string): string | undefined {
   return unquoted?.[1];
 }
 
+function extractImgSrcFromTag(tag: string): string | undefined {
+  const src = getHtmlAttr(tag, 'src');
+  if (!src?.startsWith('data:image/svg+xml')) return src;
+
+  // Some serializers emit SVG data URLs with unescaped quotes inside the
+  // src value, so a normal quoted-attribute regex stops at xmlns=". Recover
+  // by reading until the next real image attribute instead of the next quote.
+  const broad = tag.match(/\bsrc\s*=\s*["']?(data:image\/svg\+xml,[\s\S]*)/i);
+  if (!broad?.[1]) return src;
+
+  let value = broad[1];
+  const nextAttr = value.search(/["']?\s+(?:alt|class|style|width|height|loading|decoding|srcset|aria-[\w-]+|data-[\w-]+|id|role)\s*=/i);
+  if (nextAttr > 0) value = value.slice(0, nextAttr);
+  value = value.replace(/\s*\/?>\s*$/, '').trim();
+  return value || src;
+}
+
 /**
  * Extract the most likely logo from the captured header HTML.
  *
@@ -1179,7 +1196,7 @@ function extractLogoFromHeader(headerHtml: string, baseUrl: URL): string | null 
   let imgMatch: RegExpExecArray | null;
   while ((imgMatch = imgRegex.exec(headerHtml)) !== null) {
     const tag = imgMatch[0];
-    const srcAttr = getHtmlAttr(tag, 'src');
+    const srcAttr = extractImgSrcFromTag(tag);
     if (!srcAttr) continue;
     const rawSrc = decodeHtmlEntities(srcAttr);
     if (!rawSrc || rawSrc.startsWith('data:image/gif')) continue;
