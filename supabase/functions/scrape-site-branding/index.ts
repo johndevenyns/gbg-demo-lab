@@ -1074,6 +1074,11 @@ function scoreLogoCandidate(opts: {
   if (cls.includes('logo')) score += 30;
   if (alt.includes('home')) score += 5;
 
+  // Inline SVG data URLs are commonly used for header logos. Treat them as
+  // valid logo candidates even when the encoded URL itself doesn't include
+  // the word "logo" or end in ".svg".
+  if (src.startsWith('data:image/svg+xml')) score += 20;
+
   if (opts.insideHomeLink) score += 25;
 
   // SVG and small PNGs are typical logo formats
@@ -1105,6 +1110,31 @@ function decodeHtmlEntities(s: string): string {
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
     .replace(/&amp;/g, '&');
+}
+
+function getHtmlAttr(tag: string, attr: string): string | undefined {
+  const escaped = attr.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const quoted = tag.match(new RegExp(`\\b${escaped}\\s*=\\s*(["'])([\\s\\S]*?)\\1`, 'i'));
+  if (quoted?.[2] !== undefined) return quoted[2];
+  const unquoted = tag.match(new RegExp(`\\b${escaped}\\s*=\\s*([^\\s>]+)`, 'i'));
+  return unquoted?.[1];
+}
+
+function extractImgSrcFromTag(tag: string): string | undefined {
+  const src = getHtmlAttr(tag, 'src');
+  if (!src?.startsWith('data:image/svg+xml')) return src;
+
+  // Some serializers emit SVG data URLs with unescaped quotes inside the
+  // src value, so a normal quoted-attribute regex stops at xmlns=". Recover
+  // by reading until the next real image attribute instead of the next quote.
+  const broad = tag.match(/\bsrc\s*=\s*["']?(data:image\/svg\+xml,[\s\S]*)/i);
+  if (!broad?.[1]) return src;
+
+  let value = broad[1];
+  const nextAttr = value.search(/["']?\s+(?:alt|class|style|width|height|loading|decoding|srcset|aria-[\w-]+|data-[\w-]+|id|role)\s*=/i);
+  if (nextAttr > 0) value = value.slice(0, nextAttr);
+  value = value.replace(/\s*\/?>\s*$/, '').trim();
+  return value || src;
 }
 
 /**
@@ -1166,23 +1196,23 @@ function extractLogoFromHeader(headerHtml: string, baseUrl: URL): string | null 
   let imgMatch: RegExpExecArray | null;
   while ((imgMatch = imgRegex.exec(headerHtml)) !== null) {
     const tag = imgMatch[0];
-    const srcMatch = tag.match(/\bsrc=["']([^"']+)["']/i);
-    if (!srcMatch) continue;
-    const rawSrc = decodeHtmlEntities(srcMatch[1]);
+    const srcAttr = extractImgSrcFromTag(tag);
+    if (!srcAttr) continue;
+    const rawSrc = decodeHtmlEntities(srcAttr);
     if (!rawSrc || rawSrc.startsWith('data:image/gif')) continue;
-    const altMatch = tag.match(/\balt=["']([^"']*)["']/i);
-    const classMatch = tag.match(/\bclass=["']([^"']*)["']/i);
-    const widthMatch = tag.match(/\bwidth=["']?(\d+)/i);
-    const heightMatch = tag.match(/\bheight=["']?(\d+)/i);
+    const altAttr = getHtmlAttr(tag, 'alt');
+    const classAttr = getHtmlAttr(tag, 'class');
+    const widthAttr = getHtmlAttr(tag, 'width');
+    const heightAttr = getHtmlAttr(tag, 'height');
     const absSrc = makeAbsoluteUrl(rawSrc, baseUrl);
 
     const score = scoreLogoCandidate({
       src: absSrc,
-      alt: altMatch?.[1],
-      className: classMatch?.[1],
+      alt: altAttr,
+      className: classAttr,
       insideHomeLink: isInsideHomeLink(imgMatch.index),
-      width: widthMatch ? parseInt(widthMatch[1], 10) : undefined,
-      height: heightMatch ? parseInt(heightMatch[1], 10) : undefined,
+      width: widthAttr ? parseInt(widthAttr, 10) : undefined,
+      height: heightAttr ? parseInt(heightAttr, 10) : undefined,
     });
 
     if (score > 0 && (!best || score > best.score)) {

@@ -282,6 +282,11 @@ export function HtmlCaptureTab({ demo, url, onUrlChange, onApply, isConfigured, 
         mirrorHtmlCss: editedCss,
        };
 
+        if (scrapedData.logoUrl) {
+          updates.logoUrl = scrapedData.logoUrl;
+          updates.useUploadedLogo = false;
+        }
+
        // If we measured a real footer height on the source site, seed the
        // formStyle.footerHeight so the preview iframe shows the captured
        // footer at its natural size instead of clipping it to the default.

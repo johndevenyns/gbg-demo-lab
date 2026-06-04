@@ -370,6 +370,10 @@ interface SiteMirrorCardProps {
          if (r.extractedColors?.headerBgColor) updates.headerBgColor = r.extractedColors.headerBgColor;
          if (r.extractedColors?.headerTextColor) updates.headerTextColor = r.extractedColors.headerTextColor;
          if (r.extractedColors?.buttonColor) updates.buttonColor = r.extractedColors.buttonColor;
+          if (r.extractedColors?.logoUrl) {
+            updates.logoUrl = r.extractedColors.logoUrl;
+            updates.useUploadedLogo = false;
+          }
 
          onApplyBranding(updates, true);
          setLastRefinementScore(r.matchScore);
@@ -442,6 +446,7 @@ interface SiteMirrorCardProps {
      // Logo
      if (data.logoUrl) {
        updates.logoUrl = data.logoUrl;
+        updates.useUploadedLogo = false;
      }
 
      onApplyBranding(updates, true);
