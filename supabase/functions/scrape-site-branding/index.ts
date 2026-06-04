@@ -973,6 +973,13 @@ Deno.serve(async (req) => {
       console.log('Logo falling back to ogImage (may not be the actual site logo)');
     }
 
+    // If the captured header contains a fragile inline SVG data URL but we
+    // found a hosted logo (TaxAct-style pages), rewrite the header image too.
+    // Otherwise the preview can show a broken image even though logoUrl is OK.
+    if (logoUrl && !logoUrl.startsWith('data:') && /src\s*=\s*["']data:image\/svg\+xml/i.test(headerHtml)) {
+      headerHtml = replaceInlineSvgLogoInHeader(headerHtml, logoUrl, branding?.logoAlt || metadata.title || baseUrl.hostname);
+    }
+
     const colors = branding?.colors || {};
 
     console.log('Scrape successful. Inline method:', usedInlineMethod);
@@ -1426,6 +1433,15 @@ function extractLogoFromHeader(headerHtml: string, baseUrl: URL): string | null 
   }
 
   return null;
+}
+
+function replaceInlineSvgLogoInHeader(headerHtml: string, hostedLogoUrl: string, altText: string): string {
+  const safeAlt = String(altText || 'Logo').replace(/"/g, '&quot;');
+  const safeUrl = hostedLogoUrl.replace(/"/g, '%22');
+  return headerHtml.replace(
+    /<img\b[\s\S]*?src\s*=\s*["']data:image\/svg\+xml,[\s\S]*?(?:\/?>|(?=<\/a>))/i,
+    `<img alt="${safeAlt}" src="${safeUrl}" style="display:block;height:auto;max-height:48px;max-width:220px;width:auto;" />`
+  );
 }
 
 // ============== CSS EXTRACTION (fallback + form styles) ==============
