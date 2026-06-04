@@ -1016,7 +1016,17 @@ function convertRelativeUrls(html: string, baseUrl: URL): string {
     if (url.startsWith('#') || url.startsWith('javascript:')) return match;
     return `href="${makeAbsoluteUrl(url, baseUrl)}"`;
   });
-  html = html.replace(/url\(["']?([^"')]+)["']?\)/gi, (_match, url) => `url("${makeAbsoluteUrl(url, baseUrl)}")`);
+  html = html.replace(/url\(["']?([^"')]+)["']?\)/gi, (match, url) => {
+    const rawUrl = String(url || '').trim();
+    const lower = rawUrl.toLowerCase();
+    // Do not rewrite SVG fragment references embedded inside inline SVG data
+    // URLs, e.g. TaxAct's mask="url(%23a)". Rewriting those to absolute
+    // URLs inserts raw quotes into the data URL and breaks the logo image.
+    if (!rawUrl || lower.startsWith('data:') || lower.startsWith('blob:') || rawUrl.startsWith('#') || lower.startsWith('%23')) {
+      return match;
+    }
+    return `url("${makeAbsoluteUrl(rawUrl, baseUrl)}")`;
+  });
   return html;
 }
 
@@ -1112,6 +1122,31 @@ function decodeHtmlEntities(s: string): string {
     .replace(/&amp;/g, '&');
 }
 
+function normalizeImageSrcAttr(src: string): string {
+  if (!src) return src;
+  if (!src.toLowerCase().startsWith('data:image/svg+xml')) {
+    return decodeHtmlEntities(src);
+  }
+
+  const encodeEntityChar = (char: string) =>
+    Array.from(new TextEncoder().encode(char))
+      .map((byte) => `%${byte.toString(16).toUpperCase().padStart(2, '0')}`)
+      .join('');
+
+  // Data SVGs scraped from HTML often contain entity-encoded quotes in the
+  // URL payload (`&#39;`). If we decode them to raw quotes and then store the
+  // value in HTML again, the attribute can break. Percent-encode entities
+  // instead so the URL stays valid for both <img src> and string previews.
+  return src
+    .replace(/&#(\d+);/g, (_, n) => encodeEntityChar(String.fromCharCode(parseInt(n, 10))))
+    .replace(/&#x([0-9a-fA-F]+);/g, (_, h) => encodeEntityChar(String.fromCharCode(parseInt(h, 16))))
+    .replace(/&quot;/g, '%22')
+    .replace(/&apos;/g, '%27')
+    .replace(/&lt;/g, '%3C')
+    .replace(/&gt;/g, '%3E')
+    .replace(/&amp;/g, '%26');
+}
+
 function getHtmlAttr(tag: string, attr: string): string | undefined {
   const escaped = attr.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const quoted = tag.match(new RegExp(`\\b${escaped}\\s*=\\s*(["'])([\\s\\S]*?)\\1`, 'i'));
@@ -1198,7 +1233,7 @@ function extractLogoFromHeader(headerHtml: string, baseUrl: URL): string | null 
     const tag = imgMatch[0];
     const srcAttr = extractImgSrcFromTag(tag);
     if (!srcAttr) continue;
-    const rawSrc = decodeHtmlEntities(srcAttr);
+    const rawSrc = normalizeImageSrcAttr(srcAttr);
     if (!rawSrc || rawSrc.startsWith('data:image/gif')) continue;
     const altAttr = getHtmlAttr(tag, 'alt');
     const classAttr = getHtmlAttr(tag, 'class');
