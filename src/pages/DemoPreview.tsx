@@ -73,6 +73,18 @@ function fitIframeToContent(iframe: HTMLIFrameElement, opts: { minHeight?: numbe
   window.setTimeout(measureAndSet, 500);
 }
 
+function repairHeaderLogoHtml(headerHtml: string, logoUrl?: string, customerName?: string) {
+  if (!headerHtml || !logoUrl || logoUrl.startsWith('data:')) return headerHtml;
+  if (!/src\s*=\s*["']data:image\/svg\+xml/i.test(headerHtml)) return headerHtml;
+
+  const safeAlt = (customerName || 'Logo').replace(/"/g, '&quot;');
+  const safeLogoUrl = logoUrl.replace(/"/g, '%22');
+  return headerHtml.replace(
+    /<img\b[\s\S]*?src\s*=\s*["']data:image\/svg\+xml,[\s\S]*?(?:\/?>|(?=<\/a>))/i,
+    `<img alt="${safeAlt}" src="${safeLogoUrl}" style="display:block;height:auto;max-height:48px;max-width:220px;width:auto;" />`
+  );
+}
+
 export default function DemoPreview() {
   const { slug } = useParams<{ slug: string }>();
   const { isAdmin, isLoading: authLoading } = useAuth();
@@ -272,7 +284,7 @@ export default function DemoPreview() {
       headerHtml = demo.mirrorScreenshotHeaderHtml || '';
       footerHtml = demo.mirrorScreenshotFooterHtml || '';
     } else {
-      headerHtml = demo.mirrorHtmlHeaderHtml || demo.scrapedHeaderHtml || '';
+      headerHtml = repairHeaderLogoHtml(demo.mirrorHtmlHeaderHtml || demo.scrapedHeaderHtml || '', demo.logoUrl, demo.customerName);
       footerHtml = demo.mirrorHtmlFooterHtml || demo.scrapedFooterHtml || '';
       cssContent = demo.mirrorHtmlCss || demo.scrapedCss || '';
     }
@@ -591,7 +603,7 @@ export default function DemoPreview() {
                 ${baseHref}
                 <style>
                   * { box-sizing: border-box; }
-                  body { margin: 0; padding: 0; overflow: hidden; width: 100%; }
+                  body { margin: 0; padding: 0; overflow: hidden; width: 100%; background: transparent; }
                   html { overflow: hidden; }
                   a { pointer-events: none; }
                   body > header, body > [class*="header"], body > nav, body > div {
@@ -701,7 +713,7 @@ export default function DemoPreview() {
             </html>
           `}
           className="w-full block"
-          style={{ height: 'auto', minHeight: isScreenshotMode ? 0 : '60px', display: 'block', border: debugBorder }}
+          style={{ height: '1px', minHeight: 0, display: 'block', border: debugBorder }}
           title="Site header"
           sandbox="allow-same-origin allow-scripts"
           onLoad={(e) => {
@@ -709,7 +721,7 @@ export default function DemoPreview() {
               // In screenshot mode, the iframe height must match the screenshot image height exactly.
               fitIframeToContent(e.currentTarget, { minHeight: 0 });
             } else {
-              enhanceHeaderPreviewIframe(e.currentTarget, 80);
+              enhanceHeaderPreviewIframe(e.currentTarget, 1);
             }
           }}
         />
@@ -742,8 +754,8 @@ export default function DemoPreview() {
         className="flex-1 flex flex-col"
         style={{
           backgroundColor: previewDocument?.formStyle?.contentAreaBgColor || 'transparent',
-          paddingTop: `${previewDocument?.formStyle?.contentAreaPaddingY ?? 16}px`,
-          paddingBottom: `${previewDocument?.formStyle?.contentAreaPaddingY ?? 16}px`,
+          paddingTop: `${previewDocument?.formStyle?.contentAreaPaddingY ?? 0}px`,
+          paddingBottom: `${previewDocument?.formStyle?.contentAreaPaddingY ?? 0}px`,
           minHeight: `${previewDocument?.formStyle?.contentAreaMinHeight ?? 400}px`,
           justifyContent: ({ start: 'flex-start', center: 'center', end: 'flex-end' } as const)[previewDocument?.formStyle?.contentAreaJustify || 'start'],
           ...(debugBorderMain ? { border: debugBorderMain } : {}),
