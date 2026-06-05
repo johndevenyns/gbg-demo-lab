@@ -7,12 +7,20 @@ const corsHeaders = {
 };
 
 const BASE_URL = 'https://ditto.gbg.com';
-const LEGACY_BASE_URL = 'https://paulandcarolynn.com';
-
-const normalizeUrl = (url?: string) =>
-  typeof url === 'string' && url.length > 0
-    ? url.replace(LEGACY_BASE_URL, BASE_URL)
-    : url;
+// Legacy host still emitted by older deployments of the verification API.
+// Per the IVS API reference (2026-05-10), the canonical host is ditto.gbg.com
+// and app.art-of-sales-engineering.com continues to be accepted during the
+// transition. Rewrite any legacy host we receive in URLs to the canonical one.
+const LEGACY_HOSTS = [
+  'https://app.art-of-sales-engineering.com',
+  'https://paulandcarolynn.com',
+];
+const normalizeUrl = (url?: string) => {
+  if (typeof url !== 'string' || url.length === 0) return url;
+  let out = url;
+  for (const legacy of LEGACY_HOSTS) out = out.split(legacy).join(BASE_URL);
+  return out;
+};
 
 /** Redact sensitive fields before logging. */
 const SENSITIVE_KEYS = new Set([
@@ -80,70 +88,47 @@ function buildPayload(req: CreateSessionRequest, referenceId: string) {
   if (fd.zipCode) addressParts.push(fd.zipCode);
   const combinedAddress = addressParts.join(', ');
 
-  // Common fields shared by all verification types
+  // Per the IVS API reference, every verification type uses the same
+  // top-level envelope. `customerData` is required for dataBio/dataOnly,
+  // optional for docBio. Unknown top-level keys are silently dropped.
+  const customerData: Record<string, string> = {};
+  if (firstName) customerData.firstName = firstName;
+  if (lastName) customerData.lastName = lastName;
+  if (fd.dateOfBirth) customerData.dateOfBirth = fd.dateOfBirth; // YYYY-MM-DD
+  if (combinedAddress) customerData.address = combinedAddress;
+  if (fd.phone) customerData.phone = fd.phone.replace(/\D/g, '');
+  if (fd.email) customerData.email = fd.email.trim();
+  const dlNumber = fd.dlNumber || fd.documentNumber;
+  if (dlNumber) customerData.dlNumber = dlNumber;
+  if (fd.dlState) customerData.dlState = fd.dlState;
+  if (fd.ssn4) customerData.ssn4 = fd.ssn4;
+
   const base: Record<string, unknown> = {
     verificationType: req.verificationType,
-    firstName,
-    lastName,
     returnUrl: req.returnUrl || '',
+    customerName:
+      req.customerName ||
+      [firstName, lastName].filter(Boolean).join(' ') ||
+      'Verification Demo',
     includeQr: req.includeQr ?? true,
     referenceId,
-    environment: 'us',
-    // Branding — flat at top level
-    headerTextColor: req.branding?.headerTextColor || '',
-    headerBgColor: req.branding?.headerBgColor || '',
-    buttonColor: req.branding?.buttonColor || '',
   };
 
   if (req.resourceId) base.resourceId = req.resourceId;
   if (req.logoUrl) base.logoUrl = req.logoUrl;
 
-  if (req.verificationType === 'dataBio') {
-    // DataBio: flat fields + options object
-    base.customerName = `${firstName} ${lastName}`;
-    if (fd.email) base.email = fd.email.trim();
-    if (fd.ssn4) base.ssn4 = fd.ssn4;
-    if (fd.phone) base.phone = fd.phone.replace(/\D/g, '');
-    if (fd.dateOfBirth) base.birthday = fd.dateOfBirth;
-    if (combinedAddress) base.address = combinedAddress;
-    if (fd.dlNumber || fd.documentNumber) base.dlNumber = fd.dlNumber || fd.documentNumber;
-    if (fd.dlState || fd.state) base.dlState = fd.dlState || fd.state;
-
-    base.options = {
-      biometrics: { enabled: true, faceCount: 1 },
-      documents: { enabled: true, count: 2 },
-      previousAddress: { enabled: false },
-    };
-  } else {
-    // DocBio / DataOnly: nested customerData
-    base.customerName = req.customerName || 'Verification Demo';
-
-    const customerData: Record<string, string> = {};
-    const fieldMap: Record<string, string> = {
-      firstName: 'firstName', first_name: 'firstName',
-      lastName: 'lastName', last_name: 'lastName',
-      middleName: 'middleName',
-      email: 'email', phone: 'phone', dateOfBirth: 'dateOfBirth',
-      streetAddress: 'address', city: 'city', state: 'state',
-      zipCode: 'postalCode',
-      ssn4: 'ssn', ssn: 'ssn', documentNumber: 'documentNumber', documentType: 'documentType',
-      nationality: 'nationality', gender: 'gender',
-    };
-
-    for (const [field, apiKey] of Object.entries(fieldMap)) {
-      if (fd[field]) customerData[apiKey] = fd[field].trim();
-    }
-    if (combinedAddress) customerData.address = combinedAddress;
-
+  // customerData is required for dataBio/dataOnly and optional for docBio.
+  if (Object.keys(customerData).length > 0) {
     base.customerData = customerData;
+  }
 
-    if (req.branding) {
-      base.branding = {
-        headerTextColor: req.branding.headerTextColor,
-        headerBgColor: req.branding.headerBgColor,
-        buttonColor: req.branding.buttonColor,
-      };
-    }
+  // Branding is nested-only per the current spec (flat fields are deprecated).
+  if (req.branding) {
+    const branding: Record<string, string> = {};
+    if (req.branding.headerTextColor) branding.headerTextColor = req.branding.headerTextColor;
+    if (req.branding.headerBgColor) branding.headerBgColor = req.branding.headerBgColor;
+    if (req.branding.buttonColor) branding.buttonColor = req.branding.buttonColor;
+    if (Object.keys(branding).length > 0) base.branding = branding;
   }
 
   return base;
