@@ -151,7 +151,7 @@ const demoToRow = (demo: Partial<DemoEnvironment>) => {
     };
   }
   if (demo.storedTestData !== undefined) row.stored_test_data = demo.storedTestData;
-  if (demo.landingHeading !== undefined) row.landing_heading = demo.landingHeading;
+  if (demo.landingHeading !== undefined) row.landing_heading = demo.landingHeading || null;
   if (demo.isActive !== undefined) row.is_active = demo.isActive;
   return row;
 };
