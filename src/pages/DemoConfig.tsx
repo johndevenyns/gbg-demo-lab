@@ -108,7 +108,7 @@ function SiteSettingsSection({ demo, onUpdate, portalTypes }: { demo: DemoEnviro
             <p className="text-xs text-muted-foreground">Heading shown above use case tabs (leave empty for global default)</p>
             <Input
               value={demo.landingHeading || ''}
-              onChange={(e) => onUpdate({ landingHeading: e.target.value || undefined })}
+              onChange={(e) => onUpdate({ landingHeading: e.target.value })}
               placeholder="Access Your Account"
             />
           </div>
