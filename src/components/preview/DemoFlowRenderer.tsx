@@ -91,6 +91,10 @@ interface DemoFlowRendererProps {
   onSubmissionLog?: (data: SubmissionLogData) => void;
   onComplete?: (success: boolean, referenceId?: string) => void;
   onLoginSuccess?: (userData: { email: string; profileData?: Record<string, unknown> }) => void;
+  // Mirror chrome for custom result-page mode
+  mirrorHeaderHtml?: string;
+  mirrorFooterHtml?: string;
+  mirrorCss?: string;
 }
 
 // QR Code component:
