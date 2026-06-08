@@ -454,11 +454,31 @@ export function ResultPagesConfig({
           </TabsList>
 
           <TabsContent value="success">
-            {renderConfigFields(successConfig, onUpdateSuccessPage, 'success')}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div>{renderConfigFields(successConfig, onUpdateSuccessPage, 'success')}</div>
+              <LivePreview
+                config={{ ...successConfig, referenceId: successConfig.referenceId || 'PREVIEW-1234' }}
+                formStyle={formStyle}
+                buttonColor={buttonColor}
+                mirrorHeaderHtml={mirrorHeaderHtml}
+                mirrorFooterHtml={mirrorFooterHtml}
+                mirrorCss={mirrorCss}
+              />
+            </div>
           </TabsContent>
 
           <TabsContent value="failure">
-            {renderConfigFields(failureConfig, onUpdateFailurePage, 'failure')}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div>{renderConfigFields(failureConfig, onUpdateFailurePage, 'failure')}</div>
+              <LivePreview
+                config={{ ...failureConfig, referenceId: failureConfig.referenceId || 'PREVIEW-1234' }}
+                formStyle={formStyle}
+                buttonColor={buttonColor}
+                mirrorHeaderHtml={mirrorHeaderHtml}
+                mirrorFooterHtml={mirrorFooterHtml}
+                mirrorCss={mirrorCss}
+              />
+            </div>
           </TabsContent>
         </Tabs>
 
