@@ -9,10 +9,50 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CheckCircle2, XCircle, ExternalLink, Settings2, Paintbrush, Sparkles, Upload, Loader2 } from 'lucide-react';
 import { ResultPageConfig, ResultButtonAction, ResultPageMode, DEFAULT_SUCCESS_CONFIG, DEFAULT_FAILURE_CONFIG } from '@/components/preview/ResultPage';
+import { ResultPage } from '@/components/preview/ResultPage';
+import type { FormStyleConfig } from '@/types/formStyle';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import type { ResultPageScreenshotConfig } from '@/components/preview/ResultPage';
+
+function LivePreview({
+  config,
+  formStyle,
+  buttonColor,
+  mirrorHeaderHtml,
+  mirrorFooterHtml,
+  mirrorCss,
+}: {
+  config: ResultPageConfig;
+  formStyle?: FormStyleConfig;
+  buttonColor?: string;
+  mirrorHeaderHtml?: string;
+  mirrorFooterHtml?: string;
+  mirrorCss?: string;
+}) {
+  return (
+    <div className="lg:sticky lg:top-4 space-y-2">
+      <div className="flex items-center justify-between">
+        <Label className="text-xs uppercase tracking-wide text-muted-foreground">Live Preview</Label>
+        <span className="text-xs text-muted-foreground">{config.pageMode || 'default'}</span>
+      </div>
+      <div className="border rounded-md overflow-hidden bg-muted/30" style={{ height: 600 }}>
+        <div className="w-full h-full overflow-auto">
+          <ResultPage
+            config={config}
+            formStyle={formStyle}
+            buttonColor={buttonColor}
+            mirrorHeaderHtml={mirrorHeaderHtml}
+            mirrorFooterHtml={mirrorFooterHtml}
+            mirrorCss={mirrorCss}
+            onButtonClick={() => {}}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function ScreenshotSlotEditor({
   label,
@@ -100,6 +140,10 @@ interface ResultPagesConfigProps {
   failurePageConfig?: ResultPageConfig;
   buttonColor?: string;
   demoId?: string;
+  formStyle?: FormStyleConfig;
+  mirrorHeaderHtml?: string;
+  mirrorFooterHtml?: string;
+  mirrorCss?: string;
   onUpdateApprovedUrl: (url: string) => void;
   onUpdateRejectedUrl: (url: string) => void;
   onUpdateReturnUrl: (url: string) => void;
@@ -115,6 +159,10 @@ export function ResultPagesConfig({
   failurePageConfig,
   buttonColor,
   demoId,
+  formStyle,
+  mirrorHeaderHtml,
+  mirrorFooterHtml,
+  mirrorCss,
   onUpdateApprovedUrl,
   onUpdateRejectedUrl,
   onUpdateReturnUrl,
@@ -444,11 +492,31 @@ export function ResultPagesConfig({
           </TabsList>
 
           <TabsContent value="success">
-            {renderConfigFields(successConfig, onUpdateSuccessPage, 'success')}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div>{renderConfigFields(successConfig, onUpdateSuccessPage, 'success')}</div>
+              <LivePreview
+                config={{ ...successConfig, referenceId: successConfig.referenceId || 'PREVIEW-1234' }}
+                formStyle={formStyle}
+                buttonColor={buttonColor}
+                mirrorHeaderHtml={mirrorHeaderHtml}
+                mirrorFooterHtml={mirrorFooterHtml}
+                mirrorCss={mirrorCss}
+              />
+            </div>
           </TabsContent>
 
           <TabsContent value="failure">
-            {renderConfigFields(failureConfig, onUpdateFailurePage, 'failure')}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div>{renderConfigFields(failureConfig, onUpdateFailurePage, 'failure')}</div>
+              <LivePreview
+                config={{ ...failureConfig, referenceId: failureConfig.referenceId || 'PREVIEW-1234' }}
+                formStyle={formStyle}
+                buttonColor={buttonColor}
+                mirrorHeaderHtml={mirrorHeaderHtml}
+                mirrorFooterHtml={mirrorFooterHtml}
+                mirrorCss={mirrorCss}
+              />
+            </div>
           </TabsContent>
         </Tabs>
 
