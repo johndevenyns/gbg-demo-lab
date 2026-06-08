@@ -12,6 +12,85 @@ import { ResultPageConfig, ResultButtonAction, ResultPageMode, DEFAULT_SUCCESS_C
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import type { ResultPageScreenshotConfig } from '@/components/preview/ResultPage';
+
+function ScreenshotSlotEditor({
+  label,
+  value,
+  onChange,
+  upload,
+}: {
+  label: string;
+  value?: ResultPageScreenshotConfig;
+  onChange: (next: ResultPageScreenshotConfig | undefined) => void;
+  upload: (file: File) => Promise<string | null>;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState(false);
+  const cur = value || {};
+
+  const handlePick = async (file: File) => {
+    setBusy(true);
+    const url = await upload(file);
+    setBusy(false);
+    if (url) onChange({ ...cur, url });
+  };
+
+  return (
+    <div className="border rounded-md p-3 space-y-2">
+      <div className="flex items-center justify-between">
+        <Label className="font-medium">{label} image</Label>
+        {cur.url && (
+          <Button type="button" variant="ghost" size="sm" onClick={() => onChange(undefined)}>
+            Remove
+          </Button>
+        )}
+      </div>
+      {cur.url ? (
+        <img src={cur.url} alt={`${label} preview`} className="w-full max-h-32 object-contain bg-muted rounded" />
+      ) : (
+        <div className="h-20 bg-muted rounded flex items-center justify-center text-xs text-muted-foreground">No image</div>
+      )}
+      <div className="flex gap-2">
+        <Button type="button" variant="outline" size="sm" onClick={() => inputRef.current?.click()} disabled={busy}>
+          {busy ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Upload className="w-4 h-4 mr-1" />}
+          {cur.url ? 'Replace' : 'Upload'}
+        </Button>
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) handlePick(f);
+            e.target.value = '';
+          }}
+        />
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <Label className="text-xs">Height (px)</Label>
+          <Input
+            type="number"
+            min={40}
+            value={cur.height ?? ''}
+            placeholder={label === 'Main' ? '400' : '120'}
+            onChange={(e) => onChange({ ...cur, height: e.target.value ? parseInt(e.target.value, 10) : undefined })}
+          />
+        </div>
+        <div>
+          <Label className="text-xs">Background</Label>
+          <Input
+            type="color"
+            value={cur.bgColor || '#ffffff'}
+            onChange={(e) => onChange({ ...cur, bgColor: e.target.value })}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 interface ResultPagesConfigProps {
   approvedUrl: string;
