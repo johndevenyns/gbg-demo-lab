@@ -128,6 +128,51 @@ function ScreenshotSlotEditor({
           />
         </div>
       </div>
+      <div className="grid grid-cols-3 gap-2">
+        <div>
+          <Label className="text-xs">Display</Label>
+          <Select
+            value={cur.fitMode || 'contain'}
+            onValueChange={(v) => onChange({ ...cur, fitMode: v as NonNullable<ResultPageScreenshotConfig['fitMode']> })}
+          >
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="contain">Fit (actual aspect)</SelectItem>
+              <SelectItem value="cover">Cover (fill, may crop)</SelectItem>
+              <SelectItem value="stretch">Stretch (fill, distort)</SelectItem>
+              <SelectItem value="actual">Actual size</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label className="text-xs">Align X</Label>
+          <Select
+            value={cur.positionX || 'center'}
+            onValueChange={(v) => onChange({ ...cur, positionX: v as NonNullable<ResultPageScreenshotConfig['positionX']> })}
+          >
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="left">Left</SelectItem>
+              <SelectItem value="center">Center</SelectItem>
+              <SelectItem value="right">Right</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label className="text-xs">Align Y</Label>
+          <Select
+            value={cur.positionY || 'center'}
+            onValueChange={(v) => onChange({ ...cur, positionY: v as NonNullable<ResultPageScreenshotConfig['positionY']> })}
+          >
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="top">Top</SelectItem>
+              <SelectItem value="center">Center</SelectItem>
+              <SelectItem value="bottom">Bottom</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
     </div>
   );
 }
