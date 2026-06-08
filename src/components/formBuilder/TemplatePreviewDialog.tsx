@@ -1,7 +1,6 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { FormStep } from '@/types/demo';
 import { FormStyleConfig } from '@/types/formStyle';
 import { Check } from 'lucide-react';
@@ -39,7 +38,7 @@ export function TemplatePreviewDialog({ open, onOpenChange, template, onApply }:
           )}
         </DialogHeader>
 
-        <ScrollArea className="flex-1 pr-4 -mr-4">
+        <div className="flex-1 overflow-y-auto pr-2">
           <div className="space-y-4">
             {template.steps.map((step, idx) => (
               <div key={step.id || idx} className="rounded-lg border border-border p-4 bg-card">
@@ -72,7 +71,7 @@ export function TemplatePreviewDialog({ open, onOpenChange, template, onApply }:
               </div>
             ))}
           </div>
-        </ScrollArea>
+        </div>
 
         <DialogFooter className="gap-2 sm:gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
