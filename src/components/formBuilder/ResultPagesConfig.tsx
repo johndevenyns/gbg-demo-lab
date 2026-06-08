@@ -16,6 +16,44 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import type { ResultPageScreenshotConfig } from '@/components/preview/ResultPage';
 
+function LivePreview({
+  config,
+  formStyle,
+  buttonColor,
+  mirrorHeaderHtml,
+  mirrorFooterHtml,
+  mirrorCss,
+}: {
+  config: ResultPageConfig;
+  formStyle?: FormStyleConfig;
+  buttonColor?: string;
+  mirrorHeaderHtml?: string;
+  mirrorFooterHtml?: string;
+  mirrorCss?: string;
+}) {
+  return (
+    <div className="lg:sticky lg:top-4 space-y-2">
+      <div className="flex items-center justify-between">
+        <Label className="text-xs uppercase tracking-wide text-muted-foreground">Live Preview</Label>
+        <span className="text-xs text-muted-foreground">{config.pageMode || 'default'}</span>
+      </div>
+      <div className="border rounded-md overflow-hidden bg-muted/30" style={{ height: 600 }}>
+        <div className="w-full h-full overflow-auto">
+          <ResultPage
+            config={config}
+            formStyle={formStyle}
+            buttonColor={buttonColor}
+            mirrorHeaderHtml={mirrorHeaderHtml}
+            mirrorFooterHtml={mirrorFooterHtml}
+            mirrorCss={mirrorCss}
+            onButtonClick={() => {}}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ScreenshotSlotEditor({
   label,
   value,
