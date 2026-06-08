@@ -689,7 +689,10 @@ export function DemoFlowRenderer({
   onNavigateToPortal,
   onSubmissionLog,
   onComplete,
-  onLoginSuccess
+  onLoginSuccess,
+  mirrorHeaderHtml,
+  mirrorFooterHtml,
+  mirrorCss,
 }: DemoFlowRendererProps) {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [formData, setFormData] = useState<Record<string, string>>(initialFormData || {});
