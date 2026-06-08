@@ -12,6 +12,13 @@ import {
 } from '@/lib/formStyleUtils';
 
 export type ResultButtonAction = 'url' | 'portal';
+export type ResultPageMode = 'default' | 'mirror' | 'custom_html' | 'screenshots' | 'ai_generated';
+
+export interface ResultPageScreenshotConfig {
+  url?: string;
+  height?: number; // px
+  bgColor?: string;
+}
 
 export interface ResultPageConfig {
   type: 'success' | 'failure';
@@ -25,6 +32,25 @@ export interface ResultPageConfig {
   showReferenceId?: boolean;
   referenceId?: string;
   customContent?: string;
+
+  // === New: page mode + per-mode config ===
+  pageMode?: ResultPageMode;
+
+  // Mirror mode: HTML body that goes between scraped header & footer
+  mirrorMainHtml?: string;
+
+  // Custom HTML mode: full HTML body content (sanitized)
+  customHtml?: string;
+
+  // Screenshots mode
+  screenshotHeader?: ResultPageScreenshotConfig;
+  screenshotMain?: ResultPageScreenshotConfig;
+  screenshotFooter?: ResultPageScreenshotConfig;
+
+  // AI generated mode
+  aiPrompt?: string;
+  aiGeneratedHtml?: string;
+  aiGeneratedAt?: string;
 }
 
 interface ResultPageProps {
@@ -32,11 +58,56 @@ interface ResultPageProps {
   formStyle?: FormStyleConfig;
   buttonColor?: string;
   onButtonClick?: () => void;
+  // Mirror chrome (passed by renderer when mode === 'mirror')
+  mirrorHeaderHtml?: string;
+  mirrorFooterHtml?: string;
+  mirrorCss?: string;
 }
 
-export function ResultPage({ config, formStyle, buttonColor, onButtonClick }: ResultPageProps) {
+const SANITIZE_OPTS = {
+  ALLOWED_TAGS: ['p','br','strong','em','b','i','u','a','ul','ol','li','h1','h2','h3','h4','h5','h6','span','div','section','article','header','footer','main','img','figure','figcaption','blockquote','hr','small','table','thead','tbody','tr','td','th','button','svg','path','g','circle','rect','line','polyline','polygon','style'],
+  ALLOWED_ATTR: ['href','target','rel','class','style','src','alt','width','height','viewBox','fill','stroke','stroke-width','d','x','y','x1','y1','x2','y2','points','cx','cy','r','transform','aria-label','role','title'],
+  ADD_TAGS: ['style'],
+  FORBID_TAGS: ['script','iframe','object','embed'],
+};
+
+function buildMirrorIframeSrc(html: string, css: string): string {
+  return `<!doctype html><html><head><meta charset="utf-8"><base target="_blank"><style>${css || ''}\nhtml,body{margin:0;padding:0;overflow:hidden}</style></head><body>${html || ''}</body></html>`;
+}
+
+function MirrorChrome({ html, css, minHeight }: { html?: string; css?: string; minHeight: number }) {
+  if (!html) return null;
+  return (
+    <iframe
+      title="result-mirror-chrome"
+      srcDoc={buildMirrorIframeSrc(html, css || '')}
+      sandbox="allow-same-origin"
+      style={{ width: '100%', border: 'none', display: 'block', minHeight, height: minHeight }}
+    />
+  );
+}
+
+function ScreenshotBlock({ cfg, fallbackBg }: { cfg?: ResultPageScreenshotConfig; fallbackBg?: string }) {
+  if (!cfg?.url) return null;
+  return (
+    <div
+      style={{
+        width: '100%',
+        height: cfg.height || 120,
+        backgroundColor: cfg.bgColor || fallbackBg || '#ffffff',
+        backgroundImage: `url(${cfg.url})`,
+        backgroundSize: 'contain',
+        backgroundRepeat: 'no-repeat',
+        backgroundPosition: 'center',
+      }}
+    />
+  );
+}
+
+export function ResultPage({ config, formStyle, buttonColor, onButtonClick, mirrorHeaderHtml, mirrorFooterHtml, mirrorCss }: ResultPageProps) {
   const style = formStyle || DEFAULT_FORM_STYLE;
   const isSuccess = config.type === 'success';
+  const mode: ResultPageMode = config.pageMode || 'default';
   
   // Get the computed button color - prefer explicit buttonColor, then style's focus color as brand
   const computedButtonColor = buttonColor || style.inputFocusBorderColor || '#3b82f6';
@@ -58,6 +129,86 @@ export function ResultPage({ config, formStyle, buttonColor, onButtonClick }: Re
       window.location.href = config.buttonUrl;
     }
   };
+
+  // ===== AI generated or Fully custom HTML modes =====
+  if (mode === 'ai_generated' || mode === 'custom_html') {
+    const html = mode === 'ai_generated' ? config.aiGeneratedHtml : config.customHtml;
+    if (html && html.trim().length > 0) {
+      return (
+        <div
+          className="min-h-full w-full"
+          style={{ backgroundColor: style.contentAreaBgColor || '#ffffff' }}
+          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(html, SANITIZE_OPTS) }}
+        />
+      );
+    }
+    // fall through to default if html missing
+  }
+
+  // ===== Screenshots mode =====
+  if (mode === 'screenshots') {
+    const anyImage = config.screenshotHeader?.url || config.screenshotMain?.url || config.screenshotFooter?.url;
+    if (anyImage) {
+      return (
+        <div
+          className="min-h-full w-full flex flex-col"
+          style={{ backgroundColor: style.contentAreaBgColor || '#ffffff' }}
+        >
+          <ScreenshotBlock cfg={config.screenshotHeader} fallbackBg={style.formBgColor} />
+          <ScreenshotBlock cfg={config.screenshotMain} fallbackBg={style.formBgColor} />
+          <ScreenshotBlock cfg={config.screenshotFooter} fallbackBg={style.formBgColor} />
+          {config.buttonText && (
+            <div className="flex justify-center py-6">
+              <Button
+                onClick={handleButtonClick}
+                className="min-w-[200px]"
+                style={{ backgroundColor: computedButtonColor, color: '#ffffff' }}
+              >
+                {config.buttonText}
+                {config.buttonAction === 'portal' ? <LogIn className="w-4 h-4 ml-2" /> : <ArrowRight className="w-4 h-4 ml-2" />}
+              </Button>
+            </div>
+          )}
+        </div>
+      );
+    }
+    // fall through if no images
+  }
+
+  // ===== Mirror site layout mode =====
+  if (mode === 'mirror' && (mirrorHeaderHtml || mirrorFooterHtml || config.mirrorMainHtml)) {
+    const headerH = style.headerHeight || 120;
+    const footerH = style.footerHeight || 160;
+    return (
+      <div className="min-h-full w-full flex flex-col" style={{ backgroundColor: style.contentAreaBgColor || '#ffffff' }}>
+        <MirrorChrome html={mirrorHeaderHtml} css={mirrorCss} minHeight={headerH} />
+        <div
+          className="flex-1 px-4 py-8"
+          style={{ backgroundColor: style.contentAreaBgColor || '#ffffff' }}
+          dangerouslySetInnerHTML={{
+            __html: DOMPurify.sanitize(
+              config.mirrorMainHtml ||
+                `<div style="max-width:640px;margin:0 auto;text-align:center;font-family:${style.fontFamily || 'inherit'};"><h1 style="font-size:28px;margin:0 0 12px;">${config.title || ''}</h1>${config.subtitle ? `<p style=\"font-size:18px;color:#6b7280;margin:0 0 16px;\">${config.subtitle}</p>` : ''}${config.message ? `<p style=\"font-size:16px;color:#374151;\">${config.message}</p>` : ''}</div>`,
+              SANITIZE_OPTS,
+            ),
+          }}
+        />
+        {config.buttonText && (
+          <div className="flex justify-center pb-6">
+            <Button
+              onClick={handleButtonClick}
+              className="min-w-[200px]"
+              style={{ backgroundColor: computedButtonColor, color: '#ffffff' }}
+            >
+              {config.buttonText}
+              {config.buttonAction === 'portal' ? <LogIn className="w-4 h-4 ml-2" /> : <ArrowRight className="w-4 h-4 ml-2" />}
+            </Button>
+          </div>
+        )}
+        <MirrorChrome html={mirrorFooterHtml} css={mirrorCss} minHeight={footerH} />
+      </div>
+    );
+  }
 
   // Container styles matching form styling
   const containerStyle: React.CSSProperties = {

@@ -376,6 +376,21 @@ export default function DemoPreview() {
       onNavigateToPortal={handleNavigateToPortal}
       onComplete={handleFlowComplete}
       onLoginSuccess={handleLoginSuccess}
+      mirrorHeaderHtml={
+        demo.mirrorActiveMethod === 'screenshot'
+          ? demo.mirrorScreenshotHeaderHtml
+          : demo.mirrorHtmlHeaderHtml || demo.scrapedHeaderHtml
+      }
+      mirrorFooterHtml={
+        demo.mirrorActiveMethod === 'screenshot'
+          ? demo.mirrorScreenshotFooterHtml
+          : demo.mirrorHtmlFooterHtml || demo.scrapedFooterHtml
+      }
+      mirrorCss={
+        demo.mirrorActiveMethod === 'screenshot'
+          ? demo.mirrorScreenshotCss
+          : demo.mirrorHtmlCss || demo.scrapedCss
+      }
     />
   );
 

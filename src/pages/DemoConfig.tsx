@@ -31,16 +31,18 @@ import { SaveAsNewDemoDialog } from "@/components/admin/SaveAsNewDemoDialog";
 import { SaveAsIndustryDialog } from "@/components/admin/SaveAsIndustryDialog";
 import { ArchiveDemoDialog } from "@/components/admin/ArchiveDemoDialog";
 import { useDemoVerificationApiKey, useSaveDemoVerificationApiKey } from "@/hooks/useDemoVerificationApiKey";
-import { Key } from "lucide-react";
+import { Key, CheckCircle2 } from "lucide-react";
+import { ResultPagesConfig } from "@/components/formBuilder/ResultPagesConfig";
 
 // Navigation sections
-type ConfigSection = 'settings' | 'mirror' | 'branding' | 'use-cases' | 'users';
+type ConfigSection = 'settings' | 'mirror' | 'branding' | 'use-cases' | 'results' | 'users';
 
 const sections: { id: ConfigSection; label: string; icon: React.ElementType; description: string }[] = [
   { id: 'settings', label: 'Site Settings', icon: Settings, description: 'Core configuration' },
   { id: 'mirror', label: 'Appearance', icon: Globe, description: 'Site & form styling' },
   { id: 'branding', label: 'Mobile Branding', icon: Palette, description: 'Colors & logo' },
   { id: 'use-cases', label: 'Use Cases', icon: Briefcase, description: 'Journeys & workflow builder' },
+  { id: 'results', label: 'Result Pages', icon: CheckCircle2, description: 'Success & failure landing pages' },
   { id: 'users', label: 'Demo Users', icon: Users, description: 'Manage demo user accounts' },
 ];
 
@@ -406,6 +408,23 @@ export default function DemoConfig() {
         return <BrandingSection demo={localDemo} onUpdate={handleUpdate} />;
       case 'use-cases':
         return <UseCaseSection demoId={localDemo.id} demo={localDemo} onUpdateDemo={handleUpdate} />;
+      case 'results':
+        return (
+          <ResultPagesConfig
+            approvedUrl={localDemo.approvedUrl || ''}
+            rejectedUrl={localDemo.rejectedUrl || ''}
+            returnUrl={localDemo.returnUrl || ''}
+            successPageConfig={localDemo.successPageConfig}
+            failurePageConfig={localDemo.failurePageConfig}
+            buttonColor={localDemo.buttonColor}
+            demoId={localDemo.id}
+            onUpdateApprovedUrl={(url) => handleUpdate({ approvedUrl: url })}
+            onUpdateRejectedUrl={(url) => handleUpdate({ rejectedUrl: url })}
+            onUpdateReturnUrl={(url) => handleUpdate({ returnUrl: url })}
+            onUpdateSuccessPage={(cfg) => handleUpdate({ successPageConfig: cfg })}
+            onUpdateFailurePage={(cfg) => handleUpdate({ failurePageConfig: cfg })}
+          />
+        );
       case 'users':
         return <DemoUserManagement demoId={localDemo.id} demoName={localDemo.customerName} demoSlug={localDemo.slug} />;
       default:

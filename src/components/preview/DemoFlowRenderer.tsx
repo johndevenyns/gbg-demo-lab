@@ -91,6 +91,10 @@ interface DemoFlowRendererProps {
   onSubmissionLog?: (data: SubmissionLogData) => void;
   onComplete?: (success: boolean, referenceId?: string) => void;
   onLoginSuccess?: (userData: { email: string; profileData?: Record<string, unknown> }) => void;
+  // Mirror chrome for custom result-page mode
+  mirrorHeaderHtml?: string;
+  mirrorFooterHtml?: string;
+  mirrorCss?: string;
 }
 
 // QR Code component:
@@ -685,7 +689,10 @@ export function DemoFlowRenderer({
   onNavigateToPortal,
   onSubmissionLog,
   onComplete,
-  onLoginSuccess
+  onLoginSuccess,
+  mirrorHeaderHtml,
+  mirrorFooterHtml,
+  mirrorCss,
 }: DemoFlowRendererProps) {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [formData, setFormData] = useState<Record<string, string>>(initialFormData || {});
@@ -3315,6 +3322,9 @@ export function DemoFlowRenderer({
         formStyle={style}
         buttonColor={buttonColor}
         onButtonClick={() => handleResultButtonClick(isSuccess)}
+        mirrorHeaderHtml={mirrorHeaderHtml}
+        mirrorFooterHtml={mirrorFooterHtml}
+        mirrorCss={mirrorCss}
       />
     );
   }

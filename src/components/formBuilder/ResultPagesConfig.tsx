@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -7,9 +7,90 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CheckCircle2, XCircle, ExternalLink, Settings2, Paintbrush } from 'lucide-react';
-import { ResultPageConfig, ResultButtonAction, DEFAULT_SUCCESS_CONFIG, DEFAULT_FAILURE_CONFIG } from '@/components/preview/ResultPage';
+import { CheckCircle2, XCircle, ExternalLink, Settings2, Paintbrush, Sparkles, Upload, Loader2 } from 'lucide-react';
+import { ResultPageConfig, ResultButtonAction, ResultPageMode, DEFAULT_SUCCESS_CONFIG, DEFAULT_FAILURE_CONFIG } from '@/components/preview/ResultPage';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import type { ResultPageScreenshotConfig } from '@/components/preview/ResultPage';
+
+function ScreenshotSlotEditor({
+  label,
+  value,
+  onChange,
+  upload,
+}: {
+  label: string;
+  value?: ResultPageScreenshotConfig;
+  onChange: (next: ResultPageScreenshotConfig | undefined) => void;
+  upload: (file: File) => Promise<string | null>;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState(false);
+  const cur = value || {};
+
+  const handlePick = async (file: File) => {
+    setBusy(true);
+    const url = await upload(file);
+    setBusy(false);
+    if (url) onChange({ ...cur, url });
+  };
+
+  return (
+    <div className="border rounded-md p-3 space-y-2">
+      <div className="flex items-center justify-between">
+        <Label className="font-medium">{label} image</Label>
+        {cur.url && (
+          <Button type="button" variant="ghost" size="sm" onClick={() => onChange(undefined)}>
+            Remove
+          </Button>
+        )}
+      </div>
+      {cur.url ? (
+        <img src={cur.url} alt={`${label} preview`} className="w-full max-h-32 object-contain bg-muted rounded" />
+      ) : (
+        <div className="h-20 bg-muted rounded flex items-center justify-center text-xs text-muted-foreground">No image</div>
+      )}
+      <div className="flex gap-2">
+        <Button type="button" variant="outline" size="sm" onClick={() => inputRef.current?.click()} disabled={busy}>
+          {busy ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Upload className="w-4 h-4 mr-1" />}
+          {cur.url ? 'Replace' : 'Upload'}
+        </Button>
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) handlePick(f);
+            e.target.value = '';
+          }}
+        />
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <Label className="text-xs">Height (px)</Label>
+          <Input
+            type="number"
+            min={40}
+            value={cur.height ?? ''}
+            placeholder={label === 'Main' ? '400' : '120'}
+            onChange={(e) => onChange({ ...cur, height: e.target.value ? parseInt(e.target.value, 10) : undefined })}
+          />
+        </div>
+        <div>
+          <Label className="text-xs">Background</Label>
+          <Input
+            type="color"
+            value={cur.bgColor || '#ffffff'}
+            onChange={(e) => onChange({ ...cur, bgColor: e.target.value })}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 interface ResultPagesConfigProps {
   approvedUrl: string;
@@ -18,6 +99,7 @@ interface ResultPagesConfigProps {
   successPageConfig?: ResultPageConfig;
   failurePageConfig?: ResultPageConfig;
   buttonColor?: string;
+  demoId?: string;
   onUpdateApprovedUrl: (url: string) => void;
   onUpdateRejectedUrl: (url: string) => void;
   onUpdateReturnUrl: (url: string) => void;
@@ -32,6 +114,7 @@ export function ResultPagesConfig({
   successPageConfig,
   failurePageConfig,
   buttonColor,
+  demoId,
   onUpdateApprovedUrl,
   onUpdateRejectedUrl,
   onUpdateReturnUrl,
@@ -40,17 +123,84 @@ export function ResultPagesConfig({
 }: ResultPagesConfigProps) {
   const [activeTab, setActiveTab] = useState<'success' | 'failure'>('success');
   const [urlSettingsOpen, setUrlSettingsOpen] = useState(false);
+  const [generating, setGenerating] = useState<null | 'success' | 'failure'>(null);
+  const { toast } = useToast();
 
   // Use provided configs or defaults
   const successConfig = successPageConfig || DEFAULT_SUCCESS_CONFIG;
   const failureConfig = failurePageConfig || DEFAULT_FAILURE_CONFIG;
 
+  const uploadImage = async (file: File, slot: string): Promise<string | null> => {
+    if (!demoId) {
+      toast({ title: 'Save the demo first', description: 'Upload requires a saved demo.', variant: 'destructive' });
+      return null;
+    }
+    const ext = file.name.split('.').pop() || 'png';
+    const path = `${demoId}/result-${slot}-${Date.now()}.${ext}`;
+    const { error } = await supabase.storage.from('demo-logos').upload(path, file, { upsert: true });
+    if (error) {
+      toast({ title: 'Upload failed', description: error.message, variant: 'destructive' });
+      return null;
+    }
+    return supabase.storage.from('demo-logos').getPublicUrl(path).data.publicUrl;
+  };
+
+  const handleGenerateAi = async (config: ResultPageConfig, onUpdate: (c: ResultPageConfig) => void, type: 'success' | 'failure') => {
+    if (!config.aiPrompt || !config.aiPrompt.trim()) {
+      toast({ title: 'Add a prompt', description: 'Describe what the page should look like.', variant: 'destructive' });
+      return;
+    }
+    setGenerating(type);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-result-page', {
+        body: {
+          demoId,
+          resultType: type,
+          prompt: config.aiPrompt,
+          title: config.title,
+          subtitle: config.subtitle,
+          message: config.message,
+        },
+      });
+      if (error) throw error;
+      const html = (data as { html?: string })?.html;
+      if (!html) throw new Error('No HTML returned');
+      onUpdate({ ...config, aiGeneratedHtml: html, aiGeneratedAt: new Date().toISOString() });
+      toast({ title: 'Page generated', description: 'Saved as the AI page for this result.' });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Unknown error';
+      toast({ title: 'Generation failed', description: msg, variant: 'destructive' });
+    } finally {
+      setGenerating(null);
+    }
+  };
+
   const renderConfigFields = (
     config: ResultPageConfig,
     onUpdate: (config: ResultPageConfig) => void,
     type: 'success' | 'failure'
-  ) => (
+  ) => {
+    const mode: ResultPageMode = config.pageMode || 'default';
+    return (
     <div className="space-y-4">
+      {/* Mode selector */}
+      <div className="space-y-2">
+        <Label>Page Mode</Label>
+        <Select value={mode} onValueChange={(v) => onUpdate({ ...config, pageMode: v as ResultPageMode })}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="default">Default template</SelectItem>
+            <SelectItem value="mirror">Mirror site layout (header + main + footer)</SelectItem>
+            <SelectItem value="ai_generated">AI-generated page (Lovable AI)</SelectItem>
+            <SelectItem value="custom_html">Fully custom HTML</SelectItem>
+            <SelectItem value="screenshots">Screenshots (header/main/footer images)</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* === Default mode fields === */}
+      {mode === 'default' && (
+        <>
       {/* Title */}
       <div className="space-y-2">
         <Label>Title</Label>
@@ -104,6 +254,112 @@ export function ResultPagesConfig({
           onCheckedChange={(checked) => onUpdate({ ...config, showReferenceId: checked })}
         />
       </div>
+          {/* Custom HTML insert (default mode) */}
+          <div className="border-t pt-4 mt-4 space-y-2">
+            <Label>Custom HTML insert (optional)</Label>
+            <Textarea
+              value={config.customContent || ''}
+              onChange={(e) => onUpdate({ ...config, customContent: e.target.value })}
+              placeholder="<p>Additional custom HTML...</p>"
+              rows={3}
+              className="font-mono text-xs"
+            />
+          </div>
+        </>
+      )}
+
+      {/* === Mirror mode === */}
+      {mode === 'mirror' && (
+        <div className="space-y-2">
+          <Label>Main content HTML</Label>
+          <p className="text-xs text-muted-foreground">Rendered between the demo's scraped header & footer. Inline styles supported.</p>
+          <Textarea
+            value={config.mirrorMainHtml || ''}
+            onChange={(e) => onUpdate({ ...config, mirrorMainHtml: e.target.value })}
+            placeholder={`<div style="text-align:center;padding:48px 16px;">\n  <h1>${type === 'success' ? 'You are verified' : 'Verification failed'}</h1>\n  <p>Custom message here.</p>\n</div>`}
+            rows={10}
+            className="font-mono text-xs"
+          />
+        </div>
+      )}
+
+      {/* === Custom HTML mode === */}
+      {mode === 'custom_html' && (
+        <div className="space-y-2">
+          <Label>Full page HTML</Label>
+          <p className="text-xs text-muted-foreground">Renders as the entire result page. Scripts and iframes are stripped for safety.</p>
+          <Textarea
+            value={config.customHtml || ''}
+            onChange={(e) => onUpdate({ ...config, customHtml: e.target.value })}
+            placeholder="<section>...your full page...</section>"
+            rows={14}
+            className="font-mono text-xs"
+          />
+        </div>
+      )}
+
+      {/* === AI-generated mode === */}
+      {mode === 'ai_generated' && (
+        <div className="space-y-3">
+          <div className="space-y-2">
+            <Label>Prompt for Lovable AI</Label>
+            <Textarea
+              value={config.aiPrompt || ''}
+              onChange={(e) => onUpdate({ ...config, aiPrompt: e.target.value })}
+              placeholder={type === 'success'
+                ? 'A celebratory verification success page matching our brand, with a thank-you message and a clear continue button.'
+                : 'A friendly verification-failed page with troubleshooting tips and a retry button.'}
+              rows={4}
+            />
+            <p className="text-xs text-muted-foreground">
+              The AI receives your demo branding, mirrored site chrome, and verification outcome.
+            </p>
+          </div>
+          <Button
+            type="button"
+            onClick={() => handleGenerateAi(config, onUpdate, type)}
+            disabled={generating === type}
+            className="gap-2"
+          >
+            {generating === type ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+            {config.aiGeneratedHtml ? 'Regenerate page' : 'Generate page'}
+          </Button>
+          {config.aiGeneratedHtml && (
+            <div className="space-y-2">
+              <Label>Generated HTML (editable)</Label>
+              <Textarea
+                value={config.aiGeneratedHtml}
+                onChange={(e) => onUpdate({ ...config, aiGeneratedHtml: e.target.value })}
+                rows={10}
+                className="font-mono text-xs"
+              />
+              {config.aiGeneratedAt && (
+                <p className="text-xs text-muted-foreground">Last generated {new Date(config.aiGeneratedAt).toLocaleString()}</p>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* === Screenshots mode === */}
+      {mode === 'screenshots' && (
+        <div className="space-y-4">
+          {(['Header','Main','Footer'] as const).map((slot) => {
+            const key = slot.toLowerCase() as 'header' | 'main' | 'footer';
+            const cfgKey = (`screenshot${slot}`) as 'screenshotHeader' | 'screenshotMain' | 'screenshotFooter';
+            const current = config[cfgKey];
+            return (
+              <ScreenshotSlotEditor
+                key={slot}
+                label={slot}
+                value={current}
+                onChange={(next) => onUpdate({ ...config, [cfgKey]: next })}
+                upload={(file) => uploadImage(file, key)}
+              />
+            );
+          })}
+        </div>
+      )}
 
       {/* Button configuration */}
       <div className="border-t pt-4 mt-4">
@@ -158,25 +414,9 @@ export function ResultPagesConfig({
           )}
         </div>
       </div>
-
-      {/* Custom HTML content */}
-      <div className="border-t pt-4 mt-4">
-        <div className="space-y-2">
-          <Label>Custom HTML Content (optional)</Label>
-          <Textarea
-            value={config.customContent || ''}
-            onChange={(e) => onUpdate({ ...config, customContent: e.target.value })}
-            placeholder="<p>Additional custom HTML content...</p>"
-            rows={4}
-            className="font-mono text-sm"
-          />
-          <p className="text-xs text-muted-foreground">
-            Add custom HTML to display additional content, links, or instructions
-          </p>
-        </div>
-      </div>
     </div>
-  );
+    );
+  };
 
   return (
     <Card className="glass-card">
