@@ -883,39 +883,29 @@ function VerificationTypePanel({
         </div>
       )}
 
-      {/* Per-type result page overrides */}
-      <div className="space-y-2 p-3 rounded-lg border border-border">
-        <div className="flex items-center justify-between">
-          <Label className="text-sm font-medium">Custom Result Pages</Label>
-          <Switch
-            checked={typeConfig.useCustomResultPages ?? false}
-            onCheckedChange={(v) => onUpdate({ useCustomResultPages: v })}
-            className="scale-75"
-          />
-        </div>
-        
-        {typeConfig.useCustomResultPages && (
-          <div className="grid grid-cols-2 gap-3 pt-2">
-            <div className="space-y-2">
-              <Label className="text-xs text-success">Success URL</Label>
-              <Input
-                value={typeConfig.customSuccessUrl || ''}
-                onChange={(e) => onUpdate({ customSuccessUrl: e.target.value })}
-                placeholder="https://..."
-                className="h-7 text-sm"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-xs text-destructive">Failure URL</Label>
-              <Input
-                value={typeConfig.customFailureUrl || ''}
-                onChange={(e) => onUpdate({ customFailureUrl: e.target.value })}
-                placeholder="https://..."
-                className="h-7 text-sm"
-              />
-            </div>
-          </div>
-        )}
+      {/* Success/Failure pages live in the Result Pages tab — link there to avoid duplication */}
+      <div className="space-y-2 p-3 rounded-lg border border-dashed border-border bg-muted/30">
+        <Label className="text-sm font-medium flex items-center gap-2">
+          <Check className="w-4 h-4 text-muted-foreground" />
+          Success &amp; Failure Pages
+        </Label>
+        <p className="text-xs text-muted-foreground">
+          Custom success and failure landing pages (default, mirrored site layout, AI-generated,
+          custom HTML, or uploaded screenshots) are configured in one place per demo.
+        </p>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="h-7 text-xs"
+          onClick={() => {
+            const url = new URL(window.location.href);
+            url.searchParams.set('section', 'results');
+            window.location.assign(url.toString());
+          }}
+        >
+          Open Result Pages tab
+        </Button>
       </div>
     </div>
   );
