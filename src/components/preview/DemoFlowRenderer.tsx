@@ -3322,6 +3322,9 @@ export function DemoFlowRenderer({
         formStyle={style}
         buttonColor={buttonColor}
         onButtonClick={() => handleResultButtonClick(isSuccess)}
+        mirrorHeaderHtml={mirrorHeaderHtml}
+        mirrorFooterHtml={mirrorFooterHtml}
+        mirrorCss={mirrorCss}
       />
     );
   }
