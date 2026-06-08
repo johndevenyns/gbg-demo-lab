@@ -16,7 +16,7 @@ import { StoredUserDataConfig } from './StoredUserDataConfig';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   LayoutGrid, Settings2, Workflow, RotateCcw, Bookmark, Users,
-  AlignLeft, AlignCenter, AlignRight
+  AlignLeft, AlignCenter, AlignRight, Undo2
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTestProfiles } from '@/hooks/useTestProfiles';
@@ -32,6 +32,45 @@ export function FormBuilderSection({ demo, onUpdate }: FormBuilderSectionProps) 
   const [activeTab, setActiveTab] = useState('builder');
   const [saveTemplateOpen, setSaveTemplateOpen] = useState(false);
   const [templateRefreshTrigger, setTemplateRefreshTrigger] = useState(0);
+  // Undo history (in-memory snapshots of form state)
+  type FormSnapshot = {
+    label: string;
+    formSteps: FormStep[];
+    formStyle?: FormStyleConfig;
+    storedTestData?: StoredTestData;
+  };
+  const [history, setHistory] = useState<FormSnapshot[]>([]);
+  const MAX_HISTORY = 20;
+
+  const pushSnapshot = useCallback((label: string) => {
+    setHistory(prev => {
+      const next = [...prev, {
+        label,
+        formSteps: demo.formSteps,
+        formStyle: demo.formStyle,
+        storedTestData: demo.storedTestData,
+      }];
+      return next.length > MAX_HISTORY ? next.slice(next.length - MAX_HISTORY) : next;
+    });
+  }, [demo.formSteps, demo.formStyle, demo.storedTestData]);
+
+  const handleUndo = useCallback(() => {
+    setHistory(prev => {
+      if (prev.length === 0) return prev;
+      const last = prev[prev.length - 1];
+      onUpdate({
+        formSteps: last.formSteps,
+        formStyle: last.formStyle,
+        storedTestData: last.storedTestData,
+      });
+      toast({
+        title: 'Reverted',
+        description: `Restored form state before "${last.label}"`,
+      });
+      return prev.slice(0, -1);
+    });
+  }, [onUpdate, toast]);
+
   // Local state for verification paths
   const [enabledPaths, setEnabledPaths] = useState<string[]>(['docbio', 'databio']);
   const [pathConditions, setPathConditions] = useState<Record<string, PathCondition>>({
@@ -47,6 +86,7 @@ export function FormBuilderSection({ demo, onUpdate }: FormBuilderSectionProps) 
   }, [onUpdate]);
 
   const handleApplyTemplate = useCallback((steps: FormStep[], templateName: string, formStyle?: FormStyleConfig, fillDefaults?: { showFillPass: boolean; showFillFail: boolean }) => {
+    pushSnapshot(`Apply template: ${templateName}`);
     const updates: Partial<DemoEnvironment> = { formSteps: steps };
     if (formStyle) {
       updates.formStyle = formStyle;
@@ -65,7 +105,7 @@ export function FormBuilderSection({ demo, onUpdate }: FormBuilderSectionProps) 
       title: 'Template Applied',
       description: `Applied "${templateName}" template with ${steps.length} step(s)`,
     });
-  }, [onUpdate, toast, demo.storedTestData]);
+  }, [onUpdate, toast, demo.storedTestData, pushSnapshot]);
 
   const handleTemplateSaved = useCallback(() => {
     setTemplateRefreshTrigger(prev => prev + 1);
@@ -185,6 +225,7 @@ export function FormBuilderSection({ demo, onUpdate }: FormBuilderSectionProps) 
 
   const handleResetForm = useCallback(() => {
     if (confirm('Are you sure you want to reset all form steps? This cannot be undone.')) {
+      pushSnapshot('Reset form');
       onUpdate({
         formSteps: [{
           id: crypto.randomUUID(),
@@ -198,7 +239,7 @@ export function FormBuilderSection({ demo, onUpdate }: FormBuilderSectionProps) 
         description: 'All steps and fields have been cleared',
       });
     }
-  }, [onUpdate, toast]);
+  }, [onUpdate, toast, pushSnapshot]);
 
   return (
     <Card className="glass-card">
@@ -304,6 +345,16 @@ export function FormBuilderSection({ demo, onUpdate }: FormBuilderSectionProps) 
             <Button variant="outline" size="sm" onClick={() => setSaveTemplateOpen(true)}>
               <Bookmark className="w-4 h-4 mr-2" />
               Save as Template
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleUndo}
+              disabled={history.length === 0}
+              title={history.length === 0 ? 'No changes to undo' : `Undo: ${history[history.length - 1].label}`}
+            >
+              <Undo2 className="w-4 h-4 mr-2" />
+              Undo{history.length > 0 ? ` (${history.length})` : ''}
             </Button>
             <Button variant="outline" size="sm" onClick={handleResetForm}>
               <RotateCcw className="w-4 h-4 mr-2" />
