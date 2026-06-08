@@ -9,6 +9,8 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CheckCircle2, XCircle, ExternalLink, Settings2, Paintbrush, Sparkles, Upload, Loader2 } from 'lucide-react';
 import { ResultPageConfig, ResultButtonAction, ResultPageMode, DEFAULT_SUCCESS_CONFIG, DEFAULT_FAILURE_CONFIG } from '@/components/preview/ResultPage';
+import { ResultPage } from '@/components/preview/ResultPage';
+import type { FormStyleConfig } from '@/types/formStyle';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -100,6 +102,10 @@ interface ResultPagesConfigProps {
   failurePageConfig?: ResultPageConfig;
   buttonColor?: string;
   demoId?: string;
+  formStyle?: FormStyleConfig;
+  mirrorHeaderHtml?: string;
+  mirrorFooterHtml?: string;
+  mirrorCss?: string;
   onUpdateApprovedUrl: (url: string) => void;
   onUpdateRejectedUrl: (url: string) => void;
   onUpdateReturnUrl: (url: string) => void;
@@ -115,6 +121,10 @@ export function ResultPagesConfig({
   failurePageConfig,
   buttonColor,
   demoId,
+  formStyle,
+  mirrorHeaderHtml,
+  mirrorFooterHtml,
+  mirrorCss,
   onUpdateApprovedUrl,
   onUpdateRejectedUrl,
   onUpdateReturnUrl,
