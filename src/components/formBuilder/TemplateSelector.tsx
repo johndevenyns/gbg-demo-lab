@@ -12,6 +12,7 @@ import {
   Zap, ClipboardList, FileCheck, LayoutTemplate, Bookmark, Loader2, Trash2
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { TemplatePreviewDialog, TemplatePreviewData } from './TemplatePreviewDialog';
 
 const INDUSTRY_ICONS: Record<IndustryTemplate, React.ReactNode> = {
   bank: <Building2 className="w-5 h-5" />,
@@ -51,6 +52,13 @@ export function TemplateSelector({ currentTemplate, onApplyTemplate, refreshTrig
   const [savedTemplates, setSavedTemplates] = useState<SavedTemplate[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [previewTemplate, setPreviewTemplate] = useState<TemplatePreviewData | null>(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
+
+  const openPreview = (template: TemplatePreviewData) => {
+    setPreviewTemplate(template);
+    setPreviewOpen(true);
+  };
 
   const industryTemplateList = (Object.keys(INDUSTRY_TEMPLATES) as IndustryTemplate[]).map((key) => ({
     id: key,
@@ -84,21 +92,30 @@ export function TemplateSelector({ currentTemplate, onApplyTemplate, refreshTrig
     const template = INDUSTRY_TEMPLATES[templateId];
     if (template.formSteps) {
       const templateName = templateId.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-      onApplyTemplate(template.formSteps as FormStep[], templateName);
+      openPreview({
+        name: templateName,
+        description: (template as any).description,
+        steps: template.formSteps as FormStep[],
+      });
     }
   };
 
   const handleSelectMinimal = (template: FormTemplate) => {
-    onApplyTemplate(template.steps, template.id);
+    openPreview({
+      name: template.name,
+      description: template.description,
+      steps: template.steps,
+    });
   };
 
   const handleSelectSaved = (template: SavedTemplate) => {
-    onApplyTemplate(
-      template.form_steps,
-      template.name,
-      template.form_style || undefined,
-      { showFillPass: template.show_fill_pass, showFillFail: template.show_fill_fail }
-    );
+    openPreview({
+      name: template.name,
+      description: template.description || undefined,
+      steps: template.form_steps,
+      formStyle: template.form_style || undefined,
+      fillDefaults: { showFillPass: template.show_fill_pass, showFillFail: template.show_fill_fail },
+    });
   };
 
   const handleDeleteTemplate = async (e: React.MouseEvent, templateId: string) => {
@@ -125,6 +142,12 @@ export function TemplateSelector({ currentTemplate, onApplyTemplate, refreshTrig
 
   return (
     <Card className="glass-card">
+      <TemplatePreviewDialog
+        open={previewOpen}
+        onOpenChange={setPreviewOpen}
+        template={previewTemplate}
+        onApply={(t) => onApplyTemplate(t.steps, t.name, t.formStyle, t.fillDefaults)}
+      />
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <LayoutTemplate className="w-5 h-5" />
