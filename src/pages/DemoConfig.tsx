@@ -418,6 +418,22 @@ export default function DemoConfig() {
             failurePageConfig={localDemo.failurePageConfig}
             buttonColor={localDemo.buttonColor}
             demoId={localDemo.id}
+            formStyle={localDemo.formStyle}
+            mirrorHeaderHtml={
+              localDemo.mirrorActiveMethod === 'screenshot'
+                ? localDemo.mirrorScreenshotHeaderHtml
+                : localDemo.mirrorHtmlHeaderHtml || localDemo.scrapedHeaderHtml
+            }
+            mirrorFooterHtml={
+              localDemo.mirrorActiveMethod === 'screenshot'
+                ? localDemo.mirrorScreenshotFooterHtml
+                : localDemo.mirrorHtmlFooterHtml || localDemo.scrapedFooterHtml
+            }
+            mirrorCss={
+              localDemo.mirrorActiveMethod === 'screenshot'
+                ? localDemo.mirrorScreenshotCss
+                : localDemo.mirrorHtmlCss || localDemo.scrapedCss
+            }
             onUpdateApprovedUrl={(url) => handleUpdate({ approvedUrl: url })}
             onUpdateRejectedUrl={(url) => handleUpdate({ rejectedUrl: url })}
             onUpdateReturnUrl={(url) => handleUpdate({ returnUrl: url })}
