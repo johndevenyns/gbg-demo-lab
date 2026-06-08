@@ -154,9 +154,9 @@ export function ResultPage({ config, formStyle, buttonColor, onButtonClick, mirr
           className="min-h-full w-full flex flex-col"
           style={{ backgroundColor: style.contentAreaBgColor || '#ffffff' }}
         >
-          <ScreenshotBlock cfg={config.screenshotHeader} fallbackBg={style.headerBgColor} />
+          <ScreenshotBlock cfg={config.screenshotHeader} fallbackBg={style.formBgColor} />
           <ScreenshotBlock cfg={config.screenshotMain} fallbackBg={style.formBgColor} />
-          <ScreenshotBlock cfg={config.screenshotFooter} fallbackBg={style.headerBgColor} />
+          <ScreenshotBlock cfg={config.screenshotFooter} fallbackBg={style.formBgColor} />
           {config.buttonText && (
             <div className="flex justify-center py-6">
               <Button
@@ -186,7 +186,11 @@ export function ResultPage({ config, formStyle, buttonColor, onButtonClick, mirr
           className="flex-1 px-4 py-8"
           style={{ backgroundColor: style.contentAreaBgColor || '#ffffff' }}
           dangerouslySetInnerHTML={{
-            __html: DOMPurify.sanitize(config.mirrorMainHtml || defaultMirrorMainHtml(config, isSuccess), SANITIZE_OPTS),
+            __html: DOMPurify.sanitize(
+              config.mirrorMainHtml ||
+                `<div style="max-width:640px;margin:0 auto;text-align:center;font-family:${style.fontFamily || 'inherit'};"><h1 style="font-size:28px;margin:0 0 12px;">${config.title || ''}</h1>${config.subtitle ? `<p style=\"font-size:18px;color:#6b7280;margin:0 0 16px;\">${config.subtitle}</p>` : ''}${config.message ? `<p style=\"font-size:16px;color:#374151;\">${config.message}</p>` : ''}</div>`,
+              SANITIZE_OPTS,
+            ),
           }}
         />
         {config.buttonText && (
