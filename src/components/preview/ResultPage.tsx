@@ -18,6 +18,17 @@ export interface ResultPageScreenshotConfig {
   url?: string;
   height?: number; // px
   bgColor?: string;
+  /** How the image is sized within its slot:
+   *  - contain: actual aspect, fully visible (default)
+   *  - cover: fill slot, may crop
+   *  - stretch: fill slot, ignore aspect (may distort)
+   *  - actual: original pixel size (no scaling)
+   */
+  fitMode?: 'contain' | 'cover' | 'stretch' | 'actual';
+  /** Horizontal alignment of image within slot */
+  positionX?: 'left' | 'center' | 'right';
+  /** Vertical alignment of image within slot */
+  positionY?: 'top' | 'center' | 'bottom';
 }
 
 export interface ResultPageConfig {
@@ -89,6 +100,14 @@ function MirrorChrome({ html, css, minHeight }: { html?: string; css?: string; m
 
 function ScreenshotBlock({ cfg, fallbackBg }: { cfg?: ResultPageScreenshotConfig; fallbackBg?: string }) {
   if (!cfg?.url) return null;
+  const fit = cfg.fitMode || 'contain';
+  const backgroundSize =
+    fit === 'cover' ? 'cover' :
+    fit === 'stretch' ? '100% 100%' :
+    fit === 'actual' ? 'auto' :
+    'contain';
+  const posX = cfg.positionX || 'center';
+  const posY = cfg.positionY || 'center';
   return (
     <div
       style={{
@@ -96,9 +115,9 @@ function ScreenshotBlock({ cfg, fallbackBg }: { cfg?: ResultPageScreenshotConfig
         height: cfg.height || 120,
         backgroundColor: cfg.bgColor || fallbackBg || '#ffffff',
         backgroundImage: `url(${cfg.url})`,
-        backgroundSize: 'contain',
+        backgroundSize,
         backgroundRepeat: 'no-repeat',
-        backgroundPosition: 'center',
+        backgroundPosition: `${posX} ${posY}`,
       }}
     />
   );
