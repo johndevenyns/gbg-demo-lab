@@ -179,6 +179,7 @@ export default function DemoPreview() {
 
   const handleFlowComplete = useCallback((success: boolean, referenceId?: string) => {
     console.log('Flow complete:', { success, referenceId });
+    setFlowResult(success ? 'success' : 'failure');
     // If a portal verification was in progress, return to portal on completion
     if (portalVerificationAction) {
       setPortalVerificationAction(null);
