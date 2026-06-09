@@ -418,6 +418,7 @@ export default function DemoConfig() {
             failurePageConfig={localDemo.failurePageConfig}
             buttonColor={localDemo.buttonColor}
             demoId={localDemo.id}
+            demoSlug={localDemo.slug}
             formStyle={localDemo.formStyle}
             mirrorHeaderHtml={
               localDemo.mirrorActiveMethod === 'screenshot'

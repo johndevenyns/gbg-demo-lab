@@ -1,4 +1,4 @@
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useSearchParams } from "react-router-dom";
 import { useDemoBySlug } from "@/hooks/useDemos";
 import { useAuth } from "@/hooks/useAuth";
 import { Loader2, ArrowLeft, Settings } from "lucide-react";
@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useEffect, useCallback, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { DemoFlowRenderer } from "@/components/preview/DemoFlowRenderer";
-import { DEFAULT_SUCCESS_CONFIG, DEFAULT_FAILURE_CONFIG } from "@/components/preview/ResultPage";
+import { DEFAULT_SUCCESS_CONFIG, DEFAULT_FAILURE_CONFIG, ResultPage } from "@/components/preview/ResultPage";
 import { DEFAULT_FORM_STYLE } from "@/types/formStyle";
 import { useDemoUseCaseLinks } from "@/hooks/useUseCases";
 import { useHeaderCtaLinks } from "@/hooks/useHeaderCtaLinks";
@@ -87,6 +87,8 @@ function repairHeaderLogoHtml(headerHtml: string, logoUrl?: string, customerName
 
 export default function DemoPreview() {
   const { slug } = useParams<{ slug: string }>();
+  const [searchParams] = useSearchParams();
+  const previewResultParam = searchParams.get('previewResult'); // 'success' | 'failure' | null
   const { isAdmin, isLoading: authLoading } = useAuth();
   const { data: demo, isLoading, error } = useDemoBySlug(slug || "");
   const { data: links = [] } = useDemoUseCaseLinks(demo?.id);
@@ -113,6 +115,13 @@ export default function DemoPreview() {
   const [portalTransactionContext, setPortalTransactionContext] = useState<{ amount?: number; recipientName?: string; fromAccount?: string } | undefined>(undefined);
   const [portalNavCommand, setPortalNavCommand] = useState<'dashboard' | 'repeat_transfer' | null>(null);
   const [flowResult, setFlowResult] = useState<'success' | 'failure' | null>(null);
+
+  // If launched as a preview-result window, jump straight to the result page.
+  useEffect(() => {
+    if (previewResultParam === 'success' || previewResultParam === 'failure') {
+      setFlowResult(previewResultParam);
+    }
+  }, [previewResultParam]);
 
   // Get portal type directly from the demo
   const demoPortalType = demo?.portalType || 'none';
@@ -807,7 +816,28 @@ export default function DemoPreview() {
               border: `${previewDocument?.formStyle?.formBorderWidth || '1'}px solid ${previewDocument?.formStyle?.formBorderColor || '#e5e7eb'}`,
             }}
           >
-            {hasUseCases && selectedUseCase ? (
+            {previewResultParam && activeResultCfg ? (
+              <ResultPage
+                config={{ ...activeResultCfg, referenceId: activeResultCfg.referenceId || 'PREVIEW-1234' }}
+                formStyle={demo.formStyle}
+                buttonColor={demo.buttonColor}
+                mirrorHeaderHtml={
+                  demo.mirrorActiveMethod === 'screenshot'
+                    ? demo.mirrorScreenshotHeaderHtml
+                    : demo.mirrorHtmlHeaderHtml || demo.scrapedHeaderHtml
+                }
+                mirrorFooterHtml={
+                  demo.mirrorActiveMethod === 'screenshot'
+                    ? demo.mirrorScreenshotFooterHtml
+                    : demo.mirrorHtmlFooterHtml || demo.scrapedFooterHtml
+                }
+                mirrorCss={
+                  demo.mirrorActiveMethod === 'screenshot'
+                    ? demo.mirrorScreenshotCss
+                    : demo.mirrorHtmlCss || demo.scrapedCss
+                }
+              />
+            ) : hasUseCases && selectedUseCase ? (
               <UseCaseLandingPage
                 useCases={resolvedUseCases.filter(uc => uc.showOnLandingPage)}
                 selectedUseCase={selectedUseCase}
