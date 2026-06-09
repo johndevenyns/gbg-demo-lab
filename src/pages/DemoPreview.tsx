@@ -610,7 +610,7 @@ export default function DemoPreview() {
   return (
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: previewDocument?.formStyle?.contentAreaBgColor || '#f5f5f5', color: '#1a1a2e' }}>
       {/* Mirrored Header */}
-      {hasMirroredHeader && previewDocument && (() => {
+      {showMirrorHeader && previewDocument && (() => {
         // Derive base URL for resolving relative paths in the header HTML
         const siteUrl = demo.customerSiteUrl || '';
         let baseHref = '';
