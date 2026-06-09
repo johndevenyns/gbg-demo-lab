@@ -1044,44 +1044,17 @@ export function DemoFlowRenderer({
     const verificationStatus = success ? 'verified' : 'failed';
 
     try {
-      // Check if user already exists
-      const { data: existing } = await supabase
-        .from('portal_users_public')
-        .select('id')
-        .eq('email', email)
-        .maybeSingle();
-
-      if (existing) {
-        // Update existing user
-        await supabase.from('portal_users').update({
-          profile_data: profileData,
-          display_name: displayName,
-          verification_status: verificationStatus,
-        }).eq('id', existing.id);
-
-        // Ensure assignment exists
-        await supabase.from('portal_user_demo_assignments').upsert(
-          { portal_user_id: existing.id, demo_id: demoId },
-          { onConflict: 'portal_user_id,demo_id' }
-        );
-      } else {
-        // Create new user
-        const password = formData.password || Math.random().toString(36).slice(-8);
-        const { data: newUser } = await supabase.from('portal_users').insert({
+      await supabase.functions.invoke('portal-flow-rpc', {
+        body: {
+          action: 'upsert_verification_result',
+          demoId,
           email,
-          password,
-          display_name: displayName,
-          profile_data: profileData,
-          verification_status: verificationStatus,
-        }).select('id').single();
-
-        if (newUser) {
-          await supabase.from('portal_user_demo_assignments').insert({
-            portal_user_id: newUser.id,
-            demo_id: demoId,
-          });
-        }
-      }
+          profileData,
+          displayName,
+          verificationStatus,
+          password: formData.password,
+        },
+      });
       console.log('Account created/updated with verification status:', verificationStatus);
     } catch (err) {
       console.error('Failed to create/update account:', err);
