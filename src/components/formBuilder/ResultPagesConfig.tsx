@@ -115,7 +115,7 @@ function ScreenshotSlotEditor({
             type="number"
             min={40}
             value={cur.height ?? ''}
-            placeholder={label === 'Main' ? '400' : '120'}
+            placeholder="auto"
             onChange={(e) => onChange({ ...cur, height: e.target.value ? parseInt(e.target.value, 10) : undefined })}
           />
         </div>
@@ -459,6 +459,19 @@ export function ResultPagesConfig({
         <h4 className="font-medium mb-3">Button Settings</h4>
         
         <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <Label>Show Button</Label>
+              <p className="text-xs text-muted-foreground">Display an action button on this page</p>
+            </div>
+            <Switch
+              checked={config.showButton !== false}
+              onCheckedChange={(checked) => onUpdate({ ...config, showButton: checked })}
+            />
+          </div>
+
+          {config.showButton !== false && (
+          <>
           <div className="space-y-2">
             <Label>Button Text</Label>
             <Input
@@ -504,6 +517,8 @@ export function ResultPagesConfig({
                 Leave empty to use the {type === 'success' ? 'Approved' : 'Rejected'} URL below
               </p>
             </div>
+          )}
+          </>
           )}
         </div>
       </div>

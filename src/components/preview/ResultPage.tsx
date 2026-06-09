@@ -62,6 +62,9 @@ export interface ResultPageConfig {
   aiPrompt?: string;
   aiGeneratedHtml?: string;
   aiGeneratedAt?: string;
+
+  // Show/hide the action button (default: true if buttonText is set)
+  showButton?: boolean;
 }
 
 interface ResultPageProps {
@@ -101,6 +104,22 @@ function MirrorChrome({ html, css, minHeight }: { html?: string; css?: string; m
 function ScreenshotBlock({ cfg, fallbackBg }: { cfg?: ResultPageScreenshotConfig; fallbackBg?: string }) {
   if (!cfg?.url) return null;
   const fit = cfg.fitMode || 'contain';
+  // If no explicit height set, render image at its natural size (full-width, auto height)
+  // so the slot adds no extra spacing beyond the image itself.
+  if (!cfg.height) {
+    const posX = cfg.positionX || 'center';
+    const justify = posX === 'left' ? 'flex-start' : posX === 'right' ? 'flex-end' : 'center';
+    const imgStyle: React.CSSProperties =
+      fit === 'stretch' ? { width: '100%', height: 'auto', display: 'block' }
+      : fit === 'actual' ? { display: 'block' }
+      : fit === 'cover' ? { width: '100%', height: 'auto', display: 'block', objectFit: 'cover' }
+      : { maxWidth: '100%', height: 'auto', display: 'block' };
+    return (
+      <div style={{ width: '100%', backgroundColor: cfg.bgColor || fallbackBg || '#ffffff', display: 'flex', justifyContent: justify }}>
+        <img src={cfg.url} alt="" style={imgStyle} />
+      </div>
+    );
+  }
   const backgroundSize =
     fit === 'cover' ? 'cover' :
     fit === 'stretch' ? '100% 100%' :
@@ -112,7 +131,7 @@ function ScreenshotBlock({ cfg, fallbackBg }: { cfg?: ResultPageScreenshotConfig
     <div
       style={{
         width: '100%',
-        height: cfg.height || 120,
+        height: cfg.height,
         backgroundColor: cfg.bgColor || fallbackBg || '#ffffff',
         backgroundImage: `url(${cfg.url})`,
         backgroundSize,
@@ -168,26 +187,29 @@ export function ResultPage({ config, formStyle, buttonColor, onButtonClick, mirr
   if (mode === 'screenshots') {
     const anyImage = config.screenshotHeader?.url || config.screenshotMain?.url || config.screenshotFooter?.url;
     if (anyImage) {
+      const showBtn = config.showButton !== false && !!config.buttonText;
       return (
         <div
           className="min-h-full w-full flex flex-col"
           style={{ backgroundColor: style.contentAreaBgColor || '#ffffff' }}
         >
           <ScreenshotBlock cfg={config.screenshotHeader} fallbackBg={style.formBgColor} />
-          <ScreenshotBlock cfg={config.screenshotMain} fallbackBg={style.formBgColor} />
+          <div className="relative">
+            <ScreenshotBlock cfg={config.screenshotMain} fallbackBg={style.formBgColor} />
+            {showBtn && (
+              <div className="absolute inset-x-0 bottom-0 flex justify-center pb-6">
+                <Button
+                  onClick={handleButtonClick}
+                  className="min-w-[200px]"
+                  style={{ backgroundColor: computedButtonColor, color: '#ffffff' }}
+                >
+                  {config.buttonText}
+                  {config.buttonAction === 'portal' ? <LogIn className="w-4 h-4 ml-2" /> : <ArrowRight className="w-4 h-4 ml-2" />}
+                </Button>
+              </div>
+            )}
+          </div>
           <ScreenshotBlock cfg={config.screenshotFooter} fallbackBg={style.formBgColor} />
-          {config.buttonText && (
-            <div className="flex justify-center py-6">
-              <Button
-                onClick={handleButtonClick}
-                className="min-w-[200px]"
-                style={{ backgroundColor: computedButtonColor, color: '#ffffff' }}
-              >
-                {config.buttonText}
-                {config.buttonAction === 'portal' ? <LogIn className="w-4 h-4 ml-2" /> : <ArrowRight className="w-4 h-4 ml-2" />}
-              </Button>
-            </div>
-          )}
         </div>
       );
     }
@@ -198,6 +220,7 @@ export function ResultPage({ config, formStyle, buttonColor, onButtonClick, mirr
   if (mode === 'mirror' && (mirrorHeaderHtml || mirrorFooterHtml || config.mirrorMainHtml)) {
     const headerH = style.headerHeight || 120;
     const footerH = style.footerHeight || 160;
+    const showBtn = config.showButton !== false && !!config.buttonText;
     return (
       <div className="min-h-full w-full flex flex-col" style={{ backgroundColor: style.contentAreaBgColor || '#ffffff' }}>
         <MirrorChrome html={mirrorHeaderHtml} css={mirrorCss} minHeight={headerH} />
@@ -212,7 +235,7 @@ export function ResultPage({ config, formStyle, buttonColor, onButtonClick, mirr
             ),
           }}
         />
-        {config.buttonText && (
+        {showBtn && (
           <div className="flex justify-center pb-6">
             <Button
               onClick={handleButtonClick}
@@ -347,7 +370,7 @@ export function ResultPage({ config, formStyle, buttonColor, onButtonClick, mirr
         )}
 
         {/* Button */}
-        {config.buttonText && (
+        {config.showButton !== false && config.buttonText && (
           <Button
             onClick={handleButtonClick}
             className="min-w-[200px]"
