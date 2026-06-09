@@ -112,6 +112,7 @@ export default function DemoPreview() {
   const [portalVerificationTrigger, setPortalVerificationTrigger] = useState<PortalVerificationTrigger | null>(null);
   const [portalTransactionContext, setPortalTransactionContext] = useState<{ amount?: number; recipientName?: string; fromAccount?: string } | undefined>(undefined);
   const [portalNavCommand, setPortalNavCommand] = useState<'dashboard' | 'repeat_transfer' | null>(null);
+  const [flowResult, setFlowResult] = useState<'success' | 'failure' | null>(null);
 
   // Get portal type directly from the demo
   const demoPortalType = demo?.portalType || 'none';
@@ -178,6 +179,7 @@ export default function DemoPreview() {
 
   const handleFlowComplete = useCallback((success: boolean, referenceId?: string) => {
     console.log('Flow complete:', { success, referenceId });
+    setFlowResult(success ? 'success' : 'failure');
     // If a portal verification was in progress, return to portal on completion
     if (portalVerificationAction) {
       setPortalVerificationAction(null);
@@ -325,6 +327,21 @@ export default function DemoPreview() {
   const hasMirroredHeader = Boolean(previewDocument?.headerHtml?.trim());
   const hasMirroredFooter = Boolean(previewDocument?.footerHtml?.trim());
   const isScreenshotMode = (demo.mirrorActiveMethod || 'html') === 'screenshot';
+
+  // When the active result page takes over the full layout (screenshots / custom HTML / AI generated),
+  // hide the outer site-mirror chrome and the form card so the result page owns header + main + footer.
+  const activeResultCfg = flowResult === 'success'
+    ? (demo.successPageConfig || DEFAULT_SUCCESS_CONFIG)
+    : flowResult === 'failure'
+    ? (demo.failurePageConfig || DEFAULT_FAILURE_CONFIG)
+    : null;
+  const fullReplaceResult = !!activeResultCfg && (
+    activeResultCfg.pageMode === 'screenshots' ||
+    activeResultCfg.pageMode === 'custom_html' ||
+    activeResultCfg.pageMode === 'ai_generated'
+  );
+  const showMirrorHeader = hasMirroredHeader && !fullReplaceResult;
+  const showMirrorFooter = hasMirroredFooter && !fullReplaceResult;
   const debugBorder = demo.mirrorIframeBordersVisible
     ? '1px solid red'
     : 'none';
@@ -593,7 +610,7 @@ export default function DemoPreview() {
   return (
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: previewDocument?.formStyle?.contentAreaBgColor || '#f5f5f5', color: '#1a1a2e' }}>
       {/* Mirrored Header */}
-      {hasMirroredHeader && previewDocument && (() => {
+      {showMirrorHeader && previewDocument && (() => {
         // Derive base URL for resolving relative paths in the header HTML
         const siteUrl = demo.customerSiteUrl || '';
         let baseHref = '';
@@ -769,18 +786,21 @@ export default function DemoPreview() {
         className="flex-1 flex flex-col"
         style={{
           backgroundColor: previewDocument?.formStyle?.contentAreaBgColor || 'transparent',
-          paddingTop: `${previewDocument?.formStyle?.contentAreaPaddingY ?? 0}px`,
-          paddingBottom: `${previewDocument?.formStyle?.contentAreaPaddingY ?? 0}px`,
-          minHeight: `${previewDocument?.formStyle?.contentAreaMinHeight ?? 400}px`,
+          paddingTop: fullReplaceResult ? 0 : `${previewDocument?.formStyle?.contentAreaPaddingY ?? 0}px`,
+          paddingBottom: fullReplaceResult ? 0 : `${previewDocument?.formStyle?.contentAreaPaddingY ?? 0}px`,
+          minHeight: fullReplaceResult ? 0 : `${previewDocument?.formStyle?.contentAreaMinHeight ?? 400}px`,
           justifyContent: ({ start: 'flex-start', center: 'center', end: 'flex-end' } as const)[previewDocument?.formStyle?.contentAreaJustify || 'start'],
           ...(debugBorderMain ? { border: debugBorderMain } : {}),
         }}
       >
-        <div className="mx-auto px-4" style={{ maxWidth: previewDocument?.formStyle?.contentAreaMaxWidth ? `${previewDocument.formStyle.contentAreaMaxWidth}px` : '36rem', width: '100%' }}>
+        <div
+          className={fullReplaceResult ? 'w-full' : 'mx-auto px-4'}
+          style={fullReplaceResult ? { width: '100%' } : { maxWidth: previewDocument?.formStyle?.contentAreaMaxWidth ? `${previewDocument.formStyle.contentAreaMaxWidth}px` : '36rem', width: '100%' }}
+        >
           <div
             ref={formRef}
-            className="p-8"
-            style={{
+            className={fullReplaceResult ? '' : 'p-8'}
+            style={fullReplaceResult ? {} : {
               backgroundColor: previewDocument?.formStyle?.formBgColor || 'white',
               borderRadius: getFormBorderRadius(previewDocument?.formStyle?.formBorderRadius),
               boxShadow: getFormShadow(previewDocument?.formStyle?.formShadow),
@@ -815,7 +835,7 @@ export default function DemoPreview() {
       </main>
 
       {/* Mirrored Footer */}
-      {hasMirroredFooter && previewDocument && (() => {
+      {showMirrorFooter && previewDocument && (() => {
         const siteUrl = demo.customerSiteUrl || '';
         let footerBaseHref = '';
         try {
