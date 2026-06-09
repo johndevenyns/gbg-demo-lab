@@ -566,6 +566,18 @@ export function ResultPagesConfig({
           </TabsList>
 
           <TabsContent value="success">
+            {demoSlug && (
+              <div className="flex justify-end mb-3">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => window.open(`/demo/${demoSlug}?previewResult=success`, '_blank', 'noopener')}
+                >
+                  <Eye className="w-4 h-4 mr-2" />
+                  Preview in new window
+                </Button>
+              </div>
+            )}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div>{renderConfigFields(successConfig, onUpdateSuccessPage, 'success')}</div>
               <LivePreview
@@ -580,6 +592,18 @@ export function ResultPagesConfig({
           </TabsContent>
 
           <TabsContent value="failure">
+            {demoSlug && (
+              <div className="flex justify-end mb-3">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => window.open(`/demo/${demoSlug}?previewResult=failure`, '_blank', 'noopener')}
+                >
+                  <Eye className="w-4 h-4 mr-2" />
+                  Preview in new window
+                </Button>
+              </div>
+            )}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div>{renderConfigFields(failureConfig, onUpdateFailurePage, 'failure')}</div>
               <LivePreview
