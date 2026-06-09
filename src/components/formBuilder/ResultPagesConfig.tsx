@@ -291,6 +291,18 @@ export function ResultPagesConfig({
         </Select>
       </div>
 
+      {/* Debug borders toggle */}
+      <div className="flex items-center justify-between">
+        <div>
+          <Label>Show Borders</Label>
+          <p className="text-xs text-muted-foreground">Outline iframe / image slots to debug spacing</p>
+        </div>
+        <Switch
+          checked={config.showBorders === true}
+          onCheckedChange={(checked) => onUpdate({ ...config, showBorders: checked })}
+        />
+      </div>
+
       {/* === Default mode fields === */}
       {mode === 'default' && (
         <>
