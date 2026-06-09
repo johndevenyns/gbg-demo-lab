@@ -104,6 +104,22 @@ function MirrorChrome({ html, css, minHeight }: { html?: string; css?: string; m
 function ScreenshotBlock({ cfg, fallbackBg }: { cfg?: ResultPageScreenshotConfig; fallbackBg?: string }) {
   if (!cfg?.url) return null;
   const fit = cfg.fitMode || 'contain';
+  // If no explicit height set, render image at its natural size (full-width, auto height)
+  // so the slot adds no extra spacing beyond the image itself.
+  if (!cfg.height) {
+    const posX = cfg.positionX || 'center';
+    const justify = posX === 'left' ? 'flex-start' : posX === 'right' ? 'flex-end' : 'center';
+    const imgStyle: React.CSSProperties =
+      fit === 'stretch' ? { width: '100%', height: 'auto', display: 'block' }
+      : fit === 'actual' ? { display: 'block' }
+      : fit === 'cover' ? { width: '100%', height: 'auto', display: 'block', objectFit: 'cover' }
+      : { maxWidth: '100%', height: 'auto', display: 'block' };
+    return (
+      <div style={{ width: '100%', backgroundColor: cfg.bgColor || fallbackBg || '#ffffff', display: 'flex', justifyContent: justify }}>
+        <img src={cfg.url} alt="" style={imgStyle} />
+      </div>
+    );
+  }
   const backgroundSize =
     fit === 'cover' ? 'cover' :
     fit === 'stretch' ? '100% 100%' :
@@ -115,7 +131,7 @@ function ScreenshotBlock({ cfg, fallbackBg }: { cfg?: ResultPageScreenshotConfig
     <div
       style={{
         width: '100%',
-        height: cfg.height || 120,
+        height: cfg.height,
         backgroundColor: cfg.bgColor || fallbackBg || '#ffffff',
         backgroundImage: `url(${cfg.url})`,
         backgroundSize,
