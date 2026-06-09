@@ -786,18 +786,21 @@ export default function DemoPreview() {
         className="flex-1 flex flex-col"
         style={{
           backgroundColor: previewDocument?.formStyle?.contentAreaBgColor || 'transparent',
-          paddingTop: `${previewDocument?.formStyle?.contentAreaPaddingY ?? 0}px`,
-          paddingBottom: `${previewDocument?.formStyle?.contentAreaPaddingY ?? 0}px`,
-          minHeight: `${previewDocument?.formStyle?.contentAreaMinHeight ?? 400}px`,
+          paddingTop: fullReplaceResult ? 0 : `${previewDocument?.formStyle?.contentAreaPaddingY ?? 0}px`,
+          paddingBottom: fullReplaceResult ? 0 : `${previewDocument?.formStyle?.contentAreaPaddingY ?? 0}px`,
+          minHeight: fullReplaceResult ? 0 : `${previewDocument?.formStyle?.contentAreaMinHeight ?? 400}px`,
           justifyContent: ({ start: 'flex-start', center: 'center', end: 'flex-end' } as const)[previewDocument?.formStyle?.contentAreaJustify || 'start'],
           ...(debugBorderMain ? { border: debugBorderMain } : {}),
         }}
       >
-        <div className="mx-auto px-4" style={{ maxWidth: previewDocument?.formStyle?.contentAreaMaxWidth ? `${previewDocument.formStyle.contentAreaMaxWidth}px` : '36rem', width: '100%' }}>
+        <div
+          className={fullReplaceResult ? 'w-full' : 'mx-auto px-4'}
+          style={fullReplaceResult ? { width: '100%' } : { maxWidth: previewDocument?.formStyle?.contentAreaMaxWidth ? `${previewDocument.formStyle.contentAreaMaxWidth}px` : '36rem', width: '100%' }}
+        >
           <div
             ref={formRef}
-            className="p-8"
-            style={{
+            className={fullReplaceResult ? '' : 'p-8'}
+            style={fullReplaceResult ? {} : {
               backgroundColor: previewDocument?.formStyle?.formBgColor || 'white',
               borderRadius: getFormBorderRadius(previewDocument?.formStyle?.formBorderRadius),
               boxShadow: getFormShadow(previewDocument?.formStyle?.formShadow),
