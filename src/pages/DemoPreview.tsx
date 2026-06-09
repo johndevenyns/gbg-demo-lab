@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useEffect, useCallback, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { DemoFlowRenderer } from "@/components/preview/DemoFlowRenderer";
-import { DEFAULT_SUCCESS_CONFIG, DEFAULT_FAILURE_CONFIG } from "@/components/preview/ResultPage";
+import { DEFAULT_SUCCESS_CONFIG, DEFAULT_FAILURE_CONFIG, ResultPage } from "@/components/preview/ResultPage";
 import { DEFAULT_FORM_STYLE } from "@/types/formStyle";
 import { useDemoUseCaseLinks } from "@/hooks/useUseCases";
 import { useHeaderCtaLinks } from "@/hooks/useHeaderCtaLinks";
