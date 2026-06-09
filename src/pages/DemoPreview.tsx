@@ -816,7 +816,28 @@ export default function DemoPreview() {
               border: `${previewDocument?.formStyle?.formBorderWidth || '1'}px solid ${previewDocument?.formStyle?.formBorderColor || '#e5e7eb'}`,
             }}
           >
-            {hasUseCases && selectedUseCase ? (
+            {previewResultParam && activeResultCfg ? (
+              <ResultPage
+                config={{ ...activeResultCfg, referenceId: activeResultCfg.referenceId || 'PREVIEW-1234' }}
+                formStyle={demo.formStyle}
+                buttonColor={demo.buttonColor}
+                mirrorHeaderHtml={
+                  demo.mirrorActiveMethod === 'screenshot'
+                    ? demo.mirrorScreenshotHeaderHtml
+                    : demo.mirrorHtmlHeaderHtml || demo.scrapedHeaderHtml
+                }
+                mirrorFooterHtml={
+                  demo.mirrorActiveMethod === 'screenshot'
+                    ? demo.mirrorScreenshotFooterHtml
+                    : demo.mirrorHtmlFooterHtml || demo.scrapedFooterHtml
+                }
+                mirrorCss={
+                  demo.mirrorActiveMethod === 'screenshot'
+                    ? demo.mirrorScreenshotCss
+                    : demo.mirrorHtmlCss || demo.scrapedCss
+                }
+              />
+            ) : hasUseCases && selectedUseCase ? (
               <UseCaseLandingPage
                 useCases={resolvedUseCases.filter(uc => uc.showOnLandingPage)}
                 selectedUseCase={selectedUseCase}
