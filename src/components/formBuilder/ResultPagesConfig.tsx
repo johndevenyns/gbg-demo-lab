@@ -7,7 +7,7 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CheckCircle2, XCircle, ExternalLink, Settings2, Paintbrush, Sparkles, Upload, Loader2 } from 'lucide-react';
+import { CheckCircle2, XCircle, ExternalLink, Settings2, Paintbrush, Sparkles, Upload, Loader2, Eye } from 'lucide-react';
 import { ResultPageConfig, ResultButtonAction, ResultPageMode, DEFAULT_SUCCESS_CONFIG, DEFAULT_FAILURE_CONFIG } from '@/components/preview/ResultPage';
 import { ResultPage } from '@/components/preview/ResultPage';
 import type { FormStyleConfig } from '@/types/formStyle';
@@ -185,6 +185,7 @@ interface ResultPagesConfigProps {
   failurePageConfig?: ResultPageConfig;
   buttonColor?: string;
   demoId?: string;
+  demoSlug?: string;
   formStyle?: FormStyleConfig;
   mirrorHeaderHtml?: string;
   mirrorFooterHtml?: string;
@@ -204,6 +205,7 @@ export function ResultPagesConfig({
   failurePageConfig,
   buttonColor,
   demoId,
+  demoSlug,
   formStyle,
   mirrorHeaderHtml,
   mirrorFooterHtml,
