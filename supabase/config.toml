@@ -35,3 +35,6 @@ verify_jwt = false
 
 [functions.validate-portal-login]
 verify_jwt = false
+
+[functions.portal-flow-rpc]
+verify_jwt = false
