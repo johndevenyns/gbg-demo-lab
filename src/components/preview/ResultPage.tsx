@@ -65,6 +65,9 @@ export interface ResultPageConfig {
 
   // Show/hide the action button (default: true if buttonText is set)
   showButton?: boolean;
+
+  // Debug: show borders on iframe / screenshot blocks to diagnose spacing
+  showBorders?: boolean;
 }
 
 interface ResultPageProps {
@@ -89,19 +92,19 @@ function buildMirrorIframeSrc(html: string, css: string): string {
   return `<!doctype html><html><head><meta charset="utf-8"><base target="_blank"><style>${css || ''}\nhtml,body{margin:0;padding:0;overflow:hidden}</style></head><body>${html || ''}</body></html>`;
 }
 
-function MirrorChrome({ html, css, minHeight }: { html?: string; css?: string; minHeight: number }) {
+function MirrorChrome({ html, css, minHeight, showBorders }: { html?: string; css?: string; minHeight: number; showBorders?: boolean }) {
   if (!html) return null;
   return (
     <iframe
       title="result-mirror-chrome"
       srcDoc={buildMirrorIframeSrc(html, css || '')}
       sandbox="allow-same-origin"
-      style={{ width: '100%', border: 'none', display: 'block', minHeight, height: minHeight }}
+      style={{ width: '100%', border: showBorders ? '2px dashed #ef4444' : 'none', display: 'block', minHeight, height: minHeight }}
     />
   );
 }
 
-function ScreenshotBlock({ cfg, fallbackBg }: { cfg?: ResultPageScreenshotConfig; fallbackBg?: string }) {
+function ScreenshotBlock({ cfg, fallbackBg, showBorders }: { cfg?: ResultPageScreenshotConfig; fallbackBg?: string; showBorders?: boolean }) {
   if (!cfg?.url) return null;
   const fit = cfg.fitMode || 'contain';
   // If no explicit height set, render image at its natural size (full-width, auto height)
