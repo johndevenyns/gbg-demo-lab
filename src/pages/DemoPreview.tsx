@@ -327,6 +327,21 @@ export default function DemoPreview() {
   const hasMirroredHeader = Boolean(previewDocument?.headerHtml?.trim());
   const hasMirroredFooter = Boolean(previewDocument?.footerHtml?.trim());
   const isScreenshotMode = (demo.mirrorActiveMethod || 'html') === 'screenshot';
+
+  // When the active result page takes over the full layout (screenshots / custom HTML / AI generated),
+  // hide the outer site-mirror chrome and the form card so the result page owns header + main + footer.
+  const activeResultCfg = flowResult === 'success'
+    ? (demo.successPageConfig || DEFAULT_SUCCESS_CONFIG)
+    : flowResult === 'failure'
+    ? (demo.failurePageConfig || DEFAULT_FAILURE_CONFIG)
+    : null;
+  const fullReplaceResult = !!activeResultCfg && (
+    activeResultCfg.pageMode === 'screenshots' ||
+    activeResultCfg.pageMode === 'custom_html' ||
+    activeResultCfg.pageMode === 'ai_generated'
+  );
+  const showMirrorHeader = hasMirroredHeader && !fullReplaceResult;
+  const showMirrorFooter = hasMirroredFooter && !fullReplaceResult;
   const debugBorder = demo.mirrorIframeBordersVisible
     ? '1px solid red'
     : 'none';
