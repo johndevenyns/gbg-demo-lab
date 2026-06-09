@@ -1044,44 +1044,17 @@ export function DemoFlowRenderer({
     const verificationStatus = success ? 'verified' : 'failed';
 
     try {
-      // Check if user already exists
-      const { data: existing } = await supabase
-        .from('portal_users_public')
-        .select('id')
-        .eq('email', email)
-        .maybeSingle();
-
-      if (existing) {
-        // Update existing user
-        await supabase.from('portal_users').update({
-          profile_data: profileData,
-          display_name: displayName,
-          verification_status: verificationStatus,
-        }).eq('id', existing.id);
-
-        // Ensure assignment exists
-        await supabase.from('portal_user_demo_assignments').upsert(
-          { portal_user_id: existing.id, demo_id: demoId },
-          { onConflict: 'portal_user_id,demo_id' }
-        );
-      } else {
-        // Create new user
-        const password = formData.password || Math.random().toString(36).slice(-8);
-        const { data: newUser } = await supabase.from('portal_users').insert({
+      await supabase.functions.invoke('portal-flow-rpc', {
+        body: {
+          action: 'upsert_verification_result',
+          demoId,
           email,
-          password,
-          display_name: displayName,
-          profile_data: profileData,
-          verification_status: verificationStatus,
-        }).select('id').single();
-
-        if (newUser) {
-          await supabase.from('portal_user_demo_assignments').insert({
-            portal_user_id: newUser.id,
-            demo_id: demoId,
-          });
-        }
-      }
+          profileData,
+          displayName,
+          verificationStatus,
+          password: formData.password,
+        },
+      });
       console.log('Account created/updated with verification status:', verificationStatus);
     } catch (err) {
       console.error('Failed to create/update account:', err);
@@ -1309,98 +1282,19 @@ export function DemoFlowRenderer({
     setIsLoading(true);
 
     try {
-      // Check global registration codes first
-      const { data: globalCodeRows } = await supabase
-        .from('global_settings')
-        .select('value')
-        .like('key', 'global_reg_code_%');
-
-      if (globalCodeRows && globalCodeRows.length > 0) {
-        const isGlobalCode = globalCodeRows.some(row => {
-          try {
-            const parsed = JSON.parse(row.value);
-            return parsed.isActive !== false && parsed.code === code;
-          } catch {
-            return row.value === code;
-          }
-        });
-        if (isGlobalCode) {
-          setIsLoading(false);
-          return true;
-        }
-      }
-
-      // Also check legacy single master code
-      const { data: masterCodes } = await supabase
-        .from('global_settings')
-        .select('value')
-        .eq('key', 'master_registration_code')
-        .maybeSingle();
-
-      if ((masterCodes as any)?.value && code === (masterCodes as any).value) {
-        setIsLoading(false);
-        return true;
-      }
-
-      // Find portal user by registration code
-      const { data: portalUser, error: queryError } = await supabase
-        .from('portal_users_public')
-        .select('id, email, registration_code, registration_code_expires_at, is_active, is_default, profile_data')
-        .eq('registration_code', code)
-        .eq('is_active', true)
-        .maybeSingle();
-
-      if (queryError) throw queryError;
-
-      if (!portalUser) {
-        setLoginError('Invalid registration code.');
+      const { data, error } = await supabase.functions.invoke('portal-flow-rpc', {
+        body: { action: 'validate_code', demoId, code },
+      });
+      if (error) throw error;
+      if (!data?.ok) {
+        setLoginError(data?.error || 'Invalid registration code.');
         setIsLoading(false);
         return false;
       }
-
-      // Check if user has access to this demo
-      if (!portalUser.is_default) {
-        const { data: assignment } = await supabase
-          .from('portal_user_demo_assignments')
-          .select('id')
-          .eq('portal_user_id', portalUser.id)
-          .eq('demo_id', demoId)
-          .maybeSingle();
-
-        if (!assignment) {
-          setLoginError('Invalid registration code.');
-          setIsLoading(false);
-          return false;
-        }
+      const prefill = (data.prefill || {}) as Record<string, string>;
+      if (Object.keys(prefill).length) {
+        setFormData(prev => ({ ...prev, ...prefill }));
       }
-
-      // Check expiration
-      if (portalUser.registration_code_expires_at) {
-        const expiresAt = new Date(portalUser.registration_code_expires_at);
-        if (expiresAt < new Date()) {
-          setLoginError('This registration code has expired. Please request a new one.');
-          setIsLoading(false);
-          return false;
-        }
-      }
-
-      // Populate form data with profile_data from the matched user
-      if (portalUser.profile_data && typeof portalUser.profile_data === 'object' && !Array.isArray(portalUser.profile_data)) {
-        const profileData = portalUser.profile_data as Record<string, unknown>;
-        const prefillData: Record<string, string> = {};
-        for (const [key, value] of Object.entries(profileData)) {
-          if (typeof value === 'string' && value.trim()) {
-            prefillData[key] = value;
-          }
-        }
-        if (portalUser.email && !prefillData.email) {
-          prefillData.email = portalUser.email;
-        }
-        setFormData(prev => ({ ...prev, ...prefillData }));
-      } else if (portalUser.email) {
-        setFormData(prev => ({ ...prev, email: portalUser.email }));
-      }
-
       setIsLoading(false);
       return true;
     } catch (err) {
@@ -1428,35 +1322,17 @@ export function DemoFlowRenderer({
     setIsLoading(true);
 
     try {
-      const normalizedInput = ccNumber.replace(/[\s-]/g, '');
-
-      const { data: assignments } = await supabase
-        .from('portal_user_demo_assignments')
-        .select('portal_user_id')
-        .eq('demo_id', demoId);
-
-      const assignedIds = (assignments || []).map(a => a.portal_user_id);
-
-      const { data: users } = await supabase
-        .from('portal_users_public')
-        .select('id, email, display_name, profile_data, is_default, is_active')
-        .eq('is_active', true);
-
-      const matchingUser = (users || []).find(user => {
-        if (!user.is_default && !assignedIds.includes(user.id)) return false;
-        const pd = user.profile_data as Record<string, string> | null;
-        if (!pd?.creditCardNumber) return false;
-        return pd.creditCardNumber.replace(/[\s-]/g, '') === normalizedInput;
+      const { data, error } = await supabase.functions.invoke('portal-flow-rpc', {
+        body: { action: 'verify_cc', demoId, cardNumber: ccNumber },
       });
-
-      if (!matchingUser) {
-        setLoginError('Card number not recognized. Please check and try again.');
+      if (error) throw error;
+      if (!data?.ok) {
+        setLoginError(data?.error || 'Card number not recognized. Please check and try again.');
         setIsLoading(false);
         return false;
       }
-
-      // Pre-fill form data from matched user's profile
-      const pd = matchingUser.profile_data as Record<string, string> | null;
+      const matchingUser = { email: data.email as string, profile_data: data.profileData as Record<string, string> | null };
+      const pd = matchingUser.profile_data;
       if (pd) {
         const prefillMap: Record<string, string> = {
           firstName: 'first_name', lastName: 'last_name', phone: 'phone',
