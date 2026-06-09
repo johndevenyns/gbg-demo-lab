@@ -115,7 +115,7 @@ function ScreenshotSlotEditor({
             type="number"
             min={40}
             value={cur.height ?? ''}
-            placeholder={label === 'Main' ? '400' : '120'}
+            placeholder="auto"
             onChange={(e) => onChange({ ...cur, height: e.target.value ? parseInt(e.target.value, 10) : undefined })}
           />
         </div>
