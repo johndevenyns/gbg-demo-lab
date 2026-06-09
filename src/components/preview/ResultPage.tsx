@@ -118,7 +118,7 @@ function ScreenshotBlock({ cfg, fallbackBg, showBorders }: { cfg?: ResultPageScr
       : fit === 'cover' ? { width: '100%', height: 'auto', display: 'block', objectFit: 'cover' }
       : { maxWidth: '100%', height: 'auto', display: 'block' };
     return (
-      <div style={{ width: '100%', backgroundColor: cfg.bgColor || fallbackBg || '#ffffff', display: 'flex', justifyContent: justify }}>
+      <div style={{ width: '100%', backgroundColor: cfg.bgColor || fallbackBg || '#ffffff', display: 'flex', justifyContent: justify, outline: showBorders ? '2px dashed #ef4444' : undefined }}>
         <img src={cfg.url} alt="" style={imgStyle} />
       </div>
     );
@@ -140,6 +140,7 @@ function ScreenshotBlock({ cfg, fallbackBg, showBorders }: { cfg?: ResultPageScr
         backgroundSize,
         backgroundRepeat: 'no-repeat',
         backgroundPosition: `${posX} ${posY}`,
+        outline: showBorders ? '2px dashed #ef4444' : undefined,
       }}
     />
   );
@@ -196,9 +197,9 @@ export function ResultPage({ config, formStyle, buttonColor, onButtonClick, mirr
           className="min-h-full w-full flex flex-col"
           style={{ backgroundColor: style.contentAreaBgColor || '#ffffff' }}
         >
-          <ScreenshotBlock cfg={config.screenshotHeader} fallbackBg={style.formBgColor} />
-          <div className="relative">
-            <ScreenshotBlock cfg={config.screenshotMain} fallbackBg={style.formBgColor} />
+          <ScreenshotBlock cfg={config.screenshotHeader} fallbackBg={style.formBgColor} showBorders={config.showBorders} />
+          <div className="relative" style={{ outline: config.showBorders ? '2px dashed #ef4444' : undefined }}>
+            <ScreenshotBlock cfg={config.screenshotMain} fallbackBg={style.formBgColor} showBorders={config.showBorders} />
             {showBtn && (
               <div className="absolute inset-x-0 bottom-0 flex justify-center pb-6">
                 <Button
@@ -212,7 +213,7 @@ export function ResultPage({ config, formStyle, buttonColor, onButtonClick, mirr
               </div>
             )}
           </div>
-          <ScreenshotBlock cfg={config.screenshotFooter} fallbackBg={style.formBgColor} />
+          <ScreenshotBlock cfg={config.screenshotFooter} fallbackBg={style.formBgColor} showBorders={config.showBorders} />
         </div>
       );
     }
@@ -226,10 +227,10 @@ export function ResultPage({ config, formStyle, buttonColor, onButtonClick, mirr
     const showBtn = config.showButton !== false && !!config.buttonText;
     return (
       <div className="min-h-full w-full flex flex-col" style={{ backgroundColor: style.contentAreaBgColor || '#ffffff' }}>
-        <MirrorChrome html={mirrorHeaderHtml} css={mirrorCss} minHeight={headerH} />
+        <MirrorChrome html={mirrorHeaderHtml} css={mirrorCss} minHeight={headerH} showBorders={config.showBorders} />
         <div
           className="flex-1 px-4 py-8"
-          style={{ backgroundColor: style.contentAreaBgColor || '#ffffff' }}
+          style={{ backgroundColor: style.contentAreaBgColor || '#ffffff', outline: config.showBorders ? '2px dashed #ef4444' : undefined }}
           dangerouslySetInnerHTML={{
             __html: DOMPurify.sanitize(
               config.mirrorMainHtml ||
@@ -239,7 +240,7 @@ export function ResultPage({ config, formStyle, buttonColor, onButtonClick, mirr
           }}
         />
         {showBtn && (
-          <div className="flex justify-center pb-6">
+          <div className="flex justify-center pb-6" style={{ outline: config.showBorders ? '2px dashed #ef4444' : undefined }}>
             <Button
               onClick={handleButtonClick}
               className="min-w-[200px]"
@@ -250,7 +251,7 @@ export function ResultPage({ config, formStyle, buttonColor, onButtonClick, mirr
             </Button>
           </div>
         )}
-        <MirrorChrome html={mirrorFooterHtml} css={mirrorCss} minHeight={footerH} />
+        <MirrorChrome html={mirrorFooterHtml} css={mirrorCss} minHeight={footerH} showBorders={config.showBorders} />
       </div>
     );
   }
