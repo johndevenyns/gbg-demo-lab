@@ -87,6 +87,8 @@ function repairHeaderLogoHtml(headerHtml: string, logoUrl?: string, customerName
 
 export default function DemoPreview() {
   const { slug } = useParams<{ slug: string }>();
+  const [searchParams] = useSearchParams();
+  const previewResultParam = searchParams.get('previewResult'); // 'success' | 'failure' | null
   const { isAdmin, isLoading: authLoading } = useAuth();
   const { data: demo, isLoading, error } = useDemoBySlug(slug || "");
   const { data: links = [] } = useDemoUseCaseLinks(demo?.id);
@@ -113,6 +115,13 @@ export default function DemoPreview() {
   const [portalTransactionContext, setPortalTransactionContext] = useState<{ amount?: number; recipientName?: string; fromAccount?: string } | undefined>(undefined);
   const [portalNavCommand, setPortalNavCommand] = useState<'dashboard' | 'repeat_transfer' | null>(null);
   const [flowResult, setFlowResult] = useState<'success' | 'failure' | null>(null);
+
+  // If launched as a preview-result window, jump straight to the result page.
+  useEffect(() => {
+    if (previewResultParam === 'success' || previewResultParam === 'failure') {
+      setFlowResult(previewResultParam);
+    }
+  }, [previewResultParam]);
 
   // Get portal type directly from the demo
   const demoPortalType = demo?.portalType || 'none';
