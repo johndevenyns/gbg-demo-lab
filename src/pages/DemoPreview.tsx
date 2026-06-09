@@ -832,7 +832,7 @@ export default function DemoPreview() {
       </main>
 
       {/* Mirrored Footer */}
-      {hasMirroredFooter && previewDocument && (() => {
+      {showMirrorFooter && previewDocument && (() => {
         const siteUrl = demo.customerSiteUrl || '';
         let footerBaseHref = '';
         try {
