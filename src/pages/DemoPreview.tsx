@@ -112,6 +112,7 @@ export default function DemoPreview() {
   const [portalVerificationTrigger, setPortalVerificationTrigger] = useState<PortalVerificationTrigger | null>(null);
   const [portalTransactionContext, setPortalTransactionContext] = useState<{ amount?: number; recipientName?: string; fromAccount?: string } | undefined>(undefined);
   const [portalNavCommand, setPortalNavCommand] = useState<'dashboard' | 'repeat_transfer' | null>(null);
+  const [flowResult, setFlowResult] = useState<'success' | 'failure' | null>(null);
 
   // Get portal type directly from the demo
   const demoPortalType = demo?.portalType || 'none';
