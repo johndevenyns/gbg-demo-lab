@@ -327,6 +327,8 @@ export function ResultPagesConfig({
   const [selectedPage, setSelectedPage] = useState<PageKey | null>(null);
   const [urlSettingsOpen, setUrlSettingsOpen] = useState(false);
   const [generating, setGenerating] = useState<string | null>(null);
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState('');
   const { toast } = useToast();
   const pages = extraCustomPages || [];
 
