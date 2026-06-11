@@ -803,7 +803,50 @@ export function ResultPagesConfig({
                 <div className="flex items-center gap-3 min-w-0">
                   <FileText className="w-5 h-5 text-primary" />
                   <div className="min-w-0">
-                    <div className="font-medium truncate">{p.name}</div>
+                    {renamingId === p.id ? (
+                      <div className="flex items-center gap-2">
+                        <Input
+                          autoFocus
+                          value={renameValue}
+                          onChange={(e) => setRenameValue(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              if (onUpdateExtraCustomPages && renameValue.trim()) {
+                                onUpdateExtraCustomPages(pages.map((x) => x.id === p.id ? { ...x, name: renameValue.trim() } : x));
+                              }
+                              setRenamingId(null);
+                            }
+                            if (e.key === 'Escape') setRenamingId(null);
+                          }}
+                          className="h-8 text-sm"
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                          onClick={() => {
+                            if (onUpdateExtraCustomPages && renameValue.trim()) {
+                              onUpdateExtraCustomPages(pages.map((x) => x.id === p.id ? { ...x, name: renameValue.trim() } : x));
+                            }
+                            setRenamingId(null);
+                          }}
+                        >
+                          <Check className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                          onClick={() => setRenamingId(null)}
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="font-medium truncate">{p.name}</div>
+                    )}
                     <div className="text-xs text-muted-foreground truncate font-mono">
                       /demo/{demoSlug || ':slug'}/page/{p.slug}
                     </div>
@@ -823,6 +866,16 @@ export function ResultPagesConfig({
                       Preview
                     </Button>
                   )}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setRenamingId(p.id);
+                      setRenameValue(p.name);
+                    }}
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </Button>
                   <Button
                     variant="ghost"
                     size="sm"
