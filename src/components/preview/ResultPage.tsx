@@ -434,12 +434,9 @@ export function ResultPage({ config, formStyle, buttonColor, onButtonClick, mirr
   // Container styles matching form styling
   const containerStyle: React.CSSProperties = {
     fontFamily: style.fontFamily || 'inherit',
-    backgroundColor: style.formBgColor || '#ffffff',
-    borderRadius: borderRadius,
-    border: style.formBorderWidth && style.formBorderWidth !== '0' 
-      ? `${borderWidth} solid ${style.formBorderColor || '#e5e7eb'}`
-      : 'none',
-    boxShadow: boxShadow,
+    backgroundColor: 'transparent',
+    border: 'none',
+    boxShadow: 'none',
     padding: '2rem',
     maxWidth: '500px',
     margin: '0 auto',

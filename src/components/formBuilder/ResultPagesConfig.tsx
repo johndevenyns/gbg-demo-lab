@@ -884,9 +884,20 @@ export function ResultPagesConfig({
                     <div className="text-xs text-muted-foreground mt-0.5">
                       Mode: <span className="font-mono">{row.cfg.pageMode || 'default'}</span>
                     </div>
-                    <div className="text-xs text-muted-foreground truncate font-mono">
-                      {origin}/demo/{demoSlug || ':slug'}?previewResult={row.previewParam}
-                    </div>
+                    {demoSlug && row.key !== 'landing' ? (
+                      <a
+                        href={`/demo/${demoSlug}?previewResult=${row.previewParam}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-primary hover:underline truncate font-mono block"
+                      >
+                        {origin}/demo/{demoSlug}?previewResult={row.previewParam}
+                      </a>
+                    ) : (
+                      <div className="text-xs text-muted-foreground truncate font-mono">
+                        {origin}/demo/{demoSlug || ':slug'}?previewResult={row.previewParam}
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
