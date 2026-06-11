@@ -82,7 +82,7 @@ function buildPayload(req: CreateSessionRequest, referenceId: string) {
 
   const firstName = pick('firstName', 'first_name').toUpperCase();
   const lastName = pick('lastName', 'last_name').toUpperCase();
-  const dateOfBirth = pick('dateOfBirth', 'birthday');
+  const dateOfBirth = normalizeDob(pick('dateOfBirth', 'birthday', 'dob'));
   const phoneDigits = pick('phone').replace(/\D/g, '');
   const email = pick('email').toLowerCase();
   const dlNumber = pick('dlNumber', 'documentNumber');
