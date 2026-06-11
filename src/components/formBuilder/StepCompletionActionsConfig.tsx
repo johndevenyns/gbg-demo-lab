@@ -14,6 +14,8 @@ import {
   FileText, UserPlus, LogIn, ExternalLink, ArrowRight, Settings2
 } from 'lucide-react';
 import { StepCompletionConfig, StepCompletionAction, StepCompletionActionType } from '@/types/demo';
+import type { ExtraCustomPage } from '@/types/demo';
+import type { ResultPageConfig } from '@/components/preview/ResultPage';
 
 const ACTION_TYPE_OPTIONS: { value: StepCompletionActionType; label: string; description: string; icon: React.ReactNode }[] = [
   { value: 'show_result_page', label: 'Show Result Page', description: 'Display a customizable success/failure result page', icon: <FileText className="w-4 h-4" /> },
@@ -35,9 +37,21 @@ interface StepCompletionActionsConfigProps {
   config?: StepCompletionConfig;
   onChange: (config: StepCompletionConfig) => void;
   inline?: boolean;
+  demoSlug?: string;
+  extraCustomPages?: ExtraCustomPage[];
+  successPageConfig?: ResultPageConfig;
+  failurePageConfig?: ResultPageConfig;
 }
 
-export function StepCompletionActionsConfig({ config, onChange, inline }: StepCompletionActionsConfigProps) {
+export function StepCompletionActionsConfig({
+  config,
+  onChange,
+  inline,
+  demoSlug,
+  extraCustomPages,
+  successPageConfig,
+  failurePageConfig,
+}: StepCompletionActionsConfigProps) {
   const [isExpanded, setIsExpanded] = useState(!!config || !!inline);
   const [activeTab, setActiveTab] = useState<'success' | 'failure'>('success');
 
