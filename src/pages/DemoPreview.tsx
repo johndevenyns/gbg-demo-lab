@@ -344,10 +344,18 @@ export default function DemoPreview() {
     : flowResult === 'failure'
     ? (demo.failurePageConfig || DEFAULT_FAILURE_CONFIG)
     : null;
-  const fullReplaceResult = !!activeResultCfg && (
-    activeResultCfg.pageMode === 'screenshots' ||
-    activeResultCfg.pageMode === 'custom_html' ||
-    activeResultCfg.pageMode === 'ai_generated'
+
+  // If this URL targets an admin-defined extra custom page, resolve it
+  const extraPageCfg = pageSlug
+    ? (demo.extraCustomPages || []).find((p) => p.slug === pageSlug)?.config || null
+    : null;
+  const displayResultCfg = extraPageCfg || activeResultCfg;
+  const isExtraPageRoute = !!extraPageCfg;
+  const fullReplaceResult = !!displayResultCfg && (
+    displayResultCfg.pageMode === 'screenshots' ||
+    displayResultCfg.pageMode === 'custom_html' ||
+    displayResultCfg.pageMode === 'ai_generated' ||
+    displayResultCfg.pageMode === 'single_screenshot'
   );
   const showMirrorHeader = hasMirroredHeader && !fullReplaceResult;
   const showMirrorFooter = hasMirroredFooter && !fullReplaceResult;
