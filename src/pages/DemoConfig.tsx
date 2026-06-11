@@ -35,14 +35,14 @@ import { Key, CheckCircle2 } from "lucide-react";
 import { ResultPagesConfig } from "@/components/formBuilder/ResultPagesConfig";
 
 // Navigation sections
-type ConfigSection = 'settings' | 'mirror' | 'branding' | 'use-cases' | 'results' | 'users';
+type ConfigSection = 'settings' | 'mirror' | 'branding' | 'use-cases' | 'custom-pages' | 'users';
 
 const sections: { id: ConfigSection; label: string; icon: React.ElementType; description: string }[] = [
   { id: 'settings', label: 'Site Settings', icon: Settings, description: 'Core configuration' },
   { id: 'mirror', label: 'Appearance', icon: Globe, description: 'Site & form styling' },
   { id: 'branding', label: 'Mobile Branding', icon: Palette, description: 'Colors & logo' },
   { id: 'use-cases', label: 'Use Cases', icon: Briefcase, description: 'Journeys & workflow builder' },
-  { id: 'results', label: 'Result Pages', icon: CheckCircle2, description: 'Success & failure landing pages' },
+  { id: 'custom-pages', label: 'Custom Pages', icon: CheckCircle2, description: 'Success, failure & landing pages' },
   { id: 'users', label: 'Demo Users', icon: Users, description: 'Manage demo user accounts' },
 ];
 
@@ -408,7 +408,7 @@ export default function DemoConfig() {
         return <BrandingSection demo={localDemo} onUpdate={handleUpdate} />;
       case 'use-cases':
         return <UseCaseSection demoId={localDemo.id} demo={localDemo} onUpdateDemo={handleUpdate} />;
-      case 'results':
+      case 'custom-pages':
         return (
           <ResultPagesConfig
             approvedUrl={localDemo.approvedUrl || ''}
@@ -416,6 +416,7 @@ export default function DemoConfig() {
             returnUrl={localDemo.returnUrl || ''}
             successPageConfig={localDemo.successPageConfig}
             failurePageConfig={localDemo.failurePageConfig}
+            landingPageConfig={localDemo.landingPageConfig}
             buttonColor={localDemo.buttonColor}
             demoId={localDemo.id}
             demoSlug={localDemo.slug}
@@ -440,6 +441,7 @@ export default function DemoConfig() {
             onUpdateReturnUrl={(url) => handleUpdate({ returnUrl: url })}
             onUpdateSuccessPage={(cfg) => handleUpdate({ successPageConfig: cfg })}
             onUpdateFailurePage={(cfg) => handleUpdate({ failurePageConfig: cfg })}
+            onUpdateLandingPage={(cfg) => handleUpdate({ landingPageConfig: cfg })}
           />
         );
       case 'users':

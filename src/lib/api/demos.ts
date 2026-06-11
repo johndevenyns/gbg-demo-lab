@@ -47,6 +47,7 @@ const rowToDemo = (row: any): DemoEnvironment => {
   const formStyle = row.form_style as (FormStyleConfig & { 
     successPageConfig?: ResultPageConfig; 
     failurePageConfig?: ResultPageConfig;
+    landingPageConfig?: ResultPageConfig;
   }) | null;
   
   return {
@@ -91,6 +92,7 @@ const rowToDemo = (row: any): DemoEnvironment => {
     formStyle: formStyle ? { ...DEFAULT_FORM_STYLE, ...formStyle } : DEFAULT_FORM_STYLE,
     successPageConfig: formStyle?.successPageConfig,
     failurePageConfig: formStyle?.failurePageConfig,
+    landingPageConfig: formStyle?.landingPageConfig,
     storedTestData: storedTestData || undefined,
     landingHeading: row.landing_heading || undefined,
     createdAt: row.created_at,
@@ -142,12 +144,13 @@ const demoToRow = (demo: Partial<DemoEnvironment>) => {
   if (demo.headerCtaSelector !== undefined) row.header_cta_selector = demo.headerCtaSelector;
   if (demo.headerCtaUseCaseId !== undefined) row.header_cta_use_case_id = demo.headerCtaUseCaseId || null;
   // Store result page configs inside form_style to avoid new DB columns
-  if (demo.formStyle !== undefined || demo.successPageConfig !== undefined || demo.failurePageConfig !== undefined) {
+  if (demo.formStyle !== undefined || demo.successPageConfig !== undefined || demo.failurePageConfig !== undefined || demo.landingPageConfig !== undefined) {
     const existingStyle = demo.formStyle || {};
     row.form_style = {
       ...existingStyle,
       ...(demo.successPageConfig !== undefined && { successPageConfig: demo.successPageConfig }),
       ...(demo.failurePageConfig !== undefined && { failurePageConfig: demo.failurePageConfig }),
+      ...(demo.landingPageConfig !== undefined && { landingPageConfig: demo.landingPageConfig }),
     };
   }
   if (demo.storedTestData !== undefined) row.stored_test_data = demo.storedTestData;

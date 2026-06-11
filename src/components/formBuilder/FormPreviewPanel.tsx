@@ -143,6 +143,7 @@ export function FormPreviewPanel({ demo }: FormPreviewPanelProps) {
                     formStyle={demo.formStyle}
                     successPageConfig={demo.successPageConfig || DEFAULT_SUCCESS_CONFIG}
                     failurePageConfig={demo.failurePageConfig || DEFAULT_FAILURE_CONFIG}
+                    landingPageConfig={demo.landingPageConfig}
                     approvedUrl={demo.approvedUrl}
                     rejectedUrl={demo.rejectedUrl}
                     customerName={demo.customerName}

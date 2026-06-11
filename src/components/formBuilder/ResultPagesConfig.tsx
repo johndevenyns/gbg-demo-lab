@@ -4,11 +4,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CheckCircle2, XCircle, ExternalLink, Settings2, Paintbrush, Sparkles, Upload, Loader2, Eye } from 'lucide-react';
-import { ResultPageConfig, ResultButtonAction, ResultPageMode, DEFAULT_SUCCESS_CONFIG, DEFAULT_FAILURE_CONFIG } from '@/components/preview/ResultPage';
+import { CheckCircle2, XCircle, ExternalLink, Settings2, Paintbrush, Sparkles, Upload, Loader2, Eye, ArrowLeft, FileText, ChevronRight } from 'lucide-react';
+import { ResultPageConfig, ResultButtonAction, ResultPageMode, DEFAULT_SUCCESS_CONFIG, DEFAULT_FAILURE_CONFIG, DEFAULT_LANDING_CONFIG } from '@/components/preview/ResultPage';
 import { ResultPage } from '@/components/preview/ResultPage';
 import type { FormStyleConfig } from '@/types/formStyle';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -183,6 +182,7 @@ interface ResultPagesConfigProps {
   returnUrl: string;
   successPageConfig?: ResultPageConfig;
   failurePageConfig?: ResultPageConfig;
+  landingPageConfig?: ResultPageConfig;
   buttonColor?: string;
   demoId?: string;
   demoSlug?: string;
@@ -195,6 +195,7 @@ interface ResultPagesConfigProps {
   onUpdateReturnUrl: (url: string) => void;
   onUpdateSuccessPage: (config: ResultPageConfig) => void;
   onUpdateFailurePage: (config: ResultPageConfig) => void;
+  onUpdateLandingPage: (config: ResultPageConfig) => void;
 }
 
 export function ResultPagesConfig({
@@ -203,6 +204,7 @@ export function ResultPagesConfig({
   returnUrl,
   successPageConfig,
   failurePageConfig,
+  landingPageConfig,
   buttonColor,
   demoId,
   demoSlug,
@@ -215,15 +217,18 @@ export function ResultPagesConfig({
   onUpdateReturnUrl,
   onUpdateSuccessPage,
   onUpdateFailurePage,
+  onUpdateLandingPage,
 }: ResultPagesConfigProps) {
-  const [activeTab, setActiveTab] = useState<'success' | 'failure'>('success');
+  type PageKey = 'success' | 'failure' | 'landing';
+  const [selectedPage, setSelectedPage] = useState<PageKey | null>(null);
   const [urlSettingsOpen, setUrlSettingsOpen] = useState(false);
-  const [generating, setGenerating] = useState<null | 'success' | 'failure'>(null);
+  const [generating, setGenerating] = useState<null | PageKey>(null);
   const { toast } = useToast();
 
   // Use provided configs or defaults
   const successConfig = successPageConfig || DEFAULT_SUCCESS_CONFIG;
   const failureConfig = failurePageConfig || DEFAULT_FAILURE_CONFIG;
+  const landingConfig = landingPageConfig || DEFAULT_LANDING_CONFIG;
 
   const uploadImage = async (file: File, slot: string): Promise<string | null> => {
     if (!demoId) {
@@ -240,7 +245,7 @@ export function ResultPagesConfig({
     return supabase.storage.from('demo-logos').getPublicUrl(path).data.publicUrl;
   };
 
-  const handleGenerateAi = async (config: ResultPageConfig, onUpdate: (c: ResultPageConfig) => void, type: 'success' | 'failure') => {
+  const handleGenerateAi = async (config: ResultPageConfig, onUpdate: (c: ResultPageConfig) => void, type: PageKey) => {
     if (!config.aiPrompt || !config.aiPrompt.trim()) {
       toast({ title: 'Add a prompt', description: 'Describe what the page should look like.', variant: 'destructive' });
       return;
@@ -273,7 +278,7 @@ export function ResultPagesConfig({
   const renderConfigFields = (
     config: ResultPageConfig,
     onUpdate: (config: ResultPageConfig) => void,
-    type: 'success' | 'failure'
+    type: PageKey
   ) => {
     const mode: ResultPageMode = config.pageMode || 'default';
     return (
@@ -495,7 +500,7 @@ export function ResultPagesConfig({
             />
           </div>
 
-          {type === 'success' && (
+          {(type === 'success' || type === 'landing') && (
             <div className="space-y-2">
               <Label>Button Action</Label>
               <Select
@@ -508,17 +513,22 @@ export function ResultPagesConfig({
                 <SelectContent>
                   <SelectItem value="url">Redirect to URL</SelectItem>
                   <SelectItem value="portal">Go to account portal</SelectItem>
+                  {type === 'success' && (
+                    <SelectItem value="landing">Go to custom landing page</SelectItem>
+                  )}
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground">
                 {config.buttonAction === 'portal'
                   ? 'User will be logged into the industry portal'
+                  : config.buttonAction === 'landing'
+                  ? 'User will be taken to the custom Landing page you configure below'
                   : 'User will be redirected to the URL below'}
               </p>
             </div>
           )}
 
-          {(config.buttonAction !== 'portal' || type === 'failure') && (
+          {config.buttonAction !== 'portal' && config.buttonAction !== 'landing' && (
             <div className="space-y-2">
               <Label>Button URL (optional)</Label>
               <Input
@@ -528,7 +538,7 @@ export function ResultPagesConfig({
                 placeholder="https://yoursite.com/next-step"
               />
               <p className="text-xs text-muted-foreground">
-                Leave empty to use the {type === 'success' ? 'Approved' : 'Rejected'} URL below
+                Leave empty to use the {type === 'success' ? 'Approved' : type === 'failure' ? 'Rejected' : 'default'} URL below
               </p>
             </div>
           )}
@@ -545,78 +555,114 @@ export function ResultPagesConfig({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Paintbrush className="w-5 h-5" />
-          Result Pages
+          Custom Pages
         </CardTitle>
         <CardDescription>
-          Customize the success and failure pages shown after verification. These are the default pages used unless a step specifies custom result pages.
+          The default pages shown after verification. Edit Success, Failure, and your custom Landing page. Steps may override these with their own custom result pages.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Page Content Editor */}
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'success' | 'failure')}>
-          <TabsList className="grid w-full grid-cols-2 mb-4">
-            <TabsTrigger value="success" className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-green-500" />
-              Success Page
-            </TabsTrigger>
-            <TabsTrigger value="failure" className="flex items-center gap-2">
-              <XCircle className="w-4 h-4 text-red-500" />
-              Failure Page
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="success">
-            {demoSlug && (
-              <div className="flex justify-end mb-3">
+        {/* Page list / editor */}
+        {selectedPage === null ? (
+          <div className="space-y-3">
+            {([
+              {
+                key: 'success' as const,
+                label: 'Success Page',
+                description: 'Shown when verification succeeds.',
+                icon: <CheckCircle2 className="w-5 h-5 text-green-500" />,
+                cfg: successConfig,
+                previewParam: 'success',
+              },
+              {
+                key: 'failure' as const,
+                label: 'Failure Page',
+                description: 'Shown when verification fails.',
+                icon: <XCircle className="w-5 h-5 text-red-500" />,
+                cfg: failureConfig,
+                previewParam: 'failure',
+              },
+              {
+                key: 'landing' as const,
+                label: 'Custom Landing Page',
+                description: 'Optional page you can link to from the Success page button.',
+                icon: <FileText className="w-5 h-5 text-primary" />,
+                cfg: landingConfig,
+                previewParam: 'landing',
+              },
+            ]).map((row) => (
+              <div
+                key={row.key}
+                className="flex items-center justify-between gap-3 rounded-lg border bg-card p-4 hover:border-primary/50 transition-colors"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  {row.icon}
+                  <div className="min-w-0">
+                    <div className="font-medium truncate">{row.label}</div>
+                    <div className="text-xs text-muted-foreground truncate">
+                      {row.cfg.title} — {row.description}
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-0.5">
+                      Mode: <span className="font-mono">{row.cfg.pageMode || 'default'}</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  {demoSlug && row.key !== 'landing' && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => window.open(`/demo/${demoSlug}?previewResult=${row.previewParam}`, '_blank', 'noopener')}
+                    >
+                      <Eye className="w-4 h-4 mr-1" />
+                      Preview
+                    </Button>
+                  )}
+                  <Button size="sm" onClick={() => setSelectedPage(row.key)}>
+                    Edit
+                    <ChevronRight className="w-4 h-4 ml-1" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <Button variant="ghost" size="sm" onClick={() => setSelectedPage(null)}>
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to pages
+              </Button>
+              {demoSlug && selectedPage !== 'landing' && (
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => window.open(`/demo/${demoSlug}?previewResult=success`, '_blank', 'noopener')}
+                  onClick={() => window.open(`/demo/${demoSlug}?previewResult=${selectedPage}`, '_blank', 'noopener')}
                 >
                   <Eye className="w-4 h-4 mr-2" />
                   Preview in new window
                 </Button>
-              </div>
-            )}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div>{renderConfigFields(successConfig, onUpdateSuccessPage, 'success')}</div>
-              <LivePreview
-                config={{ ...successConfig, referenceId: successConfig.referenceId || 'PREVIEW-1234' }}
-                formStyle={formStyle}
-                buttonColor={buttonColor}
-                mirrorHeaderHtml={mirrorHeaderHtml}
-                mirrorFooterHtml={mirrorFooterHtml}
-                mirrorCss={mirrorCss}
-              />
+              )}
             </div>
-          </TabsContent>
-
-          <TabsContent value="failure">
-            {demoSlug && (
-              <div className="flex justify-end mb-3">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => window.open(`/demo/${demoSlug}?previewResult=failure`, '_blank', 'noopener')}
-                >
-                  <Eye className="w-4 h-4 mr-2" />
-                  Preview in new window
-                </Button>
-              </div>
-            )}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div>{renderConfigFields(failureConfig, onUpdateFailurePage, 'failure')}</div>
-              <LivePreview
-                config={{ ...failureConfig, referenceId: failureConfig.referenceId || 'PREVIEW-1234' }}
-                formStyle={formStyle}
-                buttonColor={buttonColor}
-                mirrorHeaderHtml={mirrorHeaderHtml}
-                mirrorFooterHtml={mirrorFooterHtml}
-                mirrorCss={mirrorCss}
-              />
-            </div>
-          </TabsContent>
-        </Tabs>
+            {(() => {
+              const cfg = selectedPage === 'success' ? successConfig : selectedPage === 'failure' ? failureConfig : landingConfig;
+              const upd = selectedPage === 'success' ? onUpdateSuccessPage : selectedPage === 'failure' ? onUpdateFailurePage : onUpdateLandingPage;
+              return (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div>{renderConfigFields(cfg, upd, selectedPage)}</div>
+                  <LivePreview
+                    config={{ ...cfg, referenceId: cfg.referenceId || 'PREVIEW-1234' }}
+                    formStyle={formStyle}
+                    buttonColor={buttonColor}
+                    mirrorHeaderHtml={mirrorHeaderHtml}
+                    mirrorFooterHtml={mirrorFooterHtml}
+                    mirrorCss={mirrorCss}
+                  />
+                </div>
+              );
+            })()}
+          </div>
+        )}
 
         {/* Redirect URL Settings - Collapsible */}
         <Collapsible open={urlSettingsOpen} onOpenChange={setUrlSettingsOpen}>
