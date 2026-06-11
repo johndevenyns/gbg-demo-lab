@@ -98,17 +98,20 @@ function buildPayload(req: CreateSessionRequest, referenceId: string) {
   // Per the IVS API reference, every verification type uses the same
   // top-level envelope. `customerData` is required for dataBio/dataOnly,
   // optional for docBio. Unknown top-level keys are silently dropped.
-  const customerData: Record<string, string> = {};
-  if (firstName) customerData.firstName = firstName;
-  if (lastName) customerData.lastName = lastName;
-  if (fd.dateOfBirth) customerData.dateOfBirth = fd.dateOfBirth; // YYYY-MM-DD
-  if (combinedAddress) customerData.address = combinedAddress;
-  if (fd.phone) customerData.phone = fd.phone.replace(/\D/g, '');
-  if (fd.email) customerData.email = fd.email.trim();
+  // Build identity fields. dataBio uses FLAT top-level fields per docs
+  // (POST /api/verification/sessions cURL example). docBio and dataOnly
+  // continue to use the nested customerData wrapper.
+  const identity: Record<string, string> = {};
+  if (firstName) identity.firstName = firstName;
+  if (lastName) identity.lastName = lastName;
+  if (fd.dateOfBirth) identity.dateOfBirth = fd.dateOfBirth; // YYYY-MM-DD
+  if (combinedAddress) identity.address = combinedAddress;
+  if (fd.phone) identity.phone = fd.phone.replace(/\D/g, '');
+  if (fd.email) identity.email = fd.email.trim();
   const dlNumber = fd.dlNumber || fd.documentNumber;
-  if (dlNumber) customerData.dlNumber = dlNumber;
-  if (fd.dlState) customerData.dlState = fd.dlState;
-  if (fd.ssn4) customerData.ssn4 = fd.ssn4;
+  if (dlNumber) identity.dlNumber = dlNumber;
+  if (fd.dlState) identity.dlState = fd.dlState;
+  if (fd.ssn4) identity.ssn4 = fd.ssn4;
 
   const base: Record<string, unknown> = {
     verificationType: req.verificationType,
@@ -124,9 +127,15 @@ function buildPayload(req: CreateSessionRequest, referenceId: string) {
   if (req.resourceId) base.resourceId = req.resourceId;
   if (req.logoUrl) base.logoUrl = req.logoUrl;
 
-  // customerData is required for dataBio/dataOnly and optional for docBio.
-  if (Object.keys(customerData).length > 0) {
-    base.customerData = customerData;
+  // dataBio expects flat top-level identity fields per the API reference
+  // (https://ditto.gbg.com/docs → Data & Bio → Example Request). docBio
+  // and dataOnly continue to use the nested `customerData` wrapper.
+  if (Object.keys(identity).length > 0) {
+    if (req.verificationType === 'dataBio') {
+      Object.assign(base, identity);
+    } else {
+      base.customerData = identity;
+    }
   }
 
   // Branding is nested-only per the current spec (flat fields are deprecated).
