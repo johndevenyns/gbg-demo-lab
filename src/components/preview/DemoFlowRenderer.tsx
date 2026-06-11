@@ -1586,7 +1586,18 @@ export function DemoFlowRenderer({
 
   // Create verification session with the API
   // skipAdvance: if true, don't call goToNextStep after creation (for unified_verification)
-  const createVerificationSession = useCallback(async (verificationType: VerificationType, skipAdvance = false, resourceIdOverride?: string, popupMode = false) => {
+  const createVerificationSession = useCallback(async (
+    verificationType: VerificationType,
+    skipAdvance = false,
+    resourceIdOverride?: string,
+    popupMode = false,
+    dataBioOptions?: {
+      documentsEnabled?: boolean;
+      documentsCount?: number;
+      biometricsEnabled?: boolean;
+      biometricsFaceCount?: number;
+    },
+  ) => {
     // Guard against duplicate calls
     if (verificationSessionId) {
       console.log('Session already exists, skipping creation');
@@ -1632,6 +1643,7 @@ export function DemoFlowRenderer({
         headerTextColor: headerTextColor,
         headerBgColor: headerBgColor,
       },
+      ...(verificationType === 'dataBio' && dataBioOptions ? { dataBioOptions } : {}),
     };
     
     // Log request
