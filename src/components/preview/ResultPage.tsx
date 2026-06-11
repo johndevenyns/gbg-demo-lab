@@ -356,6 +356,9 @@ export function ResultPage({ config, formStyle, buttonColor, onButtonClick, mirr
             </div>
           )}
 
+          {/* Spacer keeps the footer pinned to the bottom when no main image is set */}
+          {!url && <div className="flex-1" />}
+
           {/* Footer chrome */}
           {(config.footerSource === 'mirror' || config.footerSource === 'upload') && (
             <div className="relative">
