@@ -830,7 +830,7 @@ export default function DemoPreview() {
               border: `${previewDocument?.formStyle?.formBorderWidth || '1'}px solid ${previewDocument?.formStyle?.formBorderColor || '#e5e7eb'}`,
             }}
           >
-            {(previewResultParam && activeResultCfg) || isExtraPageRoute ? (
+            {(previewResultParam && activeResultCfg) || isExtraPageRoute || showDefaultLanding ? (
               <ResultPage
                 config={{ ...(displayResultCfg as NonNullable<typeof displayResultCfg>), referenceId: (displayResultCfg as NonNullable<typeof displayResultCfg>).referenceId || 'PREVIEW-1234' }}
                 formStyle={demo.formStyle}
