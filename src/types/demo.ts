@@ -91,7 +91,10 @@ export interface DemoEnvironment {
 
   // Extra custom pages — admin-defined, each at /demo/:slug/page/:pageSlug
   extraCustomPages?: ExtraCustomPage[];
-  
+
+  // Which custom page slug should be the default landing page for /demo/:slug
+  defaultLandingPageSlug?: string;
+
   // Stored test data for Fill Pass / Fill Fail buttons
   storedTestData?: StoredTestData;
   
