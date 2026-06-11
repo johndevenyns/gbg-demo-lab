@@ -184,6 +184,7 @@ interface ResultPagesConfigProps {
   successPageConfig?: ResultPageConfig;
   failurePageConfig?: ResultPageConfig;
   landingPageConfig?: ResultPageConfig;
+  extraCustomPages?: ExtraCustomPage[];
   buttonColor?: string;
   demoId?: string;
   demoSlug?: string;
@@ -197,6 +198,7 @@ interface ResultPagesConfigProps {
   onUpdateSuccessPage: (config: ResultPageConfig) => void;
   onUpdateFailurePage: (config: ResultPageConfig) => void;
   onUpdateLandingPage: (config: ResultPageConfig) => void;
+  onUpdateExtraCustomPages?: (pages: ExtraCustomPage[]) => void;
 }
 
 export function ResultPagesConfig({
@@ -206,6 +208,7 @@ export function ResultPagesConfig({
   successPageConfig,
   failurePageConfig,
   landingPageConfig,
+  extraCustomPages,
   buttonColor,
   demoId,
   demoSlug,
@@ -219,12 +222,14 @@ export function ResultPagesConfig({
   onUpdateSuccessPage,
   onUpdateFailurePage,
   onUpdateLandingPage,
+  onUpdateExtraCustomPages,
 }: ResultPagesConfigProps) {
-  type PageKey = 'success' | 'failure' | 'landing';
+  type PageKey = 'success' | 'failure' | 'landing' | { extraId: string };
   const [selectedPage, setSelectedPage] = useState<PageKey | null>(null);
   const [urlSettingsOpen, setUrlSettingsOpen] = useState(false);
-  const [generating, setGenerating] = useState<null | PageKey>(null);
+  const [generating, setGenerating] = useState<string | null>(null);
   const { toast } = useToast();
+  const pages = extraCustomPages || [];
 
   // Use provided configs or defaults
   const successConfig = successPageConfig || DEFAULT_SUCCESS_CONFIG;
