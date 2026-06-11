@@ -7,10 +7,6 @@ const corsHeaders = {
 };
 
 const BASE_URL = 'https://ditto.gbg.com';
-// Legacy host still emitted by older deployments of the verification API.
-// Per the IVS API reference (2026-05-10), the canonical host is ditto.gbg.com
-// and app.art-of-sales-engineering.com continues to be accepted during the
-// transition. Rewrite any legacy host we receive in URLs to the canonical one.
 const LEGACY_HOSTS = [
   'https://app.art-of-sales-engineering.com',
   'https://paulandcarolynn.com',
@@ -22,7 +18,6 @@ const normalizeUrl = (url?: string) => {
   return out;
 };
 
-/** Redact sensitive fields before logging. */
 const SENSITIVE_KEYS = new Set([
   'ssn', 'ssn4', 'dateOfBirth', 'birthday', 'dlNumber', 'documentNumber',
   'address', 'streetAddress', 'apartment', 'phone', 'email', 'lqtkey',
@@ -54,26 +49,10 @@ interface CreateSessionRequest {
     headerTextColor?: string;
     headerBgColor?: string;
     buttonColor?: string;
-    // Extended branding fields accepted by the IVS API (dataBio example).
-    borderRadius?: string;
-    fontFamily?: string;
-    mutedTextColor?: string;
-    bodyTextColor?: string;
-    accentTextColor?: string;
-    accentColor?: string;
-    buttonTextColor?: string;
-    brandName?: string;
-    cardBgColor?: string;
-    borderColor?: string;
-    tagline?: string;
-    bodyBgColor?: string;
-    logoUrl?: string;
   };
-  // DataBio-only capture options. Sent to the verification API under `options`.
   dataBioOptions?: {
     documentsEnabled?: boolean;
     documentsCount?: number;
-    documentsTypes?: string[];
     biometricsEnabled?: boolean;
     biometricsFaceCount?: number;
   };
@@ -91,18 +70,8 @@ interface SessionResponse {
   expiresAt?: string;
 }
 
-/**
- * Build the flat API payload matching the external verification service format.
- * Only fields documented in the IVS API reference are emitted upstream:
- *   - dataBio: flat top-level identity fields + options block
- *   - docBio / dataOnly: identity fields nested under customerData
- * Any other keys received in `formData` (legacy aliases, raw form scratch
- * fields, etc.) are dropped and never forwarded.
- */
 function buildPayload(req: CreateSessionRequest, referenceId: string) {
   const fd = req.formData || {};
-  // Resolve canonical identity values, tolerating common input aliases.
-  // Only canonical keys ever leave this function.
   const pick = (...keys: string[]) => {
     for (const k of keys) {
       const v = fd[k];
@@ -111,18 +80,15 @@ function buildPayload(req: CreateSessionRequest, referenceId: string) {
     return '';
   };
 
-  const firstName = pick('firstName', 'first_name');
-  const lastName = pick('lastName', 'last_name');
+  const firstName = pick('firstName', 'first_name').toUpperCase();
+  const lastName = pick('lastName', 'last_name').toUpperCase();
   const dateOfBirth = pick('dateOfBirth', 'birthday');
-  const phoneRaw = pick('phone');
+  const phoneDigits = pick('phone').replace(/\D/g, '');
   const email = pick('email').toLowerCase();
   const dlNumber = pick('dlNumber', 'documentNumber');
   const dlState = pick('dlState');
   const ssn4 = pick('ssn4');
 
-  // Combine address components into the single `address` string the API
-  // documents. Variants like street_address / addressZip / zip_code are
-  // accepted as input aliases but never forwarded as separate fields.
   const street = pick('streetAddress', 'street_address', 'addressStreet');
   const apartment = pick('apartment');
   const city = pick('city', 'addressCity', 'address_city');
@@ -135,17 +101,13 @@ function buildPayload(req: CreateSessionRequest, referenceId: string) {
   const identity: Record<string, string> = {};
   if (firstName) identity.firstName = firstName;
   if (lastName) identity.lastName = lastName;
-  if (dateOfBirth) identity.dateOfBirth = dateOfBirth; // YYYY-MM-DD
+  if (dateOfBirth) identity.dateOfBirth = dateOfBirth;
   if (combinedAddress) identity.address = combinedAddress;
-  if (phoneRaw) identity.phone = phoneRaw;
+  if (phoneDigits) identity.phone = phoneDigits;
   if (email) identity.email = email;
-
-  // dlNumber / dlState / ssn4 are only sent for docBio / dataOnly flows.
-  // The dataBio API example does NOT include them in customerData.
-  const extraIdentity: Record<string, string> = {};
-  if (dlNumber) extraIdentity.dlNumber = dlNumber;
-  if (dlState) extraIdentity.dlState = dlState;
-  if (ssn4) extraIdentity.ssn4 = ssn4;
+  if (dlNumber) identity.dlNumber = dlNumber;
+  if (dlState) identity.dlState = dlState;
+  if (ssn4) identity.ssn4 = ssn4;
 
   const base: Record<string, unknown> = {
     verificationType: req.verificationType,
@@ -159,44 +121,28 @@ function buildPayload(req: CreateSessionRequest, referenceId: string) {
   };
 
   if (req.resourceId) base.resourceId = req.resourceId;
+  if (req.logoUrl) base.logoUrl = req.logoUrl;
 
-  // All verification types use the nested `customerData` wrapper per the
-  // current IVS API reference (https://ditto.gbg.com/docs → Data & Bio →
-  // Example Request). dataBio omits dlNumber/dlState/ssn4; docBio/dataOnly
-  // include them when present.
-  if (Object.keys(identity).length > 0 || Object.keys(extraIdentity).length > 0) {
-    const customerData: Record<string, string> = { ...identity };
-    if (req.verificationType !== 'dataBio') Object.assign(customerData, extraIdentity);
-    if (Object.keys(customerData).length > 0) base.customerData = customerData;
+  if (Object.keys(identity).length > 0) {
+    if (req.verificationType === 'dataBio') {
+      Object.assign(base, identity);
+    } else {
+      base.customerData = identity;
+    }
   }
 
-  // Branding — nested-only. Pass through every documented field the caller
-  // provides; logoUrl lives inside branding per the API example.
-  const brand: Record<string, string> = {};
-  const b = req.branding || {};
-  const brandKeys: (keyof NonNullable<CreateSessionRequest['branding']>)[] = [
-    'headerTextColor', 'headerBgColor', 'buttonColor', 'borderRadius',
-    'fontFamily', 'mutedTextColor', 'bodyTextColor', 'accentTextColor',
-    'accentColor', 'buttonTextColor', 'brandName', 'cardBgColor',
-    'borderColor', 'tagline', 'bodyBgColor', 'logoUrl',
-  ];
-  for (const k of brandKeys) {
-    const v = b[k];
-    if (typeof v === 'string' && v.length > 0) brand[k] = v;
+  if (req.branding) {
+    const branding: Record<string, string> = {};
+    if (req.branding.headerTextColor) branding.headerTextColor = req.branding.headerTextColor;
+    if (req.branding.headerBgColor) branding.headerBgColor = req.branding.headerBgColor;
+    if (req.branding.buttonColor) branding.buttonColor = req.branding.buttonColor;
+    if (Object.keys(branding).length > 0) base.branding = branding;
   }
-  // Backwards-compat: allow a top-level logoUrl to populate branding.logoUrl.
-  if (!brand.logoUrl && req.logoUrl) brand.logoUrl = req.logoUrl;
-  if (Object.keys(brand).length > 0) base.branding = brand;
 
-  // DataBio capture options → nested `options` block per IVS API reference.
-  // Always emit for dataBio so document/biometric counts reach the verifier
-  // even when the caller omits dataBioOptions (uses spec defaults).
   if (req.verificationType === 'dataBio') {
     const opts = req.dataBioOptions || {};
-    const documentsTypes = Array.isArray(opts.documentsTypes) && opts.documentsTypes.length > 0
-      ? opts.documentsTypes
-      : ['driversLicense'];
     base.options = {
+      previousAddress: { enabled: false },
       biometrics: {
         enabled: opts.biometricsEnabled ?? true,
         faceCount: opts.biometricsFaceCount ?? 1,
@@ -204,7 +150,6 @@ function buildPayload(req: CreateSessionRequest, referenceId: string) {
       documents: {
         enabled: opts.documentsEnabled ?? true,
         count: opts.documentsCount ?? 2,
-        types: documentsTypes,
       },
     };
   }
@@ -224,7 +169,6 @@ serve(async (req) => {
 
     const requestData: CreateSessionRequest = await req.json();
 
-    // Resolve demo-specific override (if any) using service role
     let API_KEY: string | undefined = GLOBAL_API_KEY;
     let keySource: 'demo' | 'global' = 'global';
     if (requestData.demoId) {
