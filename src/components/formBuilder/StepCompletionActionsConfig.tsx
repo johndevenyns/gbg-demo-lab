@@ -234,15 +234,46 @@ export function StepCompletionActionsConfig({
               )}
 
               {(action.buttonAction !== 'portal' || type === 'failure') && (
-                <div className="space-y-1">
-                  <Label className="text-xs">Button URL (optional)</Label>
-                  <Input
-                    type="url"
-                    value={action.buttonUrl || ''}
-                    onChange={(e) => updateAction(type, action.id, { buttonUrl: e.target.value })}
-                    placeholder="https://yoursite.com/next-step"
-                    className="h-7 text-sm"
-                  />
+                <div className="space-y-2">
+                  {pageTargets.length > 0 && (
+                    <div className="space-y-1">
+                      <Label className="text-xs">Link to a custom page</Label>
+                      <Select
+                        value={matchedTarget?.id || '__custom__'}
+                        onValueChange={(v) => {
+                          if (v === '__custom__') {
+                            updateAction(type, action.id, { buttonUrl: '' });
+                          } else {
+                            const target = pageTargets.find((t) => t.id === v);
+                            if (target) updateAction(type, action.id, { buttonUrl: target.url });
+                          }
+                        }}
+                      >
+                        <SelectTrigger className="h-7 text-sm">
+                          <SelectValue placeholder="Pick a page or use a custom URL" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-background border z-50">
+                          <SelectItem value="__custom__">Use a custom URL (below)</SelectItem>
+                          {pageTargets.map((t) => (
+                            <SelectItem key={t.id} value={t.id}>{t.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-muted-foreground">
+                        Targets are managed in the Custom Pages section.
+                      </p>
+                    </div>
+                  )}
+                  <div className="space-y-1">
+                    <Label className="text-xs">Button URL (optional)</Label>
+                    <Input
+                      type="url"
+                      value={action.buttonUrl || ''}
+                      onChange={(e) => updateAction(type, action.id, { buttonUrl: e.target.value })}
+                      placeholder="https://yoursite.com/next-step"
+                      className="h-7 text-sm"
+                    />
+                  </div>
                 </div>
               )}
             </div>
