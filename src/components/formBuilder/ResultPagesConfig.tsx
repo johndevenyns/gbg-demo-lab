@@ -845,22 +845,6 @@ export function ResultPagesConfig({
 
             {([
               {
-                key: 'success' as const,
-                label: 'Success Page',
-                description: 'Shown when verification succeeds.',
-                icon: <CheckCircle2 className="w-5 h-5 text-green-500" />,
-                cfg: successConfig,
-                previewParam: 'success',
-              },
-              {
-                key: 'failure' as const,
-                label: 'Failure Page',
-                description: 'Shown when verification fails.',
-                icon: <XCircle className="w-5 h-5 text-red-500" />,
-                cfg: failureConfig,
-                previewParam: 'failure',
-              },
-              {
                 key: 'landing' as const,
                 label: 'Custom Landing Page',
                 description: 'Optional page you can link to from the Success page button.',
