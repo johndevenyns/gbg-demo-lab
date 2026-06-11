@@ -71,6 +71,32 @@ interface SessionResponse {
 }
 
 function buildPayload(req: CreateSessionRequest, referenceId: string) {
+  // Normalize various date inputs (MM/DD/YYYY, M/D/YY, YYYY-MM-DD, Date strings) to ISO YYYY-MM-DD
+  function normalizeDob(raw: string): string {
+    if (!raw) return '';
+    const s = raw.trim();
+    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+    const slash = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+    if (slash) {
+      const mm = slash[1].padStart(2, '0');
+      const dd = slash[2].padStart(2, '0');
+      let yyyy = slash[3];
+      if (yyyy.length === 2) {
+        const n = parseInt(yyyy, 10);
+        yyyy = (n > 30 ? '19' : '20') + yyyy;
+      }
+      return `${yyyy}-${mm}-${dd}`;
+    }
+    const d = new Date(s);
+    if (!isNaN(d.getTime())) {
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd}`;
+    }
+    return s;
+  }
+
   const fd = req.formData || {};
   const pick = (...keys: string[]) => {
     for (const k of keys) {
