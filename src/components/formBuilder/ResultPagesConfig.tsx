@@ -246,7 +246,7 @@ export function ResultPagesConfig({
     return supabase.storage.from('demo-logos').getPublicUrl(path).data.publicUrl;
   };
 
-  const handleGenerateAi = async (config: ResultPageConfig, onUpdate: (c: ResultPageConfig) => void, type: 'success' | 'failure') => {
+  const handleGenerateAi = async (config: ResultPageConfig, onUpdate: (c: ResultPageConfig) => void, type: PageKey) => {
     if (!config.aiPrompt || !config.aiPrompt.trim()) {
       toast({ title: 'Add a prompt', description: 'Describe what the page should look like.', variant: 'destructive' });
       return;
@@ -279,7 +279,7 @@ export function ResultPagesConfig({
   const renderConfigFields = (
     config: ResultPageConfig,
     onUpdate: (config: ResultPageConfig) => void,
-    type: 'success' | 'failure'
+    type: PageKey
   ) => {
     const mode: ResultPageMode = config.pageMode || 'default';
     return (
