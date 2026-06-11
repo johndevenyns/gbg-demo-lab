@@ -117,6 +117,10 @@ export default function DemoPreview() {
   const [portalTransactionContext, setPortalTransactionContext] = useState<{ amount?: number; recipientName?: string; fromAccount?: string } | undefined>(undefined);
   const [portalNavCommand, setPortalNavCommand] = useState<'dashboard' | 'repeat_transfer' | null>(null);
   const [flowResult, setFlowResult] = useState<'success' | 'failure' | null>(null);
+  // True when the flow renderer is showing its own plain in-flow result page
+  // (a show_result_page completion action) — keep the site chrome in that case
+  // instead of letting the legacy full-replace success/failure page take over.
+  const [flowResultPlain, setFlowResultPlain] = useState(false);
 
   // If launched as a preview-result window, jump straight to the result page.
   useEffect(() => {
