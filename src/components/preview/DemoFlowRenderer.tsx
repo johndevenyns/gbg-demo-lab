@@ -2079,6 +2079,12 @@ export function DemoFlowRenderer({
       typeConfigs[typeKey?.toLowerCase?.() || '']?.resourceId ||
       typeConfigs[canonicalTypeKey]?.resourceId;
 
+    const stepTypeConfig =
+      typeConfigs[typeKey] ||
+      typeConfigs[typeKey?.toLowerCase?.() || ''] ||
+      typeConfigs[canonicalTypeKey];
+    const dataBioOptions = verificationType === 'dataBio' ? stepTypeConfig?.dataBioOptions : undefined;
+
     // Digital ID (DiD) → dedicated DiD endpoint with provider scope.
     if (typeKey === 'did' && providerId) {
       console.log('Starting Digital ID verification with scope:', providerId);
@@ -2087,7 +2093,7 @@ export function DemoFlowRenderer({
     }
 
     // All other verification types use the shared session creation flow.
-    createVerificationSession(verificationType, true, stepResourceId || undefined);
+    createVerificationSession(verificationType, true, stepResourceId || undefined, false, dataBioOptions);
   }, [createVerificationSession, launchDigitalIdFlow, currentStep?.unifiedVerificationConfig]);
 
   // Trinsic mobile popup launcher — MUST be called from a user gesture (e.g. onClick)
