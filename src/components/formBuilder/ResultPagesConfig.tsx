@@ -792,6 +792,31 @@ export function ResultPagesConfig({
         {/* Page list / editor */}
         {selectedPage === null ? (
           <div className="space-y-3">
+            {/* Default landing page selector (top) */}
+            <div className="border rounded-md p-3 bg-muted/30 space-y-2">
+              <div className="flex items-center gap-2">
+                <Home className="w-4 h-4 text-muted-foreground" />
+                <Label className="font-medium">Default Site Landing Page</Label>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Choose what visitors see first at <span className="font-mono">/demo/{demoSlug || ':slug'}</span>. This is mirrored on the Site Settings page.
+              </p>
+              <Select
+                value={defaultLandingPageSlug || '__use_cases__'}
+                onValueChange={(v) => onUpdateDefaultLandingPageSlug?.(v === '__use_cases__' ? undefined : v)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__use_cases__">Use case landing page (default)</SelectItem>
+                  {pages.map((p) => (
+                    <SelectItem key={p.slug} value={p.slug}>{p.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             {([
               {
                 key: 'success' as const,
@@ -852,31 +877,6 @@ export function ResultPagesConfig({
                 </div>
               </div>
             ))}
-
-            {/* Default landing page selector */}
-            <div className="border rounded-md p-3 bg-muted/30 space-y-2">
-              <div className="flex items-center gap-2">
-                <Home className="w-4 h-4 text-muted-foreground" />
-                <Label className="font-medium">Default Site Landing Page</Label>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Choose what visitors see first at <span className="font-mono">/demo/{demoSlug || ':slug'}</span>
-              </p>
-              <Select
-                value={defaultLandingPageSlug || '__use_cases__'}
-                onValueChange={(v) => onUpdateDefaultLandingPageSlug?.(v === '__use_cases__' ? undefined : v)}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__use_cases__">Use case landing page (default)</SelectItem>
-                  {pages.map((p) => (
-                    <SelectItem key={p.slug} value={p.slug}>{p.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
 
             {/* Extra custom pages */}
             {pages.map((p) => (
