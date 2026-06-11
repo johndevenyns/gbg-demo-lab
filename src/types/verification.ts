@@ -140,6 +140,15 @@ export interface VerificationTypeOverride {
   useCustomResultPages?: boolean;
   customSuccessUrl?: string;
   customFailureUrl?: string;
+
+  // dataBio-specific options sent to the verification API under `options`.
+  // Controls how many document scans and biometric (face) captures are required.
+  dataBioOptions?: {
+    documentsEnabled?: boolean;
+    documentsCount?: number;
+    biometricsEnabled?: boolean;
+    biometricsFaceCount?: number;
+  };
 }
 
 // Database row types (snake_case for direct DB mapping)
