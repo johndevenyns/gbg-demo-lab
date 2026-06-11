@@ -20,6 +20,13 @@ export type IndustryTemplate = 'bank' | 'rental_car' | 'online_gambling' | 'heal
 import { FormStyleConfig } from './formStyle';
 import { ResultPageConfig } from '@/components/preview/ResultPage';
 
+export interface ExtraCustomPage {
+  id: string;
+  slug: string;
+  name: string;
+  config: ResultPageConfig;
+}
+
 export interface DemoEnvironment {
   id: string;
   slug: string;
@@ -81,6 +88,9 @@ export interface DemoEnvironment {
   successPageConfig?: ResultPageConfig;
   failurePageConfig?: ResultPageConfig;
   landingPageConfig?: ResultPageConfig;
+
+  // Extra custom pages — admin-defined, each at /demo/:slug/page/:pageSlug
+  extraCustomPages?: ExtraCustomPage[];
   
   // Stored test data for Fill Pass / Fill Fail buttons
   storedTestData?: StoredTestData;

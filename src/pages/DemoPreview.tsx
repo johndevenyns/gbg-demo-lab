@@ -86,7 +86,7 @@ function repairHeaderLogoHtml(headerHtml: string, logoUrl?: string, customerName
 }
 
 export default function DemoPreview() {
-  const { slug } = useParams<{ slug: string }>();
+  const { slug, pageSlug } = useParams<{ slug: string; pageSlug?: string }>();
   const [searchParams] = useSearchParams();
   const previewResultParam = searchParams.get('previewResult'); // 'success' | 'failure' | null
   const { isAdmin, isLoading: authLoading } = useAuth();
@@ -344,10 +344,18 @@ export default function DemoPreview() {
     : flowResult === 'failure'
     ? (demo.failurePageConfig || DEFAULT_FAILURE_CONFIG)
     : null;
-  const fullReplaceResult = !!activeResultCfg && (
-    activeResultCfg.pageMode === 'screenshots' ||
-    activeResultCfg.pageMode === 'custom_html' ||
-    activeResultCfg.pageMode === 'ai_generated'
+
+  // If this URL targets an admin-defined extra custom page, resolve it
+  const extraPageCfg = pageSlug
+    ? (demo.extraCustomPages || []).find((p) => p.slug === pageSlug)?.config || null
+    : null;
+  const displayResultCfg = extraPageCfg || activeResultCfg;
+  const isExtraPageRoute = !!extraPageCfg;
+  const fullReplaceResult = !!displayResultCfg && (
+    displayResultCfg.pageMode === 'screenshots' ||
+    displayResultCfg.pageMode === 'custom_html' ||
+    displayResultCfg.pageMode === 'ai_generated' ||
+    displayResultCfg.pageMode === 'single_screenshot'
   );
   const showMirrorHeader = hasMirroredHeader && !fullReplaceResult;
   const showMirrorFooter = hasMirroredFooter && !fullReplaceResult;
@@ -817,9 +825,9 @@ export default function DemoPreview() {
               border: `${previewDocument?.formStyle?.formBorderWidth || '1'}px solid ${previewDocument?.formStyle?.formBorderColor || '#e5e7eb'}`,
             }}
           >
-            {previewResultParam && activeResultCfg ? (
+            {(previewResultParam && activeResultCfg) || isExtraPageRoute ? (
               <ResultPage
-                config={{ ...activeResultCfg, referenceId: activeResultCfg.referenceId || 'PREVIEW-1234' }}
+                config={{ ...(displayResultCfg as NonNullable<typeof displayResultCfg>), referenceId: (displayResultCfg as NonNullable<typeof displayResultCfg>).referenceId || 'PREVIEW-1234' }}
                 formStyle={demo.formStyle}
                 buttonColor={demo.buttonColor}
                 mirrorHeaderHtml={

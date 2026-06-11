@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { DemoEnvironment, FormStep, INDUSTRY_TEMPLATES, IndustryTemplate, StoredTestData } from "@/types/demo";
+import { DemoEnvironment, ExtraCustomPage, FormStep, INDUSTRY_TEMPLATES, IndustryTemplate, StoredTestData } from "@/types/demo";
 import { TablesInsert } from "@/integrations/supabase/types";
 import { FormStyleConfig, DEFAULT_FORM_STYLE } from "@/types/formStyle";
 import { ResultPageConfig } from "@/components/preview/ResultPage";
@@ -48,6 +48,7 @@ const rowToDemo = (row: any): DemoEnvironment => {
     successPageConfig?: ResultPageConfig; 
     failurePageConfig?: ResultPageConfig;
     landingPageConfig?: ResultPageConfig;
+    extraCustomPages?: ExtraCustomPage[];
   }) | null;
   
   return {
@@ -93,6 +94,7 @@ const rowToDemo = (row: any): DemoEnvironment => {
     successPageConfig: formStyle?.successPageConfig,
     failurePageConfig: formStyle?.failurePageConfig,
     landingPageConfig: formStyle?.landingPageConfig,
+    extraCustomPages: formStyle?.extraCustomPages || [],
     storedTestData: storedTestData || undefined,
     landingHeading: row.landing_heading || undefined,
     createdAt: row.created_at,
@@ -144,13 +146,14 @@ const demoToRow = (demo: Partial<DemoEnvironment>) => {
   if (demo.headerCtaSelector !== undefined) row.header_cta_selector = demo.headerCtaSelector;
   if (demo.headerCtaUseCaseId !== undefined) row.header_cta_use_case_id = demo.headerCtaUseCaseId || null;
   // Store result page configs inside form_style to avoid new DB columns
-  if (demo.formStyle !== undefined || demo.successPageConfig !== undefined || demo.failurePageConfig !== undefined || demo.landingPageConfig !== undefined) {
+  if (demo.formStyle !== undefined || demo.successPageConfig !== undefined || demo.failurePageConfig !== undefined || demo.landingPageConfig !== undefined || demo.extraCustomPages !== undefined) {
     const existingStyle = demo.formStyle || {};
     row.form_style = {
       ...existingStyle,
       ...(demo.successPageConfig !== undefined && { successPageConfig: demo.successPageConfig }),
       ...(demo.failurePageConfig !== undefined && { failurePageConfig: demo.failurePageConfig }),
       ...(demo.landingPageConfig !== undefined && { landingPageConfig: demo.landingPageConfig }),
+      ...(demo.extraCustomPages !== undefined && { extraCustomPages: demo.extraCustomPages }),
     };
   }
   if (demo.storedTestData !== undefined) row.stored_test_data = demo.storedTestData;

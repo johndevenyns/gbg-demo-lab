@@ -6,10 +6,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CheckCircle2, XCircle, ExternalLink, Settings2, Paintbrush, Sparkles, Upload, Loader2, Eye, ArrowLeft, FileText, ChevronRight } from 'lucide-react';
+import { CheckCircle2, XCircle, ExternalLink, Settings2, Paintbrush, Sparkles, Upload, Loader2, Eye, ArrowLeft, FileText, ChevronRight, Plus, Trash2 } from 'lucide-react';
 import { ResultPageConfig, ResultButtonAction, ResultPageMode, DEFAULT_SUCCESS_CONFIG, DEFAULT_FAILURE_CONFIG, DEFAULT_LANDING_CONFIG } from '@/components/preview/ResultPage';
 import { ResultPage } from '@/components/preview/ResultPage';
 import type { FormStyleConfig } from '@/types/formStyle';
+import type { ExtraCustomPage } from '@/types/demo';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -176,6 +177,104 @@ function ScreenshotSlotEditor({
   );
 }
 
+function SingleScreenshotEditor({
+  config,
+  onUpdate,
+  upload,
+}: {
+  config: ResultPageConfig;
+  onUpdate: (c: ResultPageConfig) => void;
+  upload: (file: File) => Promise<string | null>;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState(false);
+  const handlePick = async (file: File) => {
+    setBusy(true);
+    const url = await upload(file);
+    setBusy(false);
+    if (url) onUpdate({ ...config, singleScreenshotUrl: url });
+  };
+  return (
+    <div className="border rounded-md p-3 space-y-3">
+      <div className="flex items-center justify-between">
+        <Label className="font-medium">Screenshot</Label>
+        {config.singleScreenshotUrl && (
+          <Button type="button" variant="ghost" size="sm" onClick={() => onUpdate({ ...config, singleScreenshotUrl: undefined })}>
+            Remove
+          </Button>
+        )}
+      </div>
+      {config.singleScreenshotUrl ? (
+        <img src={config.singleScreenshotUrl} alt="Screenshot preview" className="w-full max-h-48 object-contain bg-muted rounded" />
+      ) : (
+        <div className="h-24 bg-muted rounded flex items-center justify-center text-xs text-muted-foreground">No image</div>
+      )}
+      <div className="flex gap-2">
+        <Button type="button" variant="outline" size="sm" onClick={() => inputRef.current?.click()} disabled={busy}>
+          {busy ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Upload className="w-4 h-4 mr-1" />}
+          {config.singleScreenshotUrl ? 'Replace' : 'Upload'}
+        </Button>
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) handlePick(f);
+            e.target.value = '';
+          }}
+        />
+      </div>
+      <div className="grid grid-cols-3 gap-2">
+        <div>
+          <Label className="text-xs">Background</Label>
+          <Input
+            type="color"
+            value={config.singleScreenshotBgColor || '#ffffff'}
+            onChange={(e) => onUpdate({ ...config, singleScreenshotBgColor: e.target.value })}
+          />
+        </div>
+        <div>
+          <Label className="text-xs">Padding top (px)</Label>
+          <Input
+            type="number"
+            min={0}
+            value={config.singleScreenshotPaddingTop ?? ''}
+            placeholder="0"
+            onChange={(e) => onUpdate({ ...config, singleScreenshotPaddingTop: e.target.value ? parseInt(e.target.value, 10) : undefined })}
+          />
+        </div>
+        <div>
+          <Label className="text-xs">Padding bottom (px)</Label>
+          <Input
+            type="number"
+            min={0}
+            value={config.singleScreenshotPaddingBottom ?? ''}
+            placeholder="0"
+            onChange={(e) => onUpdate({ ...config, singleScreenshotPaddingBottom: e.target.value ? parseInt(e.target.value, 10) : undefined })}
+          />
+        </div>
+      </div>
+      <div>
+        <Label className="text-xs">Display</Label>
+        <Select
+          value={config.singleScreenshotFitMode || 'contain'}
+          onValueChange={(v) => onUpdate({ ...config, singleScreenshotFitMode: v as NonNullable<ResultPageConfig['singleScreenshotFitMode']> })}
+        >
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="contain">Fit (actual aspect)</SelectItem>
+            <SelectItem value="cover">Cover (fill width)</SelectItem>
+            <SelectItem value="stretch">Stretch (full width)</SelectItem>
+            <SelectItem value="actual">Actual size</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+    </div>
+  );
+}
+
 interface ResultPagesConfigProps {
   approvedUrl: string;
   rejectedUrl: string;
@@ -183,6 +282,7 @@ interface ResultPagesConfigProps {
   successPageConfig?: ResultPageConfig;
   failurePageConfig?: ResultPageConfig;
   landingPageConfig?: ResultPageConfig;
+  extraCustomPages?: ExtraCustomPage[];
   buttonColor?: string;
   demoId?: string;
   demoSlug?: string;
@@ -196,6 +296,7 @@ interface ResultPagesConfigProps {
   onUpdateSuccessPage: (config: ResultPageConfig) => void;
   onUpdateFailurePage: (config: ResultPageConfig) => void;
   onUpdateLandingPage: (config: ResultPageConfig) => void;
+  onUpdateExtraCustomPages?: (pages: ExtraCustomPage[]) => void;
 }
 
 export function ResultPagesConfig({
@@ -205,6 +306,7 @@ export function ResultPagesConfig({
   successPageConfig,
   failurePageConfig,
   landingPageConfig,
+  extraCustomPages,
   buttonColor,
   demoId,
   demoSlug,
@@ -218,12 +320,15 @@ export function ResultPagesConfig({
   onUpdateSuccessPage,
   onUpdateFailurePage,
   onUpdateLandingPage,
+  onUpdateExtraCustomPages,
 }: ResultPagesConfigProps) {
-  type PageKey = 'success' | 'failure' | 'landing';
+  // PageKey is 'success' | 'failure' | 'landing' | `extra:<id>`
+  type PageKey = string;
   const [selectedPage, setSelectedPage] = useState<PageKey | null>(null);
   const [urlSettingsOpen, setUrlSettingsOpen] = useState(false);
-  const [generating, setGenerating] = useState<null | PageKey>(null);
+  const [generating, setGenerating] = useState<string | null>(null);
   const { toast } = useToast();
+  const pages = extraCustomPages || [];
 
   // Use provided configs or defaults
   const successConfig = successPageConfig || DEFAULT_SUCCESS_CONFIG;
@@ -294,6 +399,7 @@ export function ResultPagesConfig({
             <SelectItem value="ai_generated">AI-generated page (Lovable AI)</SelectItem>
             <SelectItem value="custom_html">Fully custom HTML</SelectItem>
             <SelectItem value="screenshots">Screenshots (header/main/footer images)</SelectItem>
+            <SelectItem value="single_screenshot">Single screenshot (one image + spacing + bg)</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -473,6 +579,15 @@ export function ResultPagesConfig({
         </div>
       )}
 
+      {/* === Single screenshot mode === */}
+      {mode === 'single_screenshot' && (
+        <SingleScreenshotEditor
+          config={config}
+          onUpdate={onUpdate}
+          upload={(file) => uploadImage(file, 'single')}
+        />
+      )}
+
       {/* Button configuration */}
       <div className="border-t pt-4 mt-4">
         <h4 className="font-medium mb-3">Button Settings</h4>
@@ -625,6 +740,82 @@ export function ResultPagesConfig({
                 </div>
               </div>
             ))}
+
+            {/* Extra custom pages */}
+            {pages.map((p) => (
+              <div
+                key={p.id}
+                className="flex items-center justify-between gap-3 rounded-lg border bg-card p-4 hover:border-primary/50 transition-colors"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <FileText className="w-5 h-5 text-primary" />
+                  <div className="min-w-0">
+                    <div className="font-medium truncate">{p.name}</div>
+                    <div className="text-xs text-muted-foreground truncate font-mono">
+                      /demo/{demoSlug || ':slug'}/page/{p.slug}
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-0.5">
+                      Mode: <span className="font-mono">{p.config.pageMode || 'default'}</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  {demoSlug && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => window.open(`/demo/${demoSlug}/page/${p.slug}`, '_blank', 'noopener')}
+                    >
+                      <Eye className="w-4 h-4 mr-1" />
+                      Preview
+                    </Button>
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      if (!onUpdateExtraCustomPages) return;
+                      if (!confirm(`Delete "${p.name}"?`)) return;
+                      onUpdateExtraCustomPages(pages.filter((x) => x.id !== p.id));
+                    }}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                  <Button size="sm" onClick={() => setSelectedPage(`extra:${p.id}`)}>
+                    Edit
+                    <ChevronRight className="w-4 h-4 ml-1" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+
+            {/* New page button */}
+            {onUpdateExtraCustomPages && (
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => {
+                  const name = prompt('Page name?', `Custom Page ${pages.length + 1}`);
+                  if (!name) return;
+                  const baseSlug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || `page-${pages.length + 1}`;
+                  let slug = baseSlug;
+                  let i = 2;
+                  while (pages.some((x) => x.slug === slug)) slug = `${baseSlug}-${i++}`;
+                  const id = (typeof crypto !== 'undefined' && 'randomUUID' in crypto) ? crypto.randomUUID() : `p_${Date.now()}`;
+                  const newPage: ExtraCustomPage = {
+                    id,
+                    slug,
+                    name,
+                    config: { ...DEFAULT_LANDING_CONFIG, title: name, pageMode: 'single_screenshot' },
+                  };
+                  onUpdateExtraCustomPages([...pages, newPage]);
+                  setSelectedPage(`extra:${id}`);
+                }}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                New custom page
+              </Button>
+            )}
           </div>
         ) : (
           <div className="space-y-4">
@@ -633,11 +824,19 @@ export function ResultPagesConfig({
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back to pages
               </Button>
-              {demoSlug && selectedPage !== 'landing' && (
+              {demoSlug && selectedPage !== 'landing' && (selectedPage === 'success' || selectedPage === 'failure' || selectedPage.startsWith('extra:')) && (
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => window.open(`/demo/${demoSlug}?previewResult=${selectedPage}`, '_blank', 'noopener')}
+                  onClick={() => {
+                    if (selectedPage.startsWith('extra:')) {
+                      const id = selectedPage.slice('extra:'.length);
+                      const p = pages.find((x) => x.id === id);
+                      if (p) window.open(`/demo/${demoSlug}/page/${p.slug}`, '_blank', 'noopener');
+                    } else {
+                      window.open(`/demo/${demoSlug}?previewResult=${selectedPage}`, '_blank', 'noopener');
+                    }
+                  }}
                 >
                   <Eye className="w-4 h-4 mr-2" />
                   Preview in new window
@@ -645,11 +844,51 @@ export function ResultPagesConfig({
               )}
             </div>
             {(() => {
-              const cfg = selectedPage === 'success' ? successConfig : selectedPage === 'failure' ? failureConfig : landingConfig;
-              const upd = selectedPage === 'success' ? onUpdateSuccessPage : selectedPage === 'failure' ? onUpdateFailurePage : onUpdateLandingPage;
+              let cfg: ResultPageConfig;
+              let upd: (c: ResultPageConfig) => void;
+              let typeKey: string = selectedPage;
+              if (selectedPage === 'success') { cfg = successConfig; upd = onUpdateSuccessPage; }
+              else if (selectedPage === 'failure') { cfg = failureConfig; upd = onUpdateFailurePage; }
+              else if (selectedPage === 'landing') { cfg = landingConfig; upd = onUpdateLandingPage; }
+              else if (selectedPage.startsWith('extra:')) {
+                const id = selectedPage.slice('extra:'.length);
+                const p = pages.find((x) => x.id === id);
+                if (!p || !onUpdateExtraCustomPages) return null;
+                cfg = p.config;
+                upd = (c: ResultPageConfig) => onUpdateExtraCustomPages(pages.map((x) => x.id === id ? { ...x, config: c } : x));
+                typeKey = 'extra';
+              } else { return null; }
               return (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <div>{renderConfigFields(cfg, upd, selectedPage)}</div>
+                  <div className="space-y-3">
+                    {selectedPage.startsWith('extra:') && onUpdateExtraCustomPages && (() => {
+                      const id = selectedPage.slice('extra:'.length);
+                      const p = pages.find((x) => x.id === id);
+                      if (!p) return null;
+                      return (
+                        <div className="grid grid-cols-2 gap-2 border rounded-md p-3 bg-muted/30">
+                          <div>
+                            <Label className="text-xs">Page name</Label>
+                            <Input
+                              value={p.name}
+                              onChange={(e) => onUpdateExtraCustomPages(pages.map((x) => x.id === id ? { ...x, name: e.target.value } : x))}
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-xs">Slug (URL)</Label>
+                            <Input
+                              value={p.slug}
+                              onChange={(e) => {
+                                const next = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '');
+                                onUpdateExtraCustomPages(pages.map((x) => x.id === id ? { ...x, slug: next } : x));
+                              }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })()}
+                    {renderConfigFields(cfg, upd, typeKey)}
+                  </div>
                   <LivePreview
                     config={{ ...cfg, referenceId: cfg.referenceId || 'PREVIEW-1234' }}
                     formStyle={formStyle}

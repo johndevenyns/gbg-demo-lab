@@ -12,7 +12,7 @@ import {
 } from '@/lib/formStyleUtils';
 
 export type ResultButtonAction = 'url' | 'portal' | 'landing';
-export type ResultPageMode = 'default' | 'mirror' | 'custom_html' | 'screenshots' | 'ai_generated';
+export type ResultPageMode = 'default' | 'mirror' | 'custom_html' | 'screenshots' | 'ai_generated' | 'single_screenshot';
 
 export interface ResultPageScreenshotConfig {
   url?: string;
@@ -57,6 +57,13 @@ export interface ResultPageConfig {
   screenshotHeader?: ResultPageScreenshotConfig;
   screenshotMain?: ResultPageScreenshotConfig;
   screenshotFooter?: ResultPageScreenshotConfig;
+
+  // Single screenshot mode — one image fills the page with vertical spacing + bg color
+  singleScreenshotUrl?: string;
+  singleScreenshotBgColor?: string;
+  singleScreenshotPaddingTop?: number; // px
+  singleScreenshotPaddingBottom?: number; // px
+  singleScreenshotFitMode?: 'contain' | 'cover' | 'stretch' | 'actual';
 
   // AI generated mode
   aiPrompt?: string;
@@ -218,6 +225,46 @@ export function ResultPage({ config, formStyle, buttonColor, onButtonClick, mirr
       );
     }
     // fall through if no images
+  }
+
+  // ===== Single screenshot mode =====
+  if (mode === 'single_screenshot') {
+    const url = config.singleScreenshotUrl;
+    if (url) {
+      const fit = config.singleScreenshotFitMode || 'contain';
+      const imgStyle: React.CSSProperties =
+        fit === 'stretch' ? { width: '100%', height: 'auto', display: 'block' }
+        : fit === 'actual' ? { display: 'block', margin: '0 auto' }
+        : fit === 'cover' ? { width: '100%', height: 'auto', display: 'block', objectFit: 'cover' }
+        : { maxWidth: '100%', height: 'auto', display: 'block', margin: '0 auto' };
+      const showBtn = config.showButton !== false && !!config.buttonText;
+      return (
+        <div
+          className="min-h-full w-full"
+          style={{
+            backgroundColor: config.singleScreenshotBgColor || style.contentAreaBgColor || '#ffffff',
+            paddingTop: config.singleScreenshotPaddingTop ?? 0,
+            paddingBottom: config.singleScreenshotPaddingBottom ?? 0,
+            outline: config.showBorders ? '2px dashed #ef4444' : undefined,
+          }}
+        >
+          <img src={url} alt="" style={imgStyle} />
+          {showBtn && (
+            <div className="flex justify-center mt-6">
+              <Button
+                onClick={handleButtonClick}
+                className="min-w-[200px]"
+                style={{ backgroundColor: computedButtonColor, color: '#ffffff' }}
+              >
+                {config.buttonText}
+                {config.buttonAction === 'portal' ? <LogIn className="w-4 h-4 ml-2" /> : <ArrowRight className="w-4 h-4 ml-2" />}
+              </Button>
+            </div>
+          )}
+        </div>
+      );
+    }
+    // fall through if no image
   }
 
   // ===== Mirror site layout mode =====
