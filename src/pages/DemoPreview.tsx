@@ -211,9 +211,10 @@ export default function DemoPreview() {
     return () => window.removeEventListener('message', handler);
   }, [resolvedUseCases, pageSlug, slug, navigate]);
 
-  const handleFlowComplete = useCallback((success: boolean, referenceId?: string) => {
+  const handleFlowComplete = useCallback((success: boolean, referenceId?: string, opts?: { plainResultPage?: boolean }) => {
     console.log('Flow complete:', { success, referenceId });
     setFlowResult(success ? 'success' : 'failure');
+    setFlowResultPlain(!!opts?.plainResultPage);
     // If a portal verification was in progress, return to portal on completion
     if (portalVerificationAction) {
       setPortalVerificationAction(null);
