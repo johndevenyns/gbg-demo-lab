@@ -94,7 +94,28 @@ export function StepCompletionActionsConfig({
 
   const renderActionEditor = (action: StepCompletionAction, type: 'success' | 'failure') => {
     const actionMeta = ACTION_TYPE_OPTIONS.find(o => o.value === action.type);
-    
+
+    // Build list of custom-page link targets (Success, Failure, extras)
+    const slugBase = demoSlug || ':slug';
+    const pageTargets: { id: string; label: string; url: string }[] = [
+      ...(successPageConfig ? [{
+        id: 'success',
+        label: `Success Page${successPageConfig.title ? ` — ${successPageConfig.title}` : ''}`,
+        url: `/demo/${slugBase}?previewResult=success`,
+      }] : []),
+      ...(failurePageConfig ? [{
+        id: 'failure',
+        label: `Failure Page${failurePageConfig.title ? ` — ${failurePageConfig.title}` : ''}`,
+        url: `/demo/${slugBase}?previewResult=failure`,
+      }] : []),
+      ...((extraCustomPages || []).map((p) => ({
+        id: `extra:${p.id}`,
+        label: p.name,
+        url: `/demo/${slugBase}/page/${p.slug}`,
+      }))),
+    ];
+    const matchedTarget = pageTargets.find((t) => action.buttonUrl === t.url);
+
     return (
       <div key={action.id} className="border border-border rounded-lg p-3 space-y-3">
         <div className="flex items-center gap-2">
