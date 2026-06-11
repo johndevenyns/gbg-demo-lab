@@ -177,9 +177,6 @@ function ScreenshotSlotEditor({
   );
 }
 
-interface ResultPagesConfigProps {
-}
-
 function SingleScreenshotEditor({
   config,
   onUpdate,
@@ -278,7 +275,7 @@ function SingleScreenshotEditor({
   );
 }
 
-interface _ResultPagesConfigPropsPlaceholder {
+interface ResultPagesConfigProps {
   approvedUrl: string;
   rejectedUrl: string;
   returnUrl: string;
