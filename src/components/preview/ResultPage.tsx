@@ -237,7 +237,9 @@ export function ResultPage({ config, formStyle, buttonColor, onButtonClick, mirr
   // ===== Single screenshot mode =====
   if (mode === 'single_screenshot') {
     const url = config.singleScreenshotUrl;
-    if (url) {
+    const hasHeader = config.headerSource && config.headerSource !== 'none';
+    const hasFooter = config.footerSource && config.footerSource !== 'none';
+    if (url || hasHeader || hasFooter) {
       const fit = config.singleScreenshotFitMode || 'contain';
       const imgStyle: React.CSSProperties =
         fit === 'stretch' ? { width: '100%', height: 'auto', display: 'block' }
@@ -245,28 +247,54 @@ export function ResultPage({ config, formStyle, buttonColor, onButtonClick, mirr
         : fit === 'cover' ? { width: '100%', height: 'auto', display: 'block', objectFit: 'cover' }
         : { maxWidth: '100%', height: 'auto', display: 'block', margin: '0 auto' };
       const showBtn = config.showButton !== false && !!config.buttonText;
+      const headerH = style.headerHeight || 120;
+      const footerH = style.footerHeight || 160;
       return (
         <div
-          className="min-h-full w-full"
+          className="min-h-full w-full flex flex-col"
           style={{
             backgroundColor: config.singleScreenshotBgColor || style.contentAreaBgColor || '#ffffff',
-            paddingTop: config.singleScreenshotPaddingTop ?? 0,
-            paddingBottom: config.singleScreenshotPaddingBottom ?? 0,
             outline: config.showBorders ? '2px dashed #ef4444' : undefined,
           }}
         >
-          <img src={url} alt="" style={imgStyle} />
-          {showBtn && (
-            <div className="flex justify-center mt-6">
-              <Button
-                onClick={handleButtonClick}
-                className="min-w-[200px]"
-                style={{ backgroundColor: computedButtonColor, color: '#ffffff' }}
-              >
-                {config.buttonText}
-                {config.buttonAction === 'portal' ? <LogIn className="w-4 h-4 ml-2" /> : <ArrowRight className="w-4 h-4 ml-2" />}
-              </Button>
+          {/* Header chrome */}
+          {config.headerSource === 'mirror' && (
+            <MirrorChrome html={mirrorHeaderHtml} css={mirrorCss} minHeight={headerH} showBorders={config.showBorders} />
+          )}
+          {config.headerSource === 'upload' && (
+            <ScreenshotBlock cfg={config.headerScreenshot} fallbackBg={style.formBgColor} showBorders={config.showBorders} />
+          )}
+
+          {/* Main screenshot */}
+          {url && (
+            <div
+              style={{
+                paddingTop: config.singleScreenshotPaddingTop ?? 0,
+                paddingBottom: config.singleScreenshotPaddingBottom ?? 0,
+              }}
+            >
+              <img src={url} alt="" style={imgStyle} />
+              {showBtn && (
+                <div className="flex justify-center mt-6">
+                  <Button
+                    onClick={handleButtonClick}
+                    className="min-w-[200px]"
+                    style={{ backgroundColor: computedButtonColor, color: '#ffffff' }}
+                  >
+                    {config.buttonText}
+                    {config.buttonAction === 'portal' ? <LogIn className="w-4 h-4 ml-2" /> : <ArrowRight className="w-4 h-4 ml-2" />}
+                  </Button>
+                </div>
+              )}
             </div>
+          )}
+
+          {/* Footer chrome */}
+          {config.footerSource === 'mirror' && (
+            <MirrorChrome html={mirrorFooterHtml} css={mirrorCss} minHeight={footerH} showBorders={config.showBorders} />
+          )}
+          {config.footerSource === 'upload' && (
+            <ScreenshotBlock cfg={config.footerScreenshot} fallbackBg={style.formBgColor} showBorders={config.showBorders} />
           )}
         </div>
       );
