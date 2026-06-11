@@ -1057,6 +1057,7 @@ export function ResultPagesConfig({
                     mirrorHeaderHtml={mirrorHeaderHtml}
                     mirrorFooterHtml={mirrorFooterHtml}
                     mirrorCss={mirrorCss}
+                    demoSlug={demoSlug}
                   />
                 </div>
               );
