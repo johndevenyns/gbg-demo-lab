@@ -14,6 +14,21 @@ import {
 export type ResultButtonAction = 'url' | 'portal' | 'landing';
 export type ResultPageMode = 'default' | 'mirror' | 'custom_html' | 'screenshots' | 'ai_generated' | 'single_screenshot';
 
+export type PageHotspotSlot = 'main' | 'header' | 'footer';
+export type PageHotspotLinkKind = 'use_case' | 'page' | 'url';
+
+export interface PageHotspot {
+  id: string;
+  slot: PageHotspotSlot;
+  rect: { x: number; y: number; w: number; h: number }; // 0-100 percent
+  linkKind: PageHotspotLinkKind;
+  useCaseId?: string;
+  pageSlug?: string;
+  url?: string;
+  openInNewTab?: boolean;
+  label?: string;
+}
+
 export interface ResultPageScreenshotConfig {
   url?: string;
   height?: number; // px
@@ -82,6 +97,9 @@ export interface ResultPageConfig {
 
   // Debug: show borders on iframe / screenshot blocks to diagnose spacing
   showBorders?: boolean;
+
+  // Clickable hotspot regions overlaid on screenshot-mode pages
+  hotspots?: PageHotspot[];
 }
 
 interface ResultPageProps {
@@ -93,6 +111,8 @@ interface ResultPageProps {
   mirrorHeaderHtml?: string;
   mirrorFooterHtml?: string;
   mirrorCss?: string;
+  /** Used to navigate to an extra custom page via /demo/:slug/page/:pageSlug */
+  demoSlug?: string;
 }
 
 const SANITIZE_OPTS = {
