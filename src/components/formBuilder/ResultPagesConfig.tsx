@@ -740,6 +740,82 @@ export function ResultPagesConfig({
                 </div>
               </div>
             ))}
+
+            {/* Extra custom pages */}
+            {pages.map((p) => (
+              <div
+                key={p.id}
+                className="flex items-center justify-between gap-3 rounded-lg border bg-card p-4 hover:border-primary/50 transition-colors"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <FileText className="w-5 h-5 text-primary" />
+                  <div className="min-w-0">
+                    <div className="font-medium truncate">{p.name}</div>
+                    <div className="text-xs text-muted-foreground truncate font-mono">
+                      /demo/{demoSlug || ':slug'}/page/{p.slug}
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-0.5">
+                      Mode: <span className="font-mono">{p.config.pageMode || 'default'}</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  {demoSlug && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => window.open(`/demo/${demoSlug}/page/${p.slug}`, '_blank', 'noopener')}
+                    >
+                      <Eye className="w-4 h-4 mr-1" />
+                      Preview
+                    </Button>
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      if (!onUpdateExtraCustomPages) return;
+                      if (!confirm(`Delete "${p.name}"?`)) return;
+                      onUpdateExtraCustomPages(pages.filter((x) => x.id !== p.id));
+                    }}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                  <Button size="sm" onClick={() => setSelectedPage(`extra:${p.id}`)}>
+                    Edit
+                    <ChevronRight className="w-4 h-4 ml-1" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+
+            {/* New page button */}
+            {onUpdateExtraCustomPages && (
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => {
+                  const name = prompt('Page name?', `Custom Page ${pages.length + 1}`);
+                  if (!name) return;
+                  const baseSlug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || `page-${pages.length + 1}`;
+                  let slug = baseSlug;
+                  let i = 2;
+                  while (pages.some((x) => x.slug === slug)) slug = `${baseSlug}-${i++}`;
+                  const id = (typeof crypto !== 'undefined' && 'randomUUID' in crypto) ? crypto.randomUUID() : `p_${Date.now()}`;
+                  const newPage: ExtraCustomPage = {
+                    id,
+                    slug,
+                    name,
+                    config: { ...DEFAULT_LANDING_CONFIG, title: name, pageMode: 'single_screenshot' },
+                  };
+                  onUpdateExtraCustomPages([...pages, newPage]);
+                  setSelectedPage(`extra:${id}`);
+                }}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                New custom page
+              </Button>
+            )}
           </div>
         ) : (
           <div className="space-y-4">
@@ -748,11 +824,19 @@ export function ResultPagesConfig({
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back to pages
               </Button>
-              {demoSlug && selectedPage !== 'landing' && (
+              {demoSlug && selectedPage !== 'landing' && (selectedPage === 'success' || selectedPage === 'failure' || selectedPage.startsWith('extra:')) && (
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => window.open(`/demo/${demoSlug}?previewResult=${selectedPage}`, '_blank', 'noopener')}
+                  onClick={() => {
+                    if (selectedPage.startsWith('extra:')) {
+                      const id = selectedPage.slice('extra:'.length);
+                      const p = pages.find((x) => x.id === id);
+                      if (p) window.open(`/demo/${demoSlug}/page/${p.slug}`, '_blank', 'noopener');
+                    } else {
+                      window.open(`/demo/${demoSlug}?previewResult=${selectedPage}`, '_blank', 'noopener');
+                    }
+                  }}
                 >
                   <Eye className="w-4 h-4 mr-2" />
                   Preview in new window
@@ -760,11 +844,51 @@ export function ResultPagesConfig({
               )}
             </div>
             {(() => {
-              const cfg = selectedPage === 'success' ? successConfig : selectedPage === 'failure' ? failureConfig : landingConfig;
-              const upd = selectedPage === 'success' ? onUpdateSuccessPage : selectedPage === 'failure' ? onUpdateFailurePage : onUpdateLandingPage;
+              let cfg: ResultPageConfig;
+              let upd: (c: ResultPageConfig) => void;
+              let typeKey: string = selectedPage;
+              if (selectedPage === 'success') { cfg = successConfig; upd = onUpdateSuccessPage; }
+              else if (selectedPage === 'failure') { cfg = failureConfig; upd = onUpdateFailurePage; }
+              else if (selectedPage === 'landing') { cfg = landingConfig; upd = onUpdateLandingPage; }
+              else if (selectedPage.startsWith('extra:')) {
+                const id = selectedPage.slice('extra:'.length);
+                const p = pages.find((x) => x.id === id);
+                if (!p || !onUpdateExtraCustomPages) return null;
+                cfg = p.config;
+                upd = (c: ResultPageConfig) => onUpdateExtraCustomPages(pages.map((x) => x.id === id ? { ...x, config: c } : x));
+                typeKey = 'extra';
+              } else { return null; }
               return (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <div>{renderConfigFields(cfg, upd, selectedPage)}</div>
+                  <div className="space-y-3">
+                    {selectedPage.startsWith('extra:') && onUpdateExtraCustomPages && (() => {
+                      const id = selectedPage.slice('extra:'.length);
+                      const p = pages.find((x) => x.id === id);
+                      if (!p) return null;
+                      return (
+                        <div className="grid grid-cols-2 gap-2 border rounded-md p-3 bg-muted/30">
+                          <div>
+                            <Label className="text-xs">Page name</Label>
+                            <Input
+                              value={p.name}
+                              onChange={(e) => onUpdateExtraCustomPages(pages.map((x) => x.id === id ? { ...x, name: e.target.value } : x))}
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-xs">Slug (URL)</Label>
+                            <Input
+                              value={p.slug}
+                              onChange={(e) => {
+                                const next = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '');
+                                onUpdateExtraCustomPages(pages.map((x) => x.id === id ? { ...x, slug: next } : x));
+                              }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })()}
+                    {renderConfigFields(cfg, upd, typeKey)}
+                  </div>
                   <LivePreview
                     config={{ ...cfg, referenceId: cfg.referenceId || 'PREVIEW-1234' }}
                     formStyle={formStyle}
