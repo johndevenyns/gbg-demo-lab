@@ -248,6 +248,15 @@ serve(async (req) => {
     console.log(JSON.stringify(redact(requestPayload), null, 2));
     console.log('=== END PAYLOAD ===');
 
+    // Diagnostic: confirm dateOfBirth format without leaking value
+    const dobVal = (requestPayload as any).dateOfBirth ?? (requestPayload as any).customerData?.dateOfBirth;
+    if (dobVal) {
+      const isIso = /^\d{4}-\d{2}-\d{2}$/.test(String(dobVal));
+      console.log('dateOfBirth format check:', { isIso, length: String(dobVal).length });
+    } else {
+      console.log('dateOfBirth missing from payload');
+    }
+
     const response = await fetch(`${BASE_URL}/api/verification/sessions`, {
       method: 'POST',
       headers: {
