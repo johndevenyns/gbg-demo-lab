@@ -850,12 +850,11 @@ export default function DemoPreview() {
         <div
           className={fullReplaceResult ? 'w-full flex-1 flex flex-col' : 'mx-auto px-4'}
           style={fullReplaceResult ? {
+            // Custom pages mirror how the main site/use-case pages render:
+            // the content spans the full main column edge-to-edge so screenshot
+            // iframes have no whitespace on either side. Image fit modes
+            // (contain/actual/cover/stretch) control image sizing within.
             width: '100%',
-            // Cap custom/result pages to the demo's content max width so uploaded
-            // images don't blow up to the full browser width on large screens.
-            maxWidth: `${previewDocument?.formStyle?.contentAreaMaxWidth ?? 1200}px`,
-            marginLeft: 'auto',
-            marginRight: 'auto',
           } : { maxWidth: previewDocument?.formStyle?.contentAreaMaxWidth ? `${previewDocument.formStyle.contentAreaMaxWidth}px` : '36rem', width: '100%' }}
         >
           <div
