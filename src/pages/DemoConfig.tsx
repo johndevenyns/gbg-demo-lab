@@ -417,6 +417,7 @@ export default function DemoConfig() {
             successPageConfig={localDemo.successPageConfig}
             failurePageConfig={localDemo.failurePageConfig}
             landingPageConfig={localDemo.landingPageConfig}
+            extraCustomPages={localDemo.extraCustomPages}
             buttonColor={localDemo.buttonColor}
             demoId={localDemo.id}
             demoSlug={localDemo.slug}
@@ -442,6 +443,7 @@ export default function DemoConfig() {
             onUpdateSuccessPage={(cfg) => handleUpdate({ successPageConfig: cfg })}
             onUpdateFailurePage={(cfg) => handleUpdate({ failurePageConfig: cfg })}
             onUpdateLandingPage={(cfg) => handleUpdate({ landingPageConfig: cfg })}
+            onUpdateExtraCustomPages={(pages) => handleUpdate({ extraCustomPages: pages })}
           />
         );
       case 'users':
