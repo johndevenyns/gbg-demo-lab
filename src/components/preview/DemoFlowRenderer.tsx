@@ -3153,10 +3153,12 @@ export function DemoFlowRenderer({
   // Still show back button for own-nav steps when configured
   const showBackOnly = isOwnNavStep && buttonConfig.back.enabled && !isLoading;
 
-  // Handle result page button clicks
-  const handleResultButtonClick = (isSuccess: boolean) => {
-    const config = isSuccess ? successPageConfig : failurePageConfig;
-    
+  // Handle result page button clicks. Prefer the active resolved config
+  // (which may come from a show_result_page completion action) over the
+  // legacy successPageConfig/failurePageConfig.
+  const handleResultButtonClick = (isSuccess: boolean, activeConfig?: ResultPageConfig) => {
+    const config = activeConfig ?? (isSuccess ? successPageConfig : failurePageConfig);
+
     // Check if this button should navigate to portal
     if (config?.buttonAction === 'portal') {
       onNavigateToPortal?.();
@@ -3169,7 +3171,11 @@ export function DemoFlowRenderer({
       return;
     }
 
-    const url = isSuccess ? (approvedUrl || config?.buttonUrl) : (rejectedUrl || config?.buttonUrl);
+    // Prefer the button URL explicitly set on the active config (e.g. a
+    // Post-Verification show_result_page action pointing at the Success page).
+    // Fall back to legacy approved/rejected URLs only when not provided.
+    const url = config?.buttonUrl
+      || (isSuccess ? approvedUrl : rejectedUrl);
     if (url) {
       window.location.href = url;
     }
@@ -3244,7 +3250,7 @@ export function DemoFlowRenderer({
         config={config}
         formStyle={style}
         buttonColor={buttonColor}
-        onButtonClick={() => handleResultButtonClick(isSuccess)}
+        onButtonClick={() => handleResultButtonClick(isSuccess, config)}
         mirrorHeaderHtml={mirrorHeaderHtml}
         mirrorFooterHtml={mirrorFooterHtml}
         mirrorCss={mirrorCss}
