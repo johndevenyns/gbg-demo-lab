@@ -602,6 +602,7 @@ function VerificationTypePanel({
 }: VerificationTypePanelProps) {
   const isDidType = typeKey === 'did';
   const isDataOnly = typeKey === 'dataonly';
+  const isDataBio = typeKey === 'databio';
 
   // Local state for resource ID to prevent overwriting while typing
   const [localResourceId, setLocalResourceId] = useState(typeConfig.resourceId || '');
