@@ -14,6 +14,21 @@ import {
 export type ResultButtonAction = 'url' | 'portal' | 'landing';
 export type ResultPageMode = 'default' | 'mirror' | 'custom_html' | 'screenshots' | 'ai_generated' | 'single_screenshot';
 
+export type PageHotspotSlot = 'main' | 'header' | 'footer';
+export type PageHotspotLinkKind = 'use_case' | 'page' | 'url';
+
+export interface PageHotspot {
+  id: string;
+  slot: PageHotspotSlot;
+  rect: { x: number; y: number; w: number; h: number }; // 0-100 percent
+  linkKind: PageHotspotLinkKind;
+  useCaseId?: string;
+  pageSlug?: string;
+  url?: string;
+  openInNewTab?: boolean;
+  label?: string;
+}
+
 export interface ResultPageScreenshotConfig {
   url?: string;
   height?: number; // px
@@ -82,6 +97,9 @@ export interface ResultPageConfig {
 
   // Debug: show borders on iframe / screenshot blocks to diagnose spacing
   showBorders?: boolean;
+
+  // Clickable hotspot regions overlaid on screenshot-mode pages
+  hotspots?: PageHotspot[];
 }
 
 interface ResultPageProps {
@@ -93,6 +111,8 @@ interface ResultPageProps {
   mirrorHeaderHtml?: string;
   mirrorFooterHtml?: string;
   mirrorCss?: string;
+  /** Used to navigate to an extra custom page via /demo/:slug/page/:pageSlug */
+  demoSlug?: string;
 }
 
 const SANITIZE_OPTS = {
@@ -160,10 +180,49 @@ function ScreenshotBlock({ cfg, fallbackBg, showBorders }: { cfg?: ResultPageScr
   );
 }
 
-export function ResultPage({ config, formStyle, buttonColor, onButtonClick, mirrorHeaderHtml, mirrorFooterHtml, mirrorCss }: ResultPageProps) {
+export function ResultPage({ config, formStyle, buttonColor, onButtonClick, mirrorHeaderHtml, mirrorFooterHtml, mirrorCss, demoSlug }: ResultPageProps) {
   const style = formStyle || DEFAULT_FORM_STYLE;
   const isSuccess = config.type === 'success';
   const mode: ResultPageMode = config.pageMode || 'default';
+
+  // Hotspot click dispatcher — mirrors header CTA behavior
+  const handleHotspotClick = (h: PageHotspot) => {
+    if (h.linkKind === 'url' && h.url) {
+      if (h.openInNewTab) window.open(h.url, '_blank', 'noopener');
+      else window.location.href = h.url;
+    } else if (h.linkKind === 'use_case' && h.useCaseId) {
+      window.postMessage({ type: 'cta-use-case', useCaseId: h.useCaseId }, '*');
+    } else if (h.linkKind === 'page' && h.pageSlug) {
+      const slug = demoSlug || window.location.pathname.match(/^\/demo\/([^/]+)/)?.[1];
+      if (slug) window.location.href = `/demo/${slug}/page/${h.pageSlug}`;
+    }
+  };
+
+  const renderHotspots = (slot: PageHotspotSlot) => {
+    const list = (config.hotspots || []).filter(h => h.slot === slot);
+    if (list.length === 0) return null;
+    return (
+      <>
+        {list.map(h => (
+          <button
+            key={h.id}
+            type="button"
+            aria-label={h.label || `Hotspot ${slot}`}
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleHotspotClick(h); }}
+            className="absolute cursor-pointer bg-transparent border-0 p-0 m-0"
+            style={{
+              left: `${h.rect.x}%`,
+              top: `${h.rect.y}%`,
+              width: `${h.rect.w}%`,
+              height: `${h.rect.h}%`,
+              outline: config.showBorders ? '2px dashed #22c55e' : 'none',
+              zIndex: 5,
+            }}
+          />
+        ))}
+      </>
+    );
+  };
   
   // Get the computed button color - prefer explicit buttonColor, then style's focus color as brand
   const computedButtonColor = buttonColor || style.inputFocusBorderColor || '#3b82f6';
@@ -211,9 +270,13 @@ export function ResultPage({ config, formStyle, buttonColor, onButtonClick, mirr
           className="min-h-full w-full flex flex-col"
           style={{ backgroundColor: style.contentAreaBgColor || '#ffffff' }}
         >
-          <ScreenshotBlock cfg={config.screenshotHeader} fallbackBg={style.formBgColor} showBorders={config.showBorders} />
+          <div className="relative">
+            <ScreenshotBlock cfg={config.screenshotHeader} fallbackBg={style.formBgColor} showBorders={config.showBorders} />
+            {renderHotspots('header')}
+          </div>
           <div className="relative" style={{ outline: config.showBorders ? '2px dashed #ef4444' : undefined }}>
             <ScreenshotBlock cfg={config.screenshotMain} fallbackBg={style.formBgColor} showBorders={config.showBorders} />
+            {renderHotspots('main')}
             {showBtn && (
               <div className="absolute inset-x-0 bottom-0 flex justify-center pb-6">
                 <Button
@@ -227,7 +290,10 @@ export function ResultPage({ config, formStyle, buttonColor, onButtonClick, mirr
               </div>
             )}
           </div>
-          <ScreenshotBlock cfg={config.screenshotFooter} fallbackBg={style.formBgColor} showBorders={config.showBorders} />
+          <div className="relative">
+            <ScreenshotBlock cfg={config.screenshotFooter} fallbackBg={style.formBgColor} showBorders={config.showBorders} />
+            {renderHotspots('footer')}
+          </div>
         </div>
       );
     }
@@ -258,22 +324,28 @@ export function ResultPage({ config, formStyle, buttonColor, onButtonClick, mirr
           }}
         >
           {/* Header chrome */}
-          {config.headerSource === 'mirror' && (
-            <MirrorChrome html={mirrorHeaderHtml} css={mirrorCss} minHeight={headerH} showBorders={config.showBorders} />
-          )}
-          {config.headerSource === 'upload' && (
-            <ScreenshotBlock cfg={config.headerScreenshot} fallbackBg={style.formBgColor} showBorders={config.showBorders} />
+          {(config.headerSource === 'mirror' || config.headerSource === 'upload') && (
+            <div className="relative">
+              {config.headerSource === 'mirror'
+                ? <MirrorChrome html={mirrorHeaderHtml} css={mirrorCss} minHeight={headerH} showBorders={config.showBorders} />
+                : <ScreenshotBlock cfg={config.headerScreenshot} fallbackBg={style.formBgColor} showBorders={config.showBorders} />}
+              {renderHotspots('header')}
+            </div>
           )}
 
           {/* Main screenshot */}
           {url && (
             <div
+              className="relative"
               style={{
                 paddingTop: config.singleScreenshotPaddingTop ?? 0,
                 paddingBottom: config.singleScreenshotPaddingBottom ?? 0,
               }}
             >
-              <img src={url} alt="" style={imgStyle} />
+              <div className="relative">
+                <img src={url} alt="" style={imgStyle} />
+                {renderHotspots('main')}
+              </div>
               {showBtn && (
                 <div className="flex justify-center mt-6">
                   <Button
@@ -290,11 +362,13 @@ export function ResultPage({ config, formStyle, buttonColor, onButtonClick, mirr
           )}
 
           {/* Footer chrome */}
-          {config.footerSource === 'mirror' && (
-            <MirrorChrome html={mirrorFooterHtml} css={mirrorCss} minHeight={footerH} showBorders={config.showBorders} />
-          )}
-          {config.footerSource === 'upload' && (
-            <ScreenshotBlock cfg={config.footerScreenshot} fallbackBg={style.formBgColor} showBorders={config.showBorders} />
+          {(config.footerSource === 'mirror' || config.footerSource === 'upload') && (
+            <div className="relative">
+              {config.footerSource === 'mirror'
+                ? <MirrorChrome html={mirrorFooterHtml} css={mirrorCss} minHeight={footerH} showBorders={config.showBorders} />
+                : <ScreenshotBlock cfg={config.footerScreenshot} fallbackBg={style.formBgColor} showBorders={config.showBorders} />}
+              {renderHotspots('footer')}
+            </div>
           )}
         </div>
       );

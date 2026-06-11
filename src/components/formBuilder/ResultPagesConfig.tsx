@@ -15,6 +15,9 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import type { ResultPageScreenshotConfig } from '@/components/preview/ResultPage';
+import type { PageHotspot } from '@/components/preview/ResultPage';
+import type { DemoUseCaseLink } from '@/types/useCase';
+import { PageHotspotEditor } from './PageHotspotEditor';
 
 function LivePreview({
   config,
@@ -23,6 +26,7 @@ function LivePreview({
   mirrorHeaderHtml,
   mirrorFooterHtml,
   mirrorCss,
+  demoSlug,
 }: {
   config: ResultPageConfig;
   formStyle?: FormStyleConfig;
@@ -30,6 +34,7 @@ function LivePreview({
   mirrorHeaderHtml?: string;
   mirrorFooterHtml?: string;
   mirrorCss?: string;
+  demoSlug?: string;
 }) {
   return (
     <div className="lg:sticky lg:top-4 space-y-2">
@@ -46,6 +51,7 @@ function LivePreview({
             mirrorHeaderHtml={mirrorHeaderHtml}
             mirrorFooterHtml={mirrorFooterHtml}
             mirrorCss={mirrorCss}
+            demoSlug={demoSlug}
             onButtonClick={() => {}}
           />
         </div>
@@ -290,6 +296,7 @@ interface ResultPagesConfigProps {
   mirrorHeaderHtml?: string;
   mirrorFooterHtml?: string;
   mirrorCss?: string;
+  useCaseLinks?: DemoUseCaseLink[];
   onUpdateApprovedUrl: (url: string) => void;
   onUpdateRejectedUrl: (url: string) => void;
   onUpdateReturnUrl: (url: string) => void;
@@ -314,6 +321,7 @@ export function ResultPagesConfig({
   mirrorHeaderHtml,
   mirrorFooterHtml,
   mirrorCss,
+  useCaseLinks,
   onUpdateApprovedUrl,
   onUpdateRejectedUrl,
   onUpdateReturnUrl,
@@ -331,6 +339,7 @@ export function ResultPagesConfig({
   const [renameValue, setRenameValue] = useState('');
   const { toast } = useToast();
   const pages = extraCustomPages || [];
+  const ucLinks = useCaseLinks || [];
 
   // Use provided configs or defaults
   const successConfig = successPageConfig || DEFAULT_SUCCESS_CONFIG;
@@ -388,6 +397,11 @@ export function ResultPagesConfig({
     type: PageKey
   ) => {
     const mode: ResultPageMode = config.pageMode || 'default';
+    const currentExtraSlug = type.startsWith('extra:')
+      ? pages.find(p => p.id === type.slice('extra:'.length))?.slug
+      : undefined;
+    const updateHotspots = (next: PageHotspot[]) => onUpdate({ ...config, hotspots: next });
+    const allHotspots = config.hotspots || [];
     return (
     <div className="space-y-4">
       {/* Mode selector */}
@@ -569,13 +583,23 @@ export function ResultPagesConfig({
             const cfgKey = (`screenshot${slot}`) as 'screenshotHeader' | 'screenshotMain' | 'screenshotFooter';
             const current = config[cfgKey];
             return (
-              <ScreenshotSlotEditor
-                key={slot}
-                label={slot}
-                value={current}
-                onChange={(next) => onUpdate({ ...config, [cfgKey]: next })}
-                upload={(file) => uploadImage(file, key)}
-              />
+              <div key={slot} className="space-y-2">
+                <ScreenshotSlotEditor
+                  label={slot}
+                  value={current}
+                  onChange={(next) => onUpdate({ ...config, [cfgKey]: next })}
+                  upload={(file) => uploadImage(file, key)}
+                />
+                <PageHotspotEditor
+                  slot={key}
+                  imageUrl={current?.url}
+                  hotspots={allHotspots}
+                  onChange={updateHotspots}
+                  useCaseLinks={ucLinks}
+                  pages={pages}
+                  currentExtraPageSlug={currentExtraSlug}
+                />
+              </div>
             );
           })}
         </div>
@@ -606,6 +630,17 @@ export function ResultPagesConfig({
                 upload={(file) => uploadImage(file, 'header')}
               />
             )}
+            {config.headerSource === 'upload' && (
+              <PageHotspotEditor
+                slot="header"
+                imageUrl={config.headerScreenshot?.url}
+                hotspots={allHotspots}
+                onChange={updateHotspots}
+                useCaseLinks={ucLinks}
+                pages={pages}
+                currentExtraPageSlug={currentExtraSlug}
+              />
+            )}
           </div>
 
           {/* Main */}
@@ -613,6 +648,15 @@ export function ResultPagesConfig({
             config={config}
             onUpdate={onUpdate}
             upload={(file) => uploadImage(file, 'single')}
+          />
+          <PageHotspotEditor
+            slot="main"
+            imageUrl={config.singleScreenshotUrl}
+            hotspots={allHotspots}
+            onChange={updateHotspots}
+            useCaseLinks={ucLinks}
+            pages={pages}
+            currentExtraPageSlug={currentExtraSlug}
           />
 
           {/* Footer source */}
@@ -635,6 +679,17 @@ export function ResultPagesConfig({
                 value={config.footerScreenshot}
                 onChange={(next) => onUpdate({ ...config, footerScreenshot: next })}
                 upload={(file) => uploadImage(file, 'footer')}
+              />
+            )}
+            {config.footerSource === 'upload' && (
+              <PageHotspotEditor
+                slot="footer"
+                imageUrl={config.footerScreenshot?.url}
+                hotspots={allHotspots}
+                onChange={updateHotspots}
+                useCaseLinks={ucLinks}
+                pages={pages}
+                currentExtraPageSlug={currentExtraSlug}
               />
             )}
           </div>
@@ -1002,6 +1057,7 @@ export function ResultPagesConfig({
                     mirrorHeaderHtml={mirrorHeaderHtml}
                     mirrorFooterHtml={mirrorFooterHtml}
                     mirrorCss={mirrorCss}
+                    demoSlug={demoSlug}
                   />
                 </div>
               );

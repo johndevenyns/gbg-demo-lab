@@ -845,6 +845,7 @@ export default function DemoPreview() {
                     ? demo.mirrorScreenshotCss
                     : demo.mirrorHtmlCss || demo.scrapedCss
                 }
+                demoSlug={demo.slug}
               />
             ) : hasUseCases && selectedUseCase ? (
               <UseCaseLandingPage
