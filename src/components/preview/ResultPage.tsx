@@ -256,7 +256,7 @@ export function ResultPage({ config, formStyle, buttonColor, onButtonClick, mirr
       const showBtn = config.showButton !== false && !!config.buttonText;
       return (
         <div
-          className="min-h-full w-full flex flex-col"
+          className="w-full flex flex-col"
           style={{ backgroundColor: style.contentAreaBgColor || '#ffffff' }}
         >
           <div className="relative">
@@ -309,7 +309,7 @@ export function ResultPage({ config, formStyle, buttonColor, onButtonClick, mirr
       const footerH = style.footerHeight || 160;
       return (
         <div
-          className="min-h-full w-full flex flex-col"
+          className="w-full flex flex-col"
           style={{
             backgroundColor: config.singleScreenshotBgColor || style.contentAreaBgColor || '#ffffff',
             outline: config.showBorders ? '2px dashed #ef4444' : undefined,
@@ -376,7 +376,7 @@ export function ResultPage({ config, formStyle, buttonColor, onButtonClick, mirr
     const footerH = style.footerHeight || 160;
     const showBtn = config.showButton !== false && !!config.buttonText;
     return (
-      <div className="min-h-full w-full flex flex-col" style={{ backgroundColor: style.contentAreaBgColor || '#ffffff' }}>
+      <div className="w-full flex flex-col" style={{ backgroundColor: style.contentAreaBgColor || '#ffffff' }}>
         <MirrorChrome html={mirrorHeaderHtml} css={mirrorCss} minHeight={headerH} showBorders={config.showBorders} />
         <div
           className="flex-1 px-4 py-8"

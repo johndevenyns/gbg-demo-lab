@@ -806,7 +806,7 @@ export default function DemoPreview() {
 
       {/* Main Content */}
       <main
-        className="flex-1 flex flex-col"
+        className={`${fullReplaceResult ? '' : 'flex-1'} flex flex-col`}
         style={{
           backgroundColor: previewDocument?.formStyle?.contentAreaBgColor || 'transparent',
           paddingTop: fullReplaceResult ? 0 : `${previewDocument?.formStyle?.contentAreaPaddingY ?? 0}px`,
