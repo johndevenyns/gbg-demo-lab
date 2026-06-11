@@ -163,9 +163,11 @@ function buildPayload(req: CreateSessionRequest, referenceId: string) {
   }
 
   // DataBio capture options → nested `options` block per IVS API reference.
-  if (req.verificationType === 'dataBio' && req.dataBioOptions) {
-    const opts = req.dataBioOptions;
-    const options: Record<string, unknown> = {
+  // Always emit for dataBio so document/biometric counts reach the verifier
+  // even when the caller omits dataBioOptions (uses spec defaults).
+  if (req.verificationType === 'dataBio') {
+    const opts = req.dataBioOptions || {};
+    base.options = {
       previousAddress: { enabled: false },
       biometrics: {
         enabled: opts.biometricsEnabled ?? true,
@@ -176,7 +178,6 @@ function buildPayload(req: CreateSessionRequest, referenceId: string) {
         count: opts.documentsCount ?? 2,
       },
     };
-    base.options = options;
   }
 
   return base;
