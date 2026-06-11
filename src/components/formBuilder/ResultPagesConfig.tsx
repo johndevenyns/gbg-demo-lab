@@ -811,7 +811,7 @@ export function ResultPagesConfig({
           Custom Pages
         </CardTitle>
         <CardDescription>
-          The default pages shown after verification. Edit Success, Failure, and your custom Landing page. Steps may override these with their own custom result pages.
+          Build and manage the custom pages used throughout your demo. Configure the landing page and any extra custom pages, and link buttons either to another custom page or to your own URL.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
