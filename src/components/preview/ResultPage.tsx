@@ -287,12 +287,9 @@ export function ResultPage({ config, formStyle, buttonColor, onButtonClick, mirr
     const hasHeader = config.headerSource && config.headerSource !== 'none';
     const hasFooter = config.footerSource && config.footerSource !== 'none';
     if (url || hasHeader || hasFooter) {
-      const fit = config.singleScreenshotFitMode || 'contain';
-      const imgStyle: React.CSSProperties =
-        fit === 'stretch' ? { width: '100%', height: 'auto', display: 'block' }
-        : fit === 'actual' ? { display: 'block', margin: '0 auto' }
-        : fit === 'cover' ? { width: '100%', height: 'auto', display: 'block', objectFit: 'cover' }
-        : { maxWidth: '100%', height: 'auto', display: 'block', margin: '0 auto' };
+      // Always render the main uploaded image at its natural (aspect-scaled) height,
+      // full width, with no extra spacing — slot height equals the image height.
+      const imgStyle: React.CSSProperties = { display: 'block', width: '100%', height: 'auto', margin: 0, padding: 0 };
       const showBtn = config.showButton !== false && !!config.buttonText;
       const headerH = style.headerHeight || 120;
       const footerH = style.footerHeight || 160;
@@ -321,9 +318,11 @@ export function ResultPage({ config, formStyle, buttonColor, onButtonClick, mirr
               style={{
                 paddingTop: config.singleScreenshotPaddingTop ?? 0,
                 paddingBottom: config.singleScreenshotPaddingBottom ?? 0,
+                lineHeight: 0,
+                fontSize: 0,
               }}
             >
-              <div className="relative">
+              <div className="relative" style={{ lineHeight: 0, fontSize: 0 }}>
                 <img src={url} alt="" style={imgStyle} />
                 {renderHotspots('main')}
               </div>
