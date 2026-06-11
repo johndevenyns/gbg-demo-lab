@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { 
   CheckCircle2, XCircle, ChevronDown, Plus, Trash2, GripVertical,
-  FileText, UserPlus, LogIn, ExternalLink, ArrowRight, Settings2
+  FileText, UserPlus, LogIn, ExternalLink, ArrowRight, Settings2, Eye
 } from 'lucide-react';
 import { StepCompletionConfig, StepCompletionAction, StepCompletionActionType } from '@/types/demo';
 import type { ExtraCustomPage } from '@/types/demo';
@@ -357,16 +357,31 @@ export function StepCompletionActionsConfig({
 
   const content = (
     <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'success' | 'failure')}>
-      <TabsList className="grid w-full grid-cols-2 mb-4">
-        <TabsTrigger value="success" className="flex items-center gap-2 text-xs">
-          <CheckCircle2 className="w-3 h-3 text-green-500" />
-          On Success ({completionConfig.onSuccess.length})
-        </TabsTrigger>
-        <TabsTrigger value="failure" className="flex items-center gap-2 text-xs">
-          <XCircle className="w-3 h-3 text-red-500" />
-          On Failure ({completionConfig.onFailure.length})
-        </TabsTrigger>
-      </TabsList>
+      <div className="flex items-center gap-2 mb-4">
+        <TabsList className="grid flex-1 grid-cols-2">
+          <TabsTrigger value="success" className="flex items-center gap-2 text-xs">
+            <CheckCircle2 className="w-3 h-3 text-green-500" />
+            On Success ({completionConfig.onSuccess.length})
+          </TabsTrigger>
+          <TabsTrigger value="failure" className="flex items-center gap-2 text-xs">
+            <XCircle className="w-3 h-3 text-red-500" />
+            On Failure ({completionConfig.onFailure.length})
+          </TabsTrigger>
+        </TabsList>
+        {demoSlug && (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-8"
+            onClick={() => window.open(`/demo/${demoSlug}?previewResult=${activeTab}`, '_blank', 'noopener')}
+            title={`Preview the ${activeTab} page in a new tab`}
+          >
+            <Eye className="w-3 h-3 mr-1" />
+            Preview
+          </Button>
+        )}
+      </div>
 
       <TabsContent value="success">
         {renderActionsList('success')}
