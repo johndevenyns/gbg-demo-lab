@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CheckCircle2, XCircle, ExternalLink, Settings2, Paintbrush, Sparkles, Upload, Loader2, Eye, ArrowLeft, FileText, ChevronRight, Plus, Trash2, Pencil, Check, X } from 'lucide-react';
+import { CheckCircle2, XCircle, ExternalLink, Settings2, Paintbrush, Sparkles, Upload, Loader2, Eye, ArrowLeft, FileText, ChevronRight, Plus, Trash2, Pencil, Check, X, Home } from 'lucide-react';
 import { ResultPageConfig, ResultButtonAction, ResultPageMode, DEFAULT_SUCCESS_CONFIG, DEFAULT_FAILURE_CONFIG, DEFAULT_LANDING_CONFIG } from '@/components/preview/ResultPage';
 import { ResultPage } from '@/components/preview/ResultPage';
 import type { FormStyleConfig } from '@/types/formStyle';
@@ -304,6 +304,8 @@ interface ResultPagesConfigProps {
   onUpdateFailurePage: (config: ResultPageConfig) => void;
   onUpdateLandingPage: (config: ResultPageConfig) => void;
   onUpdateExtraCustomPages?: (pages: ExtraCustomPage[]) => void;
+  defaultLandingPageSlug?: string;
+  onUpdateDefaultLandingPageSlug?: (slug: string | undefined) => void;
 }
 
 export function ResultPagesConfig({
@@ -329,6 +331,8 @@ export function ResultPagesConfig({
   onUpdateFailurePage,
   onUpdateLandingPage,
   onUpdateExtraCustomPages,
+  defaultLandingPageSlug,
+  onUpdateDefaultLandingPageSlug,
 }: ResultPagesConfigProps) {
   // PageKey is 'success' | 'failure' | 'landing' | `extra:<id>`
   type PageKey = string;
@@ -848,6 +852,31 @@ export function ResultPagesConfig({
                 </div>
               </div>
             ))}
+
+            {/* Default landing page selector */}
+            <div className="border rounded-md p-3 bg-muted/30 space-y-2">
+              <div className="flex items-center gap-2">
+                <Home className="w-4 h-4 text-muted-foreground" />
+                <Label className="font-medium">Default Site Landing Page</Label>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Choose what visitors see first at <span className="font-mono">/demo/{demoSlug || ':slug'}</span>
+              </p>
+              <Select
+                value={defaultLandingPageSlug || '__use_cases__'}
+                onValueChange={(v) => onUpdateDefaultLandingPageSlug?.(v === '__use_cases__' ? undefined : v)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__use_cases__">Use case landing page (default)</SelectItem>
+                  {pages.map((p) => (
+                    <SelectItem key={p.slug} value={p.slug}>{p.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
             {/* Extra custom pages */}
             {pages.map((p) => (

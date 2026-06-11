@@ -165,9 +165,9 @@ export default function DemoPreview() {
   // Auto-select the first landing-page-visible use case
   const landingPageUseCases = useMemo(() => resolvedUseCases.filter(uc => uc.showOnLandingPage), [resolvedUseCases]);
   useEffect(() => {
-    if (!hasUseCases || selectedUseCase) return;
+    if (!hasUseCases || selectedUseCase || demo?.defaultLandingPageSlug) return;
     setSelectedUseCase(landingPageUseCases[0] || resolvedUseCases[0]);
-  }, [hasUseCases, resolvedUseCases, landingPageUseCases, selectedUseCase]);
+  }, [hasUseCases, resolvedUseCases, landingPageUseCases, selectedUseCase, demo?.defaultLandingPageSlug]);
 
   // Listen for CTA messages from the header iframe
   useEffect(() => {
@@ -349,8 +349,13 @@ export default function DemoPreview() {
   const extraPageCfg = pageSlug
     ? (demo.extraCustomPages || []).find((p) => p.slug === pageSlug)?.config || null
     : null;
-  const displayResultCfg = extraPageCfg || activeResultCfg;
+  // If no explicit page slug and a default landing page is configured, resolve it
+  const defaultLandingPageCfg = !pageSlug && !flowResult && demo.defaultLandingPageSlug
+    ? (demo.extraCustomPages || []).find((p) => p.slug === demo.defaultLandingPageSlug)?.config || null
+    : null;
+  const displayResultCfg = extraPageCfg || activeResultCfg || defaultLandingPageCfg;
   const isExtraPageRoute = !!extraPageCfg;
+  const showDefaultLanding = !!defaultLandingPageCfg && !selectedUseCase;
   const fullReplaceResult = !!displayResultCfg && (
     displayResultCfg.pageMode === 'screenshots' ||
     displayResultCfg.pageMode === 'custom_html' ||
@@ -825,7 +830,7 @@ export default function DemoPreview() {
               border: `${previewDocument?.formStyle?.formBorderWidth || '1'}px solid ${previewDocument?.formStyle?.formBorderColor || '#e5e7eb'}`,
             }}
           >
-            {(previewResultParam && activeResultCfg) || isExtraPageRoute ? (
+            {(previewResultParam && activeResultCfg) || isExtraPageRoute || showDefaultLanding ? (
               <ResultPage
                 config={{ ...(displayResultCfg as NonNullable<typeof displayResultCfg>), referenceId: (displayResultCfg as NonNullable<typeof displayResultCfg>).referenceId || 'PREVIEW-1234' }}
                 formStyle={demo.formStyle}
