@@ -270,9 +270,13 @@ export function ResultPage({ config, formStyle, buttonColor, onButtonClick, mirr
           className="min-h-full w-full flex flex-col"
           style={{ backgroundColor: style.contentAreaBgColor || '#ffffff' }}
         >
-          <ScreenshotBlock cfg={config.screenshotHeader} fallbackBg={style.formBgColor} showBorders={config.showBorders} />
+          <div className="relative">
+            <ScreenshotBlock cfg={config.screenshotHeader} fallbackBg={style.formBgColor} showBorders={config.showBorders} />
+            {renderHotspots('header')}
+          </div>
           <div className="relative" style={{ outline: config.showBorders ? '2px dashed #ef4444' : undefined }}>
             <ScreenshotBlock cfg={config.screenshotMain} fallbackBg={style.formBgColor} showBorders={config.showBorders} />
+            {renderHotspots('main')}
             {showBtn && (
               <div className="absolute inset-x-0 bottom-0 flex justify-center pb-6">
                 <Button
@@ -286,7 +290,10 @@ export function ResultPage({ config, formStyle, buttonColor, onButtonClick, mirr
               </div>
             )}
           </div>
-          <ScreenshotBlock cfg={config.screenshotFooter} fallbackBg={style.formBgColor} showBorders={config.showBorders} />
+          <div className="relative">
+            <ScreenshotBlock cfg={config.screenshotFooter} fallbackBg={style.formBgColor} showBorders={config.showBorders} />
+            {renderHotspots('footer')}
+          </div>
         </div>
       );
     }
