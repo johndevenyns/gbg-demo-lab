@@ -127,7 +127,7 @@ function buildPayload(req: CreateSessionRequest, referenceId: string) {
   const identity: Record<string, string> = {};
   if (firstName) identity.firstName = firstName;
   if (lastName) identity.lastName = lastName;
-  if (dateOfBirth) identity.dateOfBirth = dateOfBirth;
+  if (dateOfBirth) identity.birthday = dateOfBirth;
   if (combinedAddress) identity.address = combinedAddress;
   if (phoneDigits) identity.phone = phoneDigits;
   if (email) identity.email = email;
@@ -249,12 +249,12 @@ serve(async (req) => {
     console.log('=== END PAYLOAD ===');
 
     // Diagnostic: confirm dateOfBirth format without leaking value
-    const dobVal = (requestPayload as any).dateOfBirth ?? (requestPayload as any).customerData?.dateOfBirth;
+    const dobVal = (requestPayload as any).birthday ?? (requestPayload as any).customerData?.birthday;
     if (dobVal) {
       const isIso = /^\d{4}-\d{2}-\d{2}$/.test(String(dobVal));
-      console.log('dateOfBirth format check:', { isIso, length: String(dobVal).length });
+      console.log('birthday format check:', { isIso, length: String(dobVal).length });
     } else {
-      console.log('dateOfBirth missing from payload');
+      console.log('birthday missing from payload');
     }
 
     const response = await fetch(`${BASE_URL}/api/verification/sessions`, {
