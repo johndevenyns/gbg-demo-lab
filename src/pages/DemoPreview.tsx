@@ -969,7 +969,7 @@ export default function DemoPreview() {
               </div>
             </div>
           </div>
-          <div className="h-12" />
+          {!fullReplaceResult && <div className="h-12" />}
         </>
       )}
     </div>
