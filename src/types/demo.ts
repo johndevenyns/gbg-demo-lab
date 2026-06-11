@@ -81,6 +81,9 @@ export interface DemoEnvironment {
   successPageConfig?: ResultPageConfig;
   failurePageConfig?: ResultPageConfig;
   landingPageConfig?: ResultPageConfig;
+
+  // Extra custom pages — admin-defined, each at /demo/:slug/page/:pageSlug
+  extraCustomPages?: ExtraCustomPage[];
   
   // Stored test data for Fill Pass / Fill Fail buttons
   storedTestData?: StoredTestData;
