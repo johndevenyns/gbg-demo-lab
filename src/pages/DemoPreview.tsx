@@ -632,7 +632,7 @@ export default function DemoPreview() {
 
   return (
     <div
-      className={`${fullReplaceResult ? '' : 'min-h-screen'} flex flex-col`}
+      className="min-h-screen flex flex-col"
       style={{
         backgroundColor: fullReplaceResult ? 'transparent' : (previewDocument?.formStyle?.contentAreaBgColor || '#f5f5f5'),
         color: '#1a1a2e',
@@ -812,7 +812,7 @@ export default function DemoPreview() {
 
       {/* Main Content */}
       <main
-        className={`${fullReplaceResult ? '' : 'flex-1'} flex flex-col`}
+        className="flex-1 flex flex-col"
         style={{
           backgroundColor: previewDocument?.formStyle?.contentAreaBgColor || 'transparent',
           paddingTop: fullReplaceResult ? 0 : `${previewDocument?.formStyle?.contentAreaPaddingY ?? 0}px`,
@@ -823,12 +823,12 @@ export default function DemoPreview() {
         }}
       >
         <div
-          className={fullReplaceResult ? 'w-full' : 'mx-auto px-4'}
+          className={fullReplaceResult ? 'w-full flex-1 flex flex-col' : 'mx-auto px-4'}
           style={fullReplaceResult ? { width: '100%' } : { maxWidth: previewDocument?.formStyle?.contentAreaMaxWidth ? `${previewDocument.formStyle.contentAreaMaxWidth}px` : '36rem', width: '100%' }}
         >
           <div
             ref={formRef}
-            className={fullReplaceResult ? '' : 'p-8'}
+            className={fullReplaceResult ? 'flex-1 flex flex-col' : 'p-8'}
             style={fullReplaceResult ? {} : {
               backgroundColor: previewDocument?.formStyle?.formBgColor || 'white',
               borderRadius: getFormBorderRadius(previewDocument?.formStyle?.formBorderRadius),

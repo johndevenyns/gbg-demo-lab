@@ -158,7 +158,7 @@ function ScreenshotBlock({ cfg, fallbackBg, showBorders }: { cfg?: ResultPageScr
         backgroundColor: cfg.bgColor || fallbackBg || 'transparent',
         display: 'flex',
         justifyContent: justify,
-        alignItems: 'stretch',
+        alignItems: 'flex-start',
         lineHeight: 0,
         fontSize: 0,
         outline: showBorders ? '2px dashed #ef4444' : undefined,
@@ -240,7 +240,7 @@ export function ResultPage({ config, formStyle, buttonColor, onButtonClick, mirr
     if (html && html.trim().length > 0) {
       return (
         <div
-          className="min-h-full w-full"
+          className="w-full flex-1"
           style={{ backgroundColor: style.contentAreaBgColor || '#ffffff' }}
           dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(html, SANITIZE_OPTS) }}
         />
@@ -256,14 +256,14 @@ export function ResultPage({ config, formStyle, buttonColor, onButtonClick, mirr
       const showBtn = config.showButton !== false && !!config.buttonText;
       return (
         <div
-          className="w-full flex flex-col"
+          className="w-full flex-1 flex flex-col"
           style={{ backgroundColor: style.contentAreaBgColor || '#ffffff' }}
         >
           <div className="relative">
             <ScreenshotBlock cfg={config.screenshotHeader} fallbackBg={style.formBgColor} showBorders={config.showBorders} />
             {renderHotspots('header')}
           </div>
-          <div className="relative" style={{ outline: config.showBorders ? '2px dashed #ef4444' : undefined }}>
+          <div className="relative flex-1" style={{ outline: config.showBorders ? '2px dashed #ef4444' : undefined, backgroundColor: config.screenshotMain?.bgColor || undefined }}>
             <ScreenshotBlock cfg={config.screenshotMain} fallbackBg={style.formBgColor} showBorders={config.showBorders} />
             {renderHotspots('main')}
             {showBtn && (
@@ -309,7 +309,7 @@ export function ResultPage({ config, formStyle, buttonColor, onButtonClick, mirr
       const footerH = style.footerHeight || 160;
       return (
         <div
-          className="w-full flex flex-col"
+          className="w-full flex-1 flex flex-col"
           style={{
             backgroundColor: config.singleScreenshotBgColor || style.contentAreaBgColor || '#ffffff',
             outline: config.showBorders ? '2px dashed #ef4444' : undefined,
@@ -328,7 +328,7 @@ export function ResultPage({ config, formStyle, buttonColor, onButtonClick, mirr
           {/* Main screenshot */}
           {url && (
             <div
-              className="relative"
+              className="relative flex-1"
               style={{
                 paddingTop: config.singleScreenshotPaddingTop ?? 0,
                 paddingBottom: config.singleScreenshotPaddingBottom ?? 0,
@@ -336,6 +336,7 @@ export function ResultPage({ config, formStyle, buttonColor, onButtonClick, mirr
                 fontSize: 0,
               }}
             >
+              {/* grows to push the footer to the bottom of the viewport */}
               <div className="relative" style={{ lineHeight: 0, fontSize: 0 }}>
                 <img src={url} alt="" style={imgStyle} />
                 {renderHotspots('main')}
