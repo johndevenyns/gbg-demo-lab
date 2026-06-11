@@ -349,8 +349,13 @@ export default function DemoPreview() {
   const extraPageCfg = pageSlug
     ? (demo.extraCustomPages || []).find((p) => p.slug === pageSlug)?.config || null
     : null;
-  const displayResultCfg = extraPageCfg || activeResultCfg;
+  // If no explicit page slug and a default landing page is configured, resolve it
+  const defaultLandingPageCfg = !pageSlug && !flowResult && demo.defaultLandingPageSlug
+    ? (demo.extraCustomPages || []).find((p) => p.slug === demo.defaultLandingPageSlug)?.config || null
+    : null;
+  const displayResultCfg = extraPageCfg || activeResultCfg || defaultLandingPageCfg;
   const isExtraPageRoute = !!extraPageCfg;
+  const showDefaultLanding = !!defaultLandingPageCfg && !selectedUseCase;
   const fullReplaceResult = !!displayResultCfg && (
     displayResultCfg.pageMode === 'screenshots' ||
     displayResultCfg.pageMode === 'custom_html' ||
