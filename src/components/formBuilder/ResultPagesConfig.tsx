@@ -344,6 +344,7 @@ export function ResultPagesConfig({
   const { toast } = useToast();
   const pages = extraCustomPages || [];
   const ucLinks = useCaseLinks || [];
+  const origin = typeof window !== 'undefined' ? window.location.origin : '';
 
   // Use provided configs or defaults
   const successConfig = successPageConfig || DEFAULT_SUCCESS_CONFIG;
@@ -883,6 +884,9 @@ export function ResultPagesConfig({
                     <div className="text-xs text-muted-foreground mt-0.5">
                       Mode: <span className="font-mono">{row.cfg.pageMode || 'default'}</span>
                     </div>
+                    <div className="text-xs text-muted-foreground truncate font-mono">
+                      {origin}/demo/{demoSlug || ':slug'}?previewResult={row.previewParam}
+                    </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
@@ -958,7 +962,7 @@ export function ResultPagesConfig({
                       <div className="font-medium truncate">{p.name}</div>
                     )}
                     <div className="text-xs text-muted-foreground truncate font-mono">
-                      /demo/{demoSlug || ':slug'}/page/{p.slug}
+                      {origin}/demo/{demoSlug || ':slug'}/page/{p.slug}
                     </div>
                     <div className="text-xs text-muted-foreground mt-0.5">
                       Mode: <span className="font-mono">{p.config.pageMode || 'default'}</span>
