@@ -140,43 +140,24 @@ function MirrorChrome({ html, css, minHeight, showBorders }: { html?: string; cs
 
 function ScreenshotBlock({ cfg, fallbackBg, showBorders }: { cfg?: ResultPageScreenshotConfig; fallbackBg?: string; showBorders?: boolean }) {
   if (!cfg?.url) return null;
-  const fit = cfg.fitMode || 'contain';
-  // If no explicit height set, render image at its natural size (full-width, auto height)
-  // so the slot adds no extra spacing beyond the image itself.
-  if (!cfg.height) {
-    const posX = cfg.positionX || 'center';
-    const justify = posX === 'left' ? 'flex-start' : posX === 'right' ? 'flex-end' : 'center';
-    const imgStyle: React.CSSProperties =
-      fit === 'stretch' ? { width: '100%', height: 'auto', display: 'block' }
-      : fit === 'actual' ? { display: 'block' }
-      : fit === 'cover' ? { width: '100%', height: 'auto', display: 'block', objectFit: 'cover' }
-      : { maxWidth: '100%', height: 'auto', display: 'block' };
-    return (
-      <div style={{ width: '100%', backgroundColor: cfg.bgColor || fallbackBg || '#ffffff', display: 'flex', justifyContent: justify, outline: showBorders ? '2px dashed #ef4444' : undefined }}>
-        <img src={cfg.url} alt="" style={imgStyle} />
-      </div>
-    );
-  }
-  const backgroundSize =
-    fit === 'cover' ? 'cover' :
-    fit === 'stretch' ? '100% 100%' :
-    fit === 'actual' ? 'auto' :
-    'contain';
-  const posX = cfg.positionX || 'center';
-  const posY = cfg.positionY || 'center';
+  // Render uploaded screenshot slots at the image's natural (aspect-scaled) height
+  // with zero surrounding spacing, so the slot is exactly the image height.
   return (
     <div
       style={{
         width: '100%',
-        height: cfg.height,
-        backgroundColor: cfg.bgColor || fallbackBg || '#ffffff',
-        backgroundImage: `url(${cfg.url})`,
-        backgroundSize,
-        backgroundRepeat: 'no-repeat',
-        backgroundPosition: `${posX} ${posY}`,
+        backgroundColor: cfg.bgColor || fallbackBg || 'transparent',
+        lineHeight: 0,
+        fontSize: 0,
         outline: showBorders ? '2px dashed #ef4444' : undefined,
       }}
-    />
+    >
+      <img
+        src={cfg.url}
+        alt=""
+        style={{ display: 'block', width: '100%', height: 'auto', margin: 0, padding: 0 }}
+      />
+    </div>
   );
 }
 
