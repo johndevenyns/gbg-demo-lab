@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { createPortal } from 'react-dom';
+import { usePersistedStringSet } from '@/hooks/usePersistedState';
 import {
   DndContext,
   DragOverlay,
@@ -33,8 +34,10 @@ interface FormBuilderCanvasProps {
 }
 
 export function FormBuilderCanvas({ steps, onUpdateSteps, demo }: FormBuilderCanvasProps) {
-  const [expandedSteps, setExpandedSteps] = useState<Set<string>>(
-    new Set(steps.map(s => s.id))
+  const persistKey = `formBuilder.expandedSteps.${demo?.id ?? 'default'}`;
+  const [expandedSteps, setExpandedSteps] = usePersistedStringSet(
+    persistKey,
+    steps.map(s => s.id),
   );
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
   const [activeData, setActiveData] = useState<any>(null);
