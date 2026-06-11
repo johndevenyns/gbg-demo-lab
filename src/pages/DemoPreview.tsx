@@ -365,7 +365,12 @@ export default function DemoPreview() {
 
   // When the active result page takes over the full layout (screenshots / custom HTML / AI generated),
   // hide the outer site-mirror chrome and the form card so the result page owns header + main + footer.
-  const activeResultCfg = flowResult === 'success'
+  // When the in-flow result page is plain (show_result_page completion action),
+  // the legacy full-replace success/failure page must NOT hijack the layout —
+  // the user reaches it via the result page button instead.
+  const activeResultCfg = flowResultPlain
+    ? null
+    : flowResult === 'success'
     ? (demo.successPageConfig || DEFAULT_SUCCESS_CONFIG)
     : flowResult === 'failure'
     ? (demo.failurePageConfig || DEFAULT_FAILURE_CONFIG)
