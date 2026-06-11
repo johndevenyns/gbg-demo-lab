@@ -583,13 +583,23 @@ export function ResultPagesConfig({
             const cfgKey = (`screenshot${slot}`) as 'screenshotHeader' | 'screenshotMain' | 'screenshotFooter';
             const current = config[cfgKey];
             return (
-              <ScreenshotSlotEditor
-                key={slot}
-                label={slot}
-                value={current}
-                onChange={(next) => onUpdate({ ...config, [cfgKey]: next })}
-                upload={(file) => uploadImage(file, key)}
-              />
+              <div key={slot} className="space-y-2">
+                <ScreenshotSlotEditor
+                  label={slot}
+                  value={current}
+                  onChange={(next) => onUpdate({ ...config, [cfgKey]: next })}
+                  upload={(file) => uploadImage(file, key)}
+                />
+                <PageHotspotEditor
+                  slot={key}
+                  imageUrl={current?.url}
+                  hotspots={allHotspots}
+                  onChange={updateHotspots}
+                  useCaseLinks={ucLinks}
+                  pages={pages}
+                  currentExtraPageSlug={currentExtraSlug}
+                />
+              </div>
             );
           })}
         </div>
@@ -620,6 +630,17 @@ export function ResultPagesConfig({
                 upload={(file) => uploadImage(file, 'header')}
               />
             )}
+            {config.headerSource === 'upload' && (
+              <PageHotspotEditor
+                slot="header"
+                imageUrl={config.headerScreenshot?.url}
+                hotspots={allHotspots}
+                onChange={updateHotspots}
+                useCaseLinks={ucLinks}
+                pages={pages}
+                currentExtraPageSlug={currentExtraSlug}
+              />
+            )}
           </div>
 
           {/* Main */}
@@ -627,6 +648,15 @@ export function ResultPagesConfig({
             config={config}
             onUpdate={onUpdate}
             upload={(file) => uploadImage(file, 'single')}
+          />
+          <PageHotspotEditor
+            slot="main"
+            imageUrl={config.singleScreenshotUrl}
+            hotspots={allHotspots}
+            onChange={updateHotspots}
+            useCaseLinks={ucLinks}
+            pages={pages}
+            currentExtraPageSlug={currentExtraSlug}
           />
 
           {/* Footer source */}
@@ -649,6 +679,17 @@ export function ResultPagesConfig({
                 value={config.footerScreenshot}
                 onChange={(next) => onUpdate({ ...config, footerScreenshot: next })}
                 upload={(file) => uploadImage(file, 'footer')}
+              />
+            )}
+            {config.footerSource === 'upload' && (
+              <PageHotspotEditor
+                slot="footer"
+                imageUrl={config.footerScreenshot?.url}
+                hotspots={allHotspots}
+                onChange={updateHotspots}
+                useCaseLinks={ucLinks}
+                pages={pages}
+                currentExtraPageSlug={currentExtraSlug}
               />
             )}
           </div>
