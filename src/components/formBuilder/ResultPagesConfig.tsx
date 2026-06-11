@@ -178,6 +178,107 @@ function ScreenshotSlotEditor({
 }
 
 interface ResultPagesConfigProps {
+}
+
+function SingleScreenshotEditor({
+  config,
+  onUpdate,
+  upload,
+}: {
+  config: ResultPageConfig;
+  onUpdate: (c: ResultPageConfig) => void;
+  upload: (file: File) => Promise<string | null>;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState(false);
+  const handlePick = async (file: File) => {
+    setBusy(true);
+    const url = await upload(file);
+    setBusy(false);
+    if (url) onUpdate({ ...config, singleScreenshotUrl: url });
+  };
+  return (
+    <div className="border rounded-md p-3 space-y-3">
+      <div className="flex items-center justify-between">
+        <Label className="font-medium">Screenshot</Label>
+        {config.singleScreenshotUrl && (
+          <Button type="button" variant="ghost" size="sm" onClick={() => onUpdate({ ...config, singleScreenshotUrl: undefined })}>
+            Remove
+          </Button>
+        )}
+      </div>
+      {config.singleScreenshotUrl ? (
+        <img src={config.singleScreenshotUrl} alt="Screenshot preview" className="w-full max-h-48 object-contain bg-muted rounded" />
+      ) : (
+        <div className="h-24 bg-muted rounded flex items-center justify-center text-xs text-muted-foreground">No image</div>
+      )}
+      <div className="flex gap-2">
+        <Button type="button" variant="outline" size="sm" onClick={() => inputRef.current?.click()} disabled={busy}>
+          {busy ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Upload className="w-4 h-4 mr-1" />}
+          {config.singleScreenshotUrl ? 'Replace' : 'Upload'}
+        </Button>
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) handlePick(f);
+            e.target.value = '';
+          }}
+        />
+      </div>
+      <div className="grid grid-cols-3 gap-2">
+        <div>
+          <Label className="text-xs">Background</Label>
+          <Input
+            type="color"
+            value={config.singleScreenshotBgColor || '#ffffff'}
+            onChange={(e) => onUpdate({ ...config, singleScreenshotBgColor: e.target.value })}
+          />
+        </div>
+        <div>
+          <Label className="text-xs">Padding top (px)</Label>
+          <Input
+            type="number"
+            min={0}
+            value={config.singleScreenshotPaddingTop ?? ''}
+            placeholder="0"
+            onChange={(e) => onUpdate({ ...config, singleScreenshotPaddingTop: e.target.value ? parseInt(e.target.value, 10) : undefined })}
+          />
+        </div>
+        <div>
+          <Label className="text-xs">Padding bottom (px)</Label>
+          <Input
+            type="number"
+            min={0}
+            value={config.singleScreenshotPaddingBottom ?? ''}
+            placeholder="0"
+            onChange={(e) => onUpdate({ ...config, singleScreenshotPaddingBottom: e.target.value ? parseInt(e.target.value, 10) : undefined })}
+          />
+        </div>
+      </div>
+      <div>
+        <Label className="text-xs">Display</Label>
+        <Select
+          value={config.singleScreenshotFitMode || 'contain'}
+          onValueChange={(v) => onUpdate({ ...config, singleScreenshotFitMode: v as NonNullable<ResultPageConfig['singleScreenshotFitMode']> })}
+        >
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="contain">Fit (actual aspect)</SelectItem>
+            <SelectItem value="cover">Cover (fill width)</SelectItem>
+            <SelectItem value="stretch">Stretch (full width)</SelectItem>
+            <SelectItem value="actual">Actual size</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+    </div>
+  );
+}
+
+interface _ResultPagesConfigPropsPlaceholder {
   approvedUrl: string;
   rejectedUrl: string;
   returnUrl: string;
