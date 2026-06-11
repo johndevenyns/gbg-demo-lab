@@ -304,6 +304,8 @@ interface ResultPagesConfigProps {
   onUpdateFailurePage: (config: ResultPageConfig) => void;
   onUpdateLandingPage: (config: ResultPageConfig) => void;
   onUpdateExtraCustomPages?: (pages: ExtraCustomPage[]) => void;
+  defaultLandingPageSlug?: string;
+  onUpdateDefaultLandingPageSlug?: (slug: string | undefined) => void;
 }
 
 export function ResultPagesConfig({
