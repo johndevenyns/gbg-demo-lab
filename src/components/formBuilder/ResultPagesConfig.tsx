@@ -296,6 +296,7 @@ interface ResultPagesConfigProps {
   mirrorHeaderHtml?: string;
   mirrorFooterHtml?: string;
   mirrorCss?: string;
+  useCaseLinks?: DemoUseCaseLink[];
   onUpdateApprovedUrl: (url: string) => void;
   onUpdateRejectedUrl: (url: string) => void;
   onUpdateReturnUrl: (url: string) => void;
@@ -320,6 +321,7 @@ export function ResultPagesConfig({
   mirrorHeaderHtml,
   mirrorFooterHtml,
   mirrorCss,
+  useCaseLinks,
   onUpdateApprovedUrl,
   onUpdateRejectedUrl,
   onUpdateReturnUrl,
