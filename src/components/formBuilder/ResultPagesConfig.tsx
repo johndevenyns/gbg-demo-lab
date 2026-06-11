@@ -224,7 +224,8 @@ export function ResultPagesConfig({
   onUpdateLandingPage,
   onUpdateExtraCustomPages,
 }: ResultPagesConfigProps) {
-  type PageKey = 'success' | 'failure' | 'landing' | { extraId: string };
+  // PageKey is 'success' | 'failure' | 'landing' | `extra:<id>`
+  type PageKey = string;
   const [selectedPage, setSelectedPage] = useState<PageKey | null>(null);
   const [urlSettingsOpen, setUrlSettingsOpen] = useState(false);
   const [generating, setGenerating] = useState<string | null>(null);
