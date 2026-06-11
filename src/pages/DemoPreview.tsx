@@ -1,4 +1,4 @@
-import { useParams, Link, useSearchParams, useNavigate } from "react-router-dom";
+import { useParams, Link, useSearchParams, useNavigate, useLocation } from "react-router-dom";
 import { useDemoBySlug } from "@/hooks/useDemos";
 import { useAuth } from "@/hooks/useAuth";
 import { Loader2, ArrowLeft, Settings } from "lucide-react";
@@ -89,6 +89,7 @@ export default function DemoPreview() {
   const { slug, pageSlug } = useParams<{ slug: string; pageSlug?: string }>();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const previewResultParam = searchParams.get('previewResult'); // 'success' | 'failure' | null
   const { isAdmin, isLoading: authLoading } = useAuth();
   const { data: demo, isLoading, error } = useDemoBySlug(slug || "");
@@ -169,6 +170,19 @@ export default function DemoPreview() {
     if (!hasUseCases || selectedUseCase || demo?.defaultLandingPageSlug) return;
     setSelectedUseCase(landingPageUseCases[0] || resolvedUseCases[0]);
   }, [hasUseCases, resolvedUseCases, landingPageUseCases, selectedUseCase, demo?.defaultLandingPageSlug]);
+
+  // Honor a `selectUseCaseId` passed via navigation state (e.g. clicking a
+  // use-case hotspot from a custom page navigates here and asks us to select it).
+  useEffect(() => {
+    const requestedId = (location.state as { selectUseCaseId?: string } | null)?.selectUseCaseId;
+    if (!requestedId || !resolvedUseCases.length) return;
+    const target = resolvedUseCases.find(uc => uc.useCaseId === requestedId);
+    if (target) {
+      setSelectedUseCase(target);
+      // Clear the state so a manual refresh doesn't re-trigger.
+      navigate(location.pathname + location.search, { replace: true, state: null });
+    }
+  }, [location.state, location.pathname, location.search, resolvedUseCases, navigate]);
 
   // Listen for CTA messages from the header iframe
   useEffect(() => {
