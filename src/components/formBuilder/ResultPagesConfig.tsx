@@ -15,6 +15,9 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import type { ResultPageScreenshotConfig } from '@/components/preview/ResultPage';
+import type { PageHotspot } from '@/components/preview/ResultPage';
+import type { DemoUseCaseLink } from '@/types/useCase';
+import { PageHotspotEditor } from './PageHotspotEditor';
 
 function LivePreview({
   config,
@@ -23,6 +26,7 @@ function LivePreview({
   mirrorHeaderHtml,
   mirrorFooterHtml,
   mirrorCss,
+  demoSlug,
 }: {
   config: ResultPageConfig;
   formStyle?: FormStyleConfig;
@@ -30,6 +34,7 @@ function LivePreview({
   mirrorHeaderHtml?: string;
   mirrorFooterHtml?: string;
   mirrorCss?: string;
+  demoSlug?: string;
 }) {
   return (
     <div className="lg:sticky lg:top-4 space-y-2">
@@ -46,6 +51,7 @@ function LivePreview({
             mirrorHeaderHtml={mirrorHeaderHtml}
             mirrorFooterHtml={mirrorFooterHtml}
             mirrorCss={mirrorCss}
+            demoSlug={demoSlug}
             onButtonClick={() => {}}
           />
         </div>
