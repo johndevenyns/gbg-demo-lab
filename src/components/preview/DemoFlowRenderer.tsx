@@ -706,6 +706,7 @@ export function DemoFlowRenderer({
   const [forgotPasswordEmail, setForgotPasswordEmail] = useState('');
   const [forgotPasswordSuccess, setForgotPasswordSuccess] = useState(false);
   const [flowComplete, setFlowComplete] = useState<'success' | 'failure' | null>(null);
+  const [showLandingPage, setShowLandingPage] = useState(false);
   const [referenceId, setReferenceId] = useState<string | null>(null);
   const [selectedVerificationType, setSelectedVerificationType] = useState<VerificationType | null>(null);
   const [selectedDecisionChoice, setSelectedDecisionChoice] = useState<DecisionChoice | null>(null);
@@ -3176,6 +3177,26 @@ export function DemoFlowRenderer({
 
   // If flow is complete, show result page
   if (flowComplete) {
+    // If the user clicked a "Go to landing page" button, render landing page instead
+    if (showLandingPage && landingPageConfig) {
+      return (
+        <ResultPage
+          config={{ ...landingPageConfig, referenceId: referenceId || undefined }}
+          formStyle={style}
+          buttonColor={buttonColor}
+          onButtonClick={() => {
+            if (landingPageConfig.buttonAction === 'portal') {
+              onNavigateToPortal?.();
+            } else if (landingPageConfig.buttonUrl) {
+              window.location.href = landingPageConfig.buttonUrl;
+            }
+          }}
+          mirrorHeaderHtml={mirrorHeaderHtml}
+          mirrorFooterHtml={mirrorFooterHtml}
+          mirrorCss={mirrorCss}
+        />
+      );
+    }
     const isSuccess = flowComplete === 'success';
     
     // Check for stepCompletionConfig show_result_page action first
