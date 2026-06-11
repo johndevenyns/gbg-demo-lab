@@ -140,23 +140,31 @@ function MirrorChrome({ html, css, minHeight, showBorders }: { html?: string; cs
 
 function ScreenshotBlock({ cfg, fallbackBg, showBorders }: { cfg?: ResultPageScreenshotConfig; fallbackBg?: string; showBorders?: boolean }) {
   if (!cfg?.url) return null;
-  // Render uploaded screenshot slots at the image's natural (aspect-scaled) height
-  // with zero surrounding spacing, so the slot is exactly the image height.
+  // Slot is exactly the image's rendered height (no vertical whitespace).
+  // The selected background color shows on either side of the image when the
+  // image doesn't take up the full container width (contain / actual modes).
+  const fit = cfg.fitMode || 'contain';
+  const posX = cfg.positionX || 'center';
+  const justify = posX === 'left' ? 'flex-start' : posX === 'right' ? 'flex-end' : 'center';
+  const imgStyle: React.CSSProperties =
+    fit === 'stretch' ? { display: 'block', width: '100%', height: 'auto', margin: 0, padding: 0 }
+    : fit === 'cover' ? { display: 'block', width: '100%', height: 'auto', objectFit: 'cover', margin: 0, padding: 0 }
+    : fit === 'actual' ? { display: 'block', maxWidth: '100%', height: 'auto', margin: 0, padding: 0 }
+    : /* contain */ { display: 'block', maxWidth: '100%', height: 'auto', margin: 0, padding: 0 };
   return (
     <div
       style={{
         width: '100%',
         backgroundColor: cfg.bgColor || fallbackBg || 'transparent',
+        display: 'flex',
+        justifyContent: justify,
+        alignItems: 'stretch',
         lineHeight: 0,
         fontSize: 0,
         outline: showBorders ? '2px dashed #ef4444' : undefined,
       }}
     >
-      <img
-        src={cfg.url}
-        alt=""
-        style={{ display: 'block', width: '100%', height: 'auto', margin: 0, padding: 0 }}
-      />
+      <img src={cfg.url} alt="" style={imgStyle} />
     </div>
   );
 }
