@@ -128,12 +128,33 @@ function buildMirrorIframeSrc(html: string, css: string): string {
 
 function MirrorChrome({ html, css, minHeight, showBorders }: { html?: string; css?: string; minHeight: number; showBorders?: boolean }) {
   if (!html) return null;
+  // Fit the iframe height exactly to its rendered content (e.g. the footer
+  // screenshot image) so there is no extra whitespace above/below it.
+  const fitToContent = (iframe: HTMLIFrameElement) => {
+    try {
+      const doc = iframe.contentDocument;
+      if (!doc?.body) return;
+      const measure = () => {
+        try {
+          const h = Math.ceil(doc.body.getBoundingClientRect().height);
+          if (h > 0) iframe.style.height = `${h}px`;
+        } catch { /* ignore */ }
+      };
+      measure();
+      // Re-measure once images inside the chrome finish loading
+      Array.from(doc.images || []).forEach((img) => {
+        if (!img.complete) img.addEventListener('load', measure);
+      });
+      setTimeout(measure, 300);
+    } catch { /* ignore */ }
+  };
   return (
     <iframe
       title="result-mirror-chrome"
       srcDoc={buildMirrorIframeSrc(html, css || '')}
       sandbox="allow-same-origin"
-      style={{ width: '100%', border: showBorders ? '2px dashed #ef4444' : 'none', display: 'block', minHeight, height: minHeight }}
+      style={{ width: '100%', border: showBorders ? '2px dashed #ef4444' : 'none', display: 'block', height: minHeight }}
+      onLoad={(e) => fitToContent(e.currentTarget)}
     />
   );
 }
