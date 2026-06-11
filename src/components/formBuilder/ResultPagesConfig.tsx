@@ -481,6 +481,15 @@ export function ResultPagesConfig({
         </div>
       )}
 
+      {/* === Single screenshot mode === */}
+      {mode === 'single_screenshot' && (
+        <SingleScreenshotEditor
+          config={config}
+          onUpdate={onUpdate}
+          upload={(file) => uploadImage(file, 'single')}
+        />
+      )}
+
       {/* Button configuration */}
       <div className="border-t pt-4 mt-4">
         <h4 className="font-medium mb-3">Button Settings</h4>
