@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CheckCircle2, XCircle, ExternalLink, Settings2, Paintbrush, Sparkles, Upload, Loader2, Eye, ArrowLeft, FileText, ChevronRight, Plus, Trash2 } from 'lucide-react';
+import { CheckCircle2, XCircle, ExternalLink, Settings2, Paintbrush, Sparkles, Upload, Loader2, Eye, ArrowLeft, FileText, ChevronRight, Plus, Trash2, Pencil, Check, X } from 'lucide-react';
 import { ResultPageConfig, ResultButtonAction, ResultPageMode, DEFAULT_SUCCESS_CONFIG, DEFAULT_FAILURE_CONFIG, DEFAULT_LANDING_CONFIG } from '@/components/preview/ResultPage';
 import { ResultPage } from '@/components/preview/ResultPage';
 import type { FormStyleConfig } from '@/types/formStyle';
@@ -327,6 +327,8 @@ export function ResultPagesConfig({
   const [selectedPage, setSelectedPage] = useState<PageKey | null>(null);
   const [urlSettingsOpen, setUrlSettingsOpen] = useState(false);
   const [generating, setGenerating] = useState<string | null>(null);
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState('');
   const { toast } = useToast();
   const pages = extraCustomPages || [];
 
@@ -801,7 +803,50 @@ export function ResultPagesConfig({
                 <div className="flex items-center gap-3 min-w-0">
                   <FileText className="w-5 h-5 text-primary" />
                   <div className="min-w-0">
-                    <div className="font-medium truncate">{p.name}</div>
+                    {renamingId === p.id ? (
+                      <div className="flex items-center gap-2">
+                        <Input
+                          autoFocus
+                          value={renameValue}
+                          onChange={(e) => setRenameValue(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              if (onUpdateExtraCustomPages && renameValue.trim()) {
+                                onUpdateExtraCustomPages(pages.map((x) => x.id === p.id ? { ...x, name: renameValue.trim() } : x));
+                              }
+                              setRenamingId(null);
+                            }
+                            if (e.key === 'Escape') setRenamingId(null);
+                          }}
+                          className="h-8 text-sm"
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                          onClick={() => {
+                            if (onUpdateExtraCustomPages && renameValue.trim()) {
+                              onUpdateExtraCustomPages(pages.map((x) => x.id === p.id ? { ...x, name: renameValue.trim() } : x));
+                            }
+                            setRenamingId(null);
+                          }}
+                        >
+                          <Check className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                          onClick={() => setRenamingId(null)}
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="font-medium truncate">{p.name}</div>
+                    )}
                     <div className="text-xs text-muted-foreground truncate font-mono">
                       /demo/{demoSlug || ':slug'}/page/{p.slug}
                     </div>
@@ -821,6 +866,16 @@ export function ResultPagesConfig({
                       Preview
                     </Button>
                   )}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setRenamingId(p.id);
+                      setRenameValue(p.name);
+                    }}
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </Button>
                   <Button
                     variant="ghost"
                     size="sm"
