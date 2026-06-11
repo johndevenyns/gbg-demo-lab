@@ -344,6 +344,7 @@ export function ResultPagesConfig({
   const { toast } = useToast();
   const pages = extraCustomPages || [];
   const ucLinks = useCaseLinks || [];
+  const origin = typeof window !== 'undefined' ? window.location.origin : '';
 
   // Use provided configs or defaults
   const successConfig = successPageConfig || DEFAULT_SUCCESS_CONFIG;
