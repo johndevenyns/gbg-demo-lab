@@ -374,9 +374,13 @@ export default function DemoPreview() {
   const defaultLandingPageCfg = !pageSlug && !flowResult && demo.defaultLandingPageSlug
     ? (demo.extraCustomPages || []).find((p) => p.slug === demo.defaultLandingPageSlug)?.config || null
     : null;
-  const displayResultCfg = extraPageCfg || activeResultCfg || defaultLandingPageCfg;
+  // Once a use case has been selected, stop letting the default-landing custom
+  // page drive the layout — we want the site mirror header/footer with the
+  // selected use case in the main content area.
+  const effectiveDefaultLandingCfg = selectedUseCase ? null : defaultLandingPageCfg;
+  const displayResultCfg = extraPageCfg || activeResultCfg || effectiveDefaultLandingCfg;
   const isExtraPageRoute = !!extraPageCfg;
-  const showDefaultLanding = !!defaultLandingPageCfg && !selectedUseCase;
+  const showDefaultLanding = !!effectiveDefaultLandingCfg;
   const fullReplaceResult = !!displayResultCfg && (
     displayResultCfg.pageMode === 'screenshots' ||
     displayResultCfg.pageMode === 'custom_html' ||
