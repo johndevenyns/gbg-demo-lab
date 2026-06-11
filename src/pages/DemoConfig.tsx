@@ -444,6 +444,7 @@ export default function DemoConfig() {
             onUpdateFailurePage={(cfg) => handleUpdate({ failurePageConfig: cfg })}
             onUpdateLandingPage={(cfg) => handleUpdate({ landingPageConfig: cfg })}
             onUpdateExtraCustomPages={(pages) => handleUpdate({ extraCustomPages: pages })}
+            useCaseLinks={useCaseLinks}
           />
         );
       case 'users':
