@@ -54,11 +54,26 @@ interface CreateSessionRequest {
     headerTextColor?: string;
     headerBgColor?: string;
     buttonColor?: string;
+    // Extended branding fields accepted by the IVS API (dataBio example).
+    borderRadius?: string;
+    fontFamily?: string;
+    mutedTextColor?: string;
+    bodyTextColor?: string;
+    accentTextColor?: string;
+    accentColor?: string;
+    buttonTextColor?: string;
+    brandName?: string;
+    cardBgColor?: string;
+    borderColor?: string;
+    tagline?: string;
+    bodyBgColor?: string;
+    logoUrl?: string;
   };
   // DataBio-only capture options. Sent to the verification API under `options`.
   dataBioOptions?: {
     documentsEnabled?: boolean;
     documentsCount?: number;
+    documentsTypes?: string[];
     biometricsEnabled?: boolean;
     biometricsFaceCount?: number;
   };
