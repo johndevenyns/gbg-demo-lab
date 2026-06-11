@@ -528,6 +528,10 @@ export function UnifiedVerificationStepConfig({ step, onUpdateStep, demo }: Unif
             config={step.stepCompletionConfig}
             onChange={(completionConfig) => onUpdateStep({ stepCompletionConfig: completionConfig })}
             inline
+            demoSlug={demo?.slug}
+            extraCustomPages={demo?.extraCustomPages}
+            successPageConfig={demo?.successPageConfig}
+            failurePageConfig={demo?.failurePageConfig}
           />
 
           {/* Navigation Buttons */}
@@ -962,30 +966,6 @@ function VerificationTypePanel({
         </div>
       )}
 
-      {/* Success/Failure pages live in the Result Pages tab — link there to avoid duplication */}
-      <div className="space-y-2 p-3 rounded-lg border border-dashed border-border bg-muted/30">
-        <Label className="text-sm font-medium flex items-center gap-2">
-          <Check className="w-4 h-4 text-muted-foreground" />
-          Success &amp; Failure Pages
-        </Label>
-        <p className="text-xs text-muted-foreground">
-          Custom success and failure landing pages (default, mirrored site layout, AI-generated,
-          custom HTML, or uploaded screenshots) are configured in one place per demo.
-        </p>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="h-7 text-xs"
-          onClick={() => {
-            const url = new URL(window.location.href);
-            url.searchParams.set('section', 'results');
-            window.location.assign(url.toString());
-          }}
-        >
-          Open Result Pages tab
-        </Button>
-      </div>
     </div>
   );
 }
