@@ -126,6 +126,7 @@ export default function DemoPreview() {
   useEffect(() => {
     if (previewResultParam === 'success' || previewResultParam === 'failure') {
       setFlowResult(previewResultParam);
+      setFlowResultPlain(false);
     }
   }, [previewResultParam]);
 
