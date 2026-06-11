@@ -80,6 +80,7 @@ export interface DemoEnvironment {
   // Result page configurations
   successPageConfig?: ResultPageConfig;
   failurePageConfig?: ResultPageConfig;
+  landingPageConfig?: ResultPageConfig;
   
   // Stored test data for Fill Pass / Fill Fail buttons
   storedTestData?: StoredTestData;

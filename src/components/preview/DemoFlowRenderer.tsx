@@ -65,6 +65,7 @@ interface DemoFlowRendererProps {
   formStyle?: FormStyleConfig;
   successPageConfig?: ResultPageConfig;
   failurePageConfig?: ResultPageConfig;
+  landingPageConfig?: ResultPageConfig;
   approvedUrl?: string;
   rejectedUrl?: string;
   customerName?: string;
@@ -668,6 +669,7 @@ export function DemoFlowRenderer({
   formStyle, 
   successPageConfig,
   failurePageConfig,
+  landingPageConfig,
   approvedUrl,
   rejectedUrl,
   customerName,
@@ -3159,7 +3161,13 @@ export function DemoFlowRenderer({
       onNavigateToPortal?.();
       return;
     }
-    
+
+    // Navigate to the custom landing page
+    if (config?.buttonAction === 'landing') {
+      setShowLandingPage(true);
+      return;
+    }
+
     const url = isSuccess ? (approvedUrl || config?.buttonUrl) : (rejectedUrl || config?.buttonUrl);
     if (url) {
       window.location.href = url;

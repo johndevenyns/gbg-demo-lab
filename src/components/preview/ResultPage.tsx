@@ -11,7 +11,7 @@ import {
   getBorderRadius
 } from '@/lib/formStyleUtils';
 
-export type ResultButtonAction = 'url' | 'portal';
+export type ResultButtonAction = 'url' | 'portal' | 'landing';
 export type ResultPageMode = 'default' | 'mirror' | 'custom_html' | 'screenshots' | 'ai_generated';
 
 export interface ResultPageScreenshotConfig {
@@ -434,4 +434,14 @@ export const DEFAULT_FAILURE_CONFIG: ResultPageConfig = {
   showIcon: true,
   buttonText: 'Try Again',
   showReferenceId: true,
+};
+
+export const DEFAULT_LANDING_CONFIG: ResultPageConfig = {
+  type: 'success',
+  title: 'Welcome',
+  subtitle: 'Thanks for verifying',
+  message: 'This is a custom landing page you can link to from your success page.',
+  showIcon: false,
+  buttonText: 'Continue',
+  showReferenceId: false,
 };
