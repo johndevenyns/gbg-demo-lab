@@ -331,6 +331,8 @@ export function ResultPagesConfig({
   onUpdateFailurePage,
   onUpdateLandingPage,
   onUpdateExtraCustomPages,
+  defaultLandingPageSlug,
+  onUpdateDefaultLandingPageSlug,
 }: ResultPagesConfigProps) {
   // PageKey is 'success' | 'failure' | 'landing' | `extra:<id>`
   type PageKey = string;
