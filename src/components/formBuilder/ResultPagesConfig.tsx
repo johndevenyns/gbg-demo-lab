@@ -339,6 +339,7 @@ export function ResultPagesConfig({
   const [renameValue, setRenameValue] = useState('');
   const { toast } = useToast();
   const pages = extraCustomPages || [];
+  const ucLinks = useCaseLinks || [];
 
   // Use provided configs or defaults
   const successConfig = successPageConfig || DEFAULT_SUCCESS_CONFIG;
@@ -396,6 +397,11 @@ export function ResultPagesConfig({
     type: PageKey
   ) => {
     const mode: ResultPageMode = config.pageMode || 'default';
+    const currentExtraSlug = type.startsWith('extra:')
+      ? pages.find(p => p.id === type.slice('extra:'.length))?.slug
+      : undefined;
+    const updateHotspots = (next: PageHotspot[]) => onUpdate({ ...config, hotspots: next });
+    const allHotspots = config.hotspots || [];
     return (
     <div className="space-y-4">
       {/* Mode selector */}
