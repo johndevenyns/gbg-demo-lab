@@ -96,6 +96,7 @@ const rowToDemo = (row: any): DemoEnvironment => {
     failurePageConfig: formStyle?.failurePageConfig,
     landingPageConfig: formStyle?.landingPageConfig,
     extraCustomPages: formStyle?.extraCustomPages || [],
+    defaultLandingPageSlug: formStyle?.defaultLandingPageSlug || undefined,
     storedTestData: storedTestData || undefined,
     landingHeading: row.landing_heading || undefined,
     createdAt: row.created_at,
