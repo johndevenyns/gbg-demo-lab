@@ -65,6 +65,13 @@ export interface ResultPageConfig {
   singleScreenshotPaddingBottom?: number; // px
   singleScreenshotFitMode?: 'contain' | 'cover' | 'stretch' | 'actual';
 
+  // Chrome around the single-screenshot main area
+  // 'none' = no chrome, 'mirror' = use the demo's scraped header/footer, 'upload' = use uploaded image
+  headerSource?: 'none' | 'mirror' | 'upload';
+  footerSource?: 'none' | 'mirror' | 'upload';
+  headerScreenshot?: ResultPageScreenshotConfig;
+  footerScreenshot?: ResultPageScreenshotConfig;
+
   // AI generated mode
   aiPrompt?: string;
   aiGeneratedHtml?: string;
