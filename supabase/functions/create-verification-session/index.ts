@@ -78,40 +78,55 @@ interface SessionResponse {
 
 /**
  * Build the flat API payload matching the external verification service format.
- * DataBio uses a flat structure with ssn4, dlNumber, dlState, birthday, address,
- * phone, and an options object. DocBio/DataOnly use a nested customerData approach.
+ * Only fields documented in the IVS API reference are emitted upstream:
+ *   - dataBio: flat top-level identity fields + options block
+ *   - docBio / dataOnly: identity fields nested under customerData
+ * Any other keys received in `formData` (legacy aliases, raw form scratch
+ * fields, etc.) are dropped and never forwarded.
  */
 function buildPayload(req: CreateSessionRequest, referenceId: string) {
   const fd = req.formData || {};
-  const firstName = (fd.firstName || fd.first_name || '').trim().toUpperCase();
-  const lastName = (fd.lastName || fd.last_name || '').trim().toUpperCase();
+  // Resolve canonical identity values, tolerating common input aliases.
+  // Only canonical keys ever leave this function.
+  const pick = (...keys: string[]) => {
+    for (const k of keys) {
+      const v = fd[k];
+      if (typeof v === 'string' && v.trim().length > 0) return v.trim();
+    }
+    return '';
+  };
 
-  // Combine address components into a single string
-  const addressParts: string[] = [];
-  if (fd.streetAddress) addressParts.push(fd.streetAddress);
-  if (fd.apartment) addressParts.push(fd.apartment);
-  if (fd.city) addressParts.push(fd.city);
-  if (fd.state) addressParts.push(fd.state);
-  if (fd.zipCode) addressParts.push(fd.zipCode);
-  const combinedAddress = addressParts.join(', ');
+  const firstName = pick('firstName', 'first_name').toUpperCase();
+  const lastName = pick('lastName', 'last_name').toUpperCase();
+  const dateOfBirth = pick('dateOfBirth', 'birthday');
+  const phoneDigits = pick('phone').replace(/\D/g, '');
+  const email = pick('email').toLowerCase();
+  const dlNumber = pick('dlNumber', 'documentNumber');
+  const dlState = pick('dlState');
+  const ssn4 = pick('ssn4');
 
-  // Per the IVS API reference, every verification type uses the same
-  // top-level envelope. `customerData` is required for dataBio/dataOnly,
-  // optional for docBio. Unknown top-level keys are silently dropped.
-  // Build identity fields. dataBio uses FLAT top-level fields per docs
-  // (POST /api/verification/sessions cURL example). docBio and dataOnly
-  // continue to use the nested customerData wrapper.
+  // Combine address components into the single `address` string the API
+  // documents. Variants like street_address / addressZip / zip_code are
+  // accepted as input aliases but never forwarded as separate fields.
+  const street = pick('streetAddress', 'street_address', 'addressStreet');
+  const apartment = pick('apartment');
+  const city = pick('city', 'addressCity', 'address_city');
+  const state = pick('state', 'addressState', 'address_state');
+  const zip = pick('zipCode', 'zip', 'zipcode', 'zip_code', 'addressZip', 'address_zip');
+  const combinedAddress = [street, apartment, city, state, zip]
+    .filter(Boolean)
+    .join(', ');
+
   const identity: Record<string, string> = {};
   if (firstName) identity.firstName = firstName;
   if (lastName) identity.lastName = lastName;
-  if (fd.dateOfBirth) identity.dateOfBirth = fd.dateOfBirth; // YYYY-MM-DD
+  if (dateOfBirth) identity.dateOfBirth = dateOfBirth; // YYYY-MM-DD
   if (combinedAddress) identity.address = combinedAddress;
-  if (fd.phone) identity.phone = fd.phone.replace(/\D/g, '');
-  if (fd.email) identity.email = fd.email.trim();
-  const dlNumber = fd.dlNumber || fd.documentNumber;
+  if (phoneDigits) identity.phone = phoneDigits;
+  if (email) identity.email = email;
   if (dlNumber) identity.dlNumber = dlNumber;
-  if (fd.dlState) identity.dlState = fd.dlState;
-  if (fd.ssn4) identity.ssn4 = fd.ssn4;
+  if (dlState) identity.dlState = dlState;
+  if (ssn4) identity.ssn4 = ssn4;
 
   const base: Record<string, unknown> = {
     verificationType: req.verificationType,
@@ -215,7 +230,7 @@ serve(async (req) => {
     console.log('customerName:', requestData.customerName);
     console.log('hasResourceId:', Boolean(requestData.resourceId));
     console.log('includeQr:', requestData.includeQr);
-    console.log('formDataKeys:', Object.keys(requestData.formData || {}));
+    console.log('formDataKeyCount:', Object.keys(requestData.formData || {}).length);
 
     const firstName = requestData.formData?.firstName?.trim() || '';
     const lastName = requestData.formData?.lastName?.trim() || '';
