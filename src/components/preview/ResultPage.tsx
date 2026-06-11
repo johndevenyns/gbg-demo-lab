@@ -324,22 +324,28 @@ export function ResultPage({ config, formStyle, buttonColor, onButtonClick, mirr
           }}
         >
           {/* Header chrome */}
-          {config.headerSource === 'mirror' && (
-            <MirrorChrome html={mirrorHeaderHtml} css={mirrorCss} minHeight={headerH} showBorders={config.showBorders} />
-          )}
-          {config.headerSource === 'upload' && (
-            <ScreenshotBlock cfg={config.headerScreenshot} fallbackBg={style.formBgColor} showBorders={config.showBorders} />
+          {(config.headerSource === 'mirror' || config.headerSource === 'upload') && (
+            <div className="relative">
+              {config.headerSource === 'mirror'
+                ? <MirrorChrome html={mirrorHeaderHtml} css={mirrorCss} minHeight={headerH} showBorders={config.showBorders} />
+                : <ScreenshotBlock cfg={config.headerScreenshot} fallbackBg={style.formBgColor} showBorders={config.showBorders} />}
+              {renderHotspots('header')}
+            </div>
           )}
 
           {/* Main screenshot */}
           {url && (
             <div
+              className="relative"
               style={{
                 paddingTop: config.singleScreenshotPaddingTop ?? 0,
                 paddingBottom: config.singleScreenshotPaddingBottom ?? 0,
               }}
             >
-              <img src={url} alt="" style={imgStyle} />
+              <div className="relative">
+                <img src={url} alt="" style={imgStyle} />
+                {renderHotspots('main')}
+              </div>
               {showBtn && (
                 <div className="flex justify-center mt-6">
                   <Button
@@ -356,11 +362,13 @@ export function ResultPage({ config, formStyle, buttonColor, onButtonClick, mirr
           )}
 
           {/* Footer chrome */}
-          {config.footerSource === 'mirror' && (
-            <MirrorChrome html={mirrorFooterHtml} css={mirrorCss} minHeight={footerH} showBorders={config.showBorders} />
-          )}
-          {config.footerSource === 'upload' && (
-            <ScreenshotBlock cfg={config.footerScreenshot} fallbackBg={style.formBgColor} showBorders={config.showBorders} />
+          {(config.footerSource === 'mirror' || config.footerSource === 'upload') && (
+            <div className="relative">
+              {config.footerSource === 'mirror'
+                ? <MirrorChrome html={mirrorFooterHtml} css={mirrorCss} minHeight={footerH} showBorders={config.showBorders} />
+                : <ScreenshotBlock cfg={config.footerScreenshot} fallbackBg={style.formBgColor} showBorders={config.showBorders} />}
+              {renderHotspots('footer')}
+            </div>
           )}
         </div>
       );
