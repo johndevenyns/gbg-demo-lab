@@ -581,11 +581,62 @@ export function ResultPagesConfig({
 
       {/* === Single screenshot mode === */}
       {mode === 'single_screenshot' && (
-        <SingleScreenshotEditor
-          config={config}
-          onUpdate={onUpdate}
-          upload={(file) => uploadImage(file, 'single')}
-        />
+        <div className="space-y-4">
+          {/* Header source */}
+          <div className="border rounded-md p-3 space-y-2">
+            <Label className="font-medium">Header</Label>
+            <Select
+              value={config.headerSource || 'none'}
+              onValueChange={(v) => onUpdate({ ...config, headerSource: v as 'none' | 'mirror' | 'upload' })}
+            >
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">No header</SelectItem>
+                <SelectItem value="mirror">Use main site header</SelectItem>
+                <SelectItem value="upload">Upload my own image</SelectItem>
+              </SelectContent>
+            </Select>
+            {config.headerSource === 'upload' && (
+              <ScreenshotSlotEditor
+                label="Header"
+                value={config.headerScreenshot}
+                onChange={(next) => onUpdate({ ...config, headerScreenshot: next })}
+                upload={(file) => uploadImage(file, 'header')}
+              />
+            )}
+          </div>
+
+          {/* Main */}
+          <SingleScreenshotEditor
+            config={config}
+            onUpdate={onUpdate}
+            upload={(file) => uploadImage(file, 'single')}
+          />
+
+          {/* Footer source */}
+          <div className="border rounded-md p-3 space-y-2">
+            <Label className="font-medium">Footer</Label>
+            <Select
+              value={config.footerSource || 'none'}
+              onValueChange={(v) => onUpdate({ ...config, footerSource: v as 'none' | 'mirror' | 'upload' })}
+            >
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">No footer</SelectItem>
+                <SelectItem value="mirror">Use main site footer</SelectItem>
+                <SelectItem value="upload">Upload my own image</SelectItem>
+              </SelectContent>
+            </Select>
+            {config.footerSource === 'upload' && (
+              <ScreenshotSlotEditor
+                label="Footer"
+                value={config.footerScreenshot}
+                onChange={(next) => onUpdate({ ...config, footerScreenshot: next })}
+                upload={(file) => uploadImage(file, 'footer')}
+              />
+            )}
+          </div>
+        </div>
       )}
 
       {/* Button configuration */}
