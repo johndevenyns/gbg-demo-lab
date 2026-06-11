@@ -117,11 +117,16 @@ export default function DemoPreview() {
   const [portalTransactionContext, setPortalTransactionContext] = useState<{ amount?: number; recipientName?: string; fromAccount?: string } | undefined>(undefined);
   const [portalNavCommand, setPortalNavCommand] = useState<'dashboard' | 'repeat_transfer' | null>(null);
   const [flowResult, setFlowResult] = useState<'success' | 'failure' | null>(null);
+  // True when the flow renderer is showing its own plain in-flow result page
+  // (a show_result_page completion action) — keep the site chrome in that case
+  // instead of letting the legacy full-replace success/failure page take over.
+  const [flowResultPlain, setFlowResultPlain] = useState(false);
 
   // If launched as a preview-result window, jump straight to the result page.
   useEffect(() => {
     if (previewResultParam === 'success' || previewResultParam === 'failure') {
       setFlowResult(previewResultParam);
+      setFlowResultPlain(false);
     }
   }, [previewResultParam]);
 
@@ -207,9 +212,10 @@ export default function DemoPreview() {
     return () => window.removeEventListener('message', handler);
   }, [resolvedUseCases, pageSlug, slug, navigate]);
 
-  const handleFlowComplete = useCallback((success: boolean, referenceId?: string) => {
+  const handleFlowComplete = useCallback((success: boolean, referenceId?: string, opts?: { plainResultPage?: boolean }) => {
     console.log('Flow complete:', { success, referenceId });
     setFlowResult(success ? 'success' : 'failure');
+    setFlowResultPlain(!!opts?.plainResultPage);
     // If a portal verification was in progress, return to portal on completion
     if (portalVerificationAction) {
       setPortalVerificationAction(null);
@@ -360,7 +366,12 @@ export default function DemoPreview() {
 
   // When the active result page takes over the full layout (screenshots / custom HTML / AI generated),
   // hide the outer site-mirror chrome and the form card so the result page owns header + main + footer.
-  const activeResultCfg = flowResult === 'success'
+  // When the in-flow result page is plain (show_result_page completion action),
+  // the legacy full-replace success/failure page must NOT hijack the layout —
+  // the user reaches it via the result page button instead.
+  const activeResultCfg = flowResultPlain
+    ? null
+    : flowResult === 'success'
     ? (demo.successPageConfig || DEFAULT_SUCCESS_CONFIG)
     : flowResult === 'failure'
     ? (demo.failurePageConfig || DEFAULT_FAILURE_CONFIG)
