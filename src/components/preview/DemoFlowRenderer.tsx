@@ -90,7 +90,7 @@ interface DemoFlowRendererProps {
   onNavigateToLogin?: () => void;
   onNavigateToPortal?: (loginUserData?: { email: string; profileData?: Record<string, unknown>; isNewAccount?: boolean }) => void;
   onSubmissionLog?: (data: SubmissionLogData) => void;
-  onComplete?: (success: boolean, referenceId?: string) => void;
+  onComplete?: (success: boolean, referenceId?: string, opts?: { plainResultPage?: boolean }) => void;
   onLoginSuccess?: (userData: { email: string; profileData?: Record<string, unknown> }) => void;
   // Mirror chrome for custom result-page mode
   mirrorHeaderHtml?: string;
@@ -1067,7 +1067,16 @@ export function DemoFlowRenderer({
   // Complete the flow (success or failure)
   const completeFlow = useCallback(async (success: boolean, refId?: string) => {
     if (refId) setReferenceId(refId);
-    onComplete?.(success, refId);
+
+    // Determine completion actions up-front so the parent can know whether
+    // we'll render a plain in-flow result page (show_result_page action)
+    // instead of the legacy full-replace success/failure custom page.
+    const actions = success
+      ? currentStep?.stepCompletionConfig?.onSuccess
+      : currentStep?.stepCompletionConfig?.onFailure;
+    const hasShowResultAction = !!actions?.some(a => a.type === 'show_result_page');
+
+    onComplete?.(success, refId, { plainResultPage: hasShowResultAction });
 
     // Log verification completion
     logPortalActivity({
@@ -1080,10 +1089,6 @@ export function DemoFlowRenderer({
     });
 
     // Process completion actions in order
-    const actions = success
-      ? currentStep?.stepCompletionConfig?.onSuccess
-      : currentStep?.stepCompletionConfig?.onFailure;
-
     if (actions && actions.length > 0) {
       // Execute create_account if configured
       if (actions.some(a => a.type === 'create_account')) {
