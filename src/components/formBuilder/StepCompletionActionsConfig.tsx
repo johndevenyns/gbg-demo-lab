@@ -374,7 +374,21 @@ export function StepCompletionActionsConfig({
             variant="outline"
             size="sm"
             className="h-8"
-            onClick={() => window.open(`/demo/${demoSlug}?previewResultPlain=${activeTab}`, '_blank', 'noopener')}
+            onClick={() => {
+              const actions = activeTab === 'success' ? completionConfig.onSuccess : completionConfig.onFailure;
+              const resultAction = actions.find(a => a.type === 'show_result_page');
+              const params = new URLSearchParams({ previewResultPlain: activeTab });
+              if (resultAction) {
+                if (resultAction.messageTitle) params.set('title', resultAction.messageTitle);
+                if (resultAction.subtitle) params.set('subtitle', resultAction.subtitle);
+                if (resultAction.message) params.set('message', resultAction.message);
+                if (resultAction.buttonText) params.set('buttonText', resultAction.buttonText);
+                if (resultAction.buttonUrl) params.set('buttonUrl', resultAction.buttonUrl);
+                params.set('showIcon', resultAction.showIcon !== false ? '1' : '0');
+                params.set('showReferenceId', resultAction.showReferenceId !== false ? '1' : '0');
+              }
+              window.open(`/demo/${demoSlug}?${params.toString()}`, '_blank', 'noopener');
+            }}
             title={`Preview the in-flow ${activeTab} result landing page in a new tab`}
           >
             <Eye className="w-3 h-3 mr-1" />

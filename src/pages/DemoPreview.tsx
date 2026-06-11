@@ -887,6 +887,13 @@ export default function DemoPreview() {
               <ResultPage
                 config={{
                   ...(previewResultPlainParam === 'success' ? DEFAULT_SUCCESS_CONFIG : DEFAULT_FAILURE_CONFIG),
+                  ...(searchParams.get('title') ? { title: searchParams.get('title') as string } : {}),
+                  ...(searchParams.get('subtitle') ? { subtitle: searchParams.get('subtitle') as string } : {}),
+                  ...(searchParams.get('message') ? { message: searchParams.get('message') as string } : {}),
+                  ...(searchParams.get('buttonText') ? { buttonText: searchParams.get('buttonText') as string } : {}),
+                  ...(searchParams.get('buttonUrl') ? { buttonUrl: searchParams.get('buttonUrl') as string } : {}),
+                  ...(searchParams.get('showIcon') !== null ? { showIcon: searchParams.get('showIcon') === '1' } : {}),
+                  ...(searchParams.get('showReferenceId') !== null ? { showReferenceId: searchParams.get('showReferenceId') === '1' } : {}),
                   referenceId: 'PREVIEW-1234',
                 }}
                 formStyle={demo.formStyle}
