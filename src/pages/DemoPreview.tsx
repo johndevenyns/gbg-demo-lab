@@ -631,7 +631,13 @@ export default function DemoPreview() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ backgroundColor: previewDocument?.formStyle?.contentAreaBgColor || '#f5f5f5', color: '#1a1a2e' }}>
+    <div
+      className={`${fullReplaceResult ? '' : 'min-h-screen'} flex flex-col`}
+      style={{
+        backgroundColor: fullReplaceResult ? 'transparent' : (previewDocument?.formStyle?.contentAreaBgColor || '#f5f5f5'),
+        color: '#1a1a2e',
+      }}
+    >
       {/* Mirrored Header */}
       {showMirrorHeader && previewDocument && (() => {
         // Derive base URL for resolving relative paths in the header HTML
