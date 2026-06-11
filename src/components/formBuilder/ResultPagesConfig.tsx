@@ -727,7 +727,7 @@ export function ResultPagesConfig({
             />
           </div>
 
-          {(type === 'success' || type === 'landing') && (
+          {(type === 'success' || type === 'landing' || type === 'extra') && (
             <div className="space-y-2">
               <Label>Button Action</Label>
               <Select
@@ -757,6 +757,32 @@ export function ResultPagesConfig({
 
           {config.buttonAction !== 'portal' && config.buttonAction !== 'landing' && (
             <div className="space-y-2">
+              {pages.length > 0 && (
+                <div className="space-y-1">
+                  <Label>Link to a custom page (optional)</Label>
+                  <Select
+                    value={(() => {
+                      const match = pages.find((p) => config.buttonUrl === `/demo/${demoSlug || ':slug'}/page/${p.slug}`);
+                      return match ? match.slug : '__custom__';
+                    })()}
+                    onValueChange={(v) => {
+                      if (v === '__custom__') {
+                        onUpdate({ ...config, buttonUrl: '' });
+                      } else {
+                        onUpdate({ ...config, buttonUrl: `/demo/${demoSlug || ':slug'}/page/${v}` });
+                      }
+                    }}
+                  >
+                    <SelectTrigger><SelectValue placeholder="Choose a page or enter your own URL" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__custom__">Use a custom URL (below)</SelectItem>
+                      {pages.map((p) => (
+                        <SelectItem key={p.id} value={p.slug}>{p.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
               <Label>Button URL (optional)</Label>
               <Input
                 type="url"
@@ -785,7 +811,7 @@ export function ResultPagesConfig({
           Custom Pages
         </CardTitle>
         <CardDescription>
-          The default pages shown after verification. Edit Success, Failure, and your custom Landing page. Steps may override these with their own custom result pages.
+          Build and manage the custom pages used throughout your demo. Configure the landing page and any extra custom pages, and link buttons either to another custom page or to your own URL.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -818,22 +844,6 @@ export function ResultPagesConfig({
             </div>
 
             {([
-              {
-                key: 'success' as const,
-                label: 'Success Page',
-                description: 'Shown when verification succeeds.',
-                icon: <CheckCircle2 className="w-5 h-5 text-green-500" />,
-                cfg: successConfig,
-                previewParam: 'success',
-              },
-              {
-                key: 'failure' as const,
-                label: 'Failure Page',
-                description: 'Shown when verification fails.',
-                icon: <XCircle className="w-5 h-5 text-red-500" />,
-                cfg: failureConfig,
-                previewParam: 'failure',
-              },
               {
                 key: 'landing' as const,
                 label: 'Custom Landing Page',
