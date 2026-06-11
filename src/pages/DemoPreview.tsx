@@ -825,9 +825,9 @@ export default function DemoPreview() {
               border: `${previewDocument?.formStyle?.formBorderWidth || '1'}px solid ${previewDocument?.formStyle?.formBorderColor || '#e5e7eb'}`,
             }}
           >
-            {previewResultParam && activeResultCfg ? (
+            {(previewResultParam && activeResultCfg) || isExtraPageRoute ? (
               <ResultPage
-                config={{ ...activeResultCfg, referenceId: activeResultCfg.referenceId || 'PREVIEW-1234' }}
+                config={{ ...(displayResultCfg as NonNullable<typeof displayResultCfg>), referenceId: (displayResultCfg as NonNullable<typeof displayResultCfg>).referenceId || 'PREVIEW-1234' }}
                 formStyle={demo.formStyle}
                 buttonColor={demo.buttonColor}
                 mirrorHeaderHtml={
