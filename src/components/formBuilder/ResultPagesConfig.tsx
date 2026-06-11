@@ -962,7 +962,7 @@ export function ResultPagesConfig({
                       <div className="font-medium truncate">{p.name}</div>
                     )}
                     <div className="text-xs text-muted-foreground truncate font-mono">
-                      /demo/{demoSlug || ':slug'}/page/{p.slug}
+                      {origin}/demo/{demoSlug || ':slug'}/page/{p.slug}
                     </div>
                     <div className="text-xs text-muted-foreground mt-0.5">
                       Mode: <span className="font-mono">{p.config.pageMode || 'default'}</span>
