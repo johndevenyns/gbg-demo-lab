@@ -111,10 +111,10 @@ function buildPayload(req: CreateSessionRequest, referenceId: string) {
     return '';
   };
 
-  const firstName = pick('firstName', 'first_name').toUpperCase();
-  const lastName = pick('lastName', 'last_name').toUpperCase();
+  const firstName = pick('firstName', 'first_name');
+  const lastName = pick('lastName', 'last_name');
   const dateOfBirth = pick('dateOfBirth', 'birthday');
-  const phoneDigits = pick('phone').replace(/\D/g, '');
+  const phoneRaw = pick('phone');
   const email = pick('email').toLowerCase();
   const dlNumber = pick('dlNumber', 'documentNumber');
   const dlState = pick('dlState');
@@ -137,11 +137,15 @@ function buildPayload(req: CreateSessionRequest, referenceId: string) {
   if (lastName) identity.lastName = lastName;
   if (dateOfBirth) identity.dateOfBirth = dateOfBirth; // YYYY-MM-DD
   if (combinedAddress) identity.address = combinedAddress;
-  if (phoneDigits) identity.phone = phoneDigits;
+  if (phoneRaw) identity.phone = phoneRaw;
   if (email) identity.email = email;
-  if (dlNumber) identity.dlNumber = dlNumber;
-  if (dlState) identity.dlState = dlState;
-  if (ssn4) identity.ssn4 = ssn4;
+
+  // dlNumber / dlState / ssn4 are only sent for docBio / dataOnly flows.
+  // The dataBio API example does NOT include them in customerData.
+  const extraIdentity: Record<string, string> = {};
+  if (dlNumber) extraIdentity.dlNumber = dlNumber;
+  if (dlState) extraIdentity.dlState = dlState;
+  if (ssn4) extraIdentity.ssn4 = ssn4;
 
   const base: Record<string, unknown> = {
     verificationType: req.verificationType,
@@ -155,35 +159,44 @@ function buildPayload(req: CreateSessionRequest, referenceId: string) {
   };
 
   if (req.resourceId) base.resourceId = req.resourceId;
-  if (req.logoUrl) base.logoUrl = req.logoUrl;
 
-  // dataBio expects flat top-level identity fields per the API reference
-  // (https://ditto.gbg.com/docs → Data & Bio → Example Request). docBio
-  // and dataOnly continue to use the nested `customerData` wrapper.
-  if (Object.keys(identity).length > 0) {
-    if (req.verificationType === 'dataBio') {
-      Object.assign(base, identity);
-    } else {
-      base.customerData = identity;
-    }
+  // All verification types use the nested `customerData` wrapper per the
+  // current IVS API reference (https://ditto.gbg.com/docs → Data & Bio →
+  // Example Request). dataBio omits dlNumber/dlState/ssn4; docBio/dataOnly
+  // include them when present.
+  if (Object.keys(identity).length > 0 || Object.keys(extraIdentity).length > 0) {
+    const customerData: Record<string, string> = { ...identity };
+    if (req.verificationType !== 'dataBio') Object.assign(customerData, extraIdentity);
+    if (Object.keys(customerData).length > 0) base.customerData = customerData;
   }
 
-  // Branding is nested-only per the current spec (flat fields are deprecated).
-  if (req.branding) {
-    const branding: Record<string, string> = {};
-    if (req.branding.headerTextColor) branding.headerTextColor = req.branding.headerTextColor;
-    if (req.branding.headerBgColor) branding.headerBgColor = req.branding.headerBgColor;
-    if (req.branding.buttonColor) branding.buttonColor = req.branding.buttonColor;
-    if (Object.keys(branding).length > 0) base.branding = branding;
+  // Branding — nested-only. Pass through every documented field the caller
+  // provides; logoUrl lives inside branding per the API example.
+  const brand: Record<string, string> = {};
+  const b = req.branding || {};
+  const brandKeys: (keyof NonNullable<CreateSessionRequest['branding']>)[] = [
+    'headerTextColor', 'headerBgColor', 'buttonColor', 'borderRadius',
+    'fontFamily', 'mutedTextColor', 'bodyTextColor', 'accentTextColor',
+    'accentColor', 'buttonTextColor', 'brandName', 'cardBgColor',
+    'borderColor', 'tagline', 'bodyBgColor', 'logoUrl',
+  ];
+  for (const k of brandKeys) {
+    const v = b[k];
+    if (typeof v === 'string' && v.length > 0) brand[k] = v;
   }
+  // Backwards-compat: allow a top-level logoUrl to populate branding.logoUrl.
+  if (!brand.logoUrl && req.logoUrl) brand.logoUrl = req.logoUrl;
+  if (Object.keys(brand).length > 0) base.branding = brand;
 
   // DataBio capture options → nested `options` block per IVS API reference.
   // Always emit for dataBio so document/biometric counts reach the verifier
   // even when the caller omits dataBioOptions (uses spec defaults).
   if (req.verificationType === 'dataBio') {
     const opts = req.dataBioOptions || {};
+    const documentsTypes = Array.isArray(opts.documentsTypes) && opts.documentsTypes.length > 0
+      ? opts.documentsTypes
+      : ['driversLicense'];
     base.options = {
-      previousAddress: { enabled: false },
       biometrics: {
         enabled: opts.biometricsEnabled ?? true,
         faceCount: opts.biometricsFaceCount ?? 1,
@@ -191,6 +204,7 @@ function buildPayload(req: CreateSessionRequest, referenceId: string) {
       documents: {
         enabled: opts.documentsEnabled ?? true,
         count: opts.documentsCount ?? 2,
+        types: documentsTypes,
       },
     };
   }
