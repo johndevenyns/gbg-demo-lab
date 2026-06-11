@@ -591,7 +591,7 @@ function isLightColor(color: string): boolean {
 export const DEFAULT_SUCCESS_CONFIG: ResultPageConfig = {
   type: 'success',
   title: 'Verification Complete',
-  subtitle: 'Your identity has been verified successfully',
+  subtitle: undefined,
   message: 'Thank you for completing the verification process. You may now continue with your application.',
   showIcon: true,
   buttonText: 'Continue',
