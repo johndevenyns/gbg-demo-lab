@@ -14,6 +14,8 @@ import {
   FileText, UserPlus, LogIn, ExternalLink, ArrowRight, Settings2
 } from 'lucide-react';
 import { StepCompletionConfig, StepCompletionAction, StepCompletionActionType } from '@/types/demo';
+import type { ExtraCustomPage } from '@/types/demo';
+import type { ResultPageConfig } from '@/components/preview/ResultPage';
 
 const ACTION_TYPE_OPTIONS: { value: StepCompletionActionType; label: string; description: string; icon: React.ReactNode }[] = [
   { value: 'show_result_page', label: 'Show Result Page', description: 'Display a customizable success/failure result page', icon: <FileText className="w-4 h-4" /> },
@@ -35,9 +37,21 @@ interface StepCompletionActionsConfigProps {
   config?: StepCompletionConfig;
   onChange: (config: StepCompletionConfig) => void;
   inline?: boolean;
+  demoSlug?: string;
+  extraCustomPages?: ExtraCustomPage[];
+  successPageConfig?: ResultPageConfig;
+  failurePageConfig?: ResultPageConfig;
 }
 
-export function StepCompletionActionsConfig({ config, onChange, inline }: StepCompletionActionsConfigProps) {
+export function StepCompletionActionsConfig({
+  config,
+  onChange,
+  inline,
+  demoSlug,
+  extraCustomPages,
+  successPageConfig,
+  failurePageConfig,
+}: StepCompletionActionsConfigProps) {
   const [isExpanded, setIsExpanded] = useState(!!config || !!inline);
   const [activeTab, setActiveTab] = useState<'success' | 'failure'>('success');
 
@@ -80,7 +94,28 @@ export function StepCompletionActionsConfig({ config, onChange, inline }: StepCo
 
   const renderActionEditor = (action: StepCompletionAction, type: 'success' | 'failure') => {
     const actionMeta = ACTION_TYPE_OPTIONS.find(o => o.value === action.type);
-    
+
+    // Build list of custom-page link targets (Success, Failure, extras)
+    const slugBase = demoSlug || ':slug';
+    const pageTargets: { id: string; label: string; url: string }[] = [
+      ...(successPageConfig ? [{
+        id: 'success',
+        label: `Success Page${successPageConfig.title ? ` — ${successPageConfig.title}` : ''}`,
+        url: `/demo/${slugBase}?previewResult=success`,
+      }] : []),
+      ...(failurePageConfig ? [{
+        id: 'failure',
+        label: `Failure Page${failurePageConfig.title ? ` — ${failurePageConfig.title}` : ''}`,
+        url: `/demo/${slugBase}?previewResult=failure`,
+      }] : []),
+      ...((extraCustomPages || []).map((p) => ({
+        id: `extra:${p.id}`,
+        label: p.name,
+        url: `/demo/${slugBase}/page/${p.slug}`,
+      }))),
+    ];
+    const matchedTarget = pageTargets.find((t) => action.buttonUrl === t.url);
+
     return (
       <div key={action.id} className="border border-border rounded-lg p-3 space-y-3">
         <div className="flex items-center gap-2">
@@ -199,15 +234,46 @@ export function StepCompletionActionsConfig({ config, onChange, inline }: StepCo
               )}
 
               {(action.buttonAction !== 'portal' || type === 'failure') && (
-                <div className="space-y-1">
-                  <Label className="text-xs">Button URL (optional)</Label>
-                  <Input
-                    type="url"
-                    value={action.buttonUrl || ''}
-                    onChange={(e) => updateAction(type, action.id, { buttonUrl: e.target.value })}
-                    placeholder="https://yoursite.com/next-step"
-                    className="h-7 text-sm"
-                  />
+                <div className="space-y-2">
+                  {pageTargets.length > 0 && (
+                    <div className="space-y-1">
+                      <Label className="text-xs">Link to a custom page</Label>
+                      <Select
+                        value={matchedTarget?.id || '__custom__'}
+                        onValueChange={(v) => {
+                          if (v === '__custom__') {
+                            updateAction(type, action.id, { buttonUrl: '' });
+                          } else {
+                            const target = pageTargets.find((t) => t.id === v);
+                            if (target) updateAction(type, action.id, { buttonUrl: target.url });
+                          }
+                        }}
+                      >
+                        <SelectTrigger className="h-7 text-sm">
+                          <SelectValue placeholder="Pick a page or use a custom URL" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-background border z-50">
+                          <SelectItem value="__custom__">Use a custom URL (below)</SelectItem>
+                          {pageTargets.map((t) => (
+                            <SelectItem key={t.id} value={t.id}>{t.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-muted-foreground">
+                        Targets are managed in the Custom Pages section.
+                      </p>
+                    </div>
+                  )}
+                  <div className="space-y-1">
+                    <Label className="text-xs">Button URL (optional)</Label>
+                    <Input
+                      type="url"
+                      value={action.buttonUrl || ''}
+                      onChange={(e) => updateAction(type, action.id, { buttonUrl: e.target.value })}
+                      placeholder="https://yoursite.com/next-step"
+                      className="h-7 text-sm"
+                    />
+                  </div>
                 </div>
               )}
             </div>
