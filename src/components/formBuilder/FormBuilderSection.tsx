@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTestProfiles } from '@/hooks/useTestProfiles';
+import { usePersistedState } from '@/hooks/usePersistedState';
 
 interface FormBuilderSectionProps {
   demo: DemoEnvironment;
@@ -29,7 +30,10 @@ interface FormBuilderSectionProps {
 export function FormBuilderSection({ demo, onUpdate }: FormBuilderSectionProps) {
   const { toast } = useToast();
   const { data: globalProfiles = [] } = useTestProfiles();
-  const [activeTab, setActiveTab] = useState('builder');
+  const [activeTab, setActiveTab] = usePersistedState<string>(
+    `formBuilderSection.activeTab.${demo.id}`,
+    'builder',
+  );
   const [saveTemplateOpen, setSaveTemplateOpen] = useState(false);
   const [templateRefreshTrigger, setTemplateRefreshTrigger] = useState(0);
   // Undo history (in-memory snapshots of form state)
