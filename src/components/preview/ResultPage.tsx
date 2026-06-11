@@ -180,10 +180,49 @@ function ScreenshotBlock({ cfg, fallbackBg, showBorders }: { cfg?: ResultPageScr
   );
 }
 
-export function ResultPage({ config, formStyle, buttonColor, onButtonClick, mirrorHeaderHtml, mirrorFooterHtml, mirrorCss }: ResultPageProps) {
+export function ResultPage({ config, formStyle, buttonColor, onButtonClick, mirrorHeaderHtml, mirrorFooterHtml, mirrorCss, demoSlug }: ResultPageProps) {
   const style = formStyle || DEFAULT_FORM_STYLE;
   const isSuccess = config.type === 'success';
   const mode: ResultPageMode = config.pageMode || 'default';
+
+  // Hotspot click dispatcher — mirrors header CTA behavior
+  const handleHotspotClick = (h: PageHotspot) => {
+    if (h.linkKind === 'url' && h.url) {
+      if (h.openInNewTab) window.open(h.url, '_blank', 'noopener');
+      else window.location.href = h.url;
+    } else if (h.linkKind === 'use_case' && h.useCaseId) {
+      window.postMessage({ type: 'cta-use-case', useCaseId: h.useCaseId }, '*');
+    } else if (h.linkKind === 'page' && h.pageSlug) {
+      const slug = demoSlug || window.location.pathname.match(/^\/demo\/([^/]+)/)?.[1];
+      if (slug) window.location.href = `/demo/${slug}/page/${h.pageSlug}`;
+    }
+  };
+
+  const renderHotspots = (slot: PageHotspotSlot) => {
+    const list = (config.hotspots || []).filter(h => h.slot === slot);
+    if (list.length === 0) return null;
+    return (
+      <>
+        {list.map(h => (
+          <button
+            key={h.id}
+            type="button"
+            aria-label={h.label || `Hotspot ${slot}`}
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleHotspotClick(h); }}
+            className="absolute cursor-pointer bg-transparent border-0 p-0 m-0"
+            style={{
+              left: `${h.rect.x}%`,
+              top: `${h.rect.y}%`,
+              width: `${h.rect.w}%`,
+              height: `${h.rect.h}%`,
+              outline: config.showBorders ? '2px dashed #22c55e' : 'none',
+              zIndex: 5,
+            }}
+          />
+        ))}
+      </>
+    );
+  };
   
   // Get the computed button color - prefer explicit buttonColor, then style's focus color as brand
   const computedButtonColor = buttonColor || style.inputFocusBorderColor || '#3b82f6';
