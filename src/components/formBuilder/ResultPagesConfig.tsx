@@ -727,7 +727,7 @@ export function ResultPagesConfig({
             />
           </div>
 
-          {(type === 'success' || type === 'landing') && (
+          {(type === 'success' || type === 'landing' || type === 'extra') && (
             <div className="space-y-2">
               <Label>Button Action</Label>
               <Select
@@ -757,6 +757,32 @@ export function ResultPagesConfig({
 
           {config.buttonAction !== 'portal' && config.buttonAction !== 'landing' && (
             <div className="space-y-2">
+              {pages.length > 0 && (
+                <div className="space-y-1">
+                  <Label>Link to a custom page (optional)</Label>
+                  <Select
+                    value={(() => {
+                      const match = pages.find((p) => config.buttonUrl === `/demo/${demoSlug || ':slug'}/page/${p.slug}`);
+                      return match ? match.slug : '__custom__';
+                    })()}
+                    onValueChange={(v) => {
+                      if (v === '__custom__') {
+                        onUpdate({ ...config, buttonUrl: '' });
+                      } else {
+                        onUpdate({ ...config, buttonUrl: `/demo/${demoSlug || ':slug'}/page/${v}` });
+                      }
+                    }}
+                  >
+                    <SelectTrigger><SelectValue placeholder="Choose a page or enter your own URL" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__custom__">Use a custom URL (below)</SelectItem>
+                      {pages.map((p) => (
+                        <SelectItem key={p.id} value={p.slug}>{p.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
               <Label>Button URL (optional)</Label>
               <Input
                 type="url"
