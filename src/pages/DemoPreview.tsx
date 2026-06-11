@@ -1,4 +1,4 @@
-import { useParams, Link, useSearchParams } from "react-router-dom";
+import { useParams, Link, useSearchParams, useNavigate, useLocation } from "react-router-dom";
 import { useDemoBySlug } from "@/hooks/useDemos";
 import { useAuth } from "@/hooks/useAuth";
 import { Loader2, ArrowLeft, Settings } from "lucide-react";
@@ -88,6 +88,8 @@ function repairHeaderLogoHtml(headerHtml: string, logoUrl?: string, customerName
 export default function DemoPreview() {
   const { slug, pageSlug } = useParams<{ slug: string; pageSlug?: string }>();
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const location = useLocation();
   const previewResultParam = searchParams.get('previewResult'); // 'success' | 'failure' | null
   const { isAdmin, isLoading: authLoading } = useAuth();
   const { data: demo, isLoading, error } = useDemoBySlug(slug || "");
@@ -169,6 +171,19 @@ export default function DemoPreview() {
     setSelectedUseCase(landingPageUseCases[0] || resolvedUseCases[0]);
   }, [hasUseCases, resolvedUseCases, landingPageUseCases, selectedUseCase, demo?.defaultLandingPageSlug]);
 
+  // Honor a `selectUseCaseId` passed via navigation state (e.g. clicking a
+  // use-case hotspot from a custom page navigates here and asks us to select it).
+  useEffect(() => {
+    const requestedId = (location.state as { selectUseCaseId?: string } | null)?.selectUseCaseId;
+    if (!requestedId || !resolvedUseCases.length) return;
+    const target = resolvedUseCases.find(uc => uc.useCaseId === requestedId);
+    if (target) {
+      setSelectedUseCase(target);
+      // Clear the state so a manual refresh doesn't re-trigger.
+      navigate(location.pathname + location.search, { replace: true, state: null });
+    }
+  }, [location.state, location.pathname, location.search, resolvedUseCases, navigate]);
+
   // Listen for CTA messages from the header iframe
   useEffect(() => {
     const handler = (e: MessageEvent) => {
@@ -176,7 +191,13 @@ export default function DemoPreview() {
         // Find the resolved use case matching the linked ID
         const target = resolvedUseCases.find(uc => uc.useCaseId === e.data.useCaseId);
         if (target) {
-          handleSelectUseCase(target, true);
+          // If we're currently on an extra custom page route, navigate back to the
+          // main demo route so the use case landing/form is actually rendered.
+          if (pageSlug && slug) {
+            navigate(`/demo/${slug}`, { state: { selectUseCaseId: target.useCaseId } });
+          } else {
+            handleSelectUseCase(target, true);
+          }
         }
       } else if (e.data?.type === 'scroll-to-form' && formRef.current) {
         formRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -184,7 +205,7 @@ export default function DemoPreview() {
     };
     window.addEventListener('message', handler);
     return () => window.removeEventListener('message', handler);
-  }, [resolvedUseCases]);
+  }, [resolvedUseCases, pageSlug, slug, navigate]);
 
   const handleFlowComplete = useCallback((success: boolean, referenceId?: string) => {
     console.log('Flow complete:', { success, referenceId });
