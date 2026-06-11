@@ -55,6 +55,13 @@ interface CreateSessionRequest {
     headerBgColor?: string;
     buttonColor?: string;
   };
+  // DataBio-only capture options. Sent to the verification API under `options`.
+  dataBioOptions?: {
+    documentsEnabled?: boolean;
+    documentsCount?: number;
+    biometricsEnabled?: boolean;
+    biometricsFaceCount?: number;
+  };
 }
 
 interface SessionResponse {
@@ -129,6 +136,23 @@ function buildPayload(req: CreateSessionRequest, referenceId: string) {
     if (req.branding.headerBgColor) branding.headerBgColor = req.branding.headerBgColor;
     if (req.branding.buttonColor) branding.buttonColor = req.branding.buttonColor;
     if (Object.keys(branding).length > 0) base.branding = branding;
+  }
+
+  // DataBio capture options → nested `options` block per IVS API reference.
+  if (req.verificationType === 'dataBio' && req.dataBioOptions) {
+    const opts = req.dataBioOptions;
+    const options: Record<string, unknown> = {
+      previousAddress: { enabled: false },
+      biometrics: {
+        enabled: opts.biometricsEnabled ?? true,
+        faceCount: opts.biometricsFaceCount ?? 1,
+      },
+      documents: {
+        enabled: opts.documentsEnabled ?? true,
+        count: opts.documentsCount ?? 2,
+      },
+    };
+    base.options = options;
   }
 
   return base;
