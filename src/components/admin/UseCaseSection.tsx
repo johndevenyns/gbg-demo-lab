@@ -24,6 +24,7 @@ import { FormBuilderSection } from '@/components/formBuilder';
 import { FormPreviewPanel } from '@/components/formBuilder/FormPreviewPanel';
 import { PortalPreviewDialog } from './PortalPreviewDialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { usePersistedState } from '@/hooks/usePersistedState';
 
 const ICON_MAP: Record<string, React.ElementType> = {
   UserPlus, FastForward, Package, Briefcase,
@@ -41,12 +42,21 @@ export function UseCaseSection({ demoId, demo, onUpdateDemo }: UseCaseSectionPro
   const addLink = useAddDemoUseCaseLink();
   const updateLink = useUpdateDemoUseCaseLink();
   const removeLink = useRemoveDemoUseCaseLink();
-  const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [formBuilderLinkId, setFormBuilderLinkId] = useState<string | null>(null);
+  const [expandedId, setExpandedId] = usePersistedState<string | null>(
+    `useCaseSection.expandedId.${demoId}`,
+    null,
+  );
+  const [formBuilderLinkId, setFormBuilderLinkId] = usePersistedState<string | null>(
+    `useCaseSection.formBuilderLinkId.${demoId}`,
+    null,
+  );
   const [showPortalPreview, setShowPortalPreview] = useState(false);
   const { data: allIndustries = [] } = useIndustries();
   // Track which tab is active in the form builder area: 'builder' or 'preview'
-  const [builderTab, setBuilderTab] = useState<'builder' | 'preview'>('builder');
+  const [builderTab, setBuilderTab] = usePersistedState<'builder' | 'preview'>(
+    `useCaseSection.builderTab.${demoId}`,
+    'builder',
+  );
 
   const demoIndustry = useMemo(() => {
     if (!demo.industryId) return null;
