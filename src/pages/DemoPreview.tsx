@@ -86,7 +86,7 @@ function repairHeaderLogoHtml(headerHtml: string, logoUrl?: string, customerName
 }
 
 export default function DemoPreview() {
-  const { slug } = useParams<{ slug: string }>();
+  const { slug, pageSlug } = useParams<{ slug: string; pageSlug?: string }>();
   const [searchParams] = useSearchParams();
   const previewResultParam = searchParams.get('previewResult'); // 'success' | 'failure' | null
   const { isAdmin, isLoading: authLoading } = useAuth();
