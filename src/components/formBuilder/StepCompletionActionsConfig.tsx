@@ -374,8 +374,8 @@ export function StepCompletionActionsConfig({
             variant="outline"
             size="sm"
             className="h-8"
-            onClick={() => window.open(`/demo/${demoSlug}?previewResult=${activeTab}`, '_blank', 'noopener')}
-            title={`Preview the ${activeTab} page in a new tab`}
+            onClick={() => window.open(`/demo/${demoSlug}?previewResultPlain=${activeTab}`, '_blank', 'noopener')}
+            title={`Preview the in-flow ${activeTab} result landing page in a new tab`}
           >
             <Eye className="w-3 h-3 mr-1" />
             Preview
