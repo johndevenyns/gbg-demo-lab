@@ -91,6 +91,7 @@ export default function DemoPreview() {
   const navigate = useNavigate();
   const location = useLocation();
   const previewResultParam = searchParams.get('previewResult'); // 'success' | 'failure' | null
+  const previewResultPlainParam = searchParams.get('previewResultPlain'); // 'success' | 'failure' | null
   const { isAdmin, isLoading: authLoading } = useAuth();
   const { data: demo, isLoading, error } = useDemoBySlug(slug || "");
   const { data: links = [] } = useDemoUseCaseLinks(demo?.id);
@@ -127,8 +128,12 @@ export default function DemoPreview() {
     if (previewResultParam === 'success' || previewResultParam === 'failure') {
       setFlowResult(previewResultParam);
       setFlowResultPlain(false);
+    } else if (previewResultPlainParam === 'success' || previewResultPlainParam === 'failure') {
+      // Preview the in-flow result *landing* card (no custom full-replace page)
+      setFlowResult(previewResultPlainParam);
+      setFlowResultPlain(true);
     }
-  }, [previewResultParam]);
+  }, [previewResultParam, previewResultPlainParam]);
 
   // Get portal type directly from the demo
   const demoPortalType = demo?.portalType || 'none';
