@@ -3227,8 +3227,12 @@ export function DemoFlowRenderer({
     // Build config: completion action config > decision choice > legacy config
     let config: ResultPageConfig;
     if (showResultAction) {
+      // IMPORTANT: do NOT spread the legacy success/failure page config here —
+      // it may be a full-replace custom page (screenshots / custom HTML) which
+      // would hijack this plain "verification complete" result page. The
+      // custom page is reached via the button (buttonUrl) instead.
       config = {
-        ...(isSuccess ? { ...DEFAULT_SUCCESS_CONFIG, ...successPageConfig } : { ...DEFAULT_FAILURE_CONFIG, ...failurePageConfig }),
+        ...(isSuccess ? DEFAULT_SUCCESS_CONFIG : DEFAULT_FAILURE_CONFIG),
         title: showResultAction.messageTitle || (isSuccess ? DEFAULT_SUCCESS_CONFIG.title : DEFAULT_FAILURE_CONFIG.title),
         subtitle: showResultAction.subtitle,
         message: showResultAction.message || (isSuccess ? DEFAULT_SUCCESS_CONFIG.message : DEFAULT_FAILURE_CONFIG.message),
@@ -3237,6 +3241,7 @@ export function DemoFlowRenderer({
         buttonText: showResultAction.buttonText,
         buttonAction: showResultAction.buttonAction,
         buttonUrl: showResultAction.buttonUrl,
+        showButton: true,
         referenceId: referenceId || undefined,
       };
     } else {
