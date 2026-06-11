@@ -602,6 +602,7 @@ function VerificationTypePanel({
 }: VerificationTypePanelProps) {
   const isDidType = typeKey === 'did';
   const isDataOnly = typeKey === 'dataonly';
+  const isDataBio = typeKey === 'databio';
 
   // Local state for resource ID to prevent overwriting while typing
   const [localResourceId, setLocalResourceId] = useState(typeConfig.resourceId || '');
@@ -812,6 +813,84 @@ function VerificationTypePanel({
           </p>
         </div>
       )}
+
+      {/* DataBio capture options — documents + biometrics */}
+      {isDataBio && (() => {
+        const opts = typeConfig.dataBioOptions || {};
+        const documentsEnabled = opts.documentsEnabled ?? true;
+        const documentsCount = opts.documentsCount ?? 2;
+        const biometricsEnabled = opts.biometricsEnabled ?? true;
+        const biometricsFaceCount = opts.biometricsFaceCount ?? 1;
+        const update = (patch: Partial<NonNullable<VerificationTypeOverride['dataBioOptions']>>) =>
+          onUpdate({ dataBioOptions: { documentsEnabled, documentsCount, biometricsEnabled, biometricsFaceCount, ...patch } });
+        return (
+          <div className="space-y-3 p-3 rounded-lg border border-blue-500/30 bg-blue-500/5">
+            <Label className="text-sm font-medium flex items-center gap-2">
+              <FileText className="w-4 h-4" />
+              DataBio Capture Options
+            </Label>
+
+            <div className="space-y-2 p-2 rounded border border-border bg-background/50">
+              <div className="flex items-center justify-between">
+                <Label className="text-sm flex items-center gap-2">
+                  <FileText className="w-3.5 h-3.5" />
+                  Documents
+                </Label>
+                <Switch
+                  checked={documentsEnabled}
+                  onCheckedChange={(v) => update({ documentsEnabled: v })}
+                  className="scale-75"
+                />
+              </div>
+              {documentsEnabled && (
+                <div className="flex items-center gap-3">
+                  <Label className="text-xs text-muted-foreground">Document count</Label>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={5}
+                    value={documentsCount}
+                    onChange={(e) => update({ documentsCount: parseInt(e.target.value) || 1 })}
+                    className="h-7 text-sm w-20"
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-2 p-2 rounded border border-border bg-background/50">
+              <div className="flex items-center justify-between">
+                <Label className="text-sm flex items-center gap-2">
+                  <Camera className="w-3.5 h-3.5" />
+                  Biometrics
+                </Label>
+                <Switch
+                  checked={biometricsEnabled}
+                  onCheckedChange={(v) => update({ biometricsEnabled: v })}
+                  className="scale-75"
+                />
+              </div>
+              {biometricsEnabled && (
+                <div className="flex items-center gap-3">
+                  <Label className="text-xs text-muted-foreground">Face count</Label>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={3}
+                    value={biometricsFaceCount}
+                    onChange={(e) => update({ biometricsFaceCount: parseInt(e.target.value) || 1 })}
+                    className="h-7 text-sm w-20"
+                  />
+                </div>
+              )}
+            </div>
+
+            <p className="text-xs text-muted-foreground">
+              Sent as <code className="font-mono">options.documents</code> and{' '}
+              <code className="font-mono">options.biometrics</code> on the verification session payload.
+            </p>
+          </div>
+        );
+      })()}
 
       {/* Status polling */}
       {!isDataOnly && (
