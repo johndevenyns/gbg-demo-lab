@@ -44,11 +44,12 @@ const rowToDemo = (row: any): DemoEnvironment => {
   const storedTestData = row.stored_test_data as StoredTestData | null;
   
   // Parse result page configs from form_style (stored together for now)
-  const formStyle = row.form_style as (FormStyleConfig & { 
-    successPageConfig?: ResultPageConfig; 
+  const formStyle = row.form_style as (FormStyleConfig & {
+    successPageConfig?: ResultPageConfig;
     failurePageConfig?: ResultPageConfig;
     landingPageConfig?: ResultPageConfig;
     extraCustomPages?: ExtraCustomPage[];
+    defaultLandingPageSlug?: string;
   }) | null;
   
   return {
