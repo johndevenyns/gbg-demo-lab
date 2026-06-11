@@ -165,9 +165,9 @@ export default function DemoPreview() {
   // Auto-select the first landing-page-visible use case
   const landingPageUseCases = useMemo(() => resolvedUseCases.filter(uc => uc.showOnLandingPage), [resolvedUseCases]);
   useEffect(() => {
-    if (!hasUseCases || selectedUseCase) return;
+    if (!hasUseCases || selectedUseCase || demo?.defaultLandingPageSlug) return;
     setSelectedUseCase(landingPageUseCases[0] || resolvedUseCases[0]);
-  }, [hasUseCases, resolvedUseCases, landingPageUseCases, selectedUseCase]);
+  }, [hasUseCases, resolvedUseCases, landingPageUseCases, selectedUseCase, demo?.defaultLandingPageSlug]);
 
   // Listen for CTA messages from the header iframe
   useEffect(() => {
