@@ -301,6 +301,7 @@ export function ResultPagesConfig({
             <SelectItem value="ai_generated">AI-generated page (Lovable AI)</SelectItem>
             <SelectItem value="custom_html">Fully custom HTML</SelectItem>
             <SelectItem value="screenshots">Screenshots (header/main/footer images)</SelectItem>
+            <SelectItem value="single_screenshot">Single screenshot (one image + spacing + bg)</SelectItem>
           </SelectContent>
         </Select>
       </div>
