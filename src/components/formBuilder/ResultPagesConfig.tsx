@@ -7,8 +7,8 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CheckCircle2, XCircle, ExternalLink, Settings2, Paintbrush, Sparkles, Upload, Loader2, Eye } from 'lucide-react';
-import { ResultPageConfig, ResultButtonAction, ResultPageMode, DEFAULT_SUCCESS_CONFIG, DEFAULT_FAILURE_CONFIG } from '@/components/preview/ResultPage';
+import { CheckCircle2, XCircle, ExternalLink, Settings2, Paintbrush, Sparkles, Upload, Loader2, Eye, ArrowLeft, FileText, ChevronRight } from 'lucide-react';
+import { ResultPageConfig, ResultButtonAction, ResultPageMode, DEFAULT_SUCCESS_CONFIG, DEFAULT_FAILURE_CONFIG, DEFAULT_LANDING_CONFIG } from '@/components/preview/ResultPage';
 import { ResultPage } from '@/components/preview/ResultPage';
 import type { FormStyleConfig } from '@/types/formStyle';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -183,6 +183,7 @@ interface ResultPagesConfigProps {
   returnUrl: string;
   successPageConfig?: ResultPageConfig;
   failurePageConfig?: ResultPageConfig;
+  landingPageConfig?: ResultPageConfig;
   buttonColor?: string;
   demoId?: string;
   demoSlug?: string;
@@ -195,6 +196,7 @@ interface ResultPagesConfigProps {
   onUpdateReturnUrl: (url: string) => void;
   onUpdateSuccessPage: (config: ResultPageConfig) => void;
   onUpdateFailurePage: (config: ResultPageConfig) => void;
+  onUpdateLandingPage: (config: ResultPageConfig) => void;
 }
 
 export function ResultPagesConfig({
@@ -203,6 +205,7 @@ export function ResultPagesConfig({
   returnUrl,
   successPageConfig,
   failurePageConfig,
+  landingPageConfig,
   buttonColor,
   demoId,
   demoSlug,
@@ -215,15 +218,18 @@ export function ResultPagesConfig({
   onUpdateReturnUrl,
   onUpdateSuccessPage,
   onUpdateFailurePage,
+  onUpdateLandingPage,
 }: ResultPagesConfigProps) {
-  const [activeTab, setActiveTab] = useState<'success' | 'failure'>('success');
+  type PageKey = 'success' | 'failure' | 'landing';
+  const [selectedPage, setSelectedPage] = useState<PageKey | null>(null);
   const [urlSettingsOpen, setUrlSettingsOpen] = useState(false);
-  const [generating, setGenerating] = useState<null | 'success' | 'failure'>(null);
+  const [generating, setGenerating] = useState<null | PageKey>(null);
   const { toast } = useToast();
 
   // Use provided configs or defaults
   const successConfig = successPageConfig || DEFAULT_SUCCESS_CONFIG;
   const failureConfig = failurePageConfig || DEFAULT_FAILURE_CONFIG;
+  const landingConfig = landingPageConfig || DEFAULT_LANDING_CONFIG;
 
   const uploadImage = async (file: File, slot: string): Promise<string | null> => {
     if (!demoId) {
