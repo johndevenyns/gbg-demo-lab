@@ -128,12 +128,33 @@ function buildMirrorIframeSrc(html: string, css: string): string {
 
 function MirrorChrome({ html, css, minHeight, showBorders }: { html?: string; css?: string; minHeight: number; showBorders?: boolean }) {
   if (!html) return null;
+  // Fit the iframe height exactly to its rendered content (e.g. the footer
+  // screenshot image) so there is no extra whitespace above/below it.
+  const fitToContent = (iframe: HTMLIFrameElement) => {
+    try {
+      const doc = iframe.contentDocument;
+      if (!doc?.body) return;
+      const measure = () => {
+        try {
+          const h = Math.ceil(doc.body.getBoundingClientRect().height);
+          if (h > 0) iframe.style.height = `${h}px`;
+        } catch { /* ignore */ }
+      };
+      measure();
+      // Re-measure once images inside the chrome finish loading
+      Array.from(doc.images || []).forEach((img) => {
+        if (!img.complete) img.addEventListener('load', measure);
+      });
+      setTimeout(measure, 300);
+    } catch { /* ignore */ }
+  };
   return (
     <iframe
       title="result-mirror-chrome"
       srcDoc={buildMirrorIframeSrc(html, css || '')}
       sandbox="allow-same-origin"
-      style={{ width: '100%', border: showBorders ? '2px dashed #ef4444' : 'none', display: 'block', minHeight, height: minHeight }}
+      style={{ width: '100%', border: showBorders ? '2px dashed #ef4444' : 'none', display: 'block', height: minHeight }}
+      onLoad={(e) => fitToContent(e.currentTarget)}
     />
   );
 }
@@ -158,7 +179,7 @@ function ScreenshotBlock({ cfg, fallbackBg, showBorders }: { cfg?: ResultPageScr
         backgroundColor: cfg.bgColor || fallbackBg || 'transparent',
         display: 'flex',
         justifyContent: justify,
-        alignItems: 'stretch',
+        alignItems: 'flex-start',
         lineHeight: 0,
         fontSize: 0,
         outline: showBorders ? '2px dashed #ef4444' : undefined,
@@ -240,7 +261,7 @@ export function ResultPage({ config, formStyle, buttonColor, onButtonClick, mirr
     if (html && html.trim().length > 0) {
       return (
         <div
-          className="min-h-full w-full"
+          className="w-full flex-1"
           style={{ backgroundColor: style.contentAreaBgColor || '#ffffff' }}
           dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(html, SANITIZE_OPTS) }}
         />
@@ -256,14 +277,14 @@ export function ResultPage({ config, formStyle, buttonColor, onButtonClick, mirr
       const showBtn = config.showButton !== false && !!config.buttonText;
       return (
         <div
-          className="w-full flex flex-col"
+          className="w-full flex-1 flex flex-col"
           style={{ backgroundColor: style.contentAreaBgColor || '#ffffff' }}
         >
           <div className="relative">
             <ScreenshotBlock cfg={config.screenshotHeader} fallbackBg={style.formBgColor} showBorders={config.showBorders} />
             {renderHotspots('header')}
           </div>
-          <div className="relative" style={{ outline: config.showBorders ? '2px dashed #ef4444' : undefined }}>
+          <div className="relative flex-1" style={{ outline: config.showBorders ? '2px dashed #ef4444' : undefined, backgroundColor: config.screenshotMain?.bgColor || undefined }}>
             <ScreenshotBlock cfg={config.screenshotMain} fallbackBg={style.formBgColor} showBorders={config.showBorders} />
             {renderHotspots('main')}
             {showBtn && (
@@ -309,7 +330,7 @@ export function ResultPage({ config, formStyle, buttonColor, onButtonClick, mirr
       const footerH = style.footerHeight || 160;
       return (
         <div
-          className="w-full flex flex-col"
+          className="w-full flex-1 flex flex-col"
           style={{
             backgroundColor: config.singleScreenshotBgColor || style.contentAreaBgColor || '#ffffff',
             outline: config.showBorders ? '2px dashed #ef4444' : undefined,
@@ -328,7 +349,7 @@ export function ResultPage({ config, formStyle, buttonColor, onButtonClick, mirr
           {/* Main screenshot */}
           {url && (
             <div
-              className="relative"
+              className="relative flex-1"
               style={{
                 paddingTop: config.singleScreenshotPaddingTop ?? 0,
                 paddingBottom: config.singleScreenshotPaddingBottom ?? 0,
@@ -336,6 +357,7 @@ export function ResultPage({ config, formStyle, buttonColor, onButtonClick, mirr
                 fontSize: 0,
               }}
             >
+              {/* grows to push the footer to the bottom of the viewport */}
               <div className="relative" style={{ lineHeight: 0, fontSize: 0 }}>
                 <img src={url} alt="" style={imgStyle} />
                 {renderHotspots('main')}
@@ -354,6 +376,9 @@ export function ResultPage({ config, formStyle, buttonColor, onButtonClick, mirr
               )}
             </div>
           )}
+
+          {/* Spacer keeps the footer pinned to the bottom when no main image is set */}
+          {!url && <div className="flex-1" />}
 
           {/* Footer chrome */}
           {(config.footerSource === 'mirror' || config.footerSource === 'upload') && (
