@@ -74,6 +74,7 @@ function AppContent() {
             }
           />
           <Route path="/demo/:slug" element={<DemoPreview />} />
+          <Route path="/demo/:slug/page/:pageSlug" element={<DemoPreview />} />
           <Route path="/embed/:slug" element={<DemoEmbed />} />
           <Route path="/qr-preview" element={<QrCodePreview />} />
           <Route path="/verify/redirect" element={<VerifyRedirect />} />
