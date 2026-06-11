@@ -295,9 +295,15 @@ export function ResultPage({ config, formStyle, buttonColor, onButtonClick, mirr
     const hasHeader = config.headerSource && config.headerSource !== 'none';
     const hasFooter = config.footerSource && config.footerSource !== 'none';
     if (url || hasHeader || hasFooter) {
-      // Always render the main uploaded image at its natural (aspect-scaled) height,
-      // full width, with no extra spacing — slot height equals the image height.
-      const imgStyle: React.CSSProperties = { display: 'block', width: '100%', height: 'auto', margin: 0, padding: 0 };
+      // Slot height equals the image's rendered height (no vertical whitespace).
+      // The page's background color shows on either side of the image for
+      // contain/actual fit modes when the image isn't full container width.
+      const fit = config.singleScreenshotFitMode || 'contain';
+      const imgStyle: React.CSSProperties =
+        fit === 'stretch' ? { display: 'block', width: '100%', height: 'auto', margin: 0, padding: 0 }
+        : fit === 'cover' ? { display: 'block', width: '100%', height: 'auto', objectFit: 'cover', margin: 0, padding: 0 }
+        : fit === 'actual' ? { display: 'block', maxWidth: '100%', height: 'auto', margin: '0 auto', padding: 0 }
+        : /* contain */ { display: 'block', maxWidth: '100%', height: 'auto', margin: '0 auto', padding: 0 };
       const showBtn = config.showButton !== false && !!config.buttonText;
       const headerH = style.headerHeight || 120;
       const footerH = style.footerHeight || 160;
