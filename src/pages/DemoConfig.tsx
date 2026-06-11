@@ -115,6 +115,26 @@ function SiteSettingsSection({ demo, onUpdate, portalTypes }: { demo: DemoEnviro
             />
           </div>
           <div className="md:col-span-2 space-y-2">
+            <Label>Default Site Landing Page</Label>
+            <p className="text-xs text-muted-foreground">
+              Choose what visitors see first at <span className="font-mono">/demo/{demo.slug}</span>. Mirrors the setting on the Custom Pages page.
+            </p>
+            <Select
+              value={demo.defaultLandingPageSlug || '__use_cases__'}
+              onValueChange={(v) => onUpdate({ defaultLandingPageSlug: v === '__use_cases__' ? undefined : v })}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__use_cases__">Use case landing page (default)</SelectItem>
+                {(demo.extraCustomPages || []).map((p) => (
+                  <SelectItem key={p.slug} value={p.slug}>{p.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="md:col-span-2 space-y-2">
             <Label>Portal Type</Label>
             <p className="text-xs text-muted-foreground">Choose whether this demo includes a simulated portal for logged-in users</p>
             <Select value={demo.portalType || 'none'} onValueChange={(v) => onUpdate({ portalType: v })}>
