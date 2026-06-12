@@ -106,7 +106,7 @@ function SiteSettingsSection({ demo, onUpdate, portalTypes }: { demo: DemoEnviro
             </div>
           </div>
           <div className="md:col-span-2 space-y-2">
-            <Label>Landing Page Heading</Label>
+            <Label>Use Case Landing Page Heading</Label>
             <p className="text-xs text-muted-foreground">Heading shown above use case tabs (leave empty for global default)</p>
             <Input
               value={demo.landingHeading || ''}
