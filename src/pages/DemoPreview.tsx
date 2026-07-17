@@ -716,6 +716,16 @@ export default function DemoPreview() {
                     width: 100%;
                     max-width: 100%;
                   }
+                  /* Neutralize fixed/sticky/absolute positioning that would
+                     pull the captured header out of flow and collapse the
+                     iframe height (some scraped sites — e.g. sticky-nav
+                     credit-union templates — rely on external CSS classes
+                     that were not inlined). */
+                  body > header, body > [class*="header"], body > nav,
+                  body > header *, body > [class*="header"] *, body > nav * {
+                    position: static !important;
+                    transform: none !important;
+                  }
                   ${cssCtaLinks.map(l => `${l.cssSelector} { pointer-events: auto !important; cursor: pointer !important; }`).join('\n')}
                 </style>
                 ${previewDocument.cssContent ? `<style>${previewDocument.cssContent}</style>` : ''}
@@ -979,6 +989,13 @@ export default function DemoPreview() {
                   body > footer, body > [class*="footer"], body > div {
                     width: 100%;
                     max-width: 100%;
+                  }
+                  /* See header iframe: prevent captured footers from being
+                     pulled out of flow by leftover position: fixed/sticky. */
+                  body > footer, body > [class*="footer"],
+                  body > footer *, body > [class*="footer"] * {
+                    position: static !important;
+                    transform: none !important;
                   }
                 </style>
                 ${previewDocument.cssContent ? `<style>${previewDocument.cssContent}</style>` : ''}
