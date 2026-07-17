@@ -41,10 +41,14 @@ function fitIframeToContent(iframe: HTMLIFrameElement, opts: { minHeight?: numbe
       const body = iframe.contentDocument?.body;
       if (!body) return;
       const firstChild = body.firstElementChild as HTMLElement | null;
+      // Prefer body.scrollHeight so we still get a real height when the
+      // first child is pulled out of flow (e.g. captured site headers that
+      // ship with `position: fixed/sticky/absolute`, which report a 0
+      // bounding rect and would otherwise collapse the iframe to blank).
       const measured =
+        body.scrollHeight ||
         firstChild?.getBoundingClientRect().height ||
         firstChild?.offsetHeight ||
-        body.scrollHeight ||
         fallbackHeight;
       const final = Math.max(measured, minHeight);
       if (final > 0) iframe.style.height = `${final}px`;
@@ -712,6 +716,17 @@ export default function DemoPreview() {
                     width: 100%;
                     max-width: 100%;
                   }
+                  /* Neutralize fixed/sticky/absolute positioning on the
+                     top-level captured region only — some scraped sites
+                     (e.g. sticky-nav credit-union templates) rely on CSS
+                     classes that put the header out of flow and collapse
+                     the iframe to 0 height. Leave inner descendants alone
+                     so their internal flex/grid layout survives. */
+                  body > header, body > [class*="header"], body > nav {
+                    position: static !important;
+                    top: auto !important;
+                    transform: none !important;
+                  }
                   ${cssCtaLinks.map(l => `${l.cssSelector} { pointer-events: auto !important; cursor: pointer !important; }`).join('\n')}
                 </style>
                 ${previewDocument.cssContent ? `<style>${previewDocument.cssContent}</style>` : ''}
@@ -975,6 +990,13 @@ export default function DemoPreview() {
                   body > footer, body > [class*="footer"], body > div {
                     width: 100%;
                     max-width: 100%;
+                  }
+                  /* See header iframe: neutralize position on top-level
+                     footer only, not inner descendants. */
+                  body > footer, body > [class*="footer"] {
+                    position: static !important;
+                    bottom: auto !important;
+                    transform: none !important;
                   }
                 </style>
                 ${previewDocument.cssContent ? `<style>${previewDocument.cssContent}</style>` : ''}
