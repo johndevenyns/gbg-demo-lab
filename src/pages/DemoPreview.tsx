@@ -41,10 +41,14 @@ function fitIframeToContent(iframe: HTMLIFrameElement, opts: { minHeight?: numbe
       const body = iframe.contentDocument?.body;
       if (!body) return;
       const firstChild = body.firstElementChild as HTMLElement | null;
+      // Prefer body.scrollHeight so we still get a real height when the
+      // first child is pulled out of flow (e.g. captured site headers that
+      // ship with `position: fixed/sticky/absolute`, which report a 0
+      // bounding rect and would otherwise collapse the iframe to blank).
       const measured =
+        body.scrollHeight ||
         firstChild?.getBoundingClientRect().height ||
         firstChild?.offsetHeight ||
-        body.scrollHeight ||
         fallbackHeight;
       const final = Math.max(measured, minHeight);
       if (final > 0) iframe.style.height = `${final}px`;
