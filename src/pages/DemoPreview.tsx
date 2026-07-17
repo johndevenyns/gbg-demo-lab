@@ -716,14 +716,15 @@ export default function DemoPreview() {
                     width: 100%;
                     max-width: 100%;
                   }
-                  /* Neutralize fixed/sticky/absolute positioning that would
-                     pull the captured header out of flow and collapse the
-                     iframe height (some scraped sites — e.g. sticky-nav
-                     credit-union templates — rely on external CSS classes
-                     that were not inlined). */
-                  body > header, body > [class*="header"], body > nav,
-                  body > header *, body > [class*="header"] *, body > nav * {
+                  /* Neutralize fixed/sticky/absolute positioning on the
+                     top-level captured region only — some scraped sites
+                     (e.g. sticky-nav credit-union templates) rely on CSS
+                     classes that put the header out of flow and collapse
+                     the iframe to 0 height. Leave inner descendants alone
+                     so their internal flex/grid layout survives. */
+                  body > header, body > [class*="header"], body > nav {
                     position: static !important;
+                    top: auto !important;
                     transform: none !important;
                   }
                   ${cssCtaLinks.map(l => `${l.cssSelector} { pointer-events: auto !important; cursor: pointer !important; }`).join('\n')}
@@ -990,11 +991,11 @@ export default function DemoPreview() {
                     width: 100%;
                     max-width: 100%;
                   }
-                  /* See header iframe: prevent captured footers from being
-                     pulled out of flow by leftover position: fixed/sticky. */
-                  body > footer, body > [class*="footer"],
-                  body > footer *, body > [class*="footer"] * {
+                  /* See header iframe: neutralize position on top-level
+                     footer only, not inner descendants. */
+                  body > footer, body > [class*="footer"] {
                     position: static !important;
+                    bottom: auto !important;
                     transform: none !important;
                   }
                 </style>
