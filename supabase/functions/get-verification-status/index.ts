@@ -6,7 +6,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
-const BASE_URL = 'https://ditto.gbg.com';
+const BASE_URL = 'https://app.art-of-sales-engineering.com';
 
 serve(async (req) => {
   // Handle CORS preflight requests

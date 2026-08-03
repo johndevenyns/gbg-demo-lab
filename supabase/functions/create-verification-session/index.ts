@@ -6,9 +6,9 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
-const BASE_URL = 'https://ditto.gbg.com';
+const BASE_URL = 'https://app.art-of-sales-engineering.com';
 const LEGACY_HOSTS = [
-  'https://app.art-of-sales-engineering.com',
+  'https://ditto.gbg.com',
   'https://paulandcarolynn.com',
 ];
 const normalizeUrl = (url?: string) => {
