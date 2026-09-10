@@ -1,22 +1,13 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { buildDittoSessionPayload } from "../_shared/ditto-session.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
-const BASE_URL = 'https://app.art-of-sales-engineering.com';
-const LEGACY_HOSTS = [
-  'https://ditto.gbg.com',
-  'https://paulandcarolynn.com',
-];
-const normalizeUrl = (url?: string) => {
-  if (typeof url !== 'string' || url.length === 0) return url;
-  let out = url;
-  for (const legacy of LEGACY_HOSTS) out = out.split(legacy).join(BASE_URL);
-  return out;
-};
+const BASE_URL = 'https://ditto.gbg.com';
 
 const SENSITIVE_KEYS = new Set([
   'ssn', 'ssn4', 'dateOfBirth', 'birthday', 'dlNumber', 'documentNumber',
@@ -68,119 +59,6 @@ interface SessionResponse {
   error?: string;
   referenceId?: string;
   expiresAt?: string;
-}
-
-function buildPayload(req: CreateSessionRequest, referenceId: string) {
-  // Normalize various date inputs (MM/DD/YYYY, M/D/YY, YYYY-MM-DD, Date strings) to ISO YYYY-MM-DD
-  function normalizeDob(raw: string): string {
-    if (!raw) return '';
-    const s = raw.trim();
-    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
-    const slash = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
-    if (slash) {
-      const mm = slash[1].padStart(2, '0');
-      const dd = slash[2].padStart(2, '0');
-      let yyyy = slash[3];
-      if (yyyy.length === 2) {
-        const n = parseInt(yyyy, 10);
-        yyyy = (n > 30 ? '19' : '20') + yyyy;
-      }
-      return `${yyyy}-${mm}-${dd}`;
-    }
-    const d = new Date(s);
-    if (!isNaN(d.getTime())) {
-      const yyyy = d.getFullYear();
-      const mm = String(d.getMonth() + 1).padStart(2, '0');
-      const dd = String(d.getDate()).padStart(2, '0');
-      return `${yyyy}-${mm}-${dd}`;
-    }
-    return s;
-  }
-
-  const fd = req.formData || {};
-  const pick = (...keys: string[]) => {
-    for (const k of keys) {
-      const v = fd[k];
-      if (typeof v === 'string' && v.trim().length > 0) return v.trim();
-    }
-    return '';
-  };
-
-  const firstName = pick('firstName', 'first_name').toUpperCase();
-  const lastName = pick('lastName', 'last_name').toUpperCase();
-  const dateOfBirth = normalizeDob(pick('dateOfBirth', 'birthday', 'dob'));
-  const phoneDigits = pick('phone').replace(/\D/g, '');
-  const email = pick('email').toLowerCase();
-  const dlNumber = pick('dlNumber', 'documentNumber');
-  const dlState = pick('dlState');
-  const ssn4 = pick('ssn4');
-
-  const street = pick('streetAddress', 'street_address', 'addressStreet');
-  const apartment = pick('apartment');
-  const city = pick('city', 'addressCity', 'address_city');
-  const state = pick('state', 'addressState', 'address_state');
-  const zip = pick('zipCode', 'zip', 'zipcode', 'zip_code', 'addressZip', 'address_zip');
-  const combinedAddress = [street, apartment, city, state, zip]
-    .filter(Boolean)
-    .join(', ');
-
-  const identity: Record<string, string> = {};
-  if (firstName) identity.firstName = firstName;
-  if (lastName) identity.lastName = lastName;
-  if (dateOfBirth) identity.birthday = dateOfBirth;
-  if (combinedAddress) identity.address = combinedAddress;
-  if (phoneDigits) identity.phone = phoneDigits;
-  if (email) identity.email = email;
-  if (dlNumber) identity.dlNumber = dlNumber;
-  if (dlState) identity.dlState = dlState;
-  if (ssn4) identity.ssn4 = ssn4;
-
-  const base: Record<string, unknown> = {
-    verificationType: req.verificationType,
-    returnUrl: req.returnUrl || '',
-    customerName:
-      req.customerName ||
-      [firstName, lastName].filter(Boolean).join(' ') ||
-      'Verification Demo',
-    includeQr: req.includeQr ?? true,
-    referenceId,
-  };
-
-  if (req.resourceId) base.resourceId = req.resourceId;
-  if (req.logoUrl) base.logoUrl = req.logoUrl;
-
-  if (Object.keys(identity).length > 0) {
-    if (req.verificationType === 'dataBio') {
-      Object.assign(base, identity);
-    } else {
-      base.customerData = identity;
-    }
-  }
-
-  if (req.branding) {
-    const branding: Record<string, string> = {};
-    if (req.branding.headerTextColor) branding.headerTextColor = req.branding.headerTextColor;
-    if (req.branding.headerBgColor) branding.headerBgColor = req.branding.headerBgColor;
-    if (req.branding.buttonColor) branding.buttonColor = req.branding.buttonColor;
-    if (Object.keys(branding).length > 0) base.branding = branding;
-  }
-
-  if (req.verificationType === 'dataBio') {
-    const opts = req.dataBioOptions || {};
-    base.options = {
-      previousAddress: { enabled: false },
-      biometrics: {
-        enabled: opts.biometricsEnabled ?? true,
-        faceCount: opts.biometricsFaceCount ?? 1,
-      },
-      documents: {
-        enabled: opts.documentsEnabled ?? true,
-        count: opts.documentsCount ?? 2,
-      },
-    };
-  }
-
-  return base;
 }
 
 serve(async (req) => {
@@ -242,14 +120,14 @@ serve(async (req) => {
     const referenceIdPrefix = requestData.referenceIdPrefix || 'demo';
     const referenceId = `${referenceIdPrefix}-${Date.now()}`;
 
-    const requestPayload = buildPayload(requestData, referenceId);
+    const requestPayload = buildDittoSessionPayload(requestData, referenceId);
 
     console.log('=== API REQUEST PAYLOAD (redacted) ===');
     console.log(JSON.stringify(redact(requestPayload), null, 2));
     console.log('=== END PAYLOAD ===');
 
     // Diagnostic: confirm dateOfBirth format without leaking value
-    const dobVal = (requestPayload as any).birthday ?? (requestPayload as any).customerData?.birthday;
+    const dobVal = requestPayload.birthday;
     if (dobVal) {
       const isIso = /^\d{4}-\d{2}-\d{2}$/.test(String(dobVal));
       console.log('birthday format check:', { isIso, length: String(dobVal).length });
@@ -294,9 +172,9 @@ serve(async (req) => {
       );
     }
 
-    const verifyUrl = normalizeUrl(apiResponse.verifyUrl);
-    const shortUrl = normalizeUrl(apiResponse.qrCode?.shortUrl);
-    const qrCodeUrl = normalizeUrl(apiResponse.qrCode?.imageUrl) ||
+    const verifyUrl = apiResponse.verifyUrl;
+    const shortUrl = apiResponse.qrCode?.shortUrl;
+    const qrCodeUrl = apiResponse.qrCode?.imageUrl ||
       `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(verifyUrl ?? apiResponse.verifyUrl)}`;
 
     const result: SessionResponse = {
