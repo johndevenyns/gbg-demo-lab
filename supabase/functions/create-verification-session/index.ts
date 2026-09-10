@@ -10,7 +10,7 @@ const corsHeaders = {
 const BASE_URL = 'https://ditto.gbg.com';
 
 const SENSITIVE_KEYS = new Set([
-  'ssn', 'ssn4', 'dateOfBirth', 'birthday', 'dlNumber', 'documentNumber',
+  'firstName', 'lastName', 'ssn', 'ssn4', 'dateOfBirth', 'birthday', 'dlNumber', 'documentNumber',
   'address', 'streetAddress', 'apartment', 'phone', 'email', 'lqtkey',
   'resourceId', 'authorization',
 ]);
