@@ -185,6 +185,15 @@ export default function DemoPreview() {
     setSelectedUseCase(landingPageUseCases[0] || resolvedUseCases[0]);
   }, [hasUseCases, resolvedUseCases, landingPageUseCases, selectedUseCase, demo?.defaultLandingPageSlug]);
 
+  // Custom landing pages can link directly into a use case while preserving
+  // the mirrored site header and footer around the selected flow.
+  useEffect(() => {
+    const requestedId = searchParams.get('useCase');
+    if (!requestedId || !resolvedUseCases.length) return;
+    const target = resolvedUseCases.find(uc => uc.useCaseId === requestedId);
+    if (target) setSelectedUseCase(target);
+  }, [searchParams, resolvedUseCases]);
+
   // Honor a `selectUseCaseId` passed via navigation state (e.g. clicking a
   // use-case hotspot from a custom page navigates here and asks us to select it).
   useEffect(() => {
