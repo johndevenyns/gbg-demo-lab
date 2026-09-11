@@ -266,3 +266,93 @@
     }
   }
 }
+
+/* BetGBG demo landing page. Custom page HTML is sanitized before rendering,
+   so its scoped presentation lives here rather than inside the saved HTML. */
+.betgbg-page {
+  min-height: 100vh;
+  background: #fcf5fd;
+  color: #26142f;
+  font-family: "Nunito Sans", Arial, sans-serif;
+}
+
+.betgbg-nav {
+  height: 80px;
+  padding: 0 4%;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid #eadfeb;
+  background: #fffcff;
+}
+
+.betgbg-brand img { display: block; width: 132px; height: auto; }
+.betgbg-links { display: flex; gap: 44px; margin: auto; }
+.betgbg-nav a { color: #5d5665; font-size: 16px; font-weight: 700; text-decoration: none; }
+.betgbg-actions { display: flex; align-items: center; gap: 25px; margin-left: auto; }
+.betgbg-actions .signin { color: #26142f; }
+.betgbg-actions .join,
+.primary-cta { color: #fff; background: linear-gradient(120deg, #ed20c3, #8c2cf2); border-radius: 999px; }
+.betgbg-actions .join { padding: 13px 27px; }
+
+.betgbg-hero {
+  min-height: calc(100vh - 80px);
+  padding: 72px 4% 70px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(460px, .95fr);
+  align-items: center;
+  gap: 7%;
+}
+
+.eyebrow {
+  display: inline-block;
+  padding: 7px 16px;
+  border-radius: 999px;
+  background: #f4ddfa;
+  color: #b729d2;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+
+.betgbg-copy h1 {
+  max-width: 650px;
+  margin: 30px 0 24px;
+  color: #26142f;
+  font-size: 68px;
+  font-weight: 900;
+  line-height: 1.04;
+  letter-spacing: 0;
+}
+
+.gradient-text { color: #d82bd4; }
+.betgbg-copy p { max-width: 670px; margin: 0; color: #746d7a; font-size: 20px; line-height: 1.75; }
+.betgbg-ctas { display: flex; align-items: center; gap: 18px; margin-top: 30px; }
+.primary-cta { display: inline-flex; justify-content: center; padding: 18px 36px; font-size: 17px; font-weight: 800; text-decoration: none; }
+.secondary-cta { padding: 15px 0; color: #a62ee6; font-size: 16px; font-weight: 800; text-decoration: none; }
+.game-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+.game-card { min-height: 164px; padding: 29px 24px; display: flex; flex-direction: column; justify-content: center; background: #fff; border: 1px solid #eadfeb; border-radius: 18px; box-shadow: 0 2px 4px rgba(38, 20, 47, .03); }
+.game-icon { margin-bottom: 20px; font-size: 38px; line-height: 1; }
+.game-card strong { font-size: 18px; }
+.game-card span:not(.game-icon) { margin-top: 3px; color: #857d88; font-size: 14px; }
+
+@media (max-width: 900px) {
+  .betgbg-links { display: none; }
+  .betgbg-hero { grid-template-columns: 1fr; padding-top: 52px; }
+  .betgbg-copy h1 { font-size: 52px; }
+  .game-grid { margin-top: 8px; }
+}
+
+@media (max-width: 560px) {
+  .betgbg-nav { height: 68px; padding: 0 18px; }
+  .betgbg-brand img { width: 112px; }
+  .betgbg-actions .signin { display: none; }
+  .betgbg-actions .join { padding: 10px 16px; font-size: 14px; }
+  .betgbg-hero { padding: 40px 20px; }
+  .betgbg-copy h1 { font-size: 42px; }
+  .betgbg-copy p { font-size: 17px; }
+  .betgbg-ctas { align-items: flex-start; flex-direction: column; }
+  .primary-cta { width: 100%; }
+  .game-grid { grid-template-columns: 1fr; }
+  .game-card { min-height: 130px; }
+}
