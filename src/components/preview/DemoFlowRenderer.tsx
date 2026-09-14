@@ -3363,6 +3363,14 @@ export function DemoFlowRenderer({
   const showFailButton = showTestButtons && stepShowFail;
   const showAnyFillButton = (showPassButton || showFailButton) && (currentStep?.stepType === 'form' || !currentStep?.stepType);
 
+  // While a Digital ID journey is on screen, the heading/description come from the
+  // Digital ID config card (Custom Title / Custom Description) when provided.
+  const didTypeConfig = currentStep?.unifiedVerificationConfig?.typeConfigs?.['did'];
+  const didHeaderTitle = didSession ? (didTypeConfig?.customTitle || currentStep?.title) : currentStep?.title;
+  const didHeaderDescription = didSession
+    ? (didTypeConfig?.customDescription || currentStep?.description)
+    : currentStep?.description;
+
   return (
     <>
       {/* Address Validation Dialog */}
