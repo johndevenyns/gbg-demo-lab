@@ -1923,7 +1923,8 @@ export function DemoFlowRenderer({
       // 'next' - continue to next step
       goToNextStep();
     }
-  }, [createVerificationSession, steps, goToNextStep]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [createVerificationSession, steps, goToNextStep, didProviders]);
 
   // Handle unified verification type selection
   // Launch a Digital ID (DiD) flow: POST /api/verification/did, open launchUrl in a popup,
