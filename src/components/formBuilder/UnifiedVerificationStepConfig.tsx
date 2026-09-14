@@ -25,6 +25,7 @@ import {
   UserSelectionScreen,
 } from '@/types/verification';
 import { useVerificationTypes, useDidProviders } from '@/hooks/useVerificationAdmin';
+import { didProviderMatchesKey } from '@/lib/didProviders';
 import { 
   FileText, UserCheck, Database, Smartphone, QrCode, Activity, Clock, Settings2,
   ChevronRight, Check, AlertCircle, Loader2, ChevronDown, ChevronUp, GripVertical,
