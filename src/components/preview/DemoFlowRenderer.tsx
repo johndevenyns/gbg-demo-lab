@@ -2440,16 +2440,18 @@ export function DemoFlowRenderer({
               Continue on this device
               <ExternalLink className="w-4 h-4 ml-2" />
             </Button>
-            <p className="text-xs text-muted-foreground break-all max-w-md mx-auto">
-              <a
-                href={didSession.launchUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary underline"
+            <div>
+              <button
+                type="button"
+                className="text-xs text-primary underline"
+                onClick={() => {
+                  navigator.clipboard?.writeText(didSession.launchUrl);
+                  toast.success('Verification link copied');
+                }}
               >
-                {didSession.launchUrl}
-              </a>
-            </p>
+                Copy verification link
+              </button>
+            </div>
           </div>
 
           <div className="space-y-2">
