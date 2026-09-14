@@ -735,6 +735,7 @@ export function DemoFlowRenderer({
   const lastLoginUserData = useRef<Record<string, unknown> | undefined>(undefined);
   const pollingRef = useRef<NodeJS.Timeout | null>(null);
   const formSectionRef = useRef<HTMLDivElement | null>(null);
+  const previousStepIndexRef = useRef(currentStepIndex);
 
   // Fetch DiD providers for unified verification step
   const { data: didProvidersData } = useDidProviders(true);
@@ -768,9 +769,18 @@ export function DemoFlowRenderer({
   // Form validation state
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
-  // Keep each new step anchored to the form instead of jumping to the page header.
+  // Header links should land at the top of the page; advancing through the form
+  // itself (step 2 and onward) should anchor at the top of the form section.
   useEffect(() => {
-    formSectionRef.current?.scrollIntoView({ block: 'start', behavior: 'auto' });
+    const previous = previousStepIndexRef.current;
+    previousStepIndexRef.current = currentStepIndex;
+    if (currentStepIndex === 0) {
+      window.scrollTo({ top: 0, behavior: 'auto' });
+      return;
+    }
+    if (currentStepIndex > previous) {
+      formSectionRef.current?.scrollIntoView({ block: 'start', behavior: 'auto' });
+    }
   }, [currentStepIndex]);
 
   const style = formStyle || DEFAULT_FORM_STYLE;
