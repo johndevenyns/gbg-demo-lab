@@ -127,12 +127,14 @@ function QRCodeDisplay({
 
   if (finalImgSrc) {
     return (
-      <div className="bg-white p-4 rounded-lg inline-block shadow-md">
+      <div
+        className="bg-white p-4 rounded-lg inline-block shadow-md shrink-0"
+        style={{ width: size + 32, height: size + 32 }}
+      >
         <img
           src={finalImgSrc}
           alt="Verification QR Code"
-          style={{ width: size, height: size }}
-          className="mx-auto"
+          className="w-full h-full object-contain"
           onError={() => setImageError(true)}
         />
       </div>
@@ -140,7 +142,7 @@ function QRCodeDisplay({
   }
 
   return (
-    <div className="bg-white p-4 rounded-lg inline-block" style={{ width: size + 32, height: size + 32 }}>
+    <div className="bg-white p-4 rounded-lg inline-block shrink-0" style={{ width: size + 32, height: size + 32 }}>
       <div
         className="bg-muted border-2 border-dashed border-muted-foreground/30 rounded flex items-center justify-center"
         style={{ width: size, height: size }}
@@ -2439,26 +2441,26 @@ export function DemoFlowRenderer({
       return (
         <div className="space-y-4 pt-2">
           <div className="overflow-hidden rounded-lg border border-border bg-muted/20">
-            <div className="grid items-stretch md:grid-cols-[1fr_auto_1fr]">
-              <div className="flex min-h-52 flex-col items-center justify-center gap-4 px-6 py-8 text-center md:min-h-64 md:px-10">
+            <div className="grid items-stretch md:grid-cols-[minmax(0,220px)_auto_1fr]">
+              <div className="flex flex-col items-center justify-center gap-3 px-4 py-6 text-center">
                 <Button
-                  size="lg"
-                  className="min-h-12 w-full max-w-sm text-base"
+                  size="default"
+                  className="w-full text-sm"
                   onClick={() => window.open(didSession.launchUrl, '_blank', 'noopener,noreferrer')}
                   style={{ backgroundColor: buttonColor }}
                 >
-                  <ExternalLink className="h-5 w-5" />
+                  <ExternalLink className="h-4 w-4" />
                   Continue on this device
                 </Button>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   Opens the provider flow in a new tab.
                 </p>
               </div>
 
-              <div className="mx-6 h-px bg-border md:mx-0 md:my-8 md:h-auto md:w-px" aria-hidden="true" />
+              <div className="mx-4 h-px bg-border md:mx-0 md:my-6 md:h-auto md:w-px" aria-hidden="true" />
 
-              <div className="flex min-h-64 flex-col items-center justify-center gap-4 px-6 py-8 md:px-10">
-                <QRCodeDisplay value={didSession.launchUrl} size={220} />
+              <div className="flex flex-col items-center justify-center gap-3 px-6 py-6">
+                <QRCodeDisplay value={didSession.launchUrl} size={260} />
                 <p className="text-center text-sm text-muted-foreground">Or scan with your phone.</p>
               </div>
             </div>
