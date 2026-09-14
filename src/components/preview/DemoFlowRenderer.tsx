@@ -2930,9 +2930,6 @@ export function DemoFlowRenderer({
           // For doc/bio paths, show QR code and status
           return (
             <div className="text-center py-8 space-y-6">
-              {typeConfig?.customDescription && (
-                <p className="text-muted-foreground text-sm">{typeConfig.customDescription}</p>
-              )}
               {/* QR Code section */}
               {(typeConfig?.qrCodeEnabled !== false) && (
                 <div>
