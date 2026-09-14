@@ -617,6 +617,20 @@ function VerificationTypePanel({
     setLocalResourceId(typeConfig.resourceId || '');
   }, [typeConfig.resourceId]);
 
+  // Local buffers for free-text fields so re-renders don't interrupt typing
+  const [localTitle, setLocalTitle] = useState(typeConfig.customTitle || '');
+  const [titleFocused, setTitleFocused] = useState(false);
+  useEffect(() => {
+    if (!titleFocused) setLocalTitle(typeConfig.customTitle || '');
+  }, [typeConfig.customTitle, titleFocused]);
+
+  const [localDescription, setLocalDescription] = useState(typeConfig.customDescription || '');
+  const [descFocused, setDescFocused] = useState(false);
+  useEffect(() => {
+    if (!descFocused) setLocalDescription(typeConfig.customDescription || '');
+  }, [typeConfig.customDescription, descFocused]);
+
+
   // 3-tier values
   const globalDefault = globalType.defaultResourceId || '';
   const adminDefault = adminResourceIds.find(a => a.typeKey === typeKey)?.resourceId || '';
