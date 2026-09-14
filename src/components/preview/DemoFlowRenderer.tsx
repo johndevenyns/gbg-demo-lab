@@ -920,11 +920,22 @@ export function DemoFlowRenderer({
     });
 
     // Password fields can be renamed in the form builder. Populate every
-    // password-type field from the profile's canonical password value.
-    if (typeof data.password === 'string' && data.password.trim() !== '') {
+    // password-type (or password-named) field from any password-ish value
+    // stored on the profile.
+    const passwordValue = [
+      data.password,
+      data.userPassword,
+      data.loginPassword,
+      data.confirmPassword,
+      ...Object.keys(data)
+        .filter((k) => /password|passcode|pwd/i.test(k))
+        .map((k) => data[k]),
+    ].find((v) => typeof v === 'string' && v.trim() !== '');
+
+    if (passwordValue) {
       currentStep?.fields.forEach((field) => {
-        if (field.type === 'password') {
-          expandedData[field.name] = data.password;
+        if (field.type === 'password' || /password|passcode|pwd/i.test(field.name)) {
+          expandedData[field.name] = passwordValue;
         }
       });
     }
