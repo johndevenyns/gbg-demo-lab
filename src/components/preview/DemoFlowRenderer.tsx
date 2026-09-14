@@ -8,7 +8,7 @@ import { useDidProviders } from '@/hooks/useVerificationAdmin';
 import { useResolvedResourceIds } from '@/hooks/useAdminResourceIds';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, QrCode, ArrowLeft, ArrowRight, Check, Copy, ExternalLink, AlertCircle, Smartphone, CheckCircle2, XCircle } from 'lucide-react';
+import { Loader2, QrCode, ArrowLeft, ArrowRight, Check, Copy, ExternalLink, AlertCircle, Smartphone, CheckCircle2, XCircle, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { ResultPage, ResultPageConfig, DEFAULT_SUCCESS_CONFIG, DEFAULT_FAILURE_CONFIG } from './ResultPage';
@@ -719,6 +719,7 @@ export function DemoFlowRenderer({
     providerName: string;
     status: string;
   } | null>(null);
+  const [showDidUrl, setShowDidUrl] = useState(false);
   const [hostedJourneyLaunchedStepId, setHostedJourneyLaunchedStepId] = useState<string | null>(null);
   // Use ref for verification session data to avoid race condition with state updates
   const verificationSessionDataRef = useRef<{
@@ -1950,6 +1951,7 @@ export function DemoFlowRenderer({
     setIsLoading(true);
     setError(null);
     setDidSession(null);
+    setShowDidUrl(false);
 
     try {
       logPortalActivity({
@@ -2432,39 +2434,75 @@ export function DemoFlowRenderer({
       const didStatus = didSession.status;
       const didPending = didStatus === 'InProgress' || didStatus === 'pending';
       return (
-        <div className="text-center py-8 space-y-6">
-          <div>
-            <p className="text-lg font-medium">{didSession.providerName}</p>
-            <p className="text-sm text-muted-foreground mt-1">
-              Scan the code with your phone to verify with {didSession.providerName}.
-            </p>
-          </div>
+        <div className="space-y-4 pt-2">
+          <div className="overflow-hidden rounded-lg border border-border bg-muted/20">
+            <div className="grid items-stretch md:grid-cols-[1fr_auto_1fr]">
+              <div className="flex min-h-52 flex-col items-center justify-center gap-4 px-6 py-8 text-center md:min-h-64 md:px-10">
+                <Button
+                  size="lg"
+                  className="min-h-12 w-full max-w-sm text-base"
+                  onClick={() => window.open(didSession.launchUrl, '_blank', 'noopener,noreferrer')}
+                  style={{ backgroundColor: buttonColor }}
+                >
+                  <ExternalLink className="h-5 w-5" />
+                  Continue on this device
+                </Button>
+                <p className="text-sm text-muted-foreground">
+                  Opens the provider flow in a new tab.
+                </p>
+              </div>
 
-          <QRCodeDisplay value={didSession.launchUrl} size={200} />
+              <div className="mx-6 h-px bg-border md:mx-0 md:my-8 md:h-auto md:w-px" aria-hidden="true" />
 
-          <div className="space-y-3">
-            <Button
-              onClick={() => window.open(didSession.launchUrl, '_blank', 'noopener')}
-              style={{ backgroundColor: buttonColor }}
-            >
-              Continue on this device
-              <ExternalLink className="w-4 h-4 ml-2" />
-            </Button>
-            <div>
-              <button
+              <div className="flex min-h-64 flex-col items-center justify-center gap-4 px-6 py-8 md:px-10">
+                <QRCodeDisplay value={didSession.launchUrl} size={220} />
+                <p className="text-center text-sm text-muted-foreground">Or scan with your phone.</p>
+              </div>
+            </div>
+
+            <div className="border-t border-border px-5 py-4 md:px-8">
+              <Button
                 type="button"
-                className="text-xs text-primary underline"
-                onClick={() => {
-                  navigator.clipboard?.writeText(didSession.launchUrl);
-                  toast.success('Verification link copied');
-                }}
+                variant="ghost"
+                className="h-auto px-0 py-1 text-primary hover:bg-transparent hover:text-primary/80"
+                aria-expanded={showDidUrl}
+                aria-controls="digital-id-provider-url"
+                onClick={() => setShowDidUrl(current => !current)}
               >
-                Copy verification link
-              </button>
+                <ChevronRight className={`h-4 w-4 transition-transform ${showDidUrl ? 'rotate-90' : ''}`} />
+                Show URL
+              </Button>
+
+              {showDidUrl && (
+                <div id="digital-id-provider-url" className="mt-3 flex items-center gap-2 rounded-md border border-border bg-background p-2">
+                  <a
+                    href={didSession.launchUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="min-w-0 flex-1 break-all text-sm text-primary underline underline-offset-2"
+                  >
+                    {didSession.launchUrl}
+                  </a>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="shrink-0"
+                    aria-label="Copy verification URL"
+                    title="Copy verification URL"
+                    onClick={() => {
+                      navigator.clipboard?.writeText(didSession.launchUrl);
+                      toast.success('Verification link copied');
+                    }}
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-2 text-center" aria-live="polite">
             <Badge
               variant="outline"
               className={`
@@ -2478,7 +2516,7 @@ export function DemoFlowRenderer({
             {didPending && (
               <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
                 <Loader2 className="w-4 h-4 animate-spin" />
-                Waiting for verification...
+                Waiting for {didSession.providerName} verification…
               </div>
             )}
           </div>
