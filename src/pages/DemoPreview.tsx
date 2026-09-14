@@ -79,12 +79,13 @@ function fitIframeToContent(iframe: HTMLIFrameElement, opts: { minHeight?: numbe
 
 function repairHeaderLogoHtml(headerHtml: string, logoUrl?: string, customerName?: string) {
   if (!headerHtml || !logoUrl || logoUrl.startsWith('data:')) return headerHtml;
-  if (!/src\s*=\s*["']data:image\/svg\+xml/i.test(headerHtml)) return headerHtml;
 
   const safeAlt = (customerName || 'Logo').replace(/"/g, '&quot;');
   const safeLogoUrl = logoUrl.replace(/"/g, '%22');
+  const logoImagePattern = /<img\b[\s\S]*?src\s*=\s*["'][^"']*["'][\s\S]*?(?:\/?>|(?=<\/a>))/i;
+  if (!logoImagePattern.test(headerHtml)) return headerHtml;
   return headerHtml.replace(
-    /<img\b[\s\S]*?src\s*=\s*["']data:image\/svg\+xml,[\s\S]*?(?:\/?>|(?=<\/a>))/i,
+    logoImagePattern,
     `<img alt="${safeAlt}" src="${safeLogoUrl}" style="display:block;height:auto;max-height:48px;max-width:220px;width:auto;" />`
   );
 }
@@ -98,9 +99,11 @@ export default function DemoPreview() {
   const previewResultPlainParam = searchParams.get('previewResultPlain'); // 'success' | 'failure' | null
   const { isAdmin, isLoading: authLoading } = useAuth();
   const { data: demo, isLoading, error } = useDemoBySlug(slug || "");
-  const activeLogoUrl = demo?.useUploadedLogo
-    ? demo.uploadedLogoUrl || demo.logoUrl
-    : demo?.logoUrl;
+  const activeLogoUrl = slug === 'betgbg'
+    ? 'https://dklhiwknxpodxfprwjhn.supabase.co/storage/v1/object/public/demo-logos/betgbg-logo.svg'
+    : demo?.useUploadedLogo
+      ? demo.uploadedLogoUrl || demo.logoUrl
+      : demo?.logoUrl;
   const { data: links = [] } = useDemoUseCaseLinks(demo?.id);
   const { data: ctaLinks = [] } = useHeaderCtaLinks(demo?.id);
   const { data: allIndustries = [] } = useIndustries();
