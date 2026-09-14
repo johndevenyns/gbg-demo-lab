@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { FormStyleConfig, DEFAULT_FORM_STYLE } from '@/types/formStyle';
 import { UnifiedVerificationConfig, UserSelectionChoice, SelectionIconType, DidProvider } from '@/types/verification';
 import { VerificationType } from '@/types/demo';
+import { didProviderMatchesKey, getDidProviderScope } from '@/lib/didProviders';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
@@ -84,7 +85,7 @@ export function UnifiedVerificationRenderer({
       return didProviders.filter(p => p.isEnabled);
     }
     
-    return didProviders.filter(p => p.isEnabled && enabledKeys.includes(p.providerKey));
+    return didProviders.filter(p => p.isEnabled && enabledKeys.some(key => didProviderMatchesKey(p, key)));
   }, [config.typeConfigs, didProviders]);
 
   const handleChoiceSelect = useCallback((choice: UserSelectionChoice, providerId?: string) => {
@@ -105,7 +106,8 @@ export function UnifiedVerificationRenderer({
   const handleDidProviderSelect = useCallback((choice: UserSelectionChoice, provider: DidProvider) => {
     // Ditto expects the provider's upstream scope (e.g. "sweden-bankid"), which is
     // stored on the provider record. Fall back to the key for legacy rows.
-    const dittoScope = provider.scope?.[0] || provider.providerKey;
+    const dittoScope = getDidProviderScope(provider);
+    if (!dittoScope) return;
     handleChoiceSelect(choice, dittoScope);
   }, [handleChoiceSelect]);
 

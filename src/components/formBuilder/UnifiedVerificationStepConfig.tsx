@@ -927,7 +927,7 @@ function VerificationTypePanel({
           </Label>
           <div className="grid grid-cols-2 gap-2">
             {didProviders.map((provider) => {
-              const isEnabled = typeConfig.enabledProviderKeys?.includes(provider.providerKey) ?? true;
+              const isEnabled = typeConfig.enabledProviderKeys?.some(key => didProviderMatchesKey(provider, key)) ?? true;
               
               return (
                 <div
