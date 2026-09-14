@@ -2930,9 +2930,6 @@ export function DemoFlowRenderer({
           // For doc/bio paths, show QR code and status
           return (
             <div className="text-center py-8 space-y-6">
-              {typeConfig?.customDescription && (
-                <p className="text-muted-foreground text-sm">{typeConfig.customDescription}</p>
-              )}
               {/* QR Code section */}
               {(typeConfig?.qrCodeEnabled !== false) && (
                 <div>
@@ -3363,13 +3360,31 @@ export function DemoFlowRenderer({
   const showFailButton = showTestButtons && stepShowFail;
   const showAnyFillButton = (showPassButton || showFailButton) && (currentStep?.stepType === 'form' || !currentStep?.stepType);
 
-  // While a Digital ID journey is on screen, the heading/description come from the
-  // Digital ID config card (Custom Title / Custom Description) when provided.
-  const didTypeConfig = currentStep?.unifiedVerificationConfig?.typeConfigs?.['did'];
-  const didHeaderTitle = didSession ? (didTypeConfig?.customTitle || currentStep?.title) : currentStep?.title;
-  const didHeaderDescription = didSession
-    ? (didTypeConfig?.customDescription || currentStep?.description)
-    : currentStep?.description;
+  // While any verification journey is on screen, the heading/description come from the
+  // active type's config card (Custom Title / Custom Description) when provided,
+  // falling back to the step's own title/description when those fields are empty.
+  const uvHeaderCfg = currentStep?.unifiedVerificationConfig;
+  let headerTitle = currentStep?.title;
+  let headerDescription = currentStep?.description;
+  if (currentStep?.stepType === 'unified_verification' && uvHeaderCfg) {
+    const VTYPE_TO_TYPE_KEY: Record<string, string> = {
+      docBio: 'docbio',
+      dataBio: 'databio',
+      dataOnly: 'dataonly',
+    };
+    const activeTypeKey = didSession
+      ? 'did'
+      : selectedVerificationType
+        ? (VTYPE_TO_TYPE_KEY[selectedVerificationType] || 'did')
+        : (uvHeaderCfg.enabledTypes || [])[0];
+    const activeTypeCfg = activeTypeKey ? uvHeaderCfg.typeConfigs?.[activeTypeKey] : undefined;
+    // Only override the step header once a journey is actually running/selected,
+    // so the method-selection screen keeps the step's own wording.
+    if ((didSession || verificationSessionId || selectedVerificationType) && activeTypeCfg) {
+      headerTitle = activeTypeCfg.customTitle || headerTitle;
+      headerDescription = activeTypeCfg.customDescription || headerDescription;
+    }
+  }
 
   return (
     <>
@@ -3416,7 +3431,7 @@ export function DemoFlowRenderer({
             color: style.titleColor || '#1a1a2e',
           }}
         >
-          {didHeaderTitle}
+          {headerTitle}
         </h2>
         
         {/* Fill Pass / Fill Fail buttons - subtle gray style */}
@@ -3467,8 +3482,8 @@ export function DemoFlowRenderer({
           </div>
         )}
         
-        {didHeaderDescription && (
-          <p className="text-sm text-muted-foreground">{didHeaderDescription}</p>
+        {headerDescription && (
+          <p className="text-sm text-muted-foreground">{headerDescription}</p>
         )}
       </div>
       )}
