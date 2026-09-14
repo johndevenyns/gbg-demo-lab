@@ -3416,7 +3416,7 @@ export function DemoFlowRenderer({
             color: style.titleColor || '#1a1a2e',
           }}
         >
-          {currentStep?.title}
+          {didHeaderTitle}
         </h2>
         
         {/* Fill Pass / Fill Fail buttons - subtle gray style */}
@@ -3467,8 +3467,8 @@ export function DemoFlowRenderer({
           </div>
         )}
         
-        {currentStep?.description && (
-          <p className="text-sm text-muted-foreground">{currentStep.description}</p>
+        {didHeaderDescription && (
+          <p className="text-sm text-muted-foreground">{didHeaderDescription}</p>
         )}
       </div>
       )}
