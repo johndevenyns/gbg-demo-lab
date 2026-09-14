@@ -127,12 +127,14 @@ function QRCodeDisplay({
 
   if (finalImgSrc) {
     return (
-      <div className="bg-white p-4 rounded-lg inline-block shadow-md">
+      <div
+        className="bg-white p-4 rounded-lg inline-block shadow-md shrink-0"
+        style={{ width: size + 32, height: size + 32 }}
+      >
         <img
           src={finalImgSrc}
           alt="Verification QR Code"
-          style={{ width: size, height: size }}
-          className="mx-auto"
+          className="w-full h-full object-contain"
           onError={() => setImageError(true)}
         />
       </div>
@@ -140,7 +142,7 @@ function QRCodeDisplay({
   }
 
   return (
-    <div className="bg-white p-4 rounded-lg inline-block" style={{ width: size + 32, height: size + 32 }}>
+    <div className="bg-white p-4 rounded-lg inline-block shrink-0" style={{ width: size + 32, height: size + 32 }}>
       <div
         className="bg-muted border-2 border-dashed border-muted-foreground/30 rounded flex items-center justify-center"
         style={{ width: size, height: size }}
