@@ -712,6 +712,13 @@ export function DemoFlowRenderer({
   const [selectedDecisionChoice, setSelectedDecisionChoice] = useState<DecisionChoice | null>(null);
   const [verificationSessionId, setVerificationSessionId] = useState<string | null>(null);
   const [pollingStatus, setPollingStatus] = useState<string | null>(null);
+  // Active Digital ID (DiD) journey: shown as a QR code + link while we poll for the result.
+  const [didSession, setDidSession] = useState<{
+    launchUrl: string;
+    verificationId: string;
+    providerName: string;
+    status: string;
+  } | null>(null);
   const [hostedJourneyLaunchedStepId, setHostedJourneyLaunchedStepId] = useState<string | null>(null);
   // Use ref for verification session data to avoid race condition with state updates
   const verificationSessionDataRef = useRef<{
@@ -1903,7 +1910,7 @@ export function DemoFlowRenderer({
         if (provider) {
           toast.info(`${provider.name} selected - starting verification...`);
         }
-        launchDigitalIdFlow(scope);
+        launchDigitalIdFlow(scope, undefined, provider?.name);
         return;
       }
 
@@ -1927,14 +1934,12 @@ export function DemoFlowRenderer({
   }, [createVerificationSession, steps, goToNextStep, didProviders]);
 
   // Handle unified verification type selection
-  // Launch a Digital ID (DiD) flow: POST /api/verification/did, open launchUrl in a popup,
-  // poll status, then route to approvedUrl/rejectedUrl on terminal status.
-  const launchDigitalIdFlow = useCallback(async (providerScope: string, stepResourceId?: string) => {
+  // Launch a Digital ID (DiD) flow: POST /api/verification/did, show the launch URL as a
+  // QR code / link, poll status, then route to approvedUrl/rejectedUrl on terminal status.
+  const launchDigitalIdFlow = useCallback(async (providerScope: string, stepResourceId?: string, providerName?: string) => {
     setIsLoading(true);
     setError(null);
-
-    // Open popup synchronously inside the user gesture so it isn't blocked.
-    const popup = window.open('about:blank', 'gbg-did', 'width=480,height=720');
+    setDidSession(null);
 
     try {
       logPortalActivity({
@@ -2002,20 +2007,20 @@ export function DemoFlowRenderer({
       await pollLaunchUrl();
 
       if (!launchUrl) {
-        if (popup && !popup.closed) popup.close();
         throw new Error('Digital ID provider did not return a launch URL in time');
       }
 
-      // Hand the popup off to the provider's launch URL.
-      if (popup && !popup.closed) {
-        popup.location.href = launchUrl;
-      } else {
-        // Popup blocked — fall back to redirecting the current window.
-        window.location.href = launchUrl;
-        return;
-      }
+      // Show the launch URL on the page (QR code + link) so it can be started
+      // here or continued on a phone.
+      setDidSession({
+        launchUrl,
+        verificationId,
+        providerName: providerName || 'Digital ID',
+        status: 'InProgress',
+      });
+      setIsLoading(false);
 
-      // Poll status every 2s until terminal or popup closed.
+      // Poll status every 2s until terminal.
       let success = false;
       let terminalStatus = 'InProgress';
       const startedAt = Date.now();
@@ -2026,6 +2031,11 @@ export function DemoFlowRenderer({
           const { data: s } = await supabase.functions.invoke('get-did-verification', {
             body: { verificationId, demoId },
           });
+          if (s?.status) {
+            setDidSession(prev => (prev && prev.verificationId === verificationId
+              ? { ...prev, status: s.status }
+              : prev));
+          }
           if (s?.isComplete) {
             success = !!s.isPassed;
             terminalStatus = s.status || 'Completed';
@@ -2034,22 +2044,7 @@ export function DemoFlowRenderer({
         } catch (pollErr) {
           console.error('DiD poll error:', pollErr);
         }
-        if (popup?.closed) {
-          // Final check after user closes the popup.
-          try {
-            const { data: s } = await supabase.functions.invoke('get-did-verification', {
-              body: { verificationId, demoId },
-            });
-            if (s?.isComplete) {
-              success = !!s.isPassed;
-              terminalStatus = s.status || 'Completed';
-            }
-          } catch {}
-          break;
-        }
       }
-
-      if (popup && !popup.closed) popup.close();
 
       logPortalActivity({
         action: success ? 'verification_completed' : 'verification_failed',
@@ -2067,7 +2062,7 @@ export function DemoFlowRenderer({
         toast.message(success ? 'Verification approved' : `Verification ${terminalStatus}`);
       }
     } catch (err) {
-      if (popup && !popup.closed) popup.close();
+      setDidSession(null);
       console.error('Digital ID flow failed:', err);
       const msg = err instanceof Error ? err.message : 'Failed to start Digital ID verification';
       setError(msg);
@@ -2125,7 +2120,8 @@ export function DemoFlowRenderer({
         return;
       }
       console.log('Starting Digital ID verification with scope:', scope);
-      launchDigitalIdFlow(scope, stepResourceId || undefined);
+      const matched = didProviders.find(p => p.scope?.[0] === scope || p.providerKey === scope);
+      launchDigitalIdFlow(scope, stepResourceId || undefined, matched?.displayName);
       return;
     }
 
@@ -2419,6 +2415,67 @@ export function DemoFlowRenderer({
   // Render based on step type
   const renderStepContent = () => {
     if (!currentStep) return null;
+
+    // An active Digital ID journey takes over the step area: show the provider
+    // launch link as a QR code plus a direct button, and reflect live status.
+    if (didSession) {
+      const didStatus = didSession.status;
+      const didPending = didStatus === 'InProgress' || didStatus === 'pending';
+      return (
+        <div className="text-center py-8 space-y-6">
+          <div>
+            <p className="text-lg font-medium">{didSession.providerName}</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              Scan the code with your phone to verify with {didSession.providerName}.
+            </p>
+          </div>
+
+          <QRCodeDisplay value={didSession.launchUrl} size={200} />
+
+          <div className="space-y-3">
+            <Button
+              onClick={() => window.open(didSession.launchUrl, '_blank', 'noopener')}
+              style={{ backgroundColor: buttonColor }}
+            >
+              Continue on this device
+              <ExternalLink className="w-4 h-4 ml-2" />
+            </Button>
+            <div>
+              <button
+                type="button"
+                className="text-xs text-primary underline"
+                onClick={() => {
+                  navigator.clipboard?.writeText(didSession.launchUrl);
+                  toast.success('Verification link copied');
+                }}
+              >
+                Copy verification link
+              </button>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Badge
+              variant="outline"
+              className={`
+                ${didStatus === 'Completed' ? 'bg-green-500/20 text-green-600 border-green-500/30' : ''}
+                ${didStatus === 'Failed' || didStatus === 'Expired' ? 'bg-red-500/20 text-red-600 border-red-500/30' : ''}
+                ${didPending ? 'bg-yellow-500/20 text-yellow-600 border-yellow-500/30' : ''}
+              `}
+            >
+              Status: {didStatus}
+            </Badge>
+            {didPending && (
+              <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Waiting for verification...
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
 
     switch (currentStep.stepType) {
       case 'api':
