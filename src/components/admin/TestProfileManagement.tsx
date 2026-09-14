@@ -42,7 +42,7 @@ import {
 } from '@/hooks/useTestProfiles';
 
 // Profile fields matching expected CSV headers
-const PROFILE_FIELDS = [
+const PROFILE_FIELDS: Array<{ name: string; label: string; type?: string }> = [
   { name: 'firstName', label: 'First Name' },
   { name: 'lastName', label: 'Last Name' },
   { name: 'streetAddress', label: 'Street Address' },
