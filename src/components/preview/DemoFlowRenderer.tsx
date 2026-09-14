@@ -1888,17 +1888,28 @@ export function DemoFlowRenderer({
         'docbio': 'docBio',
         'databio': 'dataBio',
         'dataonly': 'dataOnly',
-        'did': 'dataBio', // DiD falls back to dataBio for now
+        'did': 'dataBio',
       };
+
+      // Digital ID choices go to the dedicated Digital ID journey.
+      if (choice.verificationType === 'did') {
+        const scope = provider?.providerKey
+          || didProviders.find(p => p.isEnabled)?.scope?.[0]
+          || didProviders.find(p => p.isEnabled)?.providerKey;
+        if (!scope) {
+          toast.error('No Digital ID provider is available.');
+          return;
+        }
+        if (provider) {
+          toast.info(`${provider.name} selected - starting verification...`);
+        }
+        launchDigitalIdFlow(scope);
+        return;
+      }
+
       const vType = verificationTypeMap[choice.verificationType || 'docbio'] || 'docBio';
       setSelectedVerificationType(vType);
-      
-      // Log the selected provider for DiD if provided
-      if (provider) {
-        console.log('DiD provider selected:', provider.name, provider.providerKey);
-        toast.info(`${provider.name} selected - starting verification...`);
-      }
-      
+
       createVerificationSession(vType);
     } else if (choice.destinationType === 'step') {
       // Jump to specific step
@@ -2119,7 +2130,7 @@ export function DemoFlowRenderer({
 
     // All other verification types use the shared session creation flow.
     createVerificationSession(verificationType, true, stepResourceId || undefined, false, dataBioOptions);
-  }, [createVerificationSession, launchDigitalIdFlow, currentStep?.unifiedVerificationConfig]);
+  }, [createVerificationSession, launchDigitalIdFlow, didProviders, currentStep?.unifiedVerificationConfig]);
 
   // Trinsic mobile popup launcher — MUST be called from a user gesture (e.g. onClick)
   // so the browser allows window.open(). The session is created inside
