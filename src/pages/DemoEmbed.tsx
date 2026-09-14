@@ -54,7 +54,7 @@ export default function DemoEmbed() {
             referenceIdPrefix={demo.referenceIdPrefix}
             storedTestData={demo.storedTestData}
             showTestButtons={false}
-            logoUrl={demo.logoUrl}
+            logoUrl={demo.useUploadedLogo ? demo.uploadedLogoUrl || demo.logoUrl : demo.logoUrl}
             headerBgColor={demo.headerBgColor}
             headerTextColor={demo.headerTextColor}
             resourceId={demo.resourceId}

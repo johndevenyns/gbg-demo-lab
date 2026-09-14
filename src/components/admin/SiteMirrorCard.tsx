@@ -474,7 +474,11 @@ interface SiteMirrorCardProps {
      // Determine which content to show based on active method
      const showingMethod = activeMethod;
       const headerHtml = showingMethod === 'html'
-        ? repairHeaderLogoHtml(demo.mirrorHtmlHeaderHtml, demo.logoUrl, demo.customerName)
+        ? repairHeaderLogoHtml(
+            demo.mirrorHtmlHeaderHtml,
+            demo.useUploadedLogo ? demo.uploadedLogoUrl || demo.logoUrl : demo.logoUrl,
+            demo.customerName,
+          )
         : demo.mirrorScreenshotHeaderHtml;
      const footerHtml = showingMethod === 'html' ? demo.mirrorHtmlFooterHtml : demo.mirrorScreenshotFooterHtml;
      const cssContent = showingMethod === 'html' ? demo.mirrorHtmlCss : demo.mirrorScreenshotCss;

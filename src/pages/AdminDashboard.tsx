@@ -153,7 +153,7 @@ export default function AdminDashboard() {
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
                   <DemoLogo
-                    url={demo.logoUrl}
+                    url={demo.useUploadedLogo ? demo.uploadedLogoUrl || demo.logoUrl : demo.logoUrl}
                     fallbackColor={demo.buttonColor}
                     fallbackIcon={industryIcons[demo.industryTemplate]}
                     headerBgColor={demo.headerBgColor}
