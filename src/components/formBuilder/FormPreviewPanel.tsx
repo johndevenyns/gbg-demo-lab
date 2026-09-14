@@ -152,7 +152,7 @@ export function FormPreviewPanel({ demo }: FormPreviewPanelProps) {
                     referenceIdPrefix={demo.referenceIdPrefix}
                     storedTestData={effectiveStoredTestData}
                     showTestButtons={true}
-                    logoUrl={demo.logoUrl}
+                    logoUrl={demo.useUploadedLogo ? demo.uploadedLogoUrl || demo.logoUrl : demo.logoUrl}
                     headerBgColor={demo.headerBgColor}
                     headerTextColor={demo.headerTextColor}
                     resourceId={demo.resourceId}

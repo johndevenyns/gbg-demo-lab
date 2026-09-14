@@ -98,6 +98,9 @@ export default function DemoPreview() {
   const previewResultPlainParam = searchParams.get('previewResultPlain'); // 'success' | 'failure' | null
   const { isAdmin, isLoading: authLoading } = useAuth();
   const { data: demo, isLoading, error } = useDemoBySlug(slug || "");
+  const activeLogoUrl = demo?.useUploadedLogo
+    ? demo.uploadedLogoUrl || demo.logoUrl
+    : demo?.logoUrl;
   const { data: links = [] } = useDemoUseCaseLinks(demo?.id);
   const { data: ctaLinks = [] } = useHeaderCtaLinks(demo?.id);
   const { data: allIndustries = [] } = useIndustries();
@@ -340,7 +343,7 @@ export default function DemoPreview() {
       headerHtml = demo.mirrorScreenshotHeaderHtml || '';
       footerHtml = demo.mirrorScreenshotFooterHtml || '';
     } else {
-      headerHtml = repairHeaderLogoHtml(demo.mirrorHtmlHeaderHtml || demo.scrapedHeaderHtml || '', demo.logoUrl, demo.customerName);
+      headerHtml = repairHeaderLogoHtml(demo.mirrorHtmlHeaderHtml || demo.scrapedHeaderHtml || '', activeLogoUrl, demo.customerName);
       footerHtml = demo.mirrorHtmlFooterHtml || demo.scrapedFooterHtml || '';
       cssContent = demo.mirrorHtmlCss || demo.scrapedCss || '';
     }
@@ -349,7 +352,7 @@ export default function DemoPreview() {
       headerHtml = `
         <header style="padding: 16px 24px; background: ${demo.headerBgColor || '#1a1a2e'}; color: ${demo.headerTextColor || '#ffffff'};">
           <div style="max-width: 1200px; margin: 0 auto; display: flex; align-items: center; gap: 16px;">
-            ${demo.logoUrl ? `<img src="${demo.logoUrl}" alt="${demo.customerName}" style="height: 32px;" />` : ''}
+            ${activeLogoUrl ? `<img src="${activeLogoUrl}" alt="${demo.customerName}" style="height: 32px;" />` : ''}
             <span style="font-weight: 600; font-size: 18px;">${demo.customerName}</span>
           </div>
         </header>
@@ -357,7 +360,7 @@ export default function DemoPreview() {
     }
 
     return { headerHtml, footerHtml, cssContent, formStyle };
-  }, [demo]);
+  }, [demo, activeLogoUrl]);
 
   if (isLoading) {
     return (
@@ -458,7 +461,7 @@ export default function DemoPreview() {
       referenceIdPrefix={demo.referenceIdPrefix}
       storedTestData={effectiveStoredTestData}
       showTestButtons={true}
-      logoUrl={demo.logoUrl}
+      logoUrl={activeLogoUrl}
       headerBgColor={demo.headerBgColor}
       headerTextColor={demo.headerTextColor}
       resourceId={demo.resourceId}
@@ -470,16 +473,8 @@ export default function DemoPreview() {
       onNavigateToPortal={handleNavigateToPortal}
       onComplete={handleFlowComplete}
       onLoginSuccess={handleLoginSuccess}
-      mirrorHeaderHtml={
-        demo.mirrorActiveMethod === 'screenshot'
-          ? demo.mirrorScreenshotHeaderHtml
-          : demo.mirrorHtmlHeaderHtml || demo.scrapedHeaderHtml
-      }
-      mirrorFooterHtml={
-        demo.mirrorActiveMethod === 'screenshot'
-          ? demo.mirrorScreenshotFooterHtml
-          : demo.mirrorHtmlFooterHtml || demo.scrapedFooterHtml
-      }
+      mirrorHeaderHtml={previewDocument?.headerHtml}
+      mirrorFooterHtml={previewDocument?.footerHtml}
       mirrorCss={
         demo.mirrorActiveMethod === 'screenshot'
           ? demo.mirrorScreenshotCss
@@ -503,7 +498,7 @@ export default function DemoPreview() {
             userName={portalUserName}
             userEmail={portalUser.email}
             accentColor={demo.buttonColor || '#DC2626'}
-            logoUrl={demo.useUploadedLogo ? demo.uploadedLogoUrl : demo.logoUrl}
+            logoUrl={activeLogoUrl}
             pharmacyName={demo.customerName}
             portalConfig={demoIndustry?.portalConfig}
             branding={portalBranding}
@@ -515,7 +510,7 @@ export default function DemoPreview() {
             userName={portalUserName}
             userEmail={portalUser.email}
             accentColor={demo.buttonColor || '#6366F1'}
-            logoUrl={demo.useUploadedLogo ? demo.uploadedLogoUrl : demo.logoUrl}
+            logoUrl={activeLogoUrl}
             storeName={demo.customerName}
             portalConfig={demoIndustry?.portalConfig}
             branding={portalBranding}
@@ -528,7 +523,7 @@ export default function DemoPreview() {
             userName={portalUserName}
             userEmail={portalUser.email}
             accentColor={demo.buttonColor || '#22C55E'}
-            logoUrl={demo.useUploadedLogo ? demo.uploadedLogoUrl : demo.logoUrl}
+            logoUrl={activeLogoUrl}
             siteName={demo.customerName}
             portalConfig={demoIndustry?.portalConfig}
             branding={portalBranding}
@@ -541,7 +536,7 @@ export default function DemoPreview() {
             userName={portalUserName}
             userEmail={portalUser.email}
             accentColor={demo.buttonColor || '#FF6B00'}
-            logoUrl={demo.useUploadedLogo ? demo.uploadedLogoUrl : demo.logoUrl}
+            logoUrl={activeLogoUrl}
             companyName={demo.customerName}
             portalConfig={demoIndustry?.portalConfig}
             branding={portalBranding}
@@ -554,7 +549,7 @@ export default function DemoPreview() {
             userName={portalUserName}
             userEmail={portalUser.email}
             accentColor={demo.buttonColor || '#1D4ED8'}
-            logoUrl={demo.useUploadedLogo ? demo.uploadedLogoUrl : demo.logoUrl}
+            logoUrl={activeLogoUrl}
             companyName={demo.customerName}
             portalConfig={demoIndustry?.portalConfig}
             branding={portalBranding}
@@ -567,7 +562,7 @@ export default function DemoPreview() {
             userName={portalUserName}
             userEmail={portalUser.email}
             accentColor={demo.buttonColor || '#0E7490'}
-            logoUrl={demo.useUploadedLogo ? demo.uploadedLogoUrl : demo.logoUrl}
+            logoUrl={activeLogoUrl}
             hotelName={demo.customerName}
             portalConfig={demoIndustry?.portalConfig}
             branding={portalBranding}
@@ -580,7 +575,7 @@ export default function DemoPreview() {
             userName={portalUserName}
             userEmail={portalUser.email}
             accentColor={demo.buttonColor || '#0D9488'}
-            logoUrl={demo.useUploadedLogo ? demo.uploadedLogoUrl : demo.logoUrl}
+            logoUrl={activeLogoUrl}
             bankName={demo.customerName}
             portalConfig={demoIndustry?.portalConfig}
             branding={portalBranding}
@@ -610,7 +605,7 @@ export default function DemoPreview() {
           buttonColor={demo.buttonColor}
           formStyle={demo.formStyle}
           customerName={demo.customerName}
-          logoUrl={demo.useUploadedLogo ? demo.uploadedLogoUrl : demo.logoUrl}
+          logoUrl={activeLogoUrl}
           headerBgColor={demo.headerBgColor}
           headerTextColor={demo.headerTextColor}
           resourceId={demo.resourceId}
@@ -929,16 +924,8 @@ export default function DemoPreview() {
                 config={{ ...(displayResultCfg as NonNullable<typeof displayResultCfg>), referenceId: (displayResultCfg as NonNullable<typeof displayResultCfg>).referenceId || 'PREVIEW-1234' }}
                 formStyle={demo.formStyle}
                 buttonColor={demo.buttonColor}
-                mirrorHeaderHtml={
-                  demo.mirrorActiveMethod === 'screenshot'
-                    ? demo.mirrorScreenshotHeaderHtml
-                    : demo.mirrorHtmlHeaderHtml || demo.scrapedHeaderHtml
-                }
-                mirrorFooterHtml={
-                  demo.mirrorActiveMethod === 'screenshot'
-                    ? demo.mirrorScreenshotFooterHtml
-                    : demo.mirrorHtmlFooterHtml || demo.scrapedFooterHtml
-                }
+                mirrorHeaderHtml={previewDocument?.headerHtml}
+                mirrorFooterHtml={previewDocument?.footerHtml}
                 mirrorCss={
                   demo.mirrorActiveMethod === 'screenshot'
                     ? demo.mirrorScreenshotCss
