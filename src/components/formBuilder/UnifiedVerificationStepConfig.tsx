@@ -754,8 +754,14 @@ function VerificationTypePanel({
         <div className="space-y-2">
           <Label className="text-sm">Custom Title</Label>
           <Input
-            value={typeConfig.customTitle || ''}
-            onChange={(e) => onUpdate({ customTitle: e.target.value })}
+            value={localTitle}
+            onChange={(e) => setLocalTitle(e.target.value)}
+            onFocus={() => setTitleFocused(true)}
+            onBlur={() => {
+              setTitleFocused(false);
+              if (localTitle !== (typeConfig.customTitle || '')) onUpdate({ customTitle: localTitle });
+            }}
+            onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
             placeholder={globalType.displayName}
             className="h-8 text-sm"
           />
@@ -763,11 +769,18 @@ function VerificationTypePanel({
         <div className="space-y-2">
           <Label className="text-sm">Custom Description</Label>
           <Input
-            value={typeConfig.customDescription || ''}
-            onChange={(e) => onUpdate({ customDescription: e.target.value })}
+            value={localDescription}
+            onChange={(e) => setLocalDescription(e.target.value)}
+            onFocus={() => setDescFocused(true)}
+            onBlur={() => {
+              setDescFocused(false);
+              if (localDescription !== (typeConfig.customDescription || '')) onUpdate({ customDescription: localDescription });
+            }}
+            onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
             placeholder={globalType.description || ''}
             className="h-8 text-sm"
           />
+
         </div>
       </div>
 
