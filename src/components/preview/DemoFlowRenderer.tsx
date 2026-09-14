@@ -2094,9 +2094,26 @@ export function DemoFlowRenderer({
     const dataBioOptions = verificationType === 'dataBio' ? stepTypeConfig?.dataBioOptions : undefined;
 
     // Digital ID (DiD) → dedicated DiD endpoint with provider scope.
-    if (typeKey === 'did' && providerId) {
-      console.log('Starting Digital ID verification with scope:', providerId);
-      launchDigitalIdFlow(providerId, stepResourceId || undefined);
+    if (typeKey === 'did') {
+      // When no provider was picked (single-provider / auto-preselect setups),
+      // resolve the first provider allowed for this step.
+      let scope = providerId;
+      if (!scope) {
+        const allowedKeys = stepTypeConfig?.enabledProviderKeys;
+        const candidates = allowedKeys && allowedKeys.length > 0
+          ? didProviders.filter(p => p.isEnabled && allowedKeys.includes(p.providerKey))
+          : didProviders.filter(p => p.isEnabled);
+        const first = candidates[0];
+        scope = first ? (first.scope?.[0] || first.providerKey) : undefined;
+      }
+      if (!scope) {
+        const msg = 'No Digital ID provider is available for this step.';
+        setError(msg);
+        toast.error(msg);
+        return;
+      }
+      console.log('Starting Digital ID verification with scope:', scope);
+      launchDigitalIdFlow(scope, stepResourceId || undefined);
       return;
     }
 
