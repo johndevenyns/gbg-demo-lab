@@ -103,7 +103,10 @@ export function UnifiedVerificationRenderer({
   }, [onSelectType, isLoading]);
 
   const handleDidProviderSelect = useCallback((choice: UserSelectionChoice, provider: DidProvider) => {
-    handleChoiceSelect(choice, provider.providerKey);
+    // Ditto expects the provider's upstream scope (e.g. "sweden-bankid"), which is
+    // stored on the provider record. Fall back to the key for legacy rows.
+    const dittoScope = provider.scope?.[0] || provider.providerKey;
+    handleChoiceSelect(choice, dittoScope);
   }, [handleChoiceSelect]);
 
   // Auto-trigger for admin_preselect or auto_detect modes, or when methodSelection is not set
