@@ -731,6 +731,7 @@ export function DemoFlowRenderer({
   const [, forceUpdate] = useState({});
   const lastLoginUserData = useRef<Record<string, unknown> | undefined>(undefined);
   const pollingRef = useRef<NodeJS.Timeout | null>(null);
+  const formSectionRef = useRef<HTMLDivElement | null>(null);
 
   // Fetch DiD providers for unified verification step
   const { data: didProvidersData } = useDidProviders(true);
@@ -764,10 +765,9 @@ export function DemoFlowRenderer({
   // Form validation state
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
-  // Use provided form style or default
-  // Scroll to top whenever the step changes
+  // Keep each new step anchored to the form instead of jumping to the page header.
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    formSectionRef.current?.scrollIntoView({ block: 'start', behavior: 'auto' });
   }, [currentStepIndex]);
 
   const style = formStyle || DEFAULT_FORM_STYLE;
@@ -3451,7 +3451,7 @@ export function DemoFlowRenderer({
         isApiError={addressValidation?.isApiError || false}
       />
       
-      <div className="space-y-6">
+      <div ref={formSectionRef} className="space-y-6">
       {/* Step indicator */}
       <div className="flex items-center justify-center gap-2">
         {steps.map((_, index) => (
