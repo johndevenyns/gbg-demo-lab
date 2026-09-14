@@ -2072,12 +2072,11 @@ export function DemoFlowRenderer({
         verificationResult: terminalStatus,
       });
 
-      const target = success ? approvedUrl : rejectedUrl;
-      if (target) {
-        window.location.href = target;
-      } else {
-        toast.message(success ? 'Verification approved' : `Verification ${terminalStatus}`);
-      }
+      // Clear the DiD launch card and hand off to the shared completion
+      // handler so configured success/failure actions (result page, custom
+      // pages, portal login, redirect) are honoured.
+      setDidSession(null);
+      await completeFlow(success, data.referenceId || referenceId || undefined);
     } catch (err) {
       setDidSession(null);
       console.error('Digital ID flow failed:', err);
@@ -2089,8 +2088,10 @@ export function DemoFlowRenderer({
     }
   }, [
     demoId, customerName, formData, referenceIdPrefix, logoUrl,
-    buttonColor, headerTextColor, headerBgColor, approvedUrl, rejectedUrl, onSubmissionLog,
+    buttonColor, headerTextColor, headerBgColor, onSubmissionLog,
+    completeFlow, referenceId,
   ]);
+
 
   const handleUnifiedVerificationSelect = useCallback((verificationType: VerificationType, typeKey: string, providerId?: string) => {
     console.log('Unified verification selected:', verificationType, typeKey, 'provider:', providerId);
