@@ -17,6 +17,7 @@ import { AddressValidationDialog } from './AddressValidationDialog';
 import { DecisionStepRenderer } from './DecisionStepRenderer';
 import { UnifiedVerificationRenderer } from './UnifiedVerificationRenderer';
 import { useDidPageHtml, DID_LAUNCH_HTML_KEY } from '@/components/admin/DidPageHtmlEditor';
+import { didProviderMatchesKey, getDidProviderScope, normalizeDidProviderScope } from '@/lib/didProviders';
 
 // Helper to determine if a color is light or dark and return contrasting text color
 const getContrastTextColor = (hexColor: string): string => {
@@ -1886,15 +1887,6 @@ export function DemoFlowRenderer({
     createVerificationSession(path === 'databio' ? 'dataBio' : 'docBio');
   }, [currentStep?.methodSelectionConfig?.documentScanPath, createVerificationSession]);
 
-  const handleDidProviderSelected = useCallback((provider: DidProvider) => {
-    console.log('DiD provider selected:', provider);
-    // For DiD, we would typically redirect to the provider's flow
-    // For now, we'll create a dataBio session as a fallback
-    setSelectedVerificationType('dataBio');
-    toast.info(`${provider.name} selected - starting verification...`);
-    createVerificationSession('dataBio');
-  }, [createVerificationSession]);
-
   // Handle decision step choice selection
   const handleDecisionChoice = useCallback((choice: DecisionChoice, provider?: DidProvider) => {
     console.log('Decision choice selected:', choice, 'provider:', provider);
@@ -1911,9 +1903,9 @@ export function DemoFlowRenderer({
 
       // Digital ID choices go to the dedicated Digital ID journey.
       if (choice.verificationType === 'did') {
-        const scope = provider?.providerKey
-          || didProviders.find(p => p.isEnabled)?.scope?.[0]
-          || didProviders.find(p => p.isEnabled)?.providerKey;
+        const scope = provider
+          ? normalizeDidProviderScope(provider.providerKey)
+          : getDidProviderScope(didProviders.find(p => p.isEnabled));
         if (!scope) {
           toast.error('No Digital ID provider is available.');
           return;
@@ -2120,10 +2112,10 @@ export function DemoFlowRenderer({
       if (!scope) {
         const allowedKeys = stepTypeConfig?.enabledProviderKeys;
         const candidates = allowedKeys && allowedKeys.length > 0
-          ? didProviders.filter(p => p.isEnabled && allowedKeys.includes(p.providerKey))
+          ? didProviders.filter(p => p.isEnabled && allowedKeys.some(key => didProviderMatchesKey(p, key)))
           : didProviders.filter(p => p.isEnabled);
         const first = candidates[0];
-        scope = first ? (first.scope?.[0] || first.providerKey) : undefined;
+        scope = getDidProviderScope(first);
       }
       if (!scope) {
         const msg = 'No Digital ID provider is available for this step.';
@@ -2132,7 +2124,7 @@ export function DemoFlowRenderer({
         return;
       }
       console.log('Starting Digital ID verification with scope:', scope);
-      const matched = didProviders.find(p => p.scope?.[0] === scope || p.providerKey === scope);
+      const matched = didProviders.find(p => didProviderMatchesKey(p, scope));
       launchDigitalIdFlow(scope, stepResourceId || undefined, matched?.displayName);
       return;
     }
@@ -2140,6 +2132,17 @@ export function DemoFlowRenderer({
     // All other verification types use the shared session creation flow.
     createVerificationSession(verificationType, true, stepResourceId || undefined, false, dataBioOptions);
   }, [createVerificationSession, launchDigitalIdFlow, didProviders, currentStep?.unifiedVerificationConfig]);
+
+  const handleDidProviderSelected = useCallback((provider: DidProvider) => {
+    const scope = normalizeDidProviderScope(provider.providerKey);
+    if (!scope) {
+      toast.error('This Digital ID provider is not configured.');
+      return;
+    }
+    setSelectedVerificationType('dataBio');
+    toast.info(`${provider.name} selected - starting verification...`);
+    launchDigitalIdFlow(scope, undefined, provider.name);
+  }, [launchDigitalIdFlow]);
 
   // Trinsic mobile popup launcher — MUST be called from a user gesture (e.g. onClick)
   // so the browser allows window.open(). The session is created inside

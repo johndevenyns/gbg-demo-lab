@@ -194,6 +194,14 @@ export const AVAILABLE_DID_PROVIDERS: DidProvider[] = [
     enabled: true,
   },
   {
+    id: 'spid',
+    name: 'SPID',
+    domain: 'spid.gov.it',
+    logoUrl: 'https://content.trinsic.id/connect/integrations/spid-logo.svg',
+    providerKey: 'italy-spid',
+    enabled: true,
+  },
+  {
     id: 'verimi',
     name: 'Verimi',
     domain: 'verimi.de',
