@@ -19,6 +19,19 @@ const FIELD_NAME_ALIASES: Record<string, string> = {
   address_country_value: 'country',
 };
 
+const PUBLISHED_APP_ORIGIN = 'https://gbg-demo-lab.lovable.app';
+
+const resolveAssetUrl = (url: string | null | undefined): string => {
+  if (!url) return '';
+  return url.startsWith('/__l5e/assets-v1/') ? `${PUBLISHED_APP_ORIGIN}${url}` : url;
+};
+
+const resolveAssetUrlsInHtml = (html: string | null | undefined): string =>
+  (html || '').replace(
+    /(["'])\/(?:__l5e\/assets-v1\/)/g,
+    `$1${PUBLISHED_APP_ORIGIN}/__l5e/assets-v1/`,
+  );
+
 // Normalize field names in form steps to canonical API-compatible names
 const normalizeFormSteps = (steps: FormStep[] | null | undefined): FormStep[] => {
   return (steps || []).map((step) => {
@@ -68,8 +81,8 @@ const rowToDemo = (row: any): DemoEnvironment => {
     resourceIdDataBio: row.resource_id_databio || '',
     resourceIdDocBio: row.resource_id_docbio || '',
     referenceIdPrefix: row.reference_id_prefix || '',
-    logoUrl: row.logo_url || '',
-    uploadedLogoUrl: row.uploaded_logo_url || '',
+    logoUrl: resolveAssetUrl(row.logo_url),
+    uploadedLogoUrl: resolveAssetUrl(row.uploaded_logo_url),
     useUploadedLogo: row.use_uploaded_logo ?? false,
     headerBgColor: row.header_bg_color || '#1a1a2e',
     headerTextColor: row.header_text_color || '#ffffff',
@@ -78,15 +91,15 @@ const rowToDemo = (row: any): DemoEnvironment => {
     includeAddressVerification: row.include_address_verification ?? false,
     formSteps: normalizeFormSteps((row.form_steps as FormStep[]) || []),
     customerSiteUrl: row.customer_site_url || '',
-    scrapedHeaderHtml: row.scraped_header_html || '',
-    scrapedFooterHtml: row.scraped_footer_html || '',
+    scrapedHeaderHtml: resolveAssetUrlsInHtml(row.scraped_header_html),
+    scrapedFooterHtml: resolveAssetUrlsInHtml(row.scraped_footer_html),
     scrapedCss: row.scraped_css || '',
     mirrorActiveMethod: (row.mirror_active_method as 'html' | 'screenshot') || 'html',
-    mirrorHtmlHeaderHtml: row.mirror_html_header_html || '',
-    mirrorHtmlFooterHtml: row.mirror_html_footer_html || '',
+    mirrorHtmlHeaderHtml: resolveAssetUrlsInHtml(row.mirror_html_header_html),
+    mirrorHtmlFooterHtml: resolveAssetUrlsInHtml(row.mirror_html_footer_html),
     mirrorHtmlCss: row.mirror_html_css || '',
-    mirrorScreenshotHeaderHtml: row.mirror_screenshot_header_html || '',
-    mirrorScreenshotFooterHtml: row.mirror_screenshot_footer_html || '',
+    mirrorScreenshotHeaderHtml: resolveAssetUrlsInHtml(row.mirror_screenshot_header_html),
+    mirrorScreenshotFooterHtml: resolveAssetUrlsInHtml(row.mirror_screenshot_footer_html),
     mirrorScreenshotCss: row.mirror_screenshot_css || '',
     mirrorIframeBordersVisible: row.mirror_iframe_borders_visible ?? false,
     headerCtaSelector: row.header_cta_selector || '',
