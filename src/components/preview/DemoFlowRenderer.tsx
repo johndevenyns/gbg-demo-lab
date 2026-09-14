@@ -735,6 +735,7 @@ export function DemoFlowRenderer({
   const lastLoginUserData = useRef<Record<string, unknown> | undefined>(undefined);
   const pollingRef = useRef<NodeJS.Timeout | null>(null);
   const formSectionRef = useRef<HTMLDivElement | null>(null);
+  const previousStepIndexRef = useRef(currentStepIndex);
 
   // Fetch DiD providers for unified verification step
   const { data: didProvidersData } = useDidProviders(true);
