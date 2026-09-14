@@ -26,9 +26,10 @@ export function normalizeDidProviderScope(value?: string | null): string | undef
 
 export function getDidProviderScope(provider?: DidProviderLike | null): string | undefined {
   if (!provider) return undefined;
-  const keyScope = normalizeDidProviderScope(provider.providerKey);
-  if (keyScope && keyScope !== provider.providerKey) return keyScope;
-  return normalizeDidProviderScope(provider.scope?.[0]) || keyScope;
+  if (Object.prototype.hasOwnProperty.call(DID_SCOPE_ALIASES, provider.providerKey)) {
+    return DID_SCOPE_ALIASES[provider.providerKey];
+  }
+  return normalizeDidProviderScope(provider.scope?.[0]) || provider.providerKey;
 }
 
 export function didProviderMatchesKey(provider: DidProviderLike, savedKey: string): boolean {
