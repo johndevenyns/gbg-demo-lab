@@ -914,10 +914,20 @@ export function DemoFlowRenderer({
         }
       });
     });
+
+    // Password fields can be renamed in the form builder. Populate every
+    // password-type field from the profile's canonical password value.
+    if (typeof data.password === 'string' && data.password.trim() !== '') {
+      currentStep?.fields.forEach((field) => {
+        if (field.type === 'password') {
+          expandedData[field.name] = data.password;
+        }
+      });
+    }
     
     setFormData(prev => ({ ...prev, ...expandedData }));
     toast.success(`Form filled with ${type} test data`);
-  }, [storedTestData]);
+  }, [currentStep?.fields, storedTestData]);
 
   // Validate address using Loqate API
   const validateAddress = useCallback(async (): Promise<{

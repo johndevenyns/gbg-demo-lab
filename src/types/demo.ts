@@ -633,6 +633,7 @@ export const AVAILABLE_FORM_FIELDS: Omit<FormField, 'id' | 'order'>[] = [
   { type: 'last_name', label: 'Last Name', name: 'lastName', placeholder: 'Enter last name', required: true },
   { type: 'middle_name', label: 'Middle Name', name: 'middleName', placeholder: 'Enter middle name', required: false },
   { type: 'email', label: 'Email Address', name: 'email', placeholder: 'email@example.com', required: true },
+  { type: 'password', label: 'Password', name: 'password', placeholder: 'Enter password', required: true },
   { type: 'phone', label: 'Phone Number', name: 'phone', placeholder: '(555) 123-4567', required: true },
   { type: 'date_of_birth', label: 'Date of Birth', name: 'dateOfBirth', placeholder: 'MM/DD/YYYY', required: true },
   { type: 'ssn', label: 'SSN (Last 4)', name: 'ssn4', placeholder: '****', required: false },

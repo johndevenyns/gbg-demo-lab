@@ -172,6 +172,7 @@ export function StoredUserDataConfig({
               <div key={field.name} className="space-y-1">
                 <Label className="text-sm text-muted-foreground">{field.label}</Label>
                 <Input
+                  type={field.type === 'password' ? 'password' : 'text'}
                   value={data[field.name] || ''}
                   onChange={(e) => handleFieldChange(type, field.name, e.target.value)}
                   placeholder={`Enter ${field.label.toLowerCase()}`}

@@ -42,7 +42,7 @@ import {
 } from '@/hooks/useTestProfiles';
 
 // Profile fields matching expected CSV headers
-const PROFILE_FIELDS = [
+const PROFILE_FIELDS: Array<{ name: string; label: string; type?: string }> = [
   { name: 'firstName', label: 'First Name' },
   { name: 'lastName', label: 'Last Name' },
   { name: 'streetAddress', label: 'Street Address' },
@@ -52,6 +52,7 @@ const PROFILE_FIELDS = [
   { name: 'zipCode', label: 'ZIP Code' },
   { name: 'ssn4', label: 'SSN4' },
   { name: 'email', label: 'Email' },
+  { name: 'password', label: 'Password', type: 'password' },
   { name: 'phone', label: 'Phone' },
   { name: 'dateOfBirth', label: 'DOB' },
   { name: 'ssn', label: 'Full SSN' },
@@ -75,6 +76,7 @@ const CSV_HEADER_MAP: Record<string, string> = {
   'ssn4': 'ssn4',
   'ssn': 'ssn',
   'email': 'email',
+  'password': 'password',
   'phone': 'phone',
   // Also accept the field_data keys directly
   'idnote': 'idNote',
@@ -83,9 +85,9 @@ const CSV_HEADER_MAP: Record<string, string> = {
   'lastname': 'lastName',
 };
 
-const SAMPLE_CSV = `ID Note,API Result Code,firstName,lastName,streetAddress,apartment,city,state,zipCode,ssn4,email,phone,dateOfBirth,ssn
-"Valid DL - Pass",pass,John,Smith,222333 PEACHTREE PLACE,,ATLANTA,GA,30318,6789,test@gbg.com,9193740211,2/28/1975,123-45-6789
-"Expired DL - Fail",fail,Bob,France,5555 MOUNTAIN ROAD,Unit 2B,ATLANTA,GA,30153,4321,testfail@gbg.com,9193740211,7/1/1951,987-65-4321`;
+const SAMPLE_CSV = `ID Note,API Result Code,firstName,lastName,streetAddress,apartment,city,state,zipCode,ssn4,email,password,phone,dateOfBirth,ssn
+"Valid DL - Pass",pass,John,Smith,222333 PEACHTREE PLACE,,ATLANTA,GA,30318,6789,test@gbg.com,TestPass123!,9193740211,2/28/1975,123-45-6789
+"Expired DL - Fail",fail,Bob,France,5555 MOUNTAIN ROAD,Unit 2B,ATLANTA,GA,30153,4321,testfail@gbg.com,TestFail123!,9193740211,7/1/1951,987-65-4321`;
 
 function downloadSampleCsv() {
   const blob = new Blob([SAMPLE_CSV], { type: 'text/csv' });
@@ -184,6 +186,7 @@ function ProfileFormDialog({
                 <div key={field.name} className="space-y-1">
                   <Label className="text-xs text-muted-foreground">{field.label}</Label>
                   <Input
+                    type={field.type || 'text'}
                     value={fieldData[field.name] || ''}
                     onChange={(e) => setFieldData((prev) => ({ ...prev, [field.name]: e.target.value }))}
                     placeholder={field.label}
