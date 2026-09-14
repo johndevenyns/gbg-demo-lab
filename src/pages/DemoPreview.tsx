@@ -473,16 +473,8 @@ export default function DemoPreview() {
       onNavigateToPortal={handleNavigateToPortal}
       onComplete={handleFlowComplete}
       onLoginSuccess={handleLoginSuccess}
-      mirrorHeaderHtml={
-        demo.mirrorActiveMethod === 'screenshot'
-          ? demo.mirrorScreenshotHeaderHtml
-          : demo.mirrorHtmlHeaderHtml || demo.scrapedHeaderHtml
-      }
-      mirrorFooterHtml={
-        demo.mirrorActiveMethod === 'screenshot'
-          ? demo.mirrorScreenshotFooterHtml
-          : demo.mirrorHtmlFooterHtml || demo.scrapedFooterHtml
-      }
+      mirrorHeaderHtml={previewDocument?.headerHtml}
+      mirrorFooterHtml={previewDocument?.footerHtml}
       mirrorCss={
         demo.mirrorActiveMethod === 'screenshot'
           ? demo.mirrorScreenshotCss
