@@ -2457,11 +2457,11 @@ export function DemoFlowRenderer({
               <div className="flex flex-col items-center justify-center gap-3 px-4 py-6 text-center">
                 <Button
                   size="default"
-                  className="w-full text-sm"
+                  className="h-auto w-full whitespace-normal py-6 text-sm leading-tight"
                   onClick={() => window.open(didSession.launchUrl, '_blank', 'noopener,noreferrer')}
                   style={{ backgroundColor: buttonColor }}
                 >
-                  <ExternalLink className="h-4 w-4" />
+                  <ExternalLink className="h-4 w-4 shrink-0" />
                   Continue on this device
                 </Button>
                 <p className="text-xs text-muted-foreground">
@@ -2496,7 +2496,7 @@ export function DemoFlowRenderer({
                     href={didSession.launchUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="min-w-0 flex-1 break-all text-sm text-primary underline underline-offset-2"
+                    className="min-w-0 flex-1 break-all text-xs text-primary underline underline-offset-2"
                   >
                     {didSession.launchUrl}
                   </a>
