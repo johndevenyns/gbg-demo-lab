@@ -924,16 +924,8 @@ export default function DemoPreview() {
                 config={{ ...(displayResultCfg as NonNullable<typeof displayResultCfg>), referenceId: (displayResultCfg as NonNullable<typeof displayResultCfg>).referenceId || 'PREVIEW-1234' }}
                 formStyle={demo.formStyle}
                 buttonColor={demo.buttonColor}
-                mirrorHeaderHtml={
-                  demo.mirrorActiveMethod === 'screenshot'
-                    ? demo.mirrorScreenshotHeaderHtml
-                    : demo.mirrorHtmlHeaderHtml || demo.scrapedHeaderHtml
-                }
-                mirrorFooterHtml={
-                  demo.mirrorActiveMethod === 'screenshot'
-                    ? demo.mirrorScreenshotFooterHtml
-                    : demo.mirrorHtmlFooterHtml || demo.scrapedFooterHtml
-                }
+                mirrorHeaderHtml={previewDocument?.headerHtml}
+                mirrorFooterHtml={previewDocument?.footerHtml}
                 mirrorCss={
                   demo.mirrorActiveMethod === 'screenshot'
                     ? demo.mirrorScreenshotCss
