@@ -423,8 +423,14 @@ export function PortalUserManagement({ demoId }: PortalUserManagementProps) {
             </div>
             <div className="space-y-2">
               <Label>Password</Label>
-              <Input value={formPassword} onChange={e => setFormPassword(e.target.value)} placeholder="Password" />
+              <Input
+                type="password"
+                value={formPassword}
+                onChange={e => setFormPassword(e.target.value)}
+                placeholder={editingUser ? 'Leave blank to keep current password' : 'Password'}
+              />
             </div>
+
             <div className="space-y-2">
               <Label>Display Name (optional)</Label>
               <Input value={formDisplayName} onChange={e => setFormDisplayName(e.target.value)} placeholder="John Doe" />
