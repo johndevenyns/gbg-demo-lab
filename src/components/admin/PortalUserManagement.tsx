@@ -216,7 +216,7 @@ export function PortalUserManagement({ demoId }: PortalUserManagementProps) {
   const openEdit = (user: PortalUser) => {
     setEditingUser(user);
     setFormEmail(user.email);
-    setFormPassword(user.password);
+    setFormPassword('');
     setFormDisplayName(user.display_name || '');
     setFormIsDefault(user.is_default);
     setFormError(null);
@@ -224,7 +224,7 @@ export function PortalUserManagement({ demoId }: PortalUserManagementProps) {
   };
 
   const handleSave = () => {
-    if (!formEmail.trim() || !formPassword.trim()) {
+    if (!formEmail.trim() || (!editingUser && !formPassword.trim())) {
       setFormError('Email and password are required');
       return;
     }
@@ -236,6 +236,7 @@ export function PortalUserManagement({ demoId }: PortalUserManagementProps) {
       is_default: formIsDefault,
     });
   };
+
 
   const getUserAssignedDemoIds = (userId: string) =>
     assignments.filter(a => a.portal_user_id === userId).map(a => a.demo_id);
