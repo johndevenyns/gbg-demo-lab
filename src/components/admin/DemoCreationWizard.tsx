@@ -13,6 +13,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { captureCustomerHomepage, mergeHomepagePage } from "@/lib/homepageCapture";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useCreateDemo, useUpdateDemo } from "@/hooks/useDemos";
 import { useGlobalUseCases, useAddDemoUseCaseLink } from "@/hooks/useUseCases";
@@ -33,6 +34,7 @@ interface DemoCreationWizardProps {
 }
 
 type WizardStep = 'details' | 'industry' | 'portal' | 'use-cases' | 'processing' | 'review';
+type DefaultViewChoice = 'use_cases' | 'homepage';
 
 type TaskPhase = 'foundation' | 'branding' | 'forms' | 'workflow' | 'finalize';
 
@@ -125,6 +127,7 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
   const [customerName, setCustomerName] = useState("");
   const [siteUrl, setSiteUrl] = useState("");
   const [enableMirroring, setEnableMirroring] = useState(false);
+  const [defaultView, setDefaultView] = useState<DefaultViewChoice>('use_cases');
   const [selectedIndustryId, setSelectedIndustryId] = useState<string | null>(null);
   const [selectedUseCases, setSelectedUseCases] = useState<string[]>([]);
   const [hiddenFromLanding, setHiddenFromLanding] = useState<Set<string>>(new Set());
@@ -209,6 +212,7 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
     setCustomerName("");
     setSiteUrl("");
     setEnableMirroring(false);
+    setDefaultView('use_cases');
     setSelectedIndustryId(null);
     setSelectedUseCases([]);
     setHiddenFromLanding(new Set());
@@ -281,6 +285,9 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
       tasks.push({ id: 'discover-form', label: 'Crawling site for application or contact form', phase: 'forms', status: 'pending' });
       tasks.push({ id: 'capture-form', label: 'Capturing form fields, labels & styling', phase: 'forms', status: 'pending' });
       tasks.push({ id: 'generate-steps', label: 'Generating matching workflow steps', phase: 'forms', status: 'pending' });
+      if (defaultView === 'homepage') {
+        tasks.push({ id: 'capture-homepage', label: 'Capturing customer homepage', phase: 'branding', status: 'pending' });
+      }
     }
     if (selectedUseCases.length > 0) {
       tasks.push({ id: 'use-cases', label: 'Linking use cases to demo', phase: 'workflow', status: 'pending' });
@@ -570,6 +577,43 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
         }
       }
 
+      // ===== Customer homepage as the default view (best-effort) =====
+      if (enableMirroring && normalizedSiteUrl && defaultView === 'homepage') {
+        activeTaskId = 'capture-homepage';
+        updateTaskStatus('capture-homepage', 'in_progress');
+        setTaskDetail('capture-homepage', 'Grabbing a full-length picture of the home page…');
+        try {
+          const result = await captureCustomerHomepage({
+            demoId: demo.id,
+            customerName: customerName.trim(),
+            siteUrl: normalizedSiteUrl,
+            bgColor: scrapedData?.colors?.headerBgColor,
+          });
+          if (result.success && result.page) {
+            await updateDemo.mutateAsync({
+              id: demo.id,
+              updates: {
+                extraCustomPages: mergeHomepagePage(undefined, result.page),
+                defaultLandingPageSlug: result.page.slug,
+              } as any,
+            });
+            updateTaskStatus('capture-homepage', 'complete', 'Home page captured and set as the default view');
+          } else {
+            updateTaskStatus(
+              'capture-homepage',
+              'error',
+              `${result.error || 'Capture failed'} — default view stays on use cases; retry from Custom Pages`,
+            );
+          }
+        } catch (e) {
+          updateTaskStatus(
+            'capture-homepage',
+            'error',
+            `${e instanceof Error ? e.message : 'Capture failed'} — default view stays on use cases`,
+          );
+        }
+      }
+
       activeTaskId = 'finalize';
       updateTaskStatus('finalize', 'in_progress');
       setTaskDetail('finalize', 'Loading Pass / Fail test profiles…');
@@ -788,18 +832,37 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
                 </div>
               </div>
               {enableMirroring && (
-                <div className="space-y-2 pl-7">
-                  <Label htmlFor="siteUrl">Website URL</Label>
-                  <Input
-                    id="siteUrl"
-                    type="url"
-                    placeholder="https://example.com"
-                    value={siteUrl}
-                    onChange={(e) => setSiteUrl(e.target.value)}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    We'll capture both an HTML extraction and a screenshot, then let you pick the best result
-                  </p>
+                <div className="space-y-4 pl-7">
+                  <div className="space-y-2">
+                    <Label htmlFor="siteUrl">Website URL</Label>
+                    <Input
+                      id="siteUrl"
+                      type="url"
+                      placeholder="https://example.com"
+                      value={siteUrl}
+                      onChange={(e) => setSiteUrl(e.target.value)}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      We'll capture both an HTML extraction and a screenshot, then let you pick the best result
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Default view</Label>
+                    <Select value={defaultView} onValueChange={(v) => setDefaultView(v as DefaultViewChoice)}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="use_cases">Use cases (default)</SelectItem>
+                        <SelectItem value="homepage">Customer homepage</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">
+                      {defaultView === 'homepage'
+                        ? "We'll grab a copy of the customer's home page and show that first."
+                        : 'Visitors land on the tabbed use case page.'}
+                    </p>
+                  </div>
                 </div>
               )}
             </div>

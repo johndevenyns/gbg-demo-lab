@@ -6,7 +6,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CheckCircle2, XCircle, ExternalLink, Settings2, Paintbrush, Sparkles, Upload, Loader2, Eye, ArrowLeft, FileText, ChevronRight, Plus, Trash2, Pencil, Check, X, Home } from 'lucide-react';
+import { CheckCircle2, XCircle, ExternalLink, Settings2, Paintbrush, Sparkles, Upload, Loader2, Eye, ArrowLeft, FileText, ChevronRight, Plus, Trash2, Pencil, Check, X, Home, Camera } from 'lucide-react';
+import { captureCustomerHomepage, mergeHomepagePage, HOMEPAGE_PAGE_SLUG } from '@/lib/homepageCapture';
 import { ResultPageConfig, ResultButtonAction, ResultPageMode, DEFAULT_SUCCESS_CONFIG, DEFAULT_FAILURE_CONFIG, DEFAULT_LANDING_CONFIG } from '@/components/preview/ResultPage';
 import { ResultPage } from '@/components/preview/ResultPage';
 import type { FormStyleConfig } from '@/types/formStyle';
@@ -306,6 +307,8 @@ interface ResultPagesConfigProps {
   onUpdateExtraCustomPages?: (pages: ExtraCustomPage[]) => void;
   defaultLandingPageSlug?: string;
   onUpdateDefaultLandingPageSlug?: (slug: string | undefined) => void;
+  customerName?: string;
+  customerSiteUrl?: string;
 }
 
 export function ResultPagesConfig({
@@ -333,6 +336,8 @@ export function ResultPagesConfig({
   onUpdateExtraCustomPages,
   defaultLandingPageSlug,
   onUpdateDefaultLandingPageSlug,
+  customerName,
+  customerSiteUrl,
 }: ResultPagesConfigProps) {
   // PageKey is 'success' | 'failure' | 'landing' | `extra:<id>`
   type PageKey = string;
@@ -341,6 +346,7 @@ export function ResultPagesConfig({
   const [generating, setGenerating] = useState<string | null>(null);
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
+  const [capturingHomepage, setCapturingHomepage] = useState(false);
   const { toast } = useToast();
   const pages = extraCustomPages || [];
   const ucLinks = useCaseLinks || [];
@@ -350,6 +356,32 @@ export function ResultPagesConfig({
   const successConfig = successPageConfig || DEFAULT_SUCCESS_CONFIG;
   const failureConfig = failurePageConfig || DEFAULT_FAILURE_CONFIG;
   const landingConfig = landingPageConfig || DEFAULT_LANDING_CONFIG;
+
+  const hasHomepagePage = pages.some((p) => p.slug === HOMEPAGE_PAGE_SLUG);
+
+  const handleCaptureHomepage = async () => {
+    if (!demoId || !customerSiteUrl) return;
+    setCapturingHomepage(true);
+    try {
+      const result = await captureCustomerHomepage({
+        demoId,
+        customerName: customerName || 'Customer',
+        siteUrl: customerSiteUrl,
+        bgColor: formStyle?.contentAreaBgColor,
+        existingPages: pages,
+      });
+      if (!result.success || !result.page) {
+        toast({ title: 'Homepage capture failed', description: result.error, variant: 'destructive' });
+        return;
+      }
+      onUpdateExtraCustomPages?.(mergeHomepagePage(pages, result.page));
+      onUpdateDefaultLandingPageSlug?.(result.page.slug);
+      toast({ title: 'Homepage captured', description: 'It is now the default view for this demo.' });
+    } finally {
+      setCapturingHomepage(false);
+    }
+  };
+
 
   const uploadImage = async (file: File, slot: string): Promise<string | null> => {
     if (!demoId) {
@@ -842,7 +874,28 @@ export function ResultPagesConfig({
                   ))}
                 </SelectContent>
               </Select>
+              <div className="flex flex-wrap items-center gap-2 pt-1">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={capturingHomepage || !demoId || !customerSiteUrl}
+                  onClick={handleCaptureHomepage}
+                >
+                  {capturingHomepage ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <Camera className="w-4 h-4 mr-2" />
+                  )}
+                  {hasHomepagePage ? 'Re-capture customer homepage' : 'Use customer homepage'}
+                </Button>
+                <span className="text-xs text-muted-foreground">
+                  {customerSiteUrl
+                    ? `Grabs a copy of ${customerSiteUrl} and shows it as the default view.`
+                    : 'Add the customer website URL in Site Settings first.'}
+                </span>
+              </div>
             </div>
+
 
             {([
               {
