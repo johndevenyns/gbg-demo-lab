@@ -33,6 +33,7 @@ interface DemoCreationWizardProps {
 }
 
 type WizardStep = 'details' | 'industry' | 'portal' | 'use-cases' | 'processing' | 'review';
+type DefaultViewChoice = 'use_cases' | 'homepage';
 
 type TaskPhase = 'foundation' | 'branding' | 'forms' | 'workflow' | 'finalize';
 
@@ -125,6 +126,7 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
   const [customerName, setCustomerName] = useState("");
   const [siteUrl, setSiteUrl] = useState("");
   const [enableMirroring, setEnableMirroring] = useState(false);
+  const [defaultView, setDefaultView] = useState<DefaultViewChoice>('use_cases');
   const [selectedIndustryId, setSelectedIndustryId] = useState<string | null>(null);
   const [selectedUseCases, setSelectedUseCases] = useState<string[]>([]);
   const [hiddenFromLanding, setHiddenFromLanding] = useState<Set<string>>(new Set());
@@ -209,6 +211,7 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
     setCustomerName("");
     setSiteUrl("");
     setEnableMirroring(false);
+    setDefaultView('use_cases');
     setSelectedIndustryId(null);
     setSelectedUseCases([]);
     setHiddenFromLanding(new Set());
@@ -788,18 +791,37 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
                 </div>
               </div>
               {enableMirroring && (
-                <div className="space-y-2 pl-7">
-                  <Label htmlFor="siteUrl">Website URL</Label>
-                  <Input
-                    id="siteUrl"
-                    type="url"
-                    placeholder="https://example.com"
-                    value={siteUrl}
-                    onChange={(e) => setSiteUrl(e.target.value)}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    We'll capture both an HTML extraction and a screenshot, then let you pick the best result
-                  </p>
+                <div className="space-y-4 pl-7">
+                  <div className="space-y-2">
+                    <Label htmlFor="siteUrl">Website URL</Label>
+                    <Input
+                      id="siteUrl"
+                      type="url"
+                      placeholder="https://example.com"
+                      value={siteUrl}
+                      onChange={(e) => setSiteUrl(e.target.value)}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      We'll capture both an HTML extraction and a screenshot, then let you pick the best result
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Default view</Label>
+                    <Select value={defaultView} onValueChange={(v) => setDefaultView(v as DefaultViewChoice)}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="use_cases">Use cases (default)</SelectItem>
+                        <SelectItem value="homepage">Customer homepage</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">
+                      {defaultView === 'homepage'
+                        ? "We'll grab a copy of the customer's home page and show that first."
+                        : 'Visitors land on the tabbed use case page.'}
+                    </p>
+                  </div>
                 </div>
               )}
             </div>
