@@ -256,17 +256,18 @@ export default function AdminDashboard() {
     <div className="manager-shell min-h-screen">
       {/* Header */}
       <header className="manager-header">
-        <div className="admin-container py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <GbgManagerLogo className="w-28 sm:w-32" />
+        <div className="admin-container py-3 sm:py-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex min-w-0 items-center gap-3">
+              <GbgManagerLogo className="hidden shrink-0 sm:flex" />
+              <GbgManagerLogo compact className="shrink-0 sm:hidden" />
               <div className="h-8 w-px bg-border hidden sm:block" />
-              <div>
+              <div className="min-w-0">
                 <h1 className="text-base sm:text-xl font-bold text-foreground">Demo Manager</h1>
-                <p className="text-sm text-muted-foreground">{user?.email}</p>
+                <p className="truncate text-xs text-muted-foreground sm:text-sm">{user?.email}</p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex max-w-full items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
               <Button onClick={() => setCreateDialogOpen(true)}>
                 <Plus className="w-4 h-4 mr-2" />
                 New Demo
@@ -283,9 +284,9 @@ export default function AdminDashboard() {
 
       {/* Main Content */}
       <main className="admin-container py-8">
-        <div className="flex items-center justify-between mb-6">
+        <div className="mb-6 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <h2 className="text-lg font-semibold">Demo Environments</h2>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Button variant="outline" onClick={() => navigate('/admin/global-settings')}>
               <Settings className="w-4 h-4 mr-2" />
               Global Settings
