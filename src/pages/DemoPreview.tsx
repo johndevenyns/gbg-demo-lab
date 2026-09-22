@@ -878,8 +878,8 @@ export default function DemoPreview() {
         className="flex-1 flex flex-col"
         style={{
           backgroundColor: previewDocument?.formStyle?.contentAreaBgColor || 'transparent',
-          paddingTop: fullReplaceResult ? 0 : `${previewDocument?.formStyle?.contentAreaPaddingY ?? 0}px`,
-          paddingBottom: fullReplaceResult ? 0 : `${previewDocument?.formStyle?.contentAreaPaddingY ?? 0}px`,
+          paddingTop: fullReplaceResult ? 0 : `${previewDocument?.formStyle?.contentAreaPaddingY ?? DEFAULT_FORM_STYLE.contentAreaPaddingY}px`,
+          paddingBottom: fullReplaceResult ? 0 : `${previewDocument?.formStyle?.contentAreaPaddingY ?? DEFAULT_FORM_STYLE.contentAreaPaddingY}px`,
           minHeight: fullReplaceResult ? 0 : `${previewDocument?.formStyle?.contentAreaMinHeight ?? 400}px`,
           justifyContent: ({ start: 'flex-start', center: 'center', end: 'flex-end' } as const)[previewDocument?.formStyle?.contentAreaJustify || 'start'],
           ...(debugBorderMain ? { border: debugBorderMain } : {}),

@@ -487,7 +487,7 @@ interface SiteMirrorCardProps {
       const vpConfig = viewportConfig[previewViewport];
 
       const formStyle = demo.formStyle || DEFAULT_FORM_STYLE;
-       const paddingY = formStyle.contentAreaPaddingY ?? 0;
+       const paddingY = formStyle.contentAreaPaddingY ?? DEFAULT_FORM_STYLE.contentAreaPaddingY ?? 40;
       const minContentHeight = formStyle.contentAreaMinHeight ?? 400;
       const justifyMap: Record<string, string> = { start: 'flex-start', center: 'center', end: 'flex-end' };
       const justifyKey = (formStyle.contentAreaJustify || 'start') as 'start' | 'center' | 'end';
