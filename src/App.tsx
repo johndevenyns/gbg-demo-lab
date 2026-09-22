@@ -76,7 +76,14 @@ function AppContent() {
           <Route path="/demo/:slug" element={<DemoPreview />} />
           <Route path="/demo/:slug/page/:pageSlug" element={<DemoPreview />} />
           <Route path="/embed/:slug" element={<DemoEmbed />} />
-          <Route path="/qr-preview" element={<QrCodePreview />} />
+          <Route
+            path="/qr-preview"
+            element={
+              <ProtectedRoute>
+                <QrCodePreview />
+              </ProtectedRoute>
+            }
+          />
           <Route path="/verify/redirect" element={<VerifyRedirect />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
