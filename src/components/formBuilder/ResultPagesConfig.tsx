@@ -306,6 +306,8 @@ interface ResultPagesConfigProps {
   onUpdateExtraCustomPages?: (pages: ExtraCustomPage[]) => void;
   defaultLandingPageSlug?: string;
   onUpdateDefaultLandingPageSlug?: (slug: string | undefined) => void;
+  customerName?: string;
+  customerSiteUrl?: string;
 }
 
 export function ResultPagesConfig({
@@ -333,6 +335,8 @@ export function ResultPagesConfig({
   onUpdateExtraCustomPages,
   defaultLandingPageSlug,
   onUpdateDefaultLandingPageSlug,
+  customerName,
+  customerSiteUrl,
 }: ResultPagesConfigProps) {
   // PageKey is 'success' | 'failure' | 'landing' | `extra:<id>`
   type PageKey = string;
