@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { FormStyleConfig } from '@/types/formStyle';
-import { scrapingApi, FormElementStyles, CapturedFormData, ExtractedField } from '@/lib/api/scraping';
+import { scrapingApi, CapturedFormData, ExtractedField } from '@/lib/api/scraping';
 import { FormStep, FormField, FormFieldType } from '@/types/demo';
 import { capturedFormDataToConfig, getSmartHoverColor } from '@/lib/formStyleUtils';
 

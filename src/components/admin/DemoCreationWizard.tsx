@@ -21,7 +21,7 @@ import { useEnabledPortalTypes } from "@/hooks/usePortalTypes";
 import { IndustryTemplate, DemoEnvironment, FormStep, FormField, FormFieldType } from "@/types/demo";
 import { scrapingApi, ScrapedBranding, ExtractedField } from "@/lib/api/scraping";
 import { useTestProfiles } from "@/hooks/useTestProfiles";
-import { capturedFormDataToConfig, formElementStylesToConfig, generatePreviewDocument, generateFormHtml } from "@/lib/formStyleUtils";
+import { capturedFormDataToConfig, formElementStylesToConfig, generateFormHtml } from "@/lib/formStyleUtils";
 import { DEFAULT_FORM_STYLE, FormStyleConfig } from "@/types/formStyle";
 import { cn } from "@/lib/utils";
 import * as LucideIcons from "lucide-react";
@@ -303,7 +303,7 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
       const template: IndustryTemplate = 'custom';
       const demo = await createDemo.mutateAsync({ customerName: customerName.trim(), template });
       setCreatedDemoId(demo.id);
-      let effectiveFormStyle: FormStyleConfig = { ...demo.formStyle, ...DEFAULT_FORM_STYLE, ...demo.formStyle };
+      let effectiveFormStyle: FormStyleConfig = { ...DEFAULT_FORM_STYLE, ...(demo.formStyle || {}) };
 
       await updateDemo.mutateAsync({
         id: demo.id,
@@ -414,8 +414,13 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
 
         try {
           await updateDemo.mutateAsync({ id: demo.id, updates: brandingUpdates as any });
-          const appliedParts = [scrapedData?.logoUrl || scrapedData?.branding?.logo ? 'logo' : null, scrapedData?.colors ? 'colors' : null, scrapedData?.formStyles ? 'site-wide form styling' : null].filter(Boolean);
-          updateTaskStatus('apply', appliedParts.length ? 'complete' : 'skipped', appliedParts.length ? `Applied ${appliedParts.join(', ')}` : 'No customer branding data found — defaults retained');
+          const assetResults = [
+            `Colors: ${scrapedData?.colors ? 'captured' : 'default'}`,
+            `Logo: ${scrapedData?.logoUrl || scrapedData?.branding?.logo ? 'captured' : 'not found'}`,
+            `Site-wide form style: ${scrapedData?.formStyles ? 'captured' : 'not found'}`,
+          ];
+          const hasCustomerBranding = Boolean(scrapedData?.colors || scrapedData?.logoUrl || scrapedData?.branding?.logo || scrapedData?.formStyles);
+          updateTaskStatus('apply', hasCustomerBranding ? 'complete' : 'skipped', assetResults.join(' · '));
         } catch (e) {
           updateTaskStatus('apply', 'error', e instanceof Error ? e.message : 'Failed to save branding');
         }
@@ -710,7 +715,7 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
   const getTotalSteps = () => stepOrder.length;
   const isLastStep = stepOrder.indexOf(step) === stepOrder.length - 1;
 
-  const completedTasks = processingTasks.filter(t => t.status === 'complete').length;
+  const completedTasks = processingTasks.filter(t => t.status === 'complete' || t.status === 'skipped' || t.status === 'error').length;
   const progressPercent = processingTasks.length > 0 ? Math.round((completedTasks / processingTasks.length) * 100) : 0;
 
   const stepDescriptions: Record<WizardStep, string> = {
@@ -1068,7 +1073,7 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
                 <div className="mt-4 space-y-1">
                   <Progress value={progressPercent} className="h-2" />
                   <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-                    <span>{processingTasks.filter(t => t.status === 'complete' || t.status === 'skipped').length} of {processingTasks.length} complete</span>
+                    <span>{completedTasks} of {processingTasks.length} complete</span>
                     <span className="font-medium">{progressPercent}%</span>
                   </div>
                 </div>
