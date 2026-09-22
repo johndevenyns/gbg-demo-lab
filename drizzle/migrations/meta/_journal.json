@@ -15,6 +15,20 @@
       "when": 1789419223054,
       "tag": "0001_backfill_test_data_passwords",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790094656113,
+      "tag": "0002_security_hardening_portal_passwords_and_policies",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1790094679478,
+      "tag": "0003_relax_portal_activity_anon_insert_user_check",
+      "breakpoints": true
     }
   ]
 }

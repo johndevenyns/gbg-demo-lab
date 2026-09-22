@@ -117,12 +117,14 @@ export function PortalUserManagement({ demoId }: PortalUserManagementProps) {
   const saveMutation = useMutation({
     mutationFn: async (user: { id?: string; email: string; password: string; display_name: string; is_default: boolean }) => {
       if (user.id) {
-        const { error } = await supabase.from('portal_users').update({
+        const updates: Record<string, unknown> = {
           email: user.email,
-          password: user.password,
           display_name: user.display_name || null,
           is_default: user.is_default,
-        }).eq('id', user.id);
+        };
+        // Only send a password when the admin typed a new one (stored value is hashed)
+        if (user.password) updates.password = user.password;
+        const { error } = await supabase.from('portal_users').update(updates).eq('id', user.id);
         if (error) throw error;
       } else {
         const { data, error } = await supabase.from('portal_users').insert({
@@ -132,6 +134,7 @@ export function PortalUserManagement({ demoId }: PortalUserManagementProps) {
           is_default: user.is_default,
         }).select().single();
         if (error) throw error;
+
 
         // If default, assign to all existing demos
         if (user.is_default && demos.length > 0) {
@@ -213,7 +216,7 @@ export function PortalUserManagement({ demoId }: PortalUserManagementProps) {
   const openEdit = (user: PortalUser) => {
     setEditingUser(user);
     setFormEmail(user.email);
-    setFormPassword(user.password);
+    setFormPassword('');
     setFormDisplayName(user.display_name || '');
     setFormIsDefault(user.is_default);
     setFormError(null);
@@ -221,7 +224,7 @@ export function PortalUserManagement({ demoId }: PortalUserManagementProps) {
   };
 
   const handleSave = () => {
-    if (!formEmail.trim() || !formPassword.trim()) {
+    if (!formEmail.trim() || (!editingUser && !formPassword.trim())) {
       setFormError('Email and password are required');
       return;
     }
@@ -233,6 +236,7 @@ export function PortalUserManagement({ demoId }: PortalUserManagementProps) {
       is_default: formIsDefault,
     });
   };
+
 
   const getUserAssignedDemoIds = (userId: string) =>
     assignments.filter(a => a.portal_user_id === userId).map(a => a.demo_id);
@@ -419,8 +423,14 @@ export function PortalUserManagement({ demoId }: PortalUserManagementProps) {
             </div>
             <div className="space-y-2">
               <Label>Password</Label>
-              <Input value={formPassword} onChange={e => setFormPassword(e.target.value)} placeholder="Password" />
+              <Input
+                type="password"
+                value={formPassword}
+                onChange={e => setFormPassword(e.target.value)}
+                placeholder={editingUser ? 'Leave blank to keep current password' : 'Password'}
+              />
             </div>
+
             <div className="space-y-2">
               <Label>Display Name (optional)</Label>
               <Input value={formDisplayName} onChange={e => setFormDisplayName(e.target.value)} placeholder="John Doe" />
