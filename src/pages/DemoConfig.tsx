@@ -467,6 +467,8 @@ export default function DemoConfig() {
             onUpdateExtraCustomPages={(pages) => handleUpdate({ extraCustomPages: pages })}
             defaultLandingPageSlug={localDemo.defaultLandingPageSlug}
             onUpdateDefaultLandingPageSlug={(slug) => handleUpdate({ defaultLandingPageSlug: slug })}
+            customerName={localDemo.customerName}
+            customerSiteUrl={localDemo.customerSiteUrl}
             useCaseLinks={useCaseLinks}
           />
         );

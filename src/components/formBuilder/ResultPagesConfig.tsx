@@ -6,7 +6,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CheckCircle2, XCircle, ExternalLink, Settings2, Paintbrush, Sparkles, Upload, Loader2, Eye, ArrowLeft, FileText, ChevronRight, Plus, Trash2, Pencil, Check, X, Home } from 'lucide-react';
+import { CheckCircle2, XCircle, ExternalLink, Settings2, Paintbrush, Sparkles, Upload, Loader2, Eye, ArrowLeft, FileText, ChevronRight, Plus, Trash2, Pencil, Check, X, Home, Camera } from 'lucide-react';
+import { captureCustomerHomepage, mergeHomepagePage, HOMEPAGE_PAGE_SLUG } from '@/lib/homepageCapture';
 import { ResultPageConfig, ResultButtonAction, ResultPageMode, DEFAULT_SUCCESS_CONFIG, DEFAULT_FAILURE_CONFIG, DEFAULT_LANDING_CONFIG } from '@/components/preview/ResultPage';
 import { ResultPage } from '@/components/preview/ResultPage';
 import type { FormStyleConfig } from '@/types/formStyle';
@@ -355,6 +356,32 @@ export function ResultPagesConfig({
   const successConfig = successPageConfig || DEFAULT_SUCCESS_CONFIG;
   const failureConfig = failurePageConfig || DEFAULT_FAILURE_CONFIG;
   const landingConfig = landingPageConfig || DEFAULT_LANDING_CONFIG;
+
+  const hasHomepagePage = pages.some((p) => p.slug === HOMEPAGE_PAGE_SLUG);
+
+  const handleCaptureHomepage = async () => {
+    if (!demoId || !customerSiteUrl) return;
+    setCapturingHomepage(true);
+    try {
+      const result = await captureCustomerHomepage({
+        demoId,
+        customerName: customerName || 'Customer',
+        siteUrl: customerSiteUrl,
+        bgColor: formStyle?.headerBgColor,
+        existingPages: pages,
+      });
+      if (!result.success || !result.page) {
+        toast({ title: 'Homepage capture failed', description: result.error, variant: 'destructive' });
+        return;
+      }
+      onUpdateExtraCustomPages?.(mergeHomepagePage(pages, result.page));
+      onUpdateDefaultLandingPageSlug?.(result.page.slug);
+      toast({ title: 'Homepage captured', description: 'It is now the default view for this demo.' });
+    } finally {
+      setCapturingHomepage(false);
+    }
+  };
+
 
   const uploadImage = async (file: File, slot: string): Promise<string | null> => {
     if (!demoId) {
