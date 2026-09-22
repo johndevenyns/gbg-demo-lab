@@ -1003,7 +1003,7 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
         {/* Step 4: Use Cases within selected industry */}
         {step === 'use-cases' && (
           <div className="py-4 space-y-4">
-            {selectedIndustry && (
+            {INDUSTRIES_ENABLED && selectedIndustry && (
               <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50 mb-2">
                 <span className="text-sm font-medium">{selectedIndustry.title}</span>
                 {hasPortal && selectedPortalType && (
@@ -1020,7 +1020,7 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
               </div>
             ) : industryUseCases.length === 0 ? (
               <p className="text-center text-muted-foreground py-8">
-                No use cases configured for this industry. Add them in Global Settings → Industries.
+                No use cases configured yet. Add them in Global Settings → Use Cases.
               </p>
             ) : (
               <div className="grid gap-3">
