@@ -284,6 +284,9 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
       tasks.push({ id: 'discover-form', label: 'Crawling site for application or contact form', phase: 'forms', status: 'pending' });
       tasks.push({ id: 'capture-form', label: 'Capturing form fields, labels & styling', phase: 'forms', status: 'pending' });
       tasks.push({ id: 'generate-steps', label: 'Generating matching workflow steps', phase: 'forms', status: 'pending' });
+      if (defaultView === 'homepage') {
+        tasks.push({ id: 'capture-homepage', label: 'Capturing customer homepage', phase: 'branding', status: 'pending' });
+      }
     }
     if (selectedUseCases.length > 0) {
       tasks.push({ id: 'use-cases', label: 'Linking use cases to demo', phase: 'workflow', status: 'pending' });
@@ -570,6 +573,43 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
           updateTaskStatus('use-cases', 'complete', `${linked} of ${selectedUseCases.length} linked (${linkErrors.length} failed)`);
         } else {
           updateTaskStatus('use-cases', 'error', `Could not link use cases: ${linkErrors[0]}`);
+        }
+      }
+
+      // ===== Customer homepage as the default view (best-effort) =====
+      if (enableMirroring && normalizedSiteUrl && defaultView === 'homepage') {
+        activeTaskId = 'capture-homepage';
+        updateTaskStatus('capture-homepage', 'in_progress');
+        setTaskDetail('capture-homepage', 'Grabbing a full-length picture of the home page…');
+        try {
+          const result = await captureCustomerHomepage({
+            demoId: demo.id,
+            customerName: customerName.trim(),
+            siteUrl: normalizedSiteUrl,
+            bgColor: scrapedData?.colors?.headerBgColor,
+          });
+          if (result.success && result.page) {
+            await updateDemo.mutateAsync({
+              id: demo.id,
+              updates: {
+                extraCustomPages: mergeHomepagePage(undefined, result.page),
+                defaultLandingPageSlug: result.page.slug,
+              } as any,
+            });
+            updateTaskStatus('capture-homepage', 'complete', 'Home page captured and set as the default view');
+          } else {
+            updateTaskStatus(
+              'capture-homepage',
+              'error',
+              `${result.error || 'Capture failed'} — default view stays on use cases; retry from Custom Pages`,
+            );
+          }
+        } catch (e) {
+          updateTaskStatus(
+            'capture-homepage',
+            'error',
+            `${e instanceof Error ? e.message : 'Capture failed'} — default view stays on use cases`,
+          );
         }
       }
 
