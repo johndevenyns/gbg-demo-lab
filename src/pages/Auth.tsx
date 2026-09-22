@@ -106,7 +106,6 @@ export default function Auth() {
   return (
     <div className="manager-auth-shell min-h-screen flex items-center justify-center p-4 sm:p-8">
       <Card className="manager-auth-card w-full max-w-md overflow-hidden">
-        <div className="h-2 bg-primary" />
         <CardHeader className="text-center px-6 pb-3 pt-8 sm:px-9">
           <GbgManagerLogo className="mx-auto mb-7 w-44" />
           <CardTitle className="text-3xl font-bold">Demo Manager</CardTitle>
