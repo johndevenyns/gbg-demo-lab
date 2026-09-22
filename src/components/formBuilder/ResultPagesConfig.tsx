@@ -367,7 +367,7 @@ export function ResultPagesConfig({
         demoId,
         customerName: customerName || 'Customer',
         siteUrl: customerSiteUrl,
-        bgColor: formStyle?.headerBgColor,
+        bgColor: formStyle?.contentAreaBgColor,
         existingPages: pages,
       });
       if (!result.success || !result.page) {
