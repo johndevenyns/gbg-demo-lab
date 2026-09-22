@@ -18,6 +18,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useCreateDemo, useUpdateDemo } from "@/hooks/useDemos";
 import { useGlobalUseCases, useAddDemoUseCaseLink } from "@/hooks/useUseCases";
 import { useIndustries } from "@/hooks/useIndustries";
+import { INDUSTRIES_ENABLED } from "@/lib/featureFlags";
 import { useEnabledPortalTypes } from "@/hooks/usePortalTypes";
 import { IndustryTemplate, DemoEnvironment, FormStep, FormField, FormFieldType } from "@/types/demo";
 import { scrapingApi, ScrapedBranding, ExtractedField } from "@/lib/api/scraping";
@@ -167,18 +168,18 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
 
   // When industry is selected, auto-select all its use cases
   useEffect(() => {
-    if (selectedIndustryId && !useCasesInitialized) {
+    if ((INDUSTRIES_ENABLED ? !!selectedIndustryId : step === 'use-cases') && !useCasesInitialized) {
       const industryUseCases = globalUseCases
         .filter(uc => uc.isEnabled)
         .map(uc => uc.id);
       setSelectedUseCases(industryUseCases);
       setUseCasesInitialized(true);
     }
-  }, [selectedIndustryId, globalUseCases, useCasesInitialized]);
+  }, [selectedIndustryId, step, globalUseCases, useCasesInitialized]);
 
   // When portal is enabled, ensure login use case is selected
   useEffect(() => {
-    if (hasPortal && selectedIndustryId && useCasesInitialized) {
+    if (hasPortal && (INDUSTRIES_ENABLED ? !!selectedIndustryId : true) && useCasesInitialized) {
       const loginUseCase = globalUseCases.find(uc => 
         uc.isEnabled &&
         uc.title.toLowerCase().includes('login')
@@ -259,7 +260,8 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
   };
 
   const startProcessing = async () => {
-    if (!customerName.trim() || !selectedIndustryId) return;
+    if (!customerName.trim()) return;
+    if (INDUSTRIES_ENABLED && !selectedIndustryId) return;
 
     // Validate the site URL up front so we fail with a helpful message instead of mid-flow.
     let normalizedSiteUrl: string | null = null;
@@ -723,7 +725,9 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
     onCreated(createdDemoId);
   };
 
-  const stepOrder: WizardStep[] = ['details', 'industry', 'portal', 'use-cases'];
+  const stepOrder: WizardStep[] = INDUSTRIES_ENABLED
+    ? ['details', 'industry', 'portal', 'use-cases']
+    : ['details', 'portal', 'use-cases'];
 
   const canProceed = () => {
     switch (step) {
