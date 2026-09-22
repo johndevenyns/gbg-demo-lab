@@ -29,6 +29,7 @@ import { DemoUserManagement } from "@/components/admin/DemoUserManagement";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { SaveAsNewDemoDialog } from "@/components/admin/SaveAsNewDemoDialog";
 import { SaveAsIndustryDialog } from "@/components/admin/SaveAsIndustryDialog";
+import { INDUSTRIES_ENABLED } from "@/lib/featureFlags";
 import { ArchiveDemoDialog } from "@/components/admin/ArchiveDemoDialog";
 import { useDemoVerificationApiKey, useSaveDemoVerificationApiKey } from "@/hooks/useDemoVerificationApiKey";
 import { Key, CheckCircle2 } from "lucide-react";
@@ -514,9 +515,11 @@ export default function DemoConfig() {
                   <DropdownMenuItem onClick={() => setShowCloneDialog(true)}>
                     <CopyPlus className="w-4 h-4 mr-2" />Save as New Demo
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setShowIndustryDialog(true)}>
-                    <Factory className="w-4 h-4 mr-2" />Save as Industry
-                  </DropdownMenuItem>
+                  {INDUSTRIES_ENABLED && (
+                    <DropdownMenuItem onClick={() => setShowIndustryDialog(true)}>
+                      <Factory className="w-4 h-4 mr-2" />Save as Industry
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => setShowArchiveDialog(true)} className="text-destructive focus:text-destructive">
                     <Archive className="w-4 h-4 mr-2" />Archive Demo

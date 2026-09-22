@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { cn } from "@/lib/utils";
+import { INDUSTRIES_ENABLED } from "@/lib/featureFlags";
 import { useNavigate } from "react-router-dom";
 import { Plus, Search, Settings, ExternalLink, Trash2, Copy, Building2, Car, Gamepad2, Shield, Landmark, Layers, Heart, ShoppingBag, ImageOff, LogOut, BarChart3 } from "lucide-react";
 import { ChangePasswordDialog } from "@/components/admin/ChangePasswordDialog";
@@ -171,10 +173,12 @@ export default function AdminDashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Industry</span>
-                  <span className="font-medium">{industryLabels[demo.industryTemplate]}</span>
-                </div>
+                {INDUSTRIES_ENABLED && (
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Industry</span>
+                    <span className="font-medium">{industryLabels[demo.industryTemplate]}</span>
+                  </div>
+                )}
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Verification</span>
                   <Badge variant="outline" className="font-mono text-xs">
@@ -304,7 +308,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <div className={cn("grid grid-cols-1 gap-4 mb-8", INDUSTRIES_ENABLED ? "md:grid-cols-4" : "md:grid-cols-3")}>
           <Card className="glass-card">
             <CardContent className="pt-6">
               <div className="text-3xl font-bold text-foreground">{demos.length}</div>
@@ -317,12 +321,14 @@ export default function AdminDashboard() {
               <div className="text-sm text-muted-foreground">Active</div>
             </CardContent>
           </Card>
-          <Card className="glass-card">
-            <CardContent className="pt-6">
-              <div className="text-3xl font-bold text-foreground">{new Set(demos.map(d => d.industryTemplate)).size}</div>
-              <div className="text-sm text-muted-foreground">Industries</div>
-            </CardContent>
-          </Card>
+          {INDUSTRIES_ENABLED && (
+            <Card className="glass-card">
+              <CardContent className="pt-6">
+                <div className="text-3xl font-bold text-foreground">{new Set(demos.map(d => d.industryTemplate)).size}</div>
+                <div className="text-sm text-muted-foreground">Industries</div>
+              </CardContent>
+            </Card>
+          )}
           <Card className="glass-card">
             <CardContent className="pt-6">
               <div className="text-3xl font-bold text-accent">{demos.filter(d => d.includeQr).length}</div>

@@ -22,6 +22,7 @@ import { TestProfileManagement } from "@/components/admin/TestProfileManagement"
 import { FormTemplateManagement } from "@/components/admin/FormTemplateManagement";
 import { GlobalFieldConfigManagement } from "@/components/admin/GlobalFieldConfigManagement";
 import { IndustryManagement } from "@/components/admin/IndustryManagement";
+import { INDUSTRIES_ENABLED } from "@/lib/featureFlags";
 import { PortalTypeManagement } from "@/components/admin/PortalTypeManagement";
 import { UnifiedVerificationSettings } from "@/components/admin/UnifiedVerificationSettings";
 import { GlobalUseCaseManagement } from "@/components/admin/GlobalUseCaseManagement";
@@ -76,12 +77,14 @@ export default function GlobalSettingsPage() {
       </header>
 
       <main className="admin-container py-8">
-        <Tabs key={isGlobalAdmin ? "global-admin" : "admin"} defaultValue="industries" className="space-y-6 w-full">
+        <Tabs key={isGlobalAdmin ? "global-admin" : "admin"} defaultValue={INDUSTRIES_ENABLED ? "industries" : "use-cases"} className="space-y-6 w-full">
           <TabsList className="flex flex-wrap h-auto gap-1 justify-start">
-            <TabsTrigger value="industries" className="flex items-center gap-2">
-              <Briefcase className="w-4 h-4" />
-              Industries
-            </TabsTrigger>
+            {INDUSTRIES_ENABLED && (
+              <TabsTrigger value="industries" className="flex items-center gap-2">
+                <Briefcase className="w-4 h-4" />
+                Industries
+              </TabsTrigger>
+            )}
             <TabsTrigger value="use-cases" className="flex items-center gap-2">
               <FolderOpen className="w-4 h-4" />
               Use Cases
@@ -108,9 +111,11 @@ export default function GlobalSettingsPage() {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="industries" className="space-y-6">
-            <IndustryManagement readOnly={!isGlobalAdmin} />
-          </TabsContent>
+          {INDUSTRIES_ENABLED && (
+            <TabsContent value="industries" className="space-y-6">
+              <IndustryManagement readOnly={!isGlobalAdmin} />
+            </TabsContent>
+          )}
 
           <TabsContent value="use-cases" className="space-y-6">
             <Tabs defaultValue="use-cases-main" className="space-y-4 w-full">

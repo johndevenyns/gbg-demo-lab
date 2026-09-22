@@ -15,6 +15,8 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { FormStep, INDUSTRY_TEMPLATES, IndustryTemplate, DemoEnvironment } from '@/types/demo';
+import { cn } from '@/lib/utils';
+import { INDUSTRIES_ENABLED } from '@/lib/featureFlags';
 import { Switch } from '@/components/ui/switch';
 import { FormStyleConfig, DEFAULT_FORM_STYLE } from '@/types/formStyle';
 import { FormBuilderCanvas } from '@/components/formBuilder/FormBuilderCanvas';
@@ -410,7 +412,7 @@ export function FormTemplateManagement({ readOnly = false }: { readOnly?: boolea
       </div>
 
       <Tabs defaultValue="saved" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 mb-4">
+        <TabsList className={cn("grid w-full mb-4", INDUSTRIES_ENABLED ? "grid-cols-2" : "grid-cols-1")}>
           <TabsTrigger value="saved" className="flex items-center gap-2">
             <Bookmark className="w-4 h-4" />
             Saved Templates
@@ -418,10 +420,12 @@ export function FormTemplateManagement({ readOnly = false }: { readOnly?: boolea
               <Badge variant="secondary" className="ml-1 text-xs px-1.5 py-0">{savedTemplates.length}</Badge>
             )}
           </TabsTrigger>
-          <TabsTrigger value="industry" className="flex items-center gap-2">
-            <Building2 className="w-4 h-4" />
-            Industry Templates
-          </TabsTrigger>
+          {INDUSTRIES_ENABLED && (
+            <TabsTrigger value="industry" className="flex items-center gap-2">
+              <Building2 className="w-4 h-4" />
+              Industry Templates
+            </TabsTrigger>
+          )}
         </TabsList>
 
         {/* Saved Templates */}
