@@ -11,7 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { FormStyleConfig } from '@/types/formStyle';
 import { scrapingApi, FormElementStyles, CapturedFormData, ExtractedField } from '@/lib/api/scraping';
 import { FormStep, FormField, FormFieldType } from '@/types/demo';
-import { capturedFormDataToConfig } from '@/lib/formStyleUtils';
+import { capturedFormDataToConfig, getSmartHoverColor } from '@/lib/formStyleUtils';
 
 interface ExactCaptureSectionProps {
   formStyle: FormStyleConfig;

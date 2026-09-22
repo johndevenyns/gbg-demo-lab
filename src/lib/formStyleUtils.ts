@@ -158,7 +158,7 @@ function adjustColorBrightness(hex: string, percent: number): string {
   return `#${adjusted.map((channel) => channel.toString(16).padStart(2, '0')).join('')}`;
 }
 
-function getSmartHoverColor(color: string): string {
+export function getSmartHoverColor(color: string): string {
   const luminance = getColorLuminance(color);
   return adjustColorBrightness(color, luminance != null && luminance > 0.5 ? -15 : 25);
 }

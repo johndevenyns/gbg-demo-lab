@@ -21,8 +21,8 @@ import { useEnabledPortalTypes } from "@/hooks/usePortalTypes";
 import { IndustryTemplate, DemoEnvironment, FormStep, FormField, FormFieldType } from "@/types/demo";
 import { scrapingApi, ScrapedBranding, ExtractedField } from "@/lib/api/scraping";
 import { useTestProfiles } from "@/hooks/useTestProfiles";
-import { formElementStylesToConfig, generatePreviewDocument, generateFormHtml } from "@/lib/formStyleUtils";
-import { DEFAULT_FORM_STYLE } from "@/types/formStyle";
+import { capturedFormDataToConfig, formElementStylesToConfig, generatePreviewDocument, generateFormHtml } from "@/lib/formStyleUtils";
+import { DEFAULT_FORM_STYLE, FormStyleConfig } from "@/types/formStyle";
 import { cn } from "@/lib/utils";
 import * as LucideIcons from "lucide-react";
 
@@ -247,8 +247,8 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
   const selectedIndustry = industries.find(i => i.id === selectedIndustryId);
   const industryUseCases = globalUseCases.filter(uc => uc.isEnabled);
 
-  const buildPreviewHtml = (headerHtml: string, footerHtml: string, css: string, buttonColor: string) => {
-    const formHtml = generateFormHtml(DEFAULT_FORM_STYLE, buttonColor);
+  const buildPreviewHtml = (headerHtml: string, footerHtml: string, css: string, buttonColor: string, formStyle: FormStyleConfig = DEFAULT_FORM_STYLE) => {
+    const formHtml = generateFormHtml(formStyle, buttonColor);
     return `<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{margin:0;padding:0;font-family:system-ui,sans-serif;}*{box-sizing:border-box;}</style>${css ? `<style>${css}</style>` : ''}</head><body>${headerHtml || ''}<div style="padding:40px 20px;background:#f5f5f5;min-height:200px;">${formHtml}</div>${footerHtml || ''}</body></html>`;
   };
 
@@ -303,6 +303,7 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
       const template: IndustryTemplate = 'custom';
       const demo = await createDemo.mutateAsync({ customerName: customerName.trim(), template });
       setCreatedDemoId(demo.id);
+      let effectiveFormStyle: FormStyleConfig = { ...demo.formStyle, ...DEFAULT_FORM_STYLE, ...demo.formStyle };
 
       await updateDemo.mutateAsync({
         id: demo.id,
@@ -407,12 +408,14 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
 
         // Apply form styles if available
         if (scrapedData?.formStyles) {
-          brandingUpdates.formStyle = formElementStylesToConfig(scrapedData.formStyles);
+          effectiveFormStyle = formElementStylesToConfig(scrapedData.formStyles, scrapedData.branding, effectiveFormStyle);
+          brandingUpdates.formStyle = effectiveFormStyle;
         }
 
         try {
           await updateDemo.mutateAsync({ id: demo.id, updates: brandingUpdates as any });
-          updateTaskStatus('apply', 'complete', `Brand color ${brandingUpdates.buttonColor}`);
+          const appliedParts = [scrapedData?.logoUrl || scrapedData?.branding?.logo ? 'logo' : null, scrapedData?.colors ? 'colors' : null, scrapedData?.formStyles ? 'site-wide form styling' : null].filter(Boolean);
+          updateTaskStatus('apply', appliedParts.length ? 'complete' : 'skipped', appliedParts.length ? `Applied ${appliedParts.join(', ')}` : 'No customer branding data found — defaults retained');
         } catch (e) {
           updateTaskStatus('apply', 'error', e instanceof Error ? e.message : 'Failed to save branding');
         }
@@ -452,35 +455,49 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
               updateTaskStatus('capture-form', 'in_progress');
               setTaskDetail('capture-form', 'Extracting HTML, CSS & field metadata…');
               const capture = await scrapingApi.captureFormById(best.pageUrl, best.formId || '');
-              if (capture.success && capture.data) {
+               const capturedHtml = capture.data?.formHtml?.trim() || '';
+               const hasFormControls = /<(input|select|textarea|button)\b/i.test(capturedHtml);
+               const hasStyleEvidence = Boolean(
+                 capture.data?.formCss?.trim()
+                 || capture.data?.styles?.rawFormCss?.trim()
+                 || capture.data?.patterns?.detectedInputBgColor
+                 || capture.data?.patterns?.detectedInputBorderColor
+                 || capture.data?.patterns?.detectedButtonBgColor
+                 || capture.data?.patterns?.detectedFontFamily
+               );
+               if (capture.success && capture.data && hasFormControls && hasStyleEvidence) {
                 extractedFields = capture.data.extractedFields || [];
                 setDiscoveredFieldCount(extractedFields.length);
-                // Persist captured form styling (merge with existing)
-                if (capture.data.styles) {
-                  const formStyleFromCapture = formElementStylesToConfig(capture.data.styles);
-                  await updateDemo.mutateAsync({
-                    id: demo.id,
-                    updates: { formStyle: formStyleFromCapture } as any,
-                  });
-                }
+                 effectiveFormStyle = capturedFormDataToConfig(capture.data, effectiveFormStyle);
+                 await updateDemo.mutateAsync({
+                   id: demo.id,
+                   updates: { formStyle: effectiveFormStyle } as any,
+                 });
                 updateTaskStatus(
                   'capture-form',
                   'complete',
-                  `Captured ${extractedFields.length} field${extractedFields.length === 1 ? '' : 's'}`,
+                   `Captured customer HTML/CSS and ${extractedFields.length} field${extractedFields.length === 1 ? '' : 's'}`,
                 );
+                 if (refinedHtml) {
+                   setHtmlPreviewDoc(buildPreviewHtml(refinedHtml.headerHtml, refinedHtml.footerHtml, refinedHtml.css, appliedButtonColor, effectiveFormStyle));
+                 }
+                 if (screenshotCapture) {
+                   setScreenshotPreviewDoc(buildPreviewHtml(screenshotCapture.headerHtml, screenshotCapture.footerHtml, '', appliedButtonColor, effectiveFormStyle));
+                 }
               } else {
-                updateTaskStatus('capture-form', 'skipped', 'Form found but capture failed — you can retry from Site Appearance');
+                 const reason = capture.error || (!hasFormControls ? 'Capture contained no usable form controls' : 'Capture contained no customer CSS or style evidence');
+                 updateTaskStatus('capture-form', 'error', `${reason} — site-wide styling or defaults retained`);
               }
             } catch (e) {
-              updateTaskStatus('capture-form', 'skipped', 'Capture skipped — retry from Site Appearance');
+               updateTaskStatus('capture-form', 'error', `${e instanceof Error ? e.message : 'Capture failed'} — retry from Site Appearance`);
             }
           } else {
             updateTaskStatus('discover-form', 'skipped', 'No suitable form found on site');
             updateTaskStatus('capture-form', 'skipped', 'Skipped — no form to capture');
           }
         } catch (e) {
-          updateTaskStatus('discover-form', 'skipped', 'Discovery skipped — you can run it later');
-          updateTaskStatus('capture-form', 'skipped', 'Skipped');
+          updateTaskStatus('discover-form', 'error', `${e instanceof Error ? e.message : 'Discovery failed'} — you can run it later`);
+          updateTaskStatus('capture-form', 'skipped', 'Not attempted because form discovery failed');
         }
 
         // Generate workflow steps from captured fields
@@ -575,23 +592,16 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
             },
           },
         });
-        updateTaskStatus('finalize', 'complete', 'Demo ready to preview');
+        const profileKinds = [Object.keys(passData).length ? 'Pass' : null, Object.keys(failData).length ? 'Fail' : null].filter(Boolean);
+        updateTaskStatus('finalize', 'complete', profileKinds.length ? `${profileKinds.join(' and ')} test profiles loaded` : 'Demo ready; no test profiles were available');
       } catch (e) {
         updateTaskStatus('finalize', 'error', e instanceof Error ? e.message : 'Failed to save test profiles');
       }
 
-      // If mirroring was enabled and we have captures, go to review step
-      // Otherwise, finish immediately
-      if (enableMirroring && siteUrl && (htmlAvailable || screenshotAvailable || refinedHtml || screenshotCapture)) {
-        // Auto-select best available method
-        setSelectedMethod(refinedHtml ? 'html' : 'screenshot');
-        setTimeout(() => setStep('review'), 800);
-      } else {
-        setTimeout(() => {
-          onOpenChange(false);
-          onCreated(demo.id);
-        }, 1000);
-      }
+      // Always keep the final report visible. If captures exist, the user can
+      // also choose which site mirror to activate before opening the demo.
+      setSelectedMethod(refinedHtml ? 'html' : 'screenshot');
+      setTimeout(() => setStep('review'), 800);
     } catch (error) {
       console.error('Processing error:', error);
       const message = error instanceof Error ? error.message : 'An unexpected error occurred';
@@ -647,10 +657,12 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
     
     // Set the active method based on user selection
     try {
-      await updateDemo.mutateAsync({
-        id: createdDemoId,
-        updates: { mirrorActiveMethod: selectedMethod } as any,
-      });
+      if ((selectedMethod === 'html' && (htmlAvailable || htmlCaptureData)) || (selectedMethod === 'screenshot' && (screenshotAvailable || screenshotCaptureData))) {
+        await updateDemo.mutateAsync({
+          id: createdDemoId,
+          updates: { mirrorActiveMethod: selectedMethod } as any,
+        });
+      }
     } catch (e) {
       console.error('Failed to set active method:', e);
     }
@@ -707,7 +719,7 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
     'portal': 'Choose whether this demo includes a portal experience for logged-in users',
     'use-cases': 'All use cases are pre-selected. Deselect any you don\'t need.',
     'processing': 'Please wait while we configure your demo environment',
-    'review': 'Compare both capture methods and pick the one that looks best',
+    'review': 'Review what succeeded, what was not found, and anything that needs attention',
   };
 
   return (
@@ -721,7 +733,7 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
       )}>
         <DialogHeader>
           <DialogTitle>
-            {step === 'processing' ? 'Setting Up Demo' : step === 'review' ? 'Choose Capture Method' : 'Create Demo Environment'}
+            {step === 'processing' ? 'Setting Up Demo' : step === 'review' ? 'Setup Results' : 'Create Demo Environment'}
           </DialogTitle>
           <DialogDescription>{stepDescriptions[step]}</DialogDescription>
         </DialogHeader>
@@ -1216,8 +1228,36 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
         {/* Review Step - Compare captures side by side */}
         {step === 'review' && (
           <div className="py-4 space-y-4">
+            <div className="rounded-lg border border-border overflow-hidden">
+              <div className="px-3 py-2 bg-muted/30 border-b border-border">
+                <h3 className="text-sm font-semibold">Initial build report</h3>
+              </div>
+              <div className="divide-y divide-border">
+                {processingTasks.map((task) => (
+                  <div key={task.id} className="flex items-start gap-3 px-3 py-2.5">
+                    <div className="mt-0.5 shrink-0">
+                      {task.status === 'complete' && <Check className="w-4 h-4 text-emerald-600" />}
+                      {task.status === 'skipped' && <span className="inline-flex w-4 h-4 items-center justify-center text-muted-foreground font-bold">–</span>}
+                      {task.status === 'error' && <AlertTriangle className="w-4 h-4 text-destructive" />}
+                      {(task.status === 'pending' || task.status === 'in_progress') && <Loader2 className="w-4 h-4 animate-spin text-primary" />}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-sm font-medium">{task.label}</p>
+                        <Badge variant={task.status === 'error' ? 'destructive' : 'outline'} className="text-[10px] shrink-0">
+                          {task.status === 'complete' ? 'Succeeded' : task.status === 'skipped' ? 'Not found / skipped' : task.status === 'error' ? 'Failed' : 'Processing'}
+                        </Badge>
+                      </div>
+                      {task.detail && <p className="text-xs text-muted-foreground mt-0.5 break-words">{task.detail}</p>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {(htmlAvailable || htmlCaptureData || screenshotAvailable || screenshotCaptureData) && (
             <RadioGroup value={selectedMethod} onValueChange={(v) => setSelectedMethod(v as 'html' | 'screenshot')}>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* HTML Capture */}
                 <div className={cn(
                   "border rounded-lg overflow-hidden transition-all cursor-pointer",
@@ -1293,10 +1333,13 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
                 </div>
               </div>
             </RadioGroup>
+            )}
 
-            <p className="text-xs text-muted-foreground text-center">
-              Both captures are saved. You can switch between them later in the Site Mirror settings.
-            </p>
+            {(htmlAvailable || htmlCaptureData || screenshotAvailable || screenshotCaptureData) && (
+              <p className="text-xs text-muted-foreground text-center">
+                Available captures are saved. You can switch between them later in Site Appearance.
+              </p>
+            )}
           </div>
         )}
         </div>
@@ -1326,15 +1369,12 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
         {/* Review Navigation */}
         {step === 'review' && (
           <div className="flex justify-between pt-4 border-t border-border">
-            <Button variant="outline" onClick={() => {
-              // Skip review — just use default
-              handleReviewComplete();
-            }}>
-              Skip
-            </Button>
+            <div />
             <Button onClick={handleReviewComplete} className="gradient-primary">
               <Check className="w-4 h-4 mr-2" />
-              Use {selectedMethod === 'html' ? 'HTML' : 'Screenshot'} Capture
+              {(htmlAvailable || htmlCaptureData || screenshotAvailable || screenshotCaptureData)
+                ? `Use ${selectedMethod === 'html' ? 'HTML' : 'Screenshot'} Capture & Open Demo`
+                : 'Open Demo'}
             </Button>
           </div>
         )}
