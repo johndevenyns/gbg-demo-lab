@@ -117,12 +117,14 @@ export function PortalUserManagement({ demoId }: PortalUserManagementProps) {
   const saveMutation = useMutation({
     mutationFn: async (user: { id?: string; email: string; password: string; display_name: string; is_default: boolean }) => {
       if (user.id) {
-        const { error } = await supabase.from('portal_users').update({
+        const updates: Record<string, unknown> = {
           email: user.email,
-          password: user.password,
           display_name: user.display_name || null,
           is_default: user.is_default,
-        }).eq('id', user.id);
+        };
+        // Only send a password when the admin typed a new one (stored value is hashed)
+        if (user.password) updates.password = user.password;
+        const { error } = await supabase.from('portal_users').update(updates).eq('id', user.id);
         if (error) throw error;
       } else {
         const { data, error } = await supabase.from('portal_users').insert({
@@ -132,6 +134,7 @@ export function PortalUserManagement({ demoId }: PortalUserManagementProps) {
           is_default: user.is_default,
         }).select().single();
         if (error) throw error;
+
 
         // If default, assign to all existing demos
         if (user.is_default && demos.length > 0) {
