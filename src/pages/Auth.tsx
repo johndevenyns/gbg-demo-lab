@@ -9,7 +9,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, Shield, AlertCircle, CheckCircle, ArrowLeft } from 'lucide-react';
+import { Loader2, AlertCircle, CheckCircle, ArrowLeft } from 'lucide-react';
+import { GbgManagerLogo } from '@/components/GbgManagerLogo';
 
 const authSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -103,18 +104,17 @@ export default function Auth() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/20 p-4">
-      <Card className="w-full max-w-md glass-card">
-        <CardHeader className="text-center pb-2">
-          <div className="w-16 h-16 rounded-xl gradient-primary flex items-center justify-center mx-auto mb-4">
-            <Shield className="w-8 h-8 text-primary-foreground" />
-          </div>
-          <CardTitle className="text-2xl">GBG Demo Manager</CardTitle>
+    <div className="manager-auth-shell min-h-screen flex items-center justify-center p-4 sm:p-8">
+      <Card className="manager-auth-card w-full max-w-md overflow-hidden">
+        <div className="h-2 bg-primary" />
+        <CardHeader className="text-center px-6 pb-3 pt-8 sm:px-9">
+          <GbgManagerLogo className="mx-auto mb-7 w-44" />
+          <CardTitle className="text-3xl font-bold">Demo Manager</CardTitle>
           <CardDescription>
             {showForgotPassword ? 'Reset your password' : 'Sign in to manage demo environments'}
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-6 pb-8 sm:px-9">
           {error && (
             <Alert variant="destructive" className="mb-4">
               <AlertCircle className="h-4 w-4" />
@@ -146,7 +146,7 @@ export default function Auth() {
                     required
                   />
                 </div>
-                <Button type="submit" className="w-full gradient-primary" disabled={isResetting}>
+                <Button type="submit" className="w-full" disabled={isResetting}>
                   {isResetting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Sending...</> : 'Send Reset Link'}
                 </Button>
                 <Button type="button" variant="ghost" className="w-full" onClick={() => { setShowForgotPassword(false); setError(null); }}>
@@ -180,7 +180,7 @@ export default function Auth() {
                   autoComplete="current-password"
                 />
               </div>
-              <Button type="submit" className="w-full gradient-primary" disabled={isSubmitting}>
+              <Button type="submit" className="w-full" disabled={isSubmitting}>
                 {isSubmitting ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />

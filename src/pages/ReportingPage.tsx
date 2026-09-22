@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, PieChart, Pie, Cell } from "recharts";
 import { format } from "date-fns";
+import { GbgManagerLogo } from "@/components/GbgManagerLogo";
 
 const actionColors: Record<string, string> = {
   login: "hsl(var(--primary))",
@@ -100,17 +101,15 @@ export default function ReportingPage() {
   if (!isAdmin) return null;
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
+    <div className="manager-shell min-h-screen">
+      <header className="manager-header">
         <div className="admin-container py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Button variant="ghost" size="icon" onClick={() => navigate("/admin")}>
                 <ArrowLeft className="w-5 h-5" />
               </Button>
-              <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center">
-                <BarChart3 className="w-5 h-5 text-primary-foreground" />
-              </div>
+              <GbgManagerLogo compact />
               <div>
                 <h1 className="text-xl font-bold text-foreground">Reporting</h1>
                 <p className="text-sm text-muted-foreground">Activity logs, usage analytics & reports</p>

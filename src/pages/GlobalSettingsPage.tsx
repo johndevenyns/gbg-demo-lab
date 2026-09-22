@@ -28,6 +28,7 @@ import { GlobalUseCaseManagement } from "@/components/admin/GlobalUseCaseManagem
 import { GlobalRegistrationCodeManagement } from "@/components/admin/GlobalRegistrationCodeManagement";
 import { InvitationTemplateManagement } from "@/components/admin/InvitationTemplateManagement";
 import { UnifiedUserManagement } from "@/components/admin/UnifiedUserManagement";
+import { GbgManagerLogo } from "@/components/GbgManagerLogo";
 
 export default function GlobalSettingsPage() {
   const navigate = useNavigate();
@@ -51,17 +52,15 @@ export default function GlobalSettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
+    <div className="manager-shell min-h-screen">
+      <header className="manager-header">
         <div className="admin-container py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Button variant="ghost" size="icon" onClick={() => navigate("/admin")}>
                 <ArrowLeft className="w-5 h-5" />
               </Button>
-              <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center">
-                <Settings className="w-5 h-5 text-primary-foreground" />
-              </div>
+              <GbgManagerLogo compact />
               <div>
                 <h1 className="text-xl font-bold text-foreground">Global Settings</h1>
                 <p className="text-sm text-muted-foreground">Manage verification types, providers, and users</p>
