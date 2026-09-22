@@ -6,7 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, KeyRound, CheckCircle, AlertCircle } from 'lucide-react';
+import { Loader2, CheckCircle, AlertCircle } from 'lucide-react';
+import { GbgManagerLogo } from '@/components/GbgManagerLogo';
 
 export default function ResetPassword() {
   const navigate = useNavigate();
@@ -77,8 +78,8 @@ export default function ResetPassword() {
 
   if (!isValidSession) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/20 p-4">
-        <Card className="w-full max-w-md">
+      <div className="manager-auth-shell min-h-screen flex items-center justify-center p-4">
+        <Card className="manager-auth-card w-full max-w-md">
           <CardContent className="py-8 text-center">
             <AlertCircle className="w-12 h-12 text-destructive mx-auto mb-4" />
             <h2 className="text-lg font-semibold mb-2">Invalid or Expired Link</h2>
@@ -91,16 +92,15 @@ export default function ResetPassword() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/20 p-4">
-      <Card className="w-full max-w-md glass-card">
-        <CardHeader className="text-center pb-2">
-          <div className="w-16 h-16 rounded-xl gradient-primary flex items-center justify-center mx-auto mb-4">
-            <KeyRound className="w-8 h-8 text-primary-foreground" />
-          </div>
+    <div className="manager-auth-shell min-h-screen flex items-center justify-center p-4 sm:p-8">
+      <Card className="manager-auth-card w-full max-w-md overflow-hidden">
+        <div className="h-2 bg-primary" />
+        <CardHeader className="text-center px-6 pb-3 pt-8 sm:px-9">
+          <GbgManagerLogo className="mx-auto mb-7 w-44" />
           <CardTitle className="text-2xl">Set New Password</CardTitle>
           <CardDescription>Enter your new password below</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-6 pb-8 sm:px-9">
           {success ? (
             <Alert className="border-primary/50 bg-primary/10">
               <CheckCircle className="h-4 w-4 text-primary" />
@@ -138,7 +138,7 @@ export default function ResetPassword() {
                     required
                   />
                 </div>
-                <Button type="submit" className="w-full gradient-primary" disabled={isSubmitting}>
+                <Button type="submit" className="w-full" disabled={isSubmitting}>
                   {isSubmitting ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />

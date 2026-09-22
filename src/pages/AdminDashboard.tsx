@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { QrCodeGeneratorDialog } from "@/components/admin/QrCodeGeneratorDialog";
+import { GbgManagerLogo } from "@/components/GbgManagerLogo";
 
 const industryIcons: Record<IndustryTemplate, React.ReactNode> = {
   bank: <Landmark className="w-5 h-5" />,
@@ -252,22 +253,21 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="manager-shell min-h-screen">
       {/* Header */}
-      <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
+      <header className="manager-header">
         <div className="admin-container py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center">
-                <Settings className="w-5 h-5 text-primary-foreground" />
-              </div>
+              <GbgManagerLogo className="w-28 sm:w-32" />
+              <div className="h-8 w-px bg-border hidden sm:block" />
               <div>
-                <h1 className="text-xl font-bold text-foreground">GBG Demo Manager</h1>
+                <h1 className="text-base sm:text-xl font-bold text-foreground">Demo Manager</h1>
                 <p className="text-sm text-muted-foreground">{user?.email}</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Button onClick={() => setCreateDialogOpen(true)} className="gradient-primary glow-primary">
+              <Button onClick={() => setCreateDialogOpen(true)}>
                 <Plus className="w-4 h-4 mr-2" />
                 New Demo
               </Button>

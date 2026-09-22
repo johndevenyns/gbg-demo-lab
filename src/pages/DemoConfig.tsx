@@ -33,6 +33,7 @@ import { ArchiveDemoDialog } from "@/components/admin/ArchiveDemoDialog";
 import { useDemoVerificationApiKey, useSaveDemoVerificationApiKey } from "@/hooks/useDemoVerificationApiKey";
 import { Key, CheckCircle2 } from "lucide-react";
 import { ResultPagesConfig } from "@/components/formBuilder/ResultPagesConfig";
+import { GbgManagerLogo } from "@/components/GbgManagerLogo";
 
 // Navigation sections
 type ConfigSection = 'settings' | 'mirror' | 'branding' | 'use-cases' | 'custom-pages' | 'users';
@@ -477,15 +478,17 @@ export default function DemoConfig() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="manager-shell min-h-screen flex flex-col">
       {/* Header */}
-      <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
+      <header className="manager-header">
         <div className="px-4 lg:px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Button variant="ghost" size="icon" onClick={() => navigate("/admin")}>
                 <ArrowLeft className="w-5 h-5" />
               </Button>
+              <GbgManagerLogo compact className="hidden sm:flex" />
+              <div className="h-8 w-px bg-border hidden sm:block" />
               <div>
                 <h1 className="text-xl font-bold">{localDemo.customerName}</h1>
                 <p className="text-sm text-muted-foreground font-mono">/demo/{localDemo.slug}</p>
