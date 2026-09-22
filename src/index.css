@@ -67,6 +67,11 @@
     --shadow-md: 0 4px 6px -1px hsl(222 47% 11% / 0.1), 0 2px 4px -2px hsl(222 47% 11% / 0.1);
     --shadow-lg: 0 10px 15px -3px hsl(222 47% 11% / 0.1), 0 4px 6px -4px hsl(222 47% 11% / 0.1);
     --shadow-glow: 0 8px 24px hsl(240 100% 65% / 0.22);
+    --manager-auth-start: 240 55% 15%;
+    --manager-auth-middle: 240 64% 34%;
+    --manager-auth-end: 240 100% 65%;
+    --manager-header-background: 0 0% 100%;
+    --manager-header-foreground: 240 8% 5%;
   }
 
   .dark {
@@ -164,12 +169,22 @@
 
   .manager-header {
     @apply sticky top-0 z-50 border-b border-border bg-card;
+    --card: var(--manager-header-background);
+    --foreground: var(--manager-header-foreground);
+    --muted-foreground: 240 5% 35%;
+    --accent: 240 13% 95%;
   }
 
   .manager-auth-shell {
+    --card: 0 0% 100%;
+    --card-foreground: 240 8% 5%;
+    --foreground: 240 8% 5%;
+    --muted-foreground: 240 5% 35%;
+    --border: 240 11% 86%;
+    --input: 240 11% 78%;
     background:
       linear-gradient(180deg, hsl(var(--card) / 0.02), hsl(var(--card) / 0.9)),
-      linear-gradient(135deg, hsl(240 55% 15%) 0%, hsl(240 64% 34%) 55%, hsl(240 100% 65%) 100%);
+      linear-gradient(135deg, hsl(var(--manager-auth-start)) 0%, hsl(var(--manager-auth-middle)) 55%, hsl(var(--manager-auth-end)) 100%);
   }
 
   .manager-auth-card {
