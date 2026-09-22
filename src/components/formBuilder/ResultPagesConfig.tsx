@@ -345,6 +345,7 @@ export function ResultPagesConfig({
   const [generating, setGenerating] = useState<string | null>(null);
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
+  const [capturingHomepage, setCapturingHomepage] = useState(false);
   const { toast } = useToast();
   const pages = extraCustomPages || [];
   const ucLinks = useCaseLinks || [];
@@ -846,7 +847,28 @@ export function ResultPagesConfig({
                   ))}
                 </SelectContent>
               </Select>
+              <div className="flex flex-wrap items-center gap-2 pt-1">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={capturingHomepage || !demoId || !customerSiteUrl}
+                  onClick={handleCaptureHomepage}
+                >
+                  {capturingHomepage ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <Camera className="w-4 h-4 mr-2" />
+                  )}
+                  {hasHomepagePage ? 'Re-capture customer homepage' : 'Use customer homepage'}
+                </Button>
+                <span className="text-xs text-muted-foreground">
+                  {customerSiteUrl
+                    ? `Grabs a copy of ${customerSiteUrl} and shows it as the default view.`
+                    : 'Add the customer website URL in Site Settings first.'}
+                </span>
+              </div>
             </div>
+
 
             {([
               {
