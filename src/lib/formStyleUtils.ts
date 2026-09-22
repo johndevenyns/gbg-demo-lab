@@ -1,5 +1,5 @@
 import { FormStyleConfig, DEFAULT_FORM_STYLE } from '@/types/formStyle';
-import type { FormElementStyles } from '@/lib/api/scraping';
+import type { CapturedFormData, FormElementStyles } from '@/lib/api/scraping';
 
 type ParsedColor = { r: number; g: number; b: number; a: number };
 
@@ -150,9 +150,26 @@ export function getReadableTextColor(textColor?: string | null, bgColor?: string
   * Convert scraped FormElementStyles to FormStyleConfig.
   * Shared across HtmlCaptureTab, ScreenshotCaptureTab, and DemoCreationWizard.
   */
- export function formElementStylesToConfig(styles: FormElementStyles): FormStyleConfig {
+function adjustColorBrightness(hex: string, percent: number): string {
+  const normalized = hex.replace('#', '');
+  if (!/^[0-9a-f]{6}$/i.test(normalized)) return hex;
+  const channels = [0, 2, 4].map((offset) => parseInt(normalized.slice(offset, offset + 2), 16));
+  const adjusted = channels.map((channel) => Math.round(Math.min(255, Math.max(0, channel + channel * percent / 100))));
+  return `#${adjusted.map((channel) => channel.toString(16).padStart(2, '0')).join('')}`;
+}
+
+export function getSmartHoverColor(color: string): string {
+  const luminance = getColorLuminance(color);
+  return adjustColorBrightness(color, luminance != null && luminance > 0.5 ? -15 : 25);
+}
+
+ export function formElementStylesToConfig(
+   styles: FormElementStyles,
+   branding?: { colors?: Record<string, string>; fonts?: Array<{ family: string }> } | null,
+   baseStyle: FormStyleConfig = DEFAULT_FORM_STYLE,
+ ): FormStyleConfig {
    const config: FormStyleConfig = {
-     ...DEFAULT_FORM_STYLE,
+      ...baseStyle,
      source: 'mirrored',
    };
 
@@ -200,10 +217,88 @@ export function getReadableTextColor(textColor?: string | null, bgColor?: string
      else config.borderWidth = '1';
    }
 
+    if (styles.inputPadding) {
+      const padding = parseInt(styles.inputPadding);
+      if (padding <= 8) config.inputPadding = 'sm';
+      else if (padding >= 14) config.inputPadding = 'lg';
+      else config.inputPadding = 'md';
+    }
+
    if (styles.errorColor) config.errorColor = styles.errorColor;
+
+    if (styles.containerBgColor) config.formBgColor = styles.containerBgColor;
+    if (!styles.inputFontFamily && !styles.labelFontFamily && branding?.fonts?.length) {
+      config.fontFamily = `${branding.fonts.map((font) => font.family).join(', ')}, sans-serif`;
+    }
+
+    const primary = styles.buttonBgColor || branding?.colors?.primary;
+    if (primary) {
+      config.buttonBgColor = primary;
+      config.buttonHoverBgColor = getSmartHoverColor(primary);
+      config.inputFocusBorderColor = styles.inputFocusBorderColor || primary;
+      config.reverseButtonTextColor = primary;
+      config.reverseButtonHoverTextColor = primary;
+    }
+    if (styles.buttonTextColor) {
+      config.buttonTextColor = styles.buttonTextColor;
+      config.buttonHoverTextColor = styles.buttonTextColor;
+    }
+    if (styles.buttonBorderRadius) {
+      const radius = parseInt(styles.buttonBorderRadius);
+      config.buttonBorderRadius = radius === 0 ? 'none' : radius <= 4 ? 'sm' : radius <= 8 ? 'md' : radius <= 16 ? 'lg' : 'full';
+      config.reverseButtonBorderRadius = config.buttonBorderRadius;
+    }
+    if (styles.buttonFontWeight) {
+      const weight = parseInt(styles.buttonFontWeight);
+      config.buttonFontWeight = weight >= 700 ? 'bold' : weight >= 600 ? 'semibold' : weight >= 500 ? 'medium' : 'normal';
+    }
 
    return config;
  }
+
+export function capturedFormDataToConfig(
+  capture: CapturedFormData,
+  baseStyle: FormStyleConfig = DEFAULT_FORM_STYLE,
+): FormStyleConfig {
+  const config = formElementStylesToConfig(capture.styles, capture.branding, baseStyle);
+  config.source = 'captured';
+  config.capturedFormHtml = capture.formHtml;
+  config.capturedFormCss = capture.formCss;
+  config.capturedFormJs = capture.formJs;
+  config.capturedFormId = capture.formId;
+  config.capturedSourceUrl = capture.sourceUrl;
+  config.capturedPatterns = capture.patterns;
+
+  const patterns = capture.patterns;
+  if (patterns) {
+    if (patterns.detectedInputBgColor) config.inputBgColor = patterns.detectedInputBgColor;
+    if (patterns.detectedInputBorderColor) config.inputBorderColor = patterns.detectedInputBorderColor;
+    if (patterns.detectedInputFocusBorderColor) config.inputFocusBorderColor = patterns.detectedInputFocusBorderColor;
+    if (patterns.detectedLabelColor) config.labelColor = patterns.detectedLabelColor;
+    if (patterns.detectedErrorColor) config.errorColor = patterns.detectedErrorColor;
+    if (patterns.detectedFontFamily) config.fontFamily = patterns.detectedFontFamily;
+    if (patterns.labelStyle) config.labelStyle = patterns.labelStyle;
+    if (patterns.detectedButtonBgColor) {
+      config.buttonBgColor = patterns.detectedButtonBgColor;
+      config.buttonHoverBgColor = getSmartHoverColor(patterns.detectedButtonBgColor);
+      config.reverseButtonTextColor = patterns.detectedButtonBgColor;
+      config.reverseButtonHoverTextColor = patterns.detectedButtonBgColor;
+    }
+    if (patterns.detectedButtonTextColor) config.buttonTextColor = patterns.detectedButtonTextColor;
+    if (patterns.detectedButtonHoverBgColor) config.buttonHoverBgColor = patterns.detectedButtonHoverBgColor;
+    if (patterns.detectedButtonBorderRadius) {
+      const radius = parseInt(patterns.detectedButtonBorderRadius);
+      config.buttonBorderRadius = radius === 0 ? 'none' : radius <= 4 ? 'sm' : radius <= 8 ? 'md' : radius <= 16 ? 'lg' : 'full';
+      config.reverseButtonBorderRadius = config.buttonBorderRadius;
+    }
+    if (patterns.detectedButtonFontWeight) {
+      const weight = parseInt(patterns.detectedButtonFontWeight);
+      config.buttonFontWeight = weight >= 700 ? 'bold' : weight >= 600 ? 'semibold' : weight >= 500 ? 'medium' : 'normal';
+    }
+  }
+
+  return config;
+}
  
  // ============ Style Value Mappers ============
  
