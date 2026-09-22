@@ -249,7 +249,9 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
 
   const buildPreviewHtml = (headerHtml: string, footerHtml: string, css: string, buttonColor: string, formStyle: FormStyleConfig = DEFAULT_FORM_STYLE) => {
     const formHtml = generateFormHtml(formStyle, buttonColor);
-    return `<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{margin:0;padding:0;font-family:system-ui,sans-serif;}*{box-sizing:border-box;}</style>${css ? `<style>${css}</style>` : ''}</head><body>${headerHtml || ''}<div style="padding:40px 20px;background:#f5f5f5;min-height:200px;">${formHtml}</div>${footerHtml || ''}</body></html>`;
+    const paddingY = formStyle.contentAreaPaddingY ?? DEFAULT_FORM_STYLE.contentAreaPaddingY ?? 40;
+    const background = formStyle.contentAreaBgColor || DEFAULT_FORM_STYLE.contentAreaBgColor;
+    return `<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{margin:0;padding:0;font-family:system-ui,sans-serif;}*{box-sizing:border-box;}</style>${css ? `<style>${css}</style>` : ''}</head><body>${headerHtml || ''}<div style="padding:${paddingY}px 20px;background:${background};min-height:200px;">${formHtml}</div>${footerHtml || ''}</body></html>`;
   };
 
   const startProcessing = async () => {
@@ -331,7 +333,7 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
         } catch (e) {
           response = { success: false, error: e instanceof Error ? e.message : 'Network error contacting scraper' };
         }
-        if (response.success && response.data) {
+        if (response.success && response.data && (response.data.headerHtml?.trim() || response.data.footerHtml?.trim())) {
           scrapedData = response.data;
           refinedHtml = {
             headerHtml: scrapedData.headerHtml || '',
@@ -340,7 +342,8 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
           };
           const headerKb = Math.round((scrapedData.headerHtml?.length || 0) / 1024);
           const cssKb = Math.round((scrapedData.cssContent?.length || 0) / 1024);
-          updateTaskStatus('scrape-html', 'complete', `Header ${headerKb}KB · CSS ${cssKb}KB`);
+          const regions = [scrapedData.headerHtml?.trim() ? 'header' : null, scrapedData.footerHtml?.trim() ? 'footer' : null].filter(Boolean);
+          updateTaskStatus('scrape-html', 'complete', `Captured ${regions.join(' and ')} · CSS ${cssKb}KB · HTML ${headerKb}KB`);
         } else {
           // Edge function may return partialData (screenshot, logo, colors) even when
           // HTML capture failed — use it so screenshot mirroring still works.
