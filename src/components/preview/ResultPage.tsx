@@ -190,6 +190,20 @@ function ScreenshotBlock({ cfg, fallbackBg, showBorders }: { cfg?: ResultPageScr
   );
 }
 
+/** Invisible click zone over the logo / upper-left of a header that returns to the demo home. */
+function HomeZone({ height }: { height?: number }) {
+  return (
+    <button
+      type="button"
+      aria-label="Go to demo home"
+      title="Home"
+      onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.postMessage({ type: 'demo-home' }, '*'); }}
+      className="absolute left-0 top-0 cursor-pointer bg-transparent border-0 p-0 m-0"
+      style={{ width: 'min(25%, 320px)', height: height ? `${height}px` : '100%', zIndex: 4 }}
+    />
+  );
+}
+
 export function ResultPage({ config, formStyle, buttonColor, onButtonClick, mirrorHeaderHtml, mirrorFooterHtml, mirrorCss, demoSlug }: ResultPageProps) {
   const style = formStyle || DEFAULT_FORM_STYLE;
   const isSuccess = config.type === 'success';
