@@ -203,6 +203,29 @@ export function PortalUserManagement({ demoId }: PortalUserManagementProps) {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['portal-user-assignments'] }),
   });
 
+  // Assign to all demo environments (is_default)
+  const setDefaultMutation = useMutation({
+    mutationFn: async ({ portalUserId, isDefault }: { portalUserId: string; isDefault: boolean }) => {
+      const { error } = await supabase.from('portal_users').update({ is_default: isDefault }).eq('id', portalUserId);
+      if (error) throw error;
+      if (isDefault && demos.length > 0) {
+        const rows = demos.map(d => ({ portal_user_id: portalUserId, demo_id: d.id }));
+        const { error: assignError } = await supabase
+          .from('portal_user_demo_assignments')
+          .upsert(rows, { onConflict: 'portal_user_id,demo_id' });
+        if (assignError) throw assignError;
+      }
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['portal-users'] });
+      queryClient.invalidateQueries({ queryKey: ['portal-user-assignments'] });
+      toast({
+        title: variables.isDefault ? 'User assigned to all demo environments' : 'Assigned to all demos turned off',
+      });
+    },
+    onError: (err: Error) => toast({ title: 'Update failed', description: err.message, variant: 'destructive' }),
+  });
+
   const closeDialog = () => {
     setAddDialogOpen(false);
     setEditingUser(null);
@@ -466,6 +489,28 @@ export function PortalUserManagement({ demoId }: PortalUserManagementProps) {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2 py-4">
+            {(() => {
+              const selectedUser = portalUsers.find(u => u.id === selectedUserId);
+              return (
+                <div className="flex items-center gap-3 p-3 rounded-md border bg-muted/30">
+                  <Checkbox
+                    id="assign-all-demos"
+                    checked={!!selectedUser?.is_default}
+                    onCheckedChange={(v) => {
+                      if (selectedUserId) {
+                        setDefaultMutation.mutate({ portalUserId: selectedUserId, isDefault: !!v });
+                      }
+                    }}
+                  />
+                  <Label htmlFor="assign-all-demos" className="cursor-pointer">
+                    <span className="text-sm font-medium">All demo environments</span>
+                    <span className="block text-xs text-muted-foreground">
+                      Gives access to every demo, including ones created later.
+                    </span>
+                  </Label>
+                </div>
+              );
+            })()}
             {demos.map(demo => {
               const isAssigned = selectedUserId
                 ? assignments.some(a => a.portal_user_id === selectedUserId && a.demo_id === demo.id)
