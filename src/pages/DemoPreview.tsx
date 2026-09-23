@@ -228,13 +228,28 @@ export default function DemoPreview() {
             handleSelectUseCase(target, true);
           }
         }
+      } else if (e.data?.type === 'demo-home') {
+        // Logo / upper-left header click: return to this demo's landing page.
+        setSelectedUseCase(null);
+        setFlowResult(null);
+        setFlowResultPlain(false);
+        setShowPortal(false);
+        setPortalVerificationAction(null);
+        setPortalVerificationTrigger(null);
+        if (slug) {
+          const params = new URLSearchParams(location.search);
+          params.delete('useCase');
+          const qs = params.toString();
+          navigate(`/demo/${slug}${qs ? `?${qs}` : ''}`);
+        }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       } else if (e.data?.type === 'scroll-to-form' && formRef.current) {
         formRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
     };
     window.addEventListener('message', handler);
     return () => window.removeEventListener('message', handler);
-  }, [resolvedUseCases, pageSlug, slug, navigate]);
+  }, [resolvedUseCases, pageSlug, slug, navigate, location.search]);
 
   const handleFlowComplete = useCallback((success: boolean, referenceId?: string, opts?: { plainResultPage?: boolean }) => {
     console.log('Flow complete:', { success, referenceId });
@@ -824,6 +839,21 @@ export default function DemoPreview() {
                   }, true);
                 </script>
                 ` : ''}
+                <script>
+                  // Clicking the logo or the upper-left of the header returns to the demo home.
+                  document.addEventListener('click', function(e) {
+                    var t = e.target;
+                    if (!t || !t.closest) return;
+                    if (t.closest('[data-cta-uc]')) return;
+                    var isLogo = !!t.closest('[class*="logo" i],[id*="logo" i],[alt*="logo" i],a[href="/"]');
+                    var w = document.documentElement.clientWidth || window.innerWidth;
+                    var inCorner = e.clientX <= Math.min(320, w * 0.25);
+                    if (!isLogo && !inCorner) return;
+                    e.preventDefault();
+                    e.stopPropagation();
+                    window.parent.postMessage({ type: 'demo-home' }, '*');
+                  }, true);
+                </script>
                 <script>
                   // Report height to parent
                   setTimeout(function() {
