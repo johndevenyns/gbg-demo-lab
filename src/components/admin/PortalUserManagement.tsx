@@ -363,7 +363,7 @@ export function PortalUserManagement({ demoId }: PortalUserManagementProps) {
                               onClick={() => { setSelectedUserId(user.id); setAssignDialogOpen(true); }}
                             >
                               <Building2 className="w-3 h-3 mr-1" />
-                              {assignedDemos.length} assigned
+                              {user.is_default ? 'All' : `${assignedDemos.length} assigned`}
                             </Button>
                           ) : (
                             <Badge variant="outline">{user.is_default ? 'Default' : 'Assigned'}</Badge>
