@@ -113,7 +113,7 @@ serve(async (req) => {
       })) || [];
 
       return new Response(
-        JSON.stringify({ users: adminsWithEmails }),
+        JSON.stringify({ users: adminsWithEmails, canManageUsers: isGlobalAdmin }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }

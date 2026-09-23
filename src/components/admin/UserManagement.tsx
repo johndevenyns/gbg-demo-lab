@@ -111,7 +111,7 @@ export function UserManagement({ isGlobalAdmin = true }: UserManagementProps) {
   };
 
   // Fetch admin users with emails via edge function
-  const { data: adminUsers = [], isLoading } = useQuery({
+  const { data: adminUserResult, isLoading } = useQuery({
     queryKey: ['admin-users'],
     queryFn: async () => {
       const { data, error } = await supabase.functions.invoke('manage-admin-users', {
@@ -121,9 +121,14 @@ export function UserManagement({ isGlobalAdmin = true }: UserManagementProps) {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       
-      return (data?.users || []) as UserRole[];
+      return {
+        users: (data?.users || []) as UserRole[],
+        canManageUsers: data?.canManageUsers === true,
+      };
     },
   });
+  const adminUsers = adminUserResult?.users || [];
+  const canManageUsers = isGlobalAdmin || adminUserResult?.canManageUsers === true;
 
   // Remove admin role
   const removeAdminMutation = useMutation({
@@ -305,7 +310,7 @@ export function UserManagement({ isGlobalAdmin = true }: UserManagementProps) {
               <CardDescription>Manage admin access to the demo manager</CardDescription>
             </div>
           </div>
-          {isGlobalAdmin && (
+          {canManageUsers && (
             <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
               <DialogTrigger asChild>
                 <Button className="gradient-primary">
@@ -394,7 +399,7 @@ export function UserManagement({ isGlobalAdmin = true }: UserManagementProps) {
                 <TableHead>Email</TableHead>
                 <TableHead>Role</TableHead>
                 <TableHead>Added</TableHead>
-                {isGlobalAdmin && <TableHead className="w-[150px]">Actions</TableHead>}
+                {canManageUsers && <TableHead className="w-[150px]">Actions</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -404,7 +409,7 @@ export function UserManagement({ isGlobalAdmin = true }: UserManagementProps) {
                     {user.email || 'Unknown'}
                   </TableCell>
                   <TableCell>
-                    {isGlobalAdmin ? (
+                    {canManageUsers ? (
                       <Select
                         value={user.role}
                         onValueChange={(v) => updateRoleMutation.mutate({ userId: user.user_id, role: v as 'admin' | 'global_admin' })}
@@ -434,7 +439,7 @@ export function UserManagement({ isGlobalAdmin = true }: UserManagementProps) {
                   <TableCell className="text-muted-foreground">
                     {new Date(user.created_at).toLocaleDateString()}
                   </TableCell>
-                  {isGlobalAdmin && (
+                  {canManageUsers && (
                     <TableCell>
                       <div className="flex items-center gap-1">
                         <Button
