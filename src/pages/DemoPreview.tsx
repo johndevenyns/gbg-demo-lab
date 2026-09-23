@@ -249,7 +249,7 @@ export default function DemoPreview() {
     };
     window.addEventListener('message', handler);
     return () => window.removeEventListener('message', handler);
-  }, [resolvedUseCases, pageSlug, slug, navigate]);
+  }, [resolvedUseCases, pageSlug, slug, navigate, location.search]);
 
   const handleFlowComplete = useCallback((success: boolean, referenceId?: string, opts?: { plainResultPage?: boolean }) => {
     console.log('Flow complete:', { success, referenceId });
