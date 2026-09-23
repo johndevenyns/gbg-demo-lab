@@ -209,11 +209,18 @@ export function PortalUserManagement({ demoId }: PortalUserManagementProps) {
       const { error } = await supabase.from('portal_users').update({ is_default: isDefault }).eq('id', portalUserId);
       if (error) throw error;
       if (isDefault && demos.length > 0) {
-        const rows = demos.map(d => ({ portal_user_id: portalUserId, demo_id: d.id }));
-        const { error: assignError } = await supabase
-          .from('portal_user_demo_assignments')
-          .upsert(rows, { onConflict: 'portal_user_id,demo_id' });
-        if (assignError) throw assignError;
+        const existing = new Set(
+          assignments.filter(a => a.portal_user_id === portalUserId).map(a => a.demo_id)
+        );
+        const rows = demos
+          .filter(d => !existing.has(d.id))
+          .map(d => ({ portal_user_id: portalUserId, demo_id: d.id }));
+        if (rows.length > 0) {
+          const { error: assignError } = await supabase
+            .from('portal_user_demo_assignments')
+            .insert(rows);
+          if (assignError) throw assignError;
+        }
       }
     },
     onSuccess: (_, variables) => {
