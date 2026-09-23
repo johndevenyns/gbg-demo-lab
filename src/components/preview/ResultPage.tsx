@@ -190,6 +190,20 @@ function ScreenshotBlock({ cfg, fallbackBg, showBorders }: { cfg?: ResultPageScr
   );
 }
 
+/** Invisible click zone over the logo / upper-left of a header that returns to the demo home. */
+function HomeZone({ height }: { height?: number }) {
+  return (
+    <button
+      type="button"
+      aria-label="Go to demo home"
+      title="Home"
+      onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.postMessage({ type: 'demo-home' }, '*'); }}
+      className="absolute left-0 top-0 cursor-pointer bg-transparent border-0 p-0 m-0"
+      style={{ width: 'min(25%, 320px)', height: height ? `${height}px` : '100%', zIndex: 4 }}
+    />
+  );
+}
+
 export function ResultPage({ config, formStyle, buttonColor, onButtonClick, mirrorHeaderHtml, mirrorFooterHtml, mirrorCss, demoSlug }: ResultPageProps) {
   const style = formStyle || DEFAULT_FORM_STYLE;
   const isSuccess = config.type === 'success';
@@ -282,6 +296,7 @@ export function ResultPage({ config, formStyle, buttonColor, onButtonClick, mirr
         >
           <div className="relative">
             <ScreenshotBlock cfg={config.screenshotHeader} fallbackBg={style.formBgColor} showBorders={config.showBorders} />
+            {config.screenshotHeader?.url && <HomeZone />}
             {renderHotspots('header')}
           </div>
           <div className="relative flex-1" style={{ outline: config.showBorders ? '2px dashed #ef4444' : undefined, backgroundColor: config.screenshotMain?.bgColor || undefined }}>
@@ -342,6 +357,7 @@ export function ResultPage({ config, formStyle, buttonColor, onButtonClick, mirr
               {config.headerSource === 'mirror'
                 ? <MirrorChrome html={mirrorHeaderHtml} css={mirrorCss} minHeight={headerH} showBorders={config.showBorders} />
                 : <ScreenshotBlock cfg={config.headerScreenshot} fallbackBg={style.formBgColor} showBorders={config.showBorders} />}
+              <HomeZone />
               {renderHotspots('header')}
             </div>
           )}
@@ -360,6 +376,8 @@ export function ResultPage({ config, formStyle, buttonColor, onButtonClick, mirr
               {/* grows to push the footer to the bottom of the viewport */}
               <div className="relative" style={{ lineHeight: 0, fontSize: 0 }}>
                 <img src={url} alt="" style={imgStyle} />
+                {/* Captured homepages include the site's own header at the top */}
+                {!hasHeader && <HomeZone height={96} />}
                 {renderHotspots('main')}
               </div>
               {showBtn && (
@@ -402,7 +420,12 @@ export function ResultPage({ config, formStyle, buttonColor, onButtonClick, mirr
     const showBtn = config.showButton !== false && !!config.buttonText;
     return (
       <div className="w-full flex flex-col" style={{ backgroundColor: style.contentAreaBgColor || '#ffffff' }}>
-        <MirrorChrome html={mirrorHeaderHtml} css={mirrorCss} minHeight={headerH} showBorders={config.showBorders} />
+        {mirrorHeaderHtml && (
+          <div className="relative">
+            <MirrorChrome html={mirrorHeaderHtml} css={mirrorCss} minHeight={headerH} showBorders={config.showBorders} />
+            <HomeZone />
+          </div>
+        )}
         <div
           className="flex-1 px-4 py-8"
           style={{ backgroundColor: style.contentAreaBgColor || '#ffffff', outline: config.showBorders ? '2px dashed #ef4444' : undefined }}
