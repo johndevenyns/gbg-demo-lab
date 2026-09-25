@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/select';
 import {
   Briefcase, Plus, Trash2, ChevronDown, ChevronRight, UserPlus, FastForward, Package, Layout, Eye,
-  ArrowUp, ArrowDown, X,
+  ArrowUp, ArrowDown, ArrowLeft,
 } from 'lucide-react';
 import { DemoUseCaseLink, UseCasePageContent } from '@/types/useCase';
 import { DemoEnvironment, FormStep } from '@/types/demo';
@@ -126,6 +126,42 @@ export function UseCaseSection({ demoId, demo, onUpdateDemo }: UseCaseSectionPro
   const activeBuilderLink = formBuilderLinkId ? links.find(l => l.id === formBuilderLinkId) : null;
   const activeBuilderDemo = activeBuilderLink ? createUseCaseDemo(activeBuilderLink) : null;
   const activeBuilderTitle = activeBuilderLink?.globalUseCase?.title ?? 'Use Case';
+
+  if (activeBuilderLink && activeBuilderDemo) {
+    return (
+      <div className="space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setFormBuilderLinkId(null)}>
+              <ArrowLeft className="w-4 h-4" /> Back to Use Cases
+            </Button>
+            <div className="min-w-0">
+              <h2 className="text-base font-semibold flex items-center gap-2 truncate">
+                <Layout className="w-4 h-4 shrink-0" />
+                Workflow Builder — {activeBuilderLink.titleOverride || activeBuilderTitle}
+              </h2>
+              <p className="text-xs text-muted-foreground">Changes save automatically for this demo's use case.</p>
+            </div>
+          </div>
+          <Tabs value={builderTab} onValueChange={(v) => setBuilderTab(v as 'builder' | 'preview')}>
+            <TabsList className="h-8">
+              <TabsTrigger value="builder" className="text-xs h-7 px-3 gap-1.5"><Layout className="w-3.5 h-3.5" />Builder</TabsTrigger>
+              <TabsTrigger value="preview" className="text-xs h-7 px-3 gap-1.5"><Eye className="w-3.5 h-3.5" />Preview</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+        <Card className="glass-card">
+          <CardContent className="p-0">
+            {builderTab === 'builder' ? (
+              <FormBuilderSection demo={activeBuilderDemo} onUpdate={createUseCaseUpdateHandler(formBuilderLinkId!)} />
+            ) : (
+              <div className="p-6"><FormPreviewPanel demo={activeBuilderDemo} /></div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -345,16 +381,17 @@ export function UseCaseSection({ demoId, demo, onUpdateDemo }: UseCaseSectionPro
                           {/* Action buttons */}
                           <div className="flex items-center justify-between pt-2 border-t border-border/50">
                             <Button
-                              variant={isBuilderActive ? "default" : "outline"}
+                              variant="outline"
                               size="sm"
                               className="gap-2 h-8 text-xs"
                               onClick={() => {
-                                setFormBuilderLinkId(isBuilderActive ? null : link.id);
+                                setFormBuilderLinkId(link.id);
                                 setBuilderTab('builder');
+                                window.scrollTo({ top: 0 });
                               }}
                             >
                               <Layout className="w-3.5 h-3.5" />
-                              {isBuilderActive ? 'Close Workflow Builder' : 'Edit Form Steps'}
+                              Open Workflow Builder
                               {link.formStepsOverride && (
                                 <Badge variant="outline" className="text-[9px] ml-1">Overridden</Badge>
                               )}
@@ -378,59 +415,6 @@ export function UseCaseSection({ demoId, demo, onUpdateDemo }: UseCaseSectionPro
           )}
         </CardContent>
       </Card>
-
-      {/* Form Builder + Preview for the active use case */}
-      {activeBuilderLink && activeBuilderDemo && (
-        <Card className="glass-card">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Layout className="w-4 h-4" />
-                  {activeBuilderTitle}
-                </CardTitle>
-                <CardDescription className="text-xs">
-                  Build form steps and preview the flow for this use case
-                </CardDescription>
-              </div>
-              <div className="flex items-center gap-2">
-                <Tabs value={builderTab} onValueChange={(v) => setBuilderTab(v as 'builder' | 'preview')}>
-                  <TabsList className="h-8">
-                    <TabsTrigger value="builder" className="text-xs h-7 px-3 gap-1.5">
-                      <Layout className="w-3.5 h-3.5" />
-                      Builder
-                    </TabsTrigger>
-                    <TabsTrigger value="preview" className="text-xs h-7 px-3 gap-1.5">
-                      <Eye className="w-3.5 h-3.5" />
-                      Preview
-                    </TabsTrigger>
-                  </TabsList>
-                </Tabs>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={() => setFormBuilderLinkId(null)}
-                >
-                  <X className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="p-0">
-            {builderTab === 'builder' ? (
-              <FormBuilderSection
-                demo={activeBuilderDemo}
-                onUpdate={createUseCaseUpdateHandler(formBuilderLinkId!)}
-              />
-            ) : (
-              <div className="p-6">
-                <FormPreviewPanel demo={activeBuilderDemo} />
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
 
       {/* Portal Preview */}
       {showPortalPreview && demoIndustry && (

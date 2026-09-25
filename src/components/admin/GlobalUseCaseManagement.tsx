@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
-  Briefcase, Plus, Trash2, ChevronDown, ChevronRight, Pencil, UserPlus, FastForward, Package, LogIn, FileText,
+  Briefcase, Plus, Trash2, ChevronDown, ChevronRight, Pencil, UserPlus, FastForward, Package, LogIn, FileText, ArrowLeft, Layout,
 } from 'lucide-react';
 import { GlobalUseCase, UseCasePageContent, PORTAL_TYPE_OPTIONS, PortalType } from '@/types/useCase';
 import {
@@ -24,6 +24,9 @@ import {
 } from '@/hooks/useUseCases';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { FormBuilderSection } from '@/components/formBuilder';
+import { DemoEnvironment, FormStep } from '@/types/demo';
+import { usePersistedState } from '@/hooks/usePersistedState';
 
 const ICON_MAP: Record<string, React.ElementType> = {
   UserPlus, FastForward, Package, Briefcase, LogIn,
@@ -68,6 +71,7 @@ export function GlobalUseCaseManagement({ readOnly = false }: { readOnly?: boole
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [builderId, setBuilderId] = usePersistedState<string | null>('globalUseCases.builderId', null);
   const [newUseCase, setNewUseCase] = useState({
     title: '',
     description: '',
@@ -153,6 +157,47 @@ export function GlobalUseCaseManagement({ readOnly = false }: { readOnly?: boole
       && template.show_fill_fail === uc.showFillFail
     ));
   };
+
+  const builderUseCase = builderId ? useCases.find(u => u.id === builderId) : null;
+  if (builderUseCase && !readOnly) {
+    const pseudoDemo = {
+      id: `global-use-case-${builderUseCase.id}`,
+      customerName: builderUseCase.title,
+      formSteps: (builderUseCase.defaultFormSteps ?? []) as unknown as FormStep[],
+    } as unknown as DemoEnvironment;
+    return (
+      <div className="space-y-4">
+        <div className="flex flex-wrap items-center gap-3">
+          <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setBuilderId(null)}>
+            <ArrowLeft className="w-4 h-4" /> Back to Use Cases
+          </Button>
+          <div className="min-w-0">
+            <h2 className="text-base font-semibold flex items-center gap-2 truncate">
+              <Layout className="w-4 h-4 shrink-0" />
+              Workflow Builder — {builderUseCase.title}
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              Editing the global default flow. Demos without their own customized flow will use these steps.
+            </p>
+          </div>
+        </div>
+        <Card className="glass-card">
+          <CardContent className="p-0">
+            <FormBuilderSection
+              demo={pseudoDemo}
+              onUpdate={(updates) => {
+                if (updates.formSteps !== undefined) {
+                  handleUpdate(builderUseCase.id, {
+                    defaultFormSteps: updates.formSteps as unknown as Record<string, unknown>[],
+                  });
+                }
+              }}
+            />
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -326,6 +371,14 @@ export function GlobalUseCaseManagement({ readOnly = false }: { readOnly?: boole
                             </Button>
                           )}
                         </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="gap-2 mt-3"
+                          onClick={() => { setBuilderId(uc.id); window.scrollTo({ top: 0 }); }}
+                        >
+                          <Layout className="w-3.5 h-3.5" /> Open Workflow Builder
+                        </Button>
                         <p className="text-xs text-muted-foreground mt-2">
                           This template will be used as the default form when new demos link this use case.
                         </p>
