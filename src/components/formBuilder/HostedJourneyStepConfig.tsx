@@ -45,6 +45,29 @@ export function HostedJourneyStepConfig({ step, onUpdateStep }: Props) {
       <Card className="border-sky-500/30 bg-sky-500/5">
         <CardContent className="pt-4 space-y-4">
           <div className="space-y-2">
+            <Label className="text-sm">Journey Provider</Label>
+            <Select
+              value={config.provider || 'url'}
+              onValueChange={(v) => update({ provider: v as 'url' | 'gbg_go' })}
+            >
+              <SelectTrigger className="bg-background">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="url">Fixed URL</SelectItem>
+                <SelectItem value="gbg_go">GBG GO hosted journey</SelectItem>
+              </SelectContent>
+            </Select>
+            {config.provider === 'gbg_go' && (
+              <p className="text-xs text-muted-foreground">
+                Starts a fresh GO journey for each user and embeds the one-time link it
+                returns. The journey completes automatically when GO reports a result —
+                no fixed URL needed below.
+              </p>
+            )}
+          </div>
+
+          <div className="space-y-2">
             <Label className="text-sm">Display Mode</Label>
             <Select value={mode} onValueChange={(v) => update({ mode: v as 'iframe' | 'popup' })}>
               <SelectTrigger className="bg-background">
@@ -68,23 +91,25 @@ export function HostedJourneyStepConfig({ step, onUpdateStep }: Props) {
             )}
           </div>
 
-          <div className="space-y-2">
-            <Label className="text-sm flex items-center gap-2">
-              <ExternalLink className="w-4 h-4" />
-              Journey URL
-            </Label>
-            <Input
-              value={config.url || ''}
-              onChange={(e) => update({ url: e.target.value })}
-              placeholder="https://example.com/journey/start"
-              className="bg-background font-mono text-sm"
-            />
-            <p className="text-xs text-muted-foreground">
-              The URL that will load in the iframe when this step is reached. You can use{' '}
-              <code className="px-1 py-0.5 bg-muted rounded">{'{{fieldName}}'}</code> to inject
-              values from prior steps (e.g. session id from an API response).
-            </p>
-          </div>
+          {config.provider !== 'gbg_go' && (
+            <div className="space-y-2">
+              <Label className="text-sm flex items-center gap-2">
+                <ExternalLink className="w-4 h-4" />
+                Journey URL
+              </Label>
+              <Input
+                value={config.url || ''}
+                onChange={(e) => update({ url: e.target.value })}
+                placeholder="https://example.com/journey/start"
+                className="bg-background font-mono text-sm"
+              />
+              <p className="text-xs text-muted-foreground">
+                The URL that will load in the iframe when this step is reached. You can use{' '}
+                <code className="px-1 py-0.5 bg-muted rounded">{'{{fieldName}}'}</code> to inject
+                values from prior steps (e.g. session id from an API response).
+              </p>
+            </div>
+          )}
 
           {mode === 'iframe' ? (
             <div className="grid grid-cols-2 gap-4">
