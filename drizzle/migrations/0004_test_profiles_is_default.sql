@@ -1,0 +1,1 @@
+ALTER TABLE public.test_user_profiles ADD COLUMN IF NOT EXISTS is_default boolean NOT NULL DEFAULT false;

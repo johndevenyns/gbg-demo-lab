@@ -898,6 +898,7 @@ export type Database = {
           created_at: string
           field_data: Json
           id: string
+          is_default: boolean
           profile_name: string
           profile_type: string
           updated_at: string
@@ -906,6 +907,7 @@ export type Database = {
           created_at?: string
           field_data?: Json
           id?: string
+          is_default?: boolean
           profile_name: string
           profile_type: string
           updated_at?: string
@@ -914,6 +916,7 @@ export type Database = {
           created_at?: string
           field_data?: Json
           id?: string
+          is_default?: boolean
           profile_name?: string
           profile_type?: string
           updated_at?: string

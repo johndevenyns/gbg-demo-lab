@@ -6,6 +6,7 @@ export interface TestUserProfile {
   profile_name: string;
   profile_type: 'pass' | 'fail';
   field_data: Record<string, string>;
+  is_default?: boolean;
   created_at: string;
   updated_at: string;
 }

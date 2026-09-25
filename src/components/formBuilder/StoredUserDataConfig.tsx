@@ -16,6 +16,8 @@ import { StoredTestData, FormStep, AVAILABLE_FORM_FIELDS } from '@/types/demo';
 import { CheckCircle2, XCircle, User, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTestProfiles } from '@/hooks/useTestProfiles';
+import { TestProfilePicker } from './TestProfilePicker';
+import { buildProfileSnapshot, withProfiles } from '@/lib/testProfiles';
 
 interface StoredUserDataConfigProps {
   storedTestData?: StoredTestData;
@@ -212,6 +214,18 @@ export function StoredUserDataConfig({
         </CardDescription>
       </CardHeader>
       <CardContent>
+        <div className="mb-6 rounded-lg border p-4">
+          <div className="mb-2">
+            <div className="font-medium text-sm">Profiles in the Pass / Fail menus</div>
+            <p className="text-xs text-muted-foreground">
+              Choose which test profiles visitors can pick on the demo form. With none selected, the defaults from Test Profiles are used.
+            </p>
+          </div>
+          <TestProfilePicker
+            selectedIds={storedTestData?.profiles?.map((p) => p.id)}
+            onChange={(ids) => onUpdate(withProfiles(storedTestData, buildProfileSnapshot(globalProfiles, ids)))}
+          />
+        </div>
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'pass' | 'fail')}>
           <TabsList className="grid w-full grid-cols-2 mb-4">
             <TabsTrigger value="pass" className="flex items-center gap-2">

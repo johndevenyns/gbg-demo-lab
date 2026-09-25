@@ -23,6 +23,8 @@ import { useEnabledPortalTypes } from "@/hooks/usePortalTypes";
 import { IndustryTemplate, DemoEnvironment, FormStep, FormField, FormFieldType } from "@/types/demo";
 import { scrapingApi, ScrapedBranding, ExtractedField } from "@/lib/api/scraping";
 import { useTestProfiles } from "@/hooks/useTestProfiles";
+import { TestProfilePicker } from "@/components/formBuilder/TestProfilePicker";
+import { buildProfileSnapshot } from "@/lib/testProfiles";
 import { capturedFormDataToConfig, formElementStylesToConfig, generateFormHtml } from "@/lib/formStyleUtils";
 import { DEFAULT_FORM_STYLE, FormStyleConfig } from "@/types/formStyle";
 import { cn } from "@/lib/utils";
@@ -123,6 +125,7 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
   const { data: globalUseCases = [], isLoading: loadingUseCases } = useGlobalUseCases();
   const { data: portalTypes = [] } = useEnabledPortalTypes();
   const { data: globalProfiles = [] } = useTestProfiles();
+  const [selectedProfileIds, setSelectedProfileIds] = useState<string[]>([]);
   
   const [step, setStep] = useState<WizardStep>('details');
   const [customerName, setCustomerName] = useState("");
@@ -629,10 +632,11 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
           .order('profile_type', { ascending: true });
         profiles = (freshProfiles || []) as typeof globalProfiles;
       }
-      const firstPass = profiles.find((p) => p.profile_type === 'pass');
-      const firstFail = profiles.find((p) => p.profile_type === 'fail');
-      const passData: Record<string, string> = firstPass ? (firstPass.field_data as Record<string, string>) : {};
-      const failData: Record<string, string> = firstFail ? (firstFail.field_data as Record<string, string>) : {};
+      const snapshot = buildProfileSnapshot(profiles, selectedProfileIds);
+      const firstPass = snapshot.find((p) => p.type === 'pass') ?? (() => { const p = profiles.find((x) => x.profile_type === 'pass'); return p ? { data: p.field_data } : undefined; })();
+      const firstFail = snapshot.find((p) => p.type === 'fail') ?? (() => { const p = profiles.find((x) => x.profile_type === 'fail'); return p ? { data: p.field_data } : undefined; })();
+      const passData: Record<string, string> = (firstPass?.data as Record<string, string>) || {};
+      const failData: Record<string, string> = (firstFail?.data as Record<string, string>) || {};
       
       try {
         await updateDemo.mutateAsync({
@@ -641,6 +645,7 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
             storedTestData: {
               passData,
               failData,
+              profiles: snapshot,
               showFillPassButton: shouldShowFillPass || Object.keys(passData).length > 0,
               showFillFailButton: shouldShowFillFail || Object.keys(failData).length > 0,
             },
@@ -1093,6 +1098,15 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
                 })}
               </div>
             )}
+            <div className="rounded-lg border p-4 space-y-2">
+              <div>
+                <h4 className="font-medium text-sm">Test profiles on the form</h4>
+                <p className="text-xs text-muted-foreground">
+                  Pick which profiles appear in the Pass / Fail menus. Leave as-is to use the defaults. You can change this later in the demo's settings.
+                </p>
+              </div>
+              <TestProfilePicker selectedIds={selectedProfileIds} onChange={setSelectedProfileIds} />
+            </div>
           </div>
         )}
 
