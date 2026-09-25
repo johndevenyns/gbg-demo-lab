@@ -122,6 +122,17 @@ export function UseCaseSection({ demoId, demo, onUpdateDemo }: UseCaseSectionPro
     };
   }, [handleUpdate, onUpdateDemo]);
 
+  const handleUpdateFormHeading = useCallback((link: DemoUseCaseLink, heading: string) => {
+    const globalSteps = link.globalUseCase?.defaultFormSteps ?? [];
+    const steps = (link.formStepsOverride ?? globalSteps).map((step) => ({ ...step }));
+    if (steps.length === 0) return;
+    const inheritedHeading = (globalSteps[0]?.title as string | undefined) || 'Get Started';
+    steps[0] = { ...steps[0], title: heading.trim() || inheritedHeading };
+    handleUpdate(link.id, {
+      formStepsOverride: steps as Record<string, unknown>[],
+    });
+  }, [handleUpdate]);
+
   // The active form builder link data
   const activeBuilderLink = formBuilderLinkId ? links.find(l => l.id === formBuilderLinkId) : null;
   const activeBuilderDemo = activeBuilderLink ? createUseCaseDemo(activeBuilderLink) : null;
@@ -291,6 +302,21 @@ export function UseCaseSection({ demoId, demo, onUpdateDemo }: UseCaseSectionPro
                                 }}
                               />
                             </div>
+                            {(link.formStepsOverride ?? uc.defaultFormSteps).length > 0 && (
+                              <div className="md:col-span-2 space-y-1.5">
+                                <Label className="text-xs font-medium">Form Heading</Label>
+                                <Input
+                                  key={`form-heading-${link.id}-${link.updatedAt}`}
+                                  defaultValue={((link.formStepsOverride ?? uc.defaultFormSteps)[0]?.title as string | undefined) || 'Get Started'}
+                                  className="h-8 text-sm"
+                                  placeholder={(uc.defaultFormSteps[0]?.title as string | undefined) || 'Get Started'}
+                                  onBlur={(e) => handleUpdateFormHeading(link, e.target.value)}
+                                />
+                                <p className="text-xs text-muted-foreground">
+                                  Changes the heading above the first form for this demo only. Leave empty to use the global heading.
+                                </p>
+                              </div>
+                            )}
                           </div>
 
                           {/* Toggles row */}

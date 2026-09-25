@@ -126,6 +126,15 @@ export function GlobalUseCaseManagement({ readOnly = false }: { readOnly?: boole
     updateMutation.mutate({ id, updates: { defaultPageContent: { ...currentContent, ...contentUpdates } } });
   };
 
+  const handleUpdateFormHeading = (useCase: GlobalUseCase, heading: string) => {
+    const steps = Array.isArray(useCase.defaultFormSteps)
+      ? useCase.defaultFormSteps.map((step) => ({ ...step }))
+      : [];
+    if (steps.length === 0) return;
+    steps[0] = { ...steps[0], title: heading.trim() || 'Get Started' };
+    handleUpdate(useCase.id, { defaultFormSteps: steps });
+  };
+
   const handleApplyTemplate = (useCaseId: string, templateId: string) => {
     const template = templates.find(t => t.id === templateId);
     if (!template) return;
@@ -327,6 +336,24 @@ export function GlobalUseCaseManagement({ readOnly = false }: { readOnly?: boole
                           <FileText className="w-4 h-4" />
                           Default Form Template
                         </h4>
+                        {stepCount > 0 && (
+                          <div className="space-y-2 mb-3">
+                            <Label>Default Form Heading</Label>
+                            <Input
+                              defaultValue={(uc.defaultFormSteps[0]?.title as string | undefined) || 'Get Started'}
+                              onBlur={(e) => {
+                                const currentHeading = (uc.defaultFormSteps[0]?.title as string | undefined) || 'Get Started';
+                                if (e.target.value.trim() !== currentHeading) {
+                                  handleUpdateFormHeading(uc, e.target.value);
+                                }
+                              }}
+                              placeholder="Get Started"
+                            />
+                            <p className="text-xs text-muted-foreground">
+                              Default heading above the first form for demos using this use case.
+                            </p>
+                          </div>
+                        )}
                         <div className="flex items-center gap-3">
                           <Select
                             key={`${uc.id}-${appliedTemplate?.id ?? 'custom'}-${uc.updatedAt}`}
