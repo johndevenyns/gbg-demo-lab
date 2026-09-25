@@ -90,7 +90,7 @@ export function FormPreviewPanel({ demo }: FormPreviewPanelProps) {
                   {hasTestData && (
                     <Badge variant="outline" className="text-xs">
                       <CheckCircle2 className="w-3 h-3 mr-1 text-green-500" />
-                      Test Data Configured
+                      Test Profiles Configured
                     </Badge>
                   )}
                 </div>
@@ -121,7 +121,7 @@ export function FormPreviewPanel({ demo }: FormPreviewPanelProps) {
                 <div className="mb-4 p-3 rounded-lg bg-muted/50 border border-dashed border-muted-foreground/30">
                   <p className="text-sm text-muted-foreground flex items-center gap-2">
                     <XCircle className="w-4 h-4" />
-                    Configure test data in the <strong>"Test Data"</strong> tab to enable Fill Pass/Fail buttons.
+                    Configure test profiles in the <strong>"Test Profiles"</strong> tab to enable Fill Pass/Fail buttons.
                   </p>
                 </div>
               )}
