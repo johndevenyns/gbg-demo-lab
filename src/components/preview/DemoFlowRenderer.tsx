@@ -1,3 +1,4 @@
+import { shortProfileLabel } from '@/lib/testProfiles';
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { FormStep, PageElement, StepApiResponse, DidProvider, VerificationType, StoredTestData, FormField, VerificationFlowConfig as VerificationFlowConfigType, DecisionChoice } from '@/types/demo';
 import { logPortalActivity } from '@/lib/auditLog';
@@ -894,13 +895,14 @@ export function DemoFlowRenderer({
   }, [currentStep?.fields, formData]);
 
   // Fill form with test data (pass or fail)
-  const fillTestData = useCallback((type: 'pass' | 'fail') => {
-    if (!storedTestData) {
+  const [profileMenu, setProfileMenu] = useState<'pass' | 'fail' | null>(null);
+  const fillTestData = useCallback((type: 'pass' | 'fail', override?: Record<string, string>) => {
+    if (!storedTestData && !override) {
       toast.error('No test data configured');
       return;
     }
     
-    const data = type === 'pass' ? storedTestData.passData : storedTestData.failData;
+    const data = override || (type === 'pass' ? storedTestData!.passData : storedTestData!.failData);
     if (!data || Object.keys(data).length === 0) {
       toast.error(`No ${type} test data configured`);
       return;
@@ -3518,7 +3520,7 @@ export function DemoFlowRenderer({
           }`}>
             {showPassButton && (
               <button 
-                onClick={() => fillTestData('pass')}
+                onClick={() => { const opts = (storedTestData?.profiles || []).filter(p => p.type === 'pass'); if (opts.length > 1) setProfileMenu(profileMenu === 'pass' ? null : 'pass'); else fillTestData('pass', opts[0]?.data); }}
                 className="px-2.5 py-0.5 text-xs font-normal rounded-full border transition-colors"
                 style={{
                   color: '#6b7280',
@@ -3537,7 +3539,7 @@ export function DemoFlowRenderer({
             )}
             {showFailButton && (
               <button 
-                onClick={() => fillTestData('fail')}
+                onClick={() => { const opts = (storedTestData?.profiles || []).filter(p => p.type === 'fail'); if (opts.length > 1) setProfileMenu(profileMenu === 'fail' ? null : 'fail'); else fillTestData('fail', opts[0]?.data); }}
                 className="px-2.5 py-0.5 text-xs font-normal rounded-full border transition-colors"
                 style={{
                   color: '#6b7280',
@@ -3557,6 +3559,31 @@ export function DemoFlowRenderer({
           </div>
         )}
         
+        {profileMenu && (
+          <div className={`flex ${storedTestData?.buttonPosition === 'left' ? 'justify-start' : storedTestData?.buttonPosition === 'center' ? 'justify-center' : 'justify-end'}`}>
+            <div className="rounded-lg border p-2 shadow-sm max-w-sm" style={{ backgroundColor: '#ffffff', borderColor: '#e5e7eb' }}>
+              <div className="flex items-center justify-between mb-1.5 px-0.5">
+                <span className="text-[11px] font-medium" style={{ color: '#6b7280' }}>
+                  {profileMenu === 'pass' ? '✓ Pass profiles' : '✗ Fail profiles'}
+                </span>
+                <button onClick={() => setProfileMenu(null)} className="text-xs px-1" style={{ color: '#9ca3af' }} aria-label="Close">×</button>
+              </div>
+              <div className="flex flex-wrap gap-1">
+                {(storedTestData?.profiles || []).filter(p => p.type === profileMenu).map(p => (
+                  <button
+                    key={p.id}
+                    onClick={() => { fillTestData(profileMenu, p.data); setProfileMenu(null); }}
+                    className="px-2 py-0.5 text-xs rounded-full border transition-colors hover:opacity-80"
+                    style={{ color: '#374151', borderColor: '#d1d5db', backgroundColor: '#f9fafb' }}
+                  >
+                    {shortProfileLabel(p.name)}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
         {headerDescription && (
           <p className="text-sm text-muted-foreground">{headerDescription}</p>
         )}
