@@ -1609,3 +1609,61 @@ function mergeWithBrandingDefaults(styles: Partial<FormElementStyles>, branding:
   }
   return { ...defaults, ...Object.fromEntries(Object.entries(styles).filter(([_, v]) => v != null)) } as FormElementStyles;
 }
+
+/**
+ * Replace remote font URLs inside @font-face rules with base64 data URIs.
+ * Picks one format per rule (woff2 > woff > ttf/otf) to keep payload small.
+ */
+async function embedFontFaces(css: string, baseUrl: URL): Promise<string> {
+  if (!css || css.indexOf('@font-face') === -1) return css;
+  const MAX_FONT_BYTES = 600_000;
+  const MAX_TOTAL_BYTES = 6_000_000;
+  let total = 0;
+  const cache = new Map<string, string | null>();
+  const rank = (u: string) => /\.woff2(\?|#|$)/i.test(u) ? 0 : /\.woff(\?|#|$)/i.test(u) ? 1 : /\.(ttf|otf)(\?|#|$)/i.test(u) ? 2 : 3;
+  const mime = (u: string) => /\.woff2/i.test(u) ? 'font/woff2' : /\.woff/i.test(u) ? 'font/woff' : /\.otf/i.test(u) ? 'font/otf' : 'font/ttf';
+  const fmt = (u: string) => /\.woff2/i.test(u) ? 'woff2' : /\.woff/i.test(u) ? 'woff' : /\.otf/i.test(u) ? 'opentype' : 'truetype';
+
+  async function fetchFont(u: string): Promise<string | null> {
+    if (cache.has(u)) return cache.get(u)!;
+    let out: string | null = null;
+    try {
+      if (total < MAX_TOTAL_BYTES) {
+        const res = await fetch(u, { headers: { 'User-Agent': 'Mozilla/5.0', Referer: baseUrl.origin + '/' } });
+        if (res.ok) {
+          const buf = new Uint8Array(await res.arrayBuffer());
+          if (buf.byteLength > 0 && buf.byteLength <= MAX_FONT_BYTES && total + buf.byteLength <= MAX_TOTAL_BYTES) {
+            total += buf.byteLength;
+            let bin = '';
+            for (let i = 0; i < buf.length; i += 0x8000) bin += String.fromCharCode(...buf.subarray(i, i + 0x8000));
+            out = `data:${mime(u)};base64,${btoa(bin)}`;
+          }
+        }
+      }
+    } catch { /* ignore */ }
+    cache.set(u, out);
+    return out;
+  }
+
+  const blocks = [...css.matchAll(/@font-face\s*\{[^}]*\}/gi)];
+  const replacements: Array<[string, string]> = [];
+  await Promise.all(blocks.map(async (m) => {
+    const block = m[0];
+    const srcMatch = block.match(/src\s*:\s*([^;}]*)/i);
+    if (!srcMatch) return;
+    const urls = [...srcMatch[1].matchAll(/url\(\s*["']?([^"')]+)["']?\s*\)/gi)]
+      .map(u => u[1].trim())
+      .filter(u => !u.startsWith('data:'));
+    if (!urls.length) return;
+    urls.sort((a, b) => rank(a) - rank(b));
+    let abs: string;
+    try { abs = new URL(urls[0], baseUrl).href; } catch { return; }
+    const data = await fetchFont(abs);
+    if (!data) return;
+    const newBlock = block.replace(srcMatch[0], `src: url("${data}") format("${fmt(abs)}")`);
+    replacements.push([block, newBlock]);
+  }));
+  for (const [from, to] of replacements) css = css.split(from).join(to);
+  console.log(`Embedded ${replacements.length}/${blocks.length} font-face rules (${Math.round(total / 1024)} KB)`);
+  return css;
+}
