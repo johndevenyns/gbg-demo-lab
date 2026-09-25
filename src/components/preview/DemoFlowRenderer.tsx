@@ -725,6 +725,11 @@ export function DemoFlowRenderer({
   } | null>(null);
   const [showDidUrl, setShowDidUrl] = useState(false);
   const [hostedJourneyLaunchedStepId, setHostedJourneyLaunchedStepId] = useState<string | null>(null);
+  // GBG GO hosted journey: fresh instance started per step visit
+  const [goJourney, setGoJourney] = useState<{ url: string; instanceId: string } | null>(null);
+  const [goJourneyError, setGoJourneyError] = useState<string | null>(null);
+  const [goJourneyLoading, setGoJourneyLoading] = useState(false);
+  const goJourneyStartedForRef = useRef<string | null>(null);
   // Use ref for verification session data to avoid race condition with state updates
   const verificationSessionDataRef = useRef<{
     qrCodeUrl?: string;
@@ -1206,6 +1211,68 @@ export function DemoFlowRenderer({
 
     return () => clearTimeout(timer);
   }, [currentStep, hostedJourneyLaunchedStepId, executeCreateAccount, formData, onNavigateToPortal, completeFlow]);
+
+  // GBG GO hosted journey: start a fresh journey instance when the step loads.
+  useEffect(() => {
+    if (!currentStep || currentStep.stepType !== 'hosted_journey') return;
+    if (currentStep.hostedJourneyConfig?.provider !== 'gbg_go') return;
+    if (goJourneyStartedForRef.current === currentStep.id) return;
+    goJourneyStartedForRef.current = currentStep.id;
+
+    const start = async () => {
+      setGoJourneyLoading(true);
+      setGoJourneyError(null);
+      try {
+        // Prefill identity data collected in earlier steps, when available.
+        const identity: Record<string, unknown> = {};
+        if (formData.firstName) identity.firstName = formData.firstName;
+        if (formData.lastName) identity.lastNames = [formData.lastName];
+        if (formData.dateOfBirth) identity.dateOfBirth = formData.dateOfBirth;
+        if (formData.email) identity.emails = [{ type: 'home', email: formData.email }];
+        if (formData.phone) identity.phones = [{ type: 'mobile', number: formData.phone }];
+
+        const { data, error } = await supabase.functions.invoke('go-hosted-journey', {
+          body: { action: 'start', subject: Object.keys(identity).length ? { identity } : {} },
+        });
+        if (error) throw new Error(error.message);
+        if (data?.error) throw new Error(data.error);
+        if (!data?.url) throw new Error('GO did not return a journey URL');
+        setGoJourney({ url: data.url, instanceId: data.instanceId });
+      } catch (err) {
+        setGoJourneyError(err instanceof Error ? err.message : 'Failed to start GO journey');
+      } finally {
+        setGoJourneyLoading(false);
+      }
+    };
+    start();
+  }, [currentStep, formData]);
+
+  // GBG GO hosted journey: poll for completion and route to the result.
+  useEffect(() => {
+    if (!goJourney?.instanceId) return;
+    if (!currentStep || currentStep.stepType !== 'hosted_journey') return;
+
+    const interval = setInterval(async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke('go-hosted-journey', {
+          body: { action: 'status', instanceId: goJourney.instanceId },
+        });
+        if (error || !data) return;
+        const status = String(data.status || '').toLowerCase();
+        if (status === 'completed' || status === 'complete' || status === 'finished') {
+          clearInterval(interval);
+          // Treat an explicit negative outcome as failure; anything else passed.
+          const outcome = JSON.stringify(data.result || {}).toLowerCase();
+          const failed = /fail|reject|declin|no.?match/.test(outcome);
+          completeFlow(!failed);
+        }
+      } catch {
+        // transient poll errors are ignored
+      }
+    }, 4000);
+
+    return () => clearInterval(interval);
+  }, [goJourney?.instanceId, currentStep, completeFlow]);
 
   // Handle address validation dialog proceed
   const handleAddressValidationProceed = useCallback((useOriginal: boolean) => {
@@ -2848,12 +2915,31 @@ export function DemoFlowRenderer({
 
       case 'hosted_journey': {
         const hjConfig = currentStep.hostedJourneyConfig;
+        const isGoJourney = hjConfig?.provider === 'gbg_go';
         const rawUrl = hjConfig?.url?.trim() || '';
-        const resolvedUrl = rawUrl ? interpolateTemplate(rawUrl) : '';
+        const resolvedUrl = isGoJourney ? (goJourney?.url || '') : (rawUrl ? interpolateTemplate(rawUrl) : '');
         const iframeHeight = hjConfig?.height || '600px';
         const allowFullScreen = hjConfig?.allowFullScreen ?? true;
         const configuredMode = hjConfig?.mode || 'iframe';
         const mode = shouldForceHostedJourneyPopup(resolvedUrl) ? 'popup' : configuredMode;
+
+        if (isGoJourney && goJourneyError) {
+          return (
+            <div className="text-center py-12 text-muted-foreground">
+              <p className="font-medium">Could not start the verification</p>
+              <p className="text-sm mt-1">{goJourneyError}</p>
+            </div>
+          );
+        }
+
+        if (isGoJourney && (goJourneyLoading || !goJourney)) {
+          return (
+            <div className="text-center py-12 text-muted-foreground">
+              <p className="font-medium">Starting your verification…</p>
+              <p className="text-sm mt-1">This only takes a moment.</p>
+            </div>
+          );
+        }
 
         if (!resolvedUrl) {
           return (
