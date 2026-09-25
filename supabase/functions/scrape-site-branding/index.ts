@@ -893,6 +893,17 @@ Deno.serve(async (req) => {
       cssContent = await extractAndInlineCss(rawHtml, baseUrl);
     }
 
+    // Brand web fonts are usually served without CORS headers, so the
+    // browser refuses to load them inside our demo iframes and falls back
+    // to Arial — which renders noticeably larger/wider than the brand font
+    // (e.g. Truist's footer looked oversized). Embed the font files
+    // directly so the mirror uses the real typeface.
+    try {
+      cssContent = await embedFontFaces(cssContent, baseUrl);
+    } catch (e) {
+      console.warn('Font embedding failed:', e);
+    }
+
     // Extract form styles
     const formStyles = extractFormElementStyles(rawHtml, cssContent, branding);
 
