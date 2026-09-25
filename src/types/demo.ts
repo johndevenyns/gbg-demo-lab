@@ -6,12 +6,21 @@ export type VerificationType = 'docBio' | 'dataBio' | 'dataOnly';
 import type { UnifiedVerificationConfig } from './verification';
 
 // Stored test data for Fill Pass/Fail buttons
+export interface TestProfileOption {
+  id: string;
+  name: string;
+  type: 'pass' | 'fail';
+  data: Record<string, string>;
+}
+
 export interface StoredTestData {
   passData: Record<string, string>;
   failData: Record<string, string>;
   showFillPassButton?: boolean;
   showFillFailButton?: boolean;
   buttonPosition?: 'left' | 'center' | 'right';
+  /** Profiles offered in the Pass/Fail pickers on the demo form (snapshot). */
+  profiles?: TestProfileOption[];
 }
 
 export type IndustryTemplate = 'bank' | 'rental_car' | 'online_gambling' | 'healthcare' | 'insurance' | 'retail' | 'custom';

@@ -31,6 +31,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Plus, Upload, Download, Trash2, Pencil, CheckCircle2, XCircle, User } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import {
   useTestProfiles,
@@ -382,6 +383,19 @@ export function TestProfileManagement() {
                     </div>
                   </div>
                   <div className="flex items-center gap-1">
+                    <label className="flex items-center gap-2 mr-2 text-xs text-muted-foreground cursor-pointer">
+                      Default
+                      <Switch
+                        checked={!!profile.is_default}
+                        onCheckedChange={(v) =>
+                          updateProfile.mutate(
+                            { id: profile.id, updates: { is_default: v } },
+                            { onError: (err) => toast({ title: 'Error', description: err.message, variant: 'destructive' }) }
+                          )
+                        }
+                      />
+                    </label>
+
                     <Button variant="ghost" size="icon" onClick={() => handleEdit(profile)}>
                       <Pencil className="w-4 h-4" />
                     </Button>
