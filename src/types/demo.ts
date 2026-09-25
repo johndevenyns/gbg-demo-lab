@@ -443,8 +443,12 @@ export interface PageStepConfig {
 
 // Hosted Journey Step configuration — embeds an external URL inside an iframe
 export interface HostedJourneyStepConfig {
+  // Journey provider. 'url' (default) embeds a fixed URL; 'gbg_go' starts a
+  // fresh GBG GO hosted journey via the go-hosted-journey edge function and
+  // embeds the one-time instance URL it returns.
+  provider?: 'url' | 'gbg_go';
   // The URL to load in the iframe. Supports {{fieldName}} interpolation
-  // from previous step / API response data.
+  // from previous step / API response data. Not used when provider is 'gbg_go'.
   url?: string;
   // Optional iframe height (CSS value e.g. "600px", "80vh"). Defaults to 600px.
   height?: string;
