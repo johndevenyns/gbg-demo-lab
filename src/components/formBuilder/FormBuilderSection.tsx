@@ -391,7 +391,7 @@ export function FormBuilderSection({ demo, onUpdate }: FormBuilderSectionProps) 
             </TabsTrigger>
             <TabsTrigger value="testdata" className="flex items-center gap-2">
               <Users className="w-4 h-4" />
-              <span className="hidden sm:inline">Test Data</span>
+              <span className="hidden sm:inline">Test Profiles</span>
             </TabsTrigger>
             <TabsTrigger value="templates" className="flex items-center gap-2">
               <Settings2 className="w-4 h-4" />
