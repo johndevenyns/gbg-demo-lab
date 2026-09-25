@@ -90,7 +90,7 @@ export function FormPreviewPanel({ demo }: FormPreviewPanelProps) {
                   {hasTestData && (
                     <Badge variant="outline" className="text-xs">
                       <CheckCircle2 className="w-3 h-3 mr-1 text-green-500" />
-                      Test Data Configured
+                      Test Profiles Configured
                     </Badge>
                   )}
                 </div>
