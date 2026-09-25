@@ -3569,16 +3569,22 @@ export function DemoFlowRenderer({
                 <button onClick={() => setProfileMenu(null)} className="text-xs px-1" style={{ color: '#9ca3af' }} aria-label="Close">×</button>
               </div>
               <div className="flex flex-wrap gap-1">
-                {(storedTestData?.profiles || []).filter(p => p.type === profileMenu).map(p => (
-                  <button
-                    key={p.id}
-                    onClick={() => { fillTestData(profileMenu, p.data); setProfileMenu(null); }}
-                    className="px-2 py-0.5 text-xs rounded-full border transition-colors hover:opacity-80"
-                    style={{ color: '#374151', borderColor: '#d1d5db', backgroundColor: '#f9fafb' }}
-                  >
-                    {shortProfileLabel(p.name)}
-                  </button>
-                ))}
+                {(storedTestData?.profiles || []).filter(p => p.type === profileMenu).map(p => {
+                  const isPass = profileMenu === 'pass';
+                  const menuColor = isPass ? '#16a34a' : '#dc2626';
+                  const menuBg = isPass ? '#f0fdf4' : '#fef2f2';
+                  const menuBorder = isPass ? '#bbf7d0' : '#fecaca';
+                  return (
+                    <button
+                      key={p.id}
+                      onClick={() => { fillTestData(profileMenu, p.data); setProfileMenu(null); }}
+                      className="px-2 py-0.5 text-xs rounded-full border transition-colors hover:opacity-80"
+                      style={{ color: menuColor, borderColor: menuBorder, backgroundColor: menuBg, fontWeight: 500 }}
+                    >
+                      {isPass ? '✓ ' : '✗ '}{shortProfileLabel(p.name)}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           </div>
