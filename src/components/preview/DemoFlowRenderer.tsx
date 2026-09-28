@@ -1185,6 +1185,7 @@ export function DemoFlowRenderer({
   useEffect(() => {
     if (!currentStep || currentStep.stepType !== 'hosted_journey') return;
     const cfg = currentStep.hostedJourneyConfig;
+    if (cfg?.provider === 'gbg_go') return;
     const delay = cfg?.autoCompleteAfterSeconds;
     if (!delay || delay <= 0) return;
     const mode = cfg?.mode || 'iframe';
@@ -1238,7 +1239,8 @@ export function DemoFlowRenderer({
           body: {
             action: 'start',
             subject: Object.keys(identity).length ? { identity } : {},
-            resourceId: currentStep.hostedJourneyConfig?.resourceId || resolvedIds.resourceIdHostedJourney,
+            resourceId: currentStep.hostedJourneyConfig?.resourceId,
+            demoId,
             version: currentStep.hostedJourneyConfig?.version || 'latest',
           },
         });
@@ -1253,7 +1255,7 @@ export function DemoFlowRenderer({
       }
     };
     start();
-  }, [currentStep, formData, resolvedIds.resourceIdHostedJourney]);
+  }, [currentStep, formData, demoId]);
 
   // GBG GO hosted journey: poll for completion and route to the result.
   useEffect(() => {
