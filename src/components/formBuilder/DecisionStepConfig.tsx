@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { BufferedInput } from '@/components/ui/buffered-input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
@@ -494,9 +495,9 @@ export function DecisionStepConfig({ step, allSteps, onUpdateStep }: DecisionSte
             <div className="flex-1 space-y-1">
               <Label className="text-sm">Back Button</Label>
               {config.showBackButton !== false && (
-                <Input
+                <BufferedInput
                   value={config.backButtonLabel || 'Back'}
-                  onChange={(e) => handleConfigUpdate({ backButtonLabel: e.target.value })}
+                  onValueChange={(v) => handleConfigUpdate({ backButtonLabel: v })}
                   placeholder="Back"
                   className="h-7 text-sm"
                 />

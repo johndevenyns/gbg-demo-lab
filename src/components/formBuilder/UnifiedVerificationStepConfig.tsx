@@ -3,6 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { StepCompletionActionsConfig } from './StepCompletionActionsConfig';
 import { useAdminResourceIdsForUser } from '@/hooks/useAdminResourceIds';
 import { Input } from '@/components/ui/input';
+import { BufferedInput } from '@/components/ui/buffered-input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
@@ -550,9 +551,9 @@ export function UnifiedVerificationStepConfig({ step, onUpdateStep, demo }: Unif
                 <div className="flex-1 space-y-1">
                   <Label className="text-sm">Back Button</Label>
                   {config.showBackButton !== false && (
-                    <Input
+                    <BufferedInput
                       value={config.backButtonLabel || 'Back'}
-                      onChange={(e) => handleConfigUpdate({ backButtonLabel: e.target.value })}
+                      onValueChange={(v) => handleConfigUpdate({ backButtonLabel: v })}
                       placeholder="Back"
                       className="h-7 text-sm"
                     />
@@ -568,9 +569,9 @@ export function UnifiedVerificationStepConfig({ step, onUpdateStep, demo }: Unif
                 <div className="flex-1 space-y-1">
                   <Label className="text-sm">Next Button</Label>
                   {config.showNextButton && (
-                    <Input
+                    <BufferedInput
                       value={config.nextButtonLabel || 'Continue'}
-                      onChange={(e) => handleConfigUpdate({ nextButtonLabel: e.target.value })}
+                      onValueChange={(v) => handleConfigUpdate({ nextButtonLabel: v })}
                       placeholder="Continue"
                       className="h-7 text-sm"
                     />

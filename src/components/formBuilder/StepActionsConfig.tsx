@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { BufferedInput } from '@/components/ui/buffered-input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
@@ -137,9 +138,9 @@ export function StepActionsConfig({
                 />
               </div>
               {backButton.enabled && !isFirstStep && (
-                <Input
+                <BufferedInput
                   value={backButton.label}
-                  onChange={(e) => handleButtonLabelChange('back', e.target.value)}
+                  onValueChange={(v) => handleButtonLabelChange('back', v)}
                   placeholder="Back"
                   className="h-8 text-sm"
                 />
@@ -164,9 +165,9 @@ export function StepActionsConfig({
                 />
               </div>
               {nextButton.enabled && !isLastStep && (
-                <Input
+                <BufferedInput
                   value={nextButton.label}
-                  onChange={(e) => handleButtonLabelChange('next', e.target.value)}
+                  onValueChange={(v) => handleButtonLabelChange('next', v)}
                   placeholder="Next"
                   className="h-8 text-sm"
                 />
@@ -190,9 +191,9 @@ export function StepActionsConfig({
                 />
               </div>
               {submitButton.enabled && (
-                <Input
+                <BufferedInput
                   value={submitButton.label}
-                  onChange={(e) => handleButtonLabelChange('submit', e.target.value)}
+                  onValueChange={(v) => handleButtonLabelChange('submit', v)}
                   placeholder="Submit"
                   className="h-8 text-sm"
                 />
