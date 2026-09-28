@@ -486,6 +486,8 @@ export default function DemoPreview() {
       resourceIdDocBio={demo.resourceIdDocBio}
       resourceIdDataBio={demo.resourceIdDataBio}
       resourceIdDataOnly={demo.resourceIdDataOnly}
+      resourceIdHostedJourney={demo.resourceIdHostedJourney}
+      adminUserId={demo.createdBy}
       demoId={demo.id}
       onNavigateToLogin={handleNavigateToLogin}
       onNavigateToPortal={handleNavigateToPortal}

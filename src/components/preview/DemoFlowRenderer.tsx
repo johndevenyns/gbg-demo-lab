@@ -87,6 +87,8 @@ interface DemoFlowRendererProps {
   resourceIdDocBio?: string;
   resourceIdDataBio?: string;
   resourceIdDataOnly?: string;
+  resourceIdHostedJourney?: string;
+  adminUserId?: string;
   // Demo ID for login authentication
   demoId?: string;
   onNavigateToLogin?: () => void;
@@ -690,6 +692,8 @@ export function DemoFlowRenderer({
   resourceIdDocBio,
   resourceIdDataBio,
   resourceIdDataOnly,
+  resourceIdHostedJourney,
+  adminUserId,
   demoId,
   onNavigateToLogin,
   onNavigateToPortal,
@@ -757,8 +761,7 @@ export function DemoFlowRenderer({
   // Resolve resource IDs using 3-tier hierarchy: Customer → Admin → Global
   const resolvedIds = useResolvedResourceIds(
     { resourceId, resourceIdDocBio, resourceIdDataBio, resourceIdDataOnly, resourceIdHostedJourney },
-    // TODO: pass adminUserId when demo tracks which admin created it
-    undefined,
+    adminUserId,
   );
 
   // Address validation state

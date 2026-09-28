@@ -159,6 +159,8 @@ export function FormPreviewPanel({ demo }: FormPreviewPanelProps) {
                     resourceIdDocBio={demo.resourceIdDocBio}
                     resourceIdDataBio={demo.resourceIdDataBio}
                     resourceIdDataOnly={demo.resourceIdDataOnly}
+                    resourceIdHostedJourney={demo.resourceIdHostedJourney}
+                    adminUserId={demo.createdBy}
                     demoId={demo.id}
                     onSubmissionLog={handleSubmissionLog}
                     onComplete={(success, refId) => {
