@@ -480,11 +480,16 @@ export interface HostedJourneyStepConfig {
   showLaunchButton?: boolean;
   // GBG GO only: show the one-time journey URL below the launch controls.
   showUrl?: boolean;
-  // GBG GO only: when the journey is started. 'onEnter' (default) starts it
-  // when this step opens; 'previousStep' starts it when the user clicks the
-  // button on the step before this one, so this step only displays the
-  // already-created URL/QR code.
-  startTrigger?: 'onEnter' | 'previousStep';
+  // GBG GO only: when the journey is started. 'startButton' (default) shows a
+  // built-in start screen on this step with a button that makes the GO start
+  // call; 'onEnter' starts it as soon as this step opens; 'previousStep'
+  // starts it when the user clicks the button on the step before this one, so
+  // this step only displays the already-created URL/QR code.
+  startTrigger?: 'onEnter' | 'previousStep' | 'startButton';
+  // GBG GO startButton mode: text on the built-in start screen.
+  startTitle?: string;
+  startDescription?: string;
+  startButtonLabel?: string;
   // Popup-only: QR code caption text.
   qrCodeLabel?: string;
   // Auto-complete: after N seconds (from step mount in iframe mode, or from
