@@ -137,6 +137,22 @@ export function HostedJourneyStepConfig({ step, onUpdateStep, demo }: Props) {
                   className="font-mono text-sm"
                 />
               </div>
+              <div className="space-y-2">
+                <Label className="text-sm">Start Journey</Label>
+                <Select
+                  value={config.startTrigger || 'onEnter'}
+                  onValueChange={(value) => update({ startTrigger: value as 'onEnter' | 'previousStep' })}
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="onEnter">When this step opens</SelectItem>
+                    <SelectItem value="previousStep">From the previous step's button</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  "From the previous step's button" starts the journey when the user clicks Next on the step before this one — this step then only shows the URL and QR code.
+                </p>
+              </div>
             </div>
           ) : (
             <div className="space-y-2">
