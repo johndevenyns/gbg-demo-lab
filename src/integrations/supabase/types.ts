@@ -118,6 +118,7 @@ export type Database = {
           resource_id_databio: string | null
           resource_id_dataonly: string | null
           resource_id_docbio: string | null
+          resource_id_hosted_journey: string | null
           return_url: string | null
           scraped_css: string | null
           scraped_footer_html: string | null
@@ -166,6 +167,7 @@ export type Database = {
           resource_id_databio?: string | null
           resource_id_dataonly?: string | null
           resource_id_docbio?: string | null
+          resource_id_hosted_journey?: string | null
           return_url?: string | null
           scraped_css?: string | null
           scraped_footer_html?: string | null
@@ -214,6 +216,7 @@ export type Database = {
           resource_id_databio?: string | null
           resource_id_dataonly?: string | null
           resource_id_docbio?: string | null
+          resource_id_hosted_journey?: string | null
           return_url?: string | null
           scraped_css?: string | null
           scraped_footer_html?: string | null
