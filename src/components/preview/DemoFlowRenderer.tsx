@@ -1252,12 +1252,13 @@ export function DemoFlowRenderer({
     }
   }, [formData, demoId]);
 
-  // GBG GO hosted journey: start when the step loads, unless configured to
-  // start from the previous step's button.
+  // GBG GO hosted journey: start when the step loads, only when configured to
+  // start on enter. 'startButton' (the default) waits for the built-in start
+  // button; 'previousStep' is started by the previous step's button.
   useEffect(() => {
     if (!currentStep || currentStep.stepType !== 'hosted_journey') return;
     if (currentStep.hostedJourneyConfig?.provider !== 'gbg_go') return;
-    if ((currentStep.hostedJourneyConfig?.startTrigger || 'onEnter') === 'previousStep') return;
+    if ((currentStep.hostedJourneyConfig?.startTrigger || 'startButton') !== 'onEnter') return;
     startGoJourney(currentStep);
   }, [currentStep, startGoJourney]);
 
@@ -2948,6 +2949,35 @@ export function DemoFlowRenderer({
         const configuredMode = hjConfig?.mode || 'iframe';
         // GBG GO blocks iframe embedding (X-Frame-Options: DENY), so always use popup mode.
         const mode = isGoJourney || shouldForceHostedJourneyPopup(resolvedUrl) ? 'popup' : configuredMode;
+
+        // Built-in start screen: the GO call is only made when the user clicks
+        // the start button, so no journey is created until they ask for one.
+        if (isGoJourney && (hjConfig?.startTrigger || 'startButton') === 'startButton' && !goJourney && !goJourneyLoading) {
+          const startTitle = hjConfig?.startTitle || 'Verify your identity';
+          const startDescription = hjConfig?.startDescription || 'Click the button below to begin the verification.';
+          const startButtonLabel = hjConfig?.startButtonLabel || 'Get Started';
+          return (
+            <div className="w-full py-8 flex flex-col items-center text-center space-y-4">
+              <div className="space-y-1 max-w-md">
+                <h3 className="text-lg font-semibold">{startTitle}</h3>
+                <p className="text-sm text-muted-foreground">{startDescription}</p>
+              </div>
+              {goJourneyError && (
+                <p className="text-sm text-destructive max-w-md">{goJourneyError}</p>
+              )}
+              <Button
+                style={buttonColor ? { backgroundColor: buttonColor, color: getContrastTextColor(buttonColor) } : undefined}
+                onClick={() => {
+                  goJourneyStartedForRef.current = null;
+                  setGoJourneyError(null);
+                  startGoJourney(currentStep);
+                }}
+              >
+                {startButtonLabel}
+              </Button>
+            </div>
+          );
+        }
 
         if (isGoJourney && goJourneyError) {
           return (
