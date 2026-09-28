@@ -756,7 +756,7 @@ export function DemoFlowRenderer({
 
   // Resolve resource IDs using 3-tier hierarchy: Customer → Admin → Global
   const resolvedIds = useResolvedResourceIds(
-    { resourceId, resourceIdDocBio, resourceIdDataBio, resourceIdDataOnly },
+    { resourceId, resourceIdDocBio, resourceIdDataBio, resourceIdDataOnly, resourceIdHostedJourney },
     // TODO: pass adminUserId when demo tracks which admin created it
     undefined,
   );
