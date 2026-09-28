@@ -1,0 +1,1 @@
+Hosted Journey Resource IDs use step override → demo default → admin default → global default, with the backend secret only as a legacy safety fallback; this keeps GO journeys configurable without exposing credentials.

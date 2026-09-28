@@ -87,6 +87,8 @@ interface DemoFlowRendererProps {
   resourceIdDocBio?: string;
   resourceIdDataBio?: string;
   resourceIdDataOnly?: string;
+  resourceIdHostedJourney?: string;
+  adminUserId?: string;
   // Demo ID for login authentication
   demoId?: string;
   onNavigateToLogin?: () => void;
@@ -690,6 +692,8 @@ export function DemoFlowRenderer({
   resourceIdDocBio,
   resourceIdDataBio,
   resourceIdDataOnly,
+  resourceIdHostedJourney,
+  adminUserId,
   demoId,
   onNavigateToLogin,
   onNavigateToPortal,
@@ -756,9 +760,8 @@ export function DemoFlowRenderer({
 
   // Resolve resource IDs using 3-tier hierarchy: Customer → Admin → Global
   const resolvedIds = useResolvedResourceIds(
-    { resourceId, resourceIdDocBio, resourceIdDataBio, resourceIdDataOnly },
-    // TODO: pass adminUserId when demo tracks which admin created it
-    undefined,
+    { resourceId, resourceIdDocBio, resourceIdDataBio, resourceIdDataOnly, resourceIdHostedJourney },
+    adminUserId,
   );
 
   // Address validation state
@@ -1182,6 +1185,7 @@ export function DemoFlowRenderer({
   useEffect(() => {
     if (!currentStep || currentStep.stepType !== 'hosted_journey') return;
     const cfg = currentStep.hostedJourneyConfig;
+    if (cfg?.provider === 'gbg_go') return;
     const delay = cfg?.autoCompleteAfterSeconds;
     if (!delay || delay <= 0) return;
     const mode = cfg?.mode || 'iframe';
@@ -1232,7 +1236,13 @@ export function DemoFlowRenderer({
         if (formData.phone) identity.phones = [{ type: 'mobile', number: formData.phone }];
 
         const { data, error } = await supabase.functions.invoke('go-hosted-journey', {
-          body: { action: 'start', subject: Object.keys(identity).length ? { identity } : {} },
+          body: {
+            action: 'start',
+            subject: Object.keys(identity).length ? { identity } : {},
+            resourceId: currentStep.hostedJourneyConfig?.resourceId,
+            demoId,
+            version: currentStep.hostedJourneyConfig?.version || 'latest',
+          },
         });
         if (error) throw new Error(error.message);
         if (data?.error) throw new Error(data.error);
@@ -1245,7 +1255,7 @@ export function DemoFlowRenderer({
       }
     };
     start();
-  }, [currentStep, formData]);
+  }, [currentStep, formData, demoId]);
 
   // GBG GO hosted journey: poll for completion and route to the result.
   useEffect(() => {
@@ -2959,6 +2969,8 @@ export function DemoFlowRenderer({
             hjConfig?.launchDescription ||
             'Click the button below to open the application in a new window.';
           const showQrCode = hjConfig?.showQrCode ?? isGoJourney;
+          const showLaunchButton = hjConfig?.showLaunchButton ?? true;
+          const showUrl = hjConfig?.showUrl ?? isGoJourney;
           const qrCodeLabel = hjConfig?.qrCodeLabel || 'Or scan to continue on your phone';
           const forceTopNavigation = shouldForceHostedJourneyPopup(resolvedUrl);
           const isEmbedded = typeof window !== 'undefined' && window.self !== window.top;
@@ -3006,21 +3018,23 @@ export function DemoFlowRenderer({
                   <p className="text-sm text-muted-foreground">{launchDescription}</p>
                 </div>
               )}
-              <Button
-                asChild
-                style={buttonColor ? { backgroundColor: buttonColor, color: getContrastTextColor(buttonColor) } : undefined}
-              >
-                <a
-                  href={resolvedUrl}
-                  target={linkTarget}
-                  rel={linkTarget === '_blank' ? 'noopener noreferrer' : undefined}
-                  onClick={handleLaunchClick}
+              {showLaunchButton && (
+                <Button
+                  asChild
+                  style={buttonColor ? { backgroundColor: buttonColor, color: getContrastTextColor(buttonColor) } : undefined}
                 >
-                  <ExternalLink className="w-4 h-4 mr-2" />
-                  {launchButtonLabel}
-                </a>
-              </Button>
-              {isGoJourney && (
+                  <a
+                    href={resolvedUrl}
+                    target={linkTarget}
+                    rel={linkTarget === '_blank' ? 'noopener noreferrer' : undefined}
+                    onClick={handleLaunchClick}
+                  >
+                    <ExternalLink className="w-4 h-4 mr-2" />
+                    {launchButtonLabel}
+                  </a>
+                </Button>
+              )}
+              {isGoJourney && showUrl && (
                 <div className="max-w-md space-y-1">
                   <p className="text-xs text-muted-foreground">Or open this link (opens in a new window):</p>
                   <a

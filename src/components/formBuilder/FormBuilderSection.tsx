@@ -141,7 +141,7 @@ export function FormBuilderSection({ demo, onUpdate }: FormBuilderSectionProps) 
     setDefaultPath(pathId);
   }, []);
 
-  const handleUpdateResourceId = useCallback((field: 'resourceIdDocBio' | 'resourceIdDataBio' | 'resourceIdDataOnly', value: string) => {
+  const handleUpdateResourceId = useCallback((field: 'resourceIdDocBio' | 'resourceIdDataBio' | 'resourceIdDataOnly' | 'resourceIdHostedJourney', value: string) => {
     onUpdate({ [field]: value });
   }, [onUpdate]);
 
@@ -425,6 +425,7 @@ export function FormBuilderSection({ demo, onUpdate }: FormBuilderSectionProps) 
                 resourceIdDocBio: demo.resourceIdDocBio || '',
                 resourceIdDataBio: demo.resourceIdDataBio || '',
                 resourceIdDataOnly: demo.resourceIdDataOnly || '',
+                resourceIdHostedJourney: demo.resourceIdHostedJourney || '',
               }}
               onTogglePath={handleTogglePath}
               onSetCondition={handleSetCondition}

@@ -36,6 +36,13 @@
       "when": 1790347362728,
       "tag": "0004_test_profiles_is_default",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1790624434770,
+      "tag": "0005_add_hosted_journey_resource_id",
+      "breakpoints": true
     }
   ]
 }

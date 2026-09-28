@@ -80,6 +80,7 @@ const rowToDemo = (row: any): DemoEnvironment => {
     resourceIdDataOnly: row.resource_id_dataonly || '',
     resourceIdDataBio: row.resource_id_databio || '',
     resourceIdDocBio: row.resource_id_docbio || '',
+    resourceIdHostedJourney: row.resource_id_hosted_journey || '',
     referenceIdPrefix: row.reference_id_prefix || '',
     logoUrl: resolveAssetUrl(row.logo_url),
     uploadedLogoUrl: resolveAssetUrl(row.uploaded_logo_url),
@@ -136,6 +137,7 @@ const demoToRow = (demo: Partial<DemoEnvironment>) => {
   if (demo.resourceIdDataOnly !== undefined) row.resource_id_dataonly = demo.resourceIdDataOnly;
   if (demo.resourceIdDataBio !== undefined) row.resource_id_databio = demo.resourceIdDataBio;
   if (demo.resourceIdDocBio !== undefined) row.resource_id_docbio = demo.resourceIdDocBio;
+  if (demo.resourceIdHostedJourney !== undefined) row.resource_id_hosted_journey = demo.resourceIdHostedJourney;
   if (demo.referenceIdPrefix !== undefined) row.reference_id_prefix = demo.referenceIdPrefix;
   if (demo.logoUrl !== undefined) row.logo_url = demo.logoUrl;
   if (demo.uploadedLogoUrl !== undefined) row.uploaded_logo_url = demo.uploadedLogoUrl;

@@ -61,6 +61,8 @@ export default function DemoEmbed() {
             resourceIdDocBio={demo.resourceIdDocBio}
             resourceIdDataBio={demo.resourceIdDataBio}
             resourceIdDataOnly={demo.resourceIdDataOnly}
+            resourceIdHostedJourney={demo.resourceIdHostedJourney}
+            adminUserId={demo.createdBy}
             demoId={demo.id}
             onComplete={(success, refId) => {
               // Post message to parent window for iframe communication

@@ -1,4 +1,9 @@
-import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
+import { createClient } from 'npm:@supabase/supabase-js@2'
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
 
 // Direct integration with GBG GO v2 hosted journeys (US production).
 // No Ditto involved: we exchange the client credentials for an access token,
@@ -43,6 +48,53 @@ function json(data: unknown, status = 200) {
   })
 }
 
+async function resolveResourceId(payload: Record<string, unknown>): Promise<string | undefined> {
+  const stepOverride = typeof payload.resourceId === 'string' ? payload.resourceId.trim() : ''
+  if (stepOverride) return stepOverride
+
+  const demoId = typeof payload.demoId === 'string' ? payload.demoId.trim() : ''
+  const supabaseUrl = Deno.env.get('SUPABASE_URL')
+  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+  if (demoId && supabaseUrl && serviceKey) {
+    const admin = createClient(supabaseUrl, serviceKey)
+    const { data: demo } = await admin
+      .from('demo_environments')
+      .select('resource_id_hosted_journey, created_by')
+      .eq('id', demoId)
+      .maybeSingle()
+
+    const demoDefault = typeof demo?.resource_id_hosted_journey === 'string'
+      ? demo.resource_id_hosted_journey.trim()
+      : ''
+    if (demoDefault) return demoDefault
+
+    if (demo?.created_by) {
+      const { data: adminOverride } = await admin
+        .from('admin_resource_ids')
+        .select('resource_id')
+        .eq('admin_user_id', demo.created_by)
+        .eq('type_key', 'hosted_journey')
+        .maybeSingle()
+      const adminDefault = typeof adminOverride?.resource_id === 'string'
+        ? adminOverride.resource_id.trim()
+        : ''
+      if (adminDefault) return adminDefault
+    }
+
+    const { data: globalConfig } = await admin
+      .from('verification_type_configs')
+      .select('default_resource_id')
+      .eq('type_key', 'hosted_journey')
+      .maybeSingle()
+    const globalDefault = typeof globalConfig?.default_resource_id === 'string'
+      ? globalConfig.default_resource_id.trim()
+      : ''
+    if (globalDefault) return globalDefault
+  }
+
+  return Deno.env.get('GO_RESOURCE_ID')
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -55,7 +107,7 @@ Deno.serve(async (req) => {
     const token = await getAccessToken()
 
     if (action === 'start') {
-      const resourceId = Deno.env.get('GO_RESOURCE_ID')
+      const resourceId = await resolveResourceId(payload)
       if (!resourceId) throw new Error('GO resource ID is not configured')
 
       // Version: default to latest published version.

@@ -654,7 +654,7 @@ export function FormStepCard({
             <PageStepConfig step={step} onUpdateStep={onUpdateStep} />
           ) : step.stepType === 'hosted_journey' ? (
             /* Hosted Journey Step Type */
-            <HostedJourneyStepConfig step={step} onUpdateStep={onUpdateStep} />
+            <HostedJourneyStepConfig step={step} onUpdateStep={onUpdateStep} demo={demo} />
           ) : step.stepType === 'method_selection' ? (
             /* Method Selection Step Type */
             <div className="space-y-4">
