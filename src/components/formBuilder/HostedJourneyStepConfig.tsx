@@ -76,7 +76,7 @@ export function HostedJourneyStepConfig({ step, onUpdateStep, demo }: Props) {
               value={config.provider || 'url'}
               onValueChange={(value) => update({
                 provider: value as 'url' | 'gbg_go',
-                ...(value === 'gbg_go' ? { mode: 'popup', showQrCode: config.showQrCode ?? true, showUrl: config.showUrl ?? true } : {}),
+                ...(value === 'gbg_go' ? { mode: 'popup', showQrCode: config.showQrCode ?? true, showUrl: config.showUrl ?? true, startTrigger: config.startTrigger ?? 'startButton' } : {}),
               })}
             >
               <SelectTrigger className="bg-background"><SelectValue /></SelectTrigger>
@@ -141,19 +141,36 @@ export function HostedJourneyStepConfig({ step, onUpdateStep, demo }: Props) {
               <div className="space-y-2">
                 <Label className="text-sm">Start Journey</Label>
                 <Select
-                  value={config.startTrigger || 'onEnter'}
-                  onValueChange={(value) => update({ startTrigger: value as 'onEnter' | 'previousStep' })}
+                  value={config.startTrigger || 'startButton'}
+                  onValueChange={(value) => update({ startTrigger: value as 'onEnter' | 'previousStep' | 'startButton' })}
                 >
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="startButton">Show a start button on this step</SelectItem>
                     <SelectItem value="onEnter">When this step opens</SelectItem>
                     <SelectItem value="previousStep">From the previous step's button</SelectItem>
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-muted-foreground">
-                  "From the previous step's button" starts the journey when the user clicks Next on the step before this one — this step then only shows the URL and QR code.
+                  "Show a start button" displays a built-in Get Started screen on this step — clicking it calls GO and then reveals the URL and QR code. "From the previous step's button" starts the journey when the user clicks Next on the step before this one.
                 </p>
               </div>
+              {(config.startTrigger || 'startButton') === 'startButton' && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div className="space-y-2">
+                    <Label className="text-sm">Start Title</Label>
+                    <BufferedInput value={config.startTitle ?? ''} onValueChange={(v) => update({ startTitle: v })} placeholder="Verify your identity" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-sm">Start Description</Label>
+                    <BufferedInput value={config.startDescription ?? ''} onValueChange={(v) => update({ startDescription: v })} placeholder="Click below to begin the verification." />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-sm">Start Button Label</Label>
+                    <BufferedInput value={config.startButtonLabel ?? ''} onValueChange={(v) => update({ startButtonLabel: v })} placeholder="Get Started" />
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             <div className="space-y-2">

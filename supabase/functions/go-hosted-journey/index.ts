@@ -110,9 +110,11 @@ Deno.serve(async (req) => {
       const resourceId = await resolveResourceId(payload)
       if (!resourceId) throw new Error('GO resource ID is not configured')
 
-      // Version: default to latest published version.
+      // Version: default to latest published version. The stored Resource ID
+      // may already carry an @version suffix — strip it before appending.
       const version = (payload?.version as string | undefined) || 'latest'
-      const fullResourceId = `${resourceId}@${version}`
+      const baseResourceId = resourceId.split('@')[0]
+      const fullResourceId = `${baseResourceId}@${version}`
 
       // Optional prefill of identity data collected in earlier form steps.
       const subject = payload?.subject && typeof payload.subject === 'object'
