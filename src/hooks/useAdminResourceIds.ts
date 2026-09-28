@@ -147,6 +147,7 @@ export function useResolvedResourceIds(
     resourceIdDocBio?: string;
     resourceIdDataBio?: string;
     resourceIdDataOnly?: string;
+    resourceIdHostedJourney?: string;
   },
   adminUserId?: string,
 ) {
@@ -185,6 +186,7 @@ export function useResolvedResourceIds(
     resourceIdDocBio: resolve('docbio', customerResourceIds.resourceIdDocBio),
     resourceIdDataBio: resolve('databio', customerResourceIds.resourceIdDataBio),
     resourceIdDataOnly: resolve('dataonly', customerResourceIds.resourceIdDataOnly),
+    resourceIdHostedJourney: resolve('hosted_journey', customerResourceIds.resourceIdHostedJourney),
     // Generic fallback
     resourceId: resolve('docbio', customerResourceIds.resourceId),
   };

@@ -55,7 +55,10 @@ Deno.serve(async (req) => {
     const token = await getAccessToken()
 
     if (action === 'start') {
-      const resourceId = Deno.env.get('GO_RESOURCE_ID')
+      const requestedResourceId = typeof payload?.resourceId === 'string'
+        ? payload.resourceId.trim()
+        : ''
+      const resourceId = requestedResourceId || Deno.env.get('GO_RESOURCE_ID')
       if (!resourceId) throw new Error('GO resource ID is not configured')
 
       // Version: default to latest published version.

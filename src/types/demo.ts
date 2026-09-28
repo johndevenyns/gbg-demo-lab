@@ -60,6 +60,7 @@ export interface DemoEnvironment {
   resourceIdDataOnly?: string;
   resourceIdDataBio?: string;
   resourceIdDocBio?: string;
+  resourceIdHostedJourney?: string;
   
   // QR Code Settings
   includeQr: boolean;
@@ -447,6 +448,10 @@ export interface HostedJourneyStepConfig {
   // fresh GBG GO hosted journey via the go-hosted-journey edge function and
   // embeds the one-time instance URL it returns.
   provider?: 'url' | 'gbg_go';
+  // GBG GO journey Resource ID. When empty, inherits demo → admin → global.
+  resourceId?: string;
+  // GO journey version. Defaults to the latest published version.
+  version?: string;
   // The URL to load in the iframe. Supports {{fieldName}} interpolation
   // from previous step / API response data. Not used when provider is 'gbg_go'.
   url?: string;
@@ -471,6 +476,10 @@ export interface HostedJourneyStepConfig {
   showLaunchText?: boolean;
   // Popup-only: also render a QR code of the URL so users can continue on mobile.
   showQrCode?: boolean;
+  // Popup-only: show the button that opens the journey in a new window.
+  showLaunchButton?: boolean;
+  // GBG GO only: show the one-time journey URL below the launch controls.
+  showUrl?: boolean;
   // Popup-only: QR code caption text.
   qrCodeLabel?: string;
   // Auto-complete: after N seconds (from step mount in iframe mode, or from

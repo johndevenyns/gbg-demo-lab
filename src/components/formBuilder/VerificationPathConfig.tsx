@@ -35,6 +35,7 @@ interface ResourceIds {
   resourceIdDocBio: string;
   resourceIdDataBio: string;
   resourceIdDataOnly: string;
+  resourceIdHostedJourney: string;
 }
 
 interface VerificationPathConfigProps {
@@ -82,6 +83,19 @@ export function VerificationPathConfig({
             value={globalResourceId}
             onChange={(e) => onUpdateGlobalResourceId(e.target.value)}
             placeholder="Enter default Resource ID"
+            className="font-mono"
+          />
+        </div>
+
+        <div className="p-3 rounded-lg bg-muted/50 space-y-2">
+          <Label className="font-medium">GBG GO Hosted Journey Resource ID</Label>
+          <p className="text-sm text-muted-foreground">
+            Demo-level default for GO steps. Leave empty to use the demo owner's admin default, then the global Hosted Journey default.
+          </p>
+          <Input
+            value={resourceIds.resourceIdHostedJourney}
+            onChange={(e) => onUpdateResourceId('resourceIdHostedJourney', e.target.value)}
+            placeholder="Use admin or global Hosted Journey default"
             className="font-mono"
           />
         </div>
