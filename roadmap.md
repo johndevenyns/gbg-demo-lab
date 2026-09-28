@@ -3,4 +3,4 @@
 - [x] Apply complete, validated customer form capture styling during demo creation.
 - [x] Show a persistent initial-build success/skipped/failure report.
 - [x] Validate the targeted flows and checks.
-- [ ] Align GBG GO Hosted Journey settings, Resource ID inheritance, and completion controls.
+- [x] Align GBG GO Hosted Journey settings, Resource ID inheritance, and completion controls.
