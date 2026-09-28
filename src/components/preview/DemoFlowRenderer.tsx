@@ -2921,7 +2921,8 @@ export function DemoFlowRenderer({
         const iframeHeight = hjConfig?.height || '600px';
         const allowFullScreen = hjConfig?.allowFullScreen ?? true;
         const configuredMode = hjConfig?.mode || 'iframe';
-        const mode = shouldForceHostedJourneyPopup(resolvedUrl) ? 'popup' : configuredMode;
+        // GBG GO blocks iframe embedding (X-Frame-Options: DENY), so always use popup mode.
+        const mode = isGoJourney || shouldForceHostedJourneyPopup(resolvedUrl) ? 'popup' : configuredMode;
 
         if (isGoJourney && goJourneyError) {
           return (
@@ -2951,13 +2952,13 @@ export function DemoFlowRenderer({
         }
 
         if (mode === 'popup') {
-          const launchButtonLabel = hjConfig?.launchButtonLabel || 'Launch verification';
+          const launchButtonLabel = hjConfig?.launchButtonLabel || (isGoJourney ? 'Continue in a new window' : 'Launch verification');
           const showLaunchText = hjConfig?.showLaunchText ?? true;
           const launchTitle = hjConfig?.launchTitle || 'Continue in a new window';
           const launchDescription =
             hjConfig?.launchDescription ||
             'Click the button below to open the application in a new window.';
-          const showQrCode = hjConfig?.showQrCode ?? false;
+          const showQrCode = hjConfig?.showQrCode ?? isGoJourney;
           const qrCodeLabel = hjConfig?.qrCodeLabel || 'Or scan to continue on your phone';
           const forceTopNavigation = shouldForceHostedJourneyPopup(resolvedUrl);
           const isEmbedded = typeof window !== 'undefined' && window.self !== window.top;
@@ -3019,6 +3020,23 @@ export function DemoFlowRenderer({
                   {launchButtonLabel}
                 </a>
               </Button>
+              {isGoJourney && (
+                <div className="max-w-md space-y-1">
+                  <p className="text-xs text-muted-foreground">Or open this link (opens in a new window):</p>
+                  <a
+                    href={resolvedUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setHostedJourneyLaunchedStepId(currentStep.id)}
+                    className="text-xs text-primary underline break-all"
+                  >
+                    {resolvedUrl}
+                  </a>
+                </div>
+              )}
+              {isGoJourney && (
+                <p className="text-xs text-muted-foreground">Waiting for your verification to finish — this page updates automatically.</p>
+              )}
               {showQrCode && (
                 <div className="flex flex-col items-center gap-2 pt-2">
                   <QRCodeDisplay value={resolvedUrl} size={180} />
