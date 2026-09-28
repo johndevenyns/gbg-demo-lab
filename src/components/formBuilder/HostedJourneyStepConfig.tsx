@@ -61,8 +61,9 @@ export function HostedJourneyStepConfig({ step, onUpdateStep }: Props) {
             {config.provider === 'gbg_go' && (
               <p className="text-xs text-muted-foreground">
                 Starts a fresh GO journey for each user and embeds the one-time link it
-                returns. The journey completes automatically when GO reports a result —
-                no fixed URL needed below.
+                returns. GO can't be shown inside the page, so it always opens in a new
+                window, with a QR code and a link to continue on mobile. The step completes
+                automatically when GO reports a result.
               </p>
             )}
           </div>

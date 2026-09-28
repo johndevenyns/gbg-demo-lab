@@ -2952,7 +2952,7 @@ export function DemoFlowRenderer({
         }
 
         if (mode === 'popup') {
-          const launchButtonLabel = hjConfig?.launchButtonLabel || 'Launch verification';
+          const launchButtonLabel = hjConfig?.launchButtonLabel || (isGoJourney ? 'Continue in a new window' : 'Launch verification');
           const showLaunchText = hjConfig?.showLaunchText ?? true;
           const launchTitle = hjConfig?.launchTitle || 'Continue in a new window';
           const launchDescription =
