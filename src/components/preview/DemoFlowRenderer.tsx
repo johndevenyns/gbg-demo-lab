@@ -1216,46 +1216,50 @@ export function DemoFlowRenderer({
     return () => clearTimeout(timer);
   }, [currentStep, hostedJourneyLaunchedStepId, executeCreateAccount, formData, onNavigateToPortal, completeFlow]);
 
-  // GBG GO hosted journey: start a fresh journey instance when the step loads.
+  // GBG GO hosted journey: start a fresh journey instance for a given step.
+  const startGoJourney = useCallback(async (step: FormStep) => {
+    if (goJourneyStartedForRef.current === step.id) return;
+    goJourneyStartedForRef.current = step.id;
+
+    setGoJourneyLoading(true);
+    setGoJourneyError(null);
+    try {
+      // Prefill identity data collected in earlier steps, when available.
+      const identity: Record<string, unknown> = {};
+      if (formData.firstName) identity.firstName = formData.firstName;
+      if (formData.lastName) identity.lastNames = [formData.lastName];
+      if (formData.dateOfBirth) identity.dateOfBirth = formData.dateOfBirth;
+      if (formData.email) identity.emails = [{ type: 'home', email: formData.email }];
+      if (formData.phone) identity.phones = [{ type: 'mobile', number: formData.phone }];
+
+      const { data, error } = await supabase.functions.invoke('go-hosted-journey', {
+        body: {
+          action: 'start',
+          subject: Object.keys(identity).length ? { identity } : {},
+          resourceId: step.hostedJourneyConfig?.resourceId,
+          demoId,
+          version: step.hostedJourneyConfig?.version || 'latest',
+        },
+      });
+      if (error) throw new Error(error.message);
+      if (data?.error) throw new Error(data.error);
+      if (!data?.url) throw new Error('GO did not return a journey URL');
+      setGoJourney({ url: data.url, instanceId: data.instanceId });
+    } catch (err) {
+      setGoJourneyError(err instanceof Error ? err.message : 'Failed to start GO journey');
+    } finally {
+      setGoJourneyLoading(false);
+    }
+  }, [formData, demoId]);
+
+  // GBG GO hosted journey: start when the step loads, unless configured to
+  // start from the previous step's button.
   useEffect(() => {
     if (!currentStep || currentStep.stepType !== 'hosted_journey') return;
     if (currentStep.hostedJourneyConfig?.provider !== 'gbg_go') return;
-    if (goJourneyStartedForRef.current === currentStep.id) return;
-    goJourneyStartedForRef.current = currentStep.id;
-
-    const start = async () => {
-      setGoJourneyLoading(true);
-      setGoJourneyError(null);
-      try {
-        // Prefill identity data collected in earlier steps, when available.
-        const identity: Record<string, unknown> = {};
-        if (formData.firstName) identity.firstName = formData.firstName;
-        if (formData.lastName) identity.lastNames = [formData.lastName];
-        if (formData.dateOfBirth) identity.dateOfBirth = formData.dateOfBirth;
-        if (formData.email) identity.emails = [{ type: 'home', email: formData.email }];
-        if (formData.phone) identity.phones = [{ type: 'mobile', number: formData.phone }];
-
-        const { data, error } = await supabase.functions.invoke('go-hosted-journey', {
-          body: {
-            action: 'start',
-            subject: Object.keys(identity).length ? { identity } : {},
-            resourceId: currentStep.hostedJourneyConfig?.resourceId,
-            demoId,
-            version: currentStep.hostedJourneyConfig?.version || 'latest',
-          },
-        });
-        if (error) throw new Error(error.message);
-        if (data?.error) throw new Error(data.error);
-        if (!data?.url) throw new Error('GO did not return a journey URL');
-        setGoJourney({ url: data.url, instanceId: data.instanceId });
-      } catch (err) {
-        setGoJourneyError(err instanceof Error ? err.message : 'Failed to start GO journey');
-      } finally {
-        setGoJourneyLoading(false);
-      }
-    };
-    start();
-  }, [currentStep, formData, demoId]);
+    if ((currentStep.hostedJourneyConfig?.startTrigger || 'onEnter') === 'previousStep') return;
+    startGoJourney(currentStep);
+  }, [currentStep, startGoJourney]);
 
   // GBG GO hosted journey: poll for completion and route to the result.
   useEffect(() => {
