@@ -1314,14 +1314,25 @@ export function DemoFlowRenderer({
   }, [pendingNextStep, showAddressDialog, isLastStep, referenceId, allApiData, completeFlow]);
 
   // Proceed to next step (internal - after validation)
-  const proceedToNextStep = useCallback(() => {
+  const proceedToNextStep = useCallback(async () => {
     if (isLastStep) {
       const refId = referenceId || (allApiData.referenceId as string) || `REF-${Date.now().toString(36).toUpperCase()}`;
       completeFlow(true, refId);
     } else {
+      // If the next step is a GO hosted journey configured to start from the
+      // previous step's button, kick off the journey now so its URL/QR code
+      // is ready when the step opens.
+      const nextStep = steps[currentStepIndex + 1];
+      if (
+        nextStep?.stepType === 'hosted_journey' &&
+        nextStep.hostedJourneyConfig?.provider === 'gbg_go' &&
+        nextStep.hostedJourneyConfig?.startTrigger === 'previousStep'
+      ) {
+        await startGoJourney(nextStep);
+      }
       setCurrentStepIndex(prev => prev + 1);
     }
-  }, [isLastStep, completeFlow, referenceId, allApiData]);
+  }, [isLastStep, completeFlow, referenceId, allApiData, steps, currentStepIndex, startGoJourney]);
 
   // Check if current step has address fields
   const hasAddressFields = useCallback((step: FormStep | undefined): boolean => {
