@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { BufferedInput } from '@/components/ui/buffered-input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
@@ -226,7 +227,7 @@ export function HostedJourneyStepConfig({ step, onUpdateStep, demo }: Props) {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   <div className="space-y-2">
                     <Label className="text-sm">Button Label</Label>
-                    <Input value={config.launchButtonLabel ?? ''} onChange={(event) => update({ launchButtonLabel: event.target.value })} placeholder="Continue in a new window" />
+                    <BufferedInput value={config.launchButtonLabel ?? ''} onValueChange={(v) => update({ launchButtonLabel: v })} placeholder="Continue in a new window" />
                   </div>
                   <div className="space-y-2">
                     <Label className="text-sm">Window Width</Label>

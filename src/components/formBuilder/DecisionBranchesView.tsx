@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { BufferedInput } from '@/components/ui/buffered-input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { FormStep, DecisionChoice, DemoEnvironment, DecisionStepConfig as DecisionStepConfigType } from '@/types/demo';
@@ -230,9 +231,9 @@ export function DecisionBranchesView({ step, allSteps, demo, onUpdateStep }: Dec
                 <Label className="text-sm">Show back button</Label>
               </div>
               {config.showBackButton !== false && (
-                <Input
+                <BufferedInput
                   value={config.backButtonLabel || 'Back'}
-                  onChange={(e) => handleConfigUpdate({ backButtonLabel: e.target.value })}
+                  onValueChange={(v) => handleConfigUpdate({ backButtonLabel: v })}
                   placeholder="Back"
                   className="w-32 h-8 text-sm"
                 />
