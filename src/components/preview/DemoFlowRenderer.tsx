@@ -1277,15 +1277,14 @@ export function DemoFlowRenderer({
         if (error || !data) return;
         const status = String(data.status || '').toLowerCase();
         if (data.status) setGoJourneyStatus(String(data.status));
-        if (status === 'completed' || status === 'complete' || status === 'finished') {
+        if (data.decision === 'pass' || data.decision === 'fail') {
           clearInterval(interval);
-          // Treat an explicit negative outcome as failure; anything else passed.
-          const outcome = JSON.stringify(data.result || {}).toLowerCase();
-          const failed = /fail|reject|declin|no.?match/.test(outcome);
-          setTimeout(() => completeFlow(!failed), 1200);
+          const passed = data.decision === 'pass';
+          setGoJourneyStatus(passed ? 'Completed – Pass' : `Completed – Fail${data.reason ? ` (${data.reason})` : ''}`);
+          setTimeout(() => completeFlow(passed, goJourney.instanceId), 1200);
         } else if (/fail|expire|cancel|reject/.test(status)) {
           clearInterval(interval);
-          setTimeout(() => completeFlow(false), 1200);
+          setTimeout(() => completeFlow(false, goJourney.instanceId), 1200);
         }
       } catch {
         // transient poll errors are ignored
