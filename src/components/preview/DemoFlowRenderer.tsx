@@ -3146,14 +3146,6 @@ export function DemoFlowRenderer({
                   </div>
                 );
               })()}
-              {showQrCode && (
-                <div className="flex flex-col items-center gap-2 pt-2">
-                  <QRCodeDisplay value={resolvedUrl} size={180} />
-                  {qrCodeLabel && (
-                    <p className="text-xs text-muted-foreground max-w-xs">{qrCodeLabel}</p>
-                  )}
-                </div>
-              )}
             </div>
           );
         }
