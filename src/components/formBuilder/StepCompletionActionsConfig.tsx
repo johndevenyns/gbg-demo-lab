@@ -125,7 +125,7 @@ export function StepCompletionActionsConfig({
               value={action.type}
               onValueChange={(v) => updateAction(type, action.id, { type: v as StepCompletionActionType })}
             >
-              <SelectTrigger className="h-8 text-sm">
+              <SelectTrigger className="h-8 text-sm bg-card">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="bg-background border z-50">
@@ -161,7 +161,7 @@ export function StepCompletionActionsConfig({
                 value={action.messageTitle || ''}
                 onChange={(e) => updateAction(type, action.id, { messageTitle: e.target.value })}
                 placeholder={type === 'success' ? 'Verification Complete' : 'Verification Failed'}
-                className="h-7 text-sm"
+                className="h-7 text-sm bg-card"
               />
             </div>
             <div className="space-y-1">
@@ -170,7 +170,7 @@ export function StepCompletionActionsConfig({
                 value={action.subtitle || ''}
                 onChange={(e) => updateAction(type, action.id, { subtitle: e.target.value })}
                 placeholder="A brief subtitle under the title"
-                className="h-7 text-sm"
+                className="h-7 text-sm bg-card"
               />
             </div>
             <div className="space-y-1">
@@ -211,7 +211,7 @@ export function StepCompletionActionsConfig({
                   value={action.buttonText || ''}
                   onChange={(e) => updateAction(type, action.id, { buttonText: e.target.value })}
                   placeholder={type === 'success' ? 'Continue' : 'Try Again'}
-                  className="h-7 text-sm"
+                  className="h-7 text-sm bg-card"
                 />
               </div>
 
@@ -222,7 +222,7 @@ export function StepCompletionActionsConfig({
                     value={action.buttonAction || 'url'}
                     onValueChange={(v) => updateAction(type, action.id, { buttonAction: v as 'url' | 'portal' })}
                   >
-                    <SelectTrigger className="h-7 text-sm">
+                    <SelectTrigger className="h-7 text-sm bg-card">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="bg-background border z-50">
@@ -249,7 +249,7 @@ export function StepCompletionActionsConfig({
                           }
                         }}
                       >
-                        <SelectTrigger className="h-7 text-sm">
+                        <SelectTrigger className="h-7 text-sm bg-card">
                           <SelectValue placeholder="Pick a page or use a custom URL" />
                         </SelectTrigger>
                         <SelectContent className="bg-background border z-50">
@@ -271,7 +271,7 @@ export function StepCompletionActionsConfig({
                       value={action.buttonUrl || ''}
                       onChange={(e) => updateAction(type, action.id, { buttonUrl: e.target.value })}
                       placeholder="https://yoursite.com/next-step"
-                      className="h-7 text-sm"
+                      className="h-7 text-sm bg-card"
                     />
                   </div>
                 </div>
@@ -301,7 +301,7 @@ export function StepCompletionActionsConfig({
               value={action.redirectUrl || ''}
               onChange={(e) => updateAction(type, action.id, { redirectUrl: e.target.value })}
               placeholder="https://example.com/next"
-              className="h-7 text-sm"
+              className="h-7 text-sm bg-card"
             />
           </div>
         )}
