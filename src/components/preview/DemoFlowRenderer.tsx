@@ -733,6 +733,7 @@ export function DemoFlowRenderer({
   const [goJourney, setGoJourney] = useState<{ url: string; instanceId: string } | null>(null);
   const [goJourneyError, setGoJourneyError] = useState<string | null>(null);
   const [goJourneyLoading, setGoJourneyLoading] = useState(false);
+  const [goJourneyStatus, setGoJourneyStatus] = useState<string>('pending');
   const goJourneyStartedForRef = useRef<string | null>(null);
   // Use ref for verification session data to avoid race condition with state updates
   const verificationSessionDataRef = useRef<{
@@ -1266,6 +1267,7 @@ export function DemoFlowRenderer({
   useEffect(() => {
     if (!goJourney?.instanceId) return;
     if (!currentStep || currentStep.stepType !== 'hosted_journey') return;
+    setGoJourneyStatus('pending');
 
     const interval = setInterval(async () => {
       try {
@@ -1274,12 +1276,16 @@ export function DemoFlowRenderer({
         });
         if (error || !data) return;
         const status = String(data.status || '').toLowerCase();
+        if (data.status) setGoJourneyStatus(String(data.status));
         if (status === 'completed' || status === 'complete' || status === 'finished') {
           clearInterval(interval);
           // Treat an explicit negative outcome as failure; anything else passed.
           const outcome = JSON.stringify(data.result || {}).toLowerCase();
           const failed = /fail|reject|declin|no.?match/.test(outcome);
-          completeFlow(!failed);
+          setTimeout(() => completeFlow(!failed), 1200);
+        } else if (/fail|expire|cancel|reject/.test(status)) {
+          clearInterval(interval);
+          setTimeout(() => completeFlow(false), 1200);
         }
       } catch {
         // transient poll errors are ignored
@@ -3093,9 +3099,30 @@ export function DemoFlowRenderer({
                   </a>
                 </div>
               )}
-              {isGoJourney && (
-                <p className="text-xs text-muted-foreground">Waiting for your verification to finish — this page updates automatically.</p>
-              )}
+              {isGoJourney && (() => {
+                const s = goJourneyStatus.toLowerCase();
+                const done = /complete|finish/.test(s);
+                const bad = /fail|expire|reject|cancel/.test(s);
+                return (
+                  <div className="space-y-2" aria-live="polite">
+                    <Badge
+                      variant="outline"
+                      className={done ? 'bg-green-500/20 text-green-600 border-green-500/30' : bad ? 'bg-red-500/20 text-red-600 border-red-500/30' : 'bg-yellow-500/20 text-yellow-600 border-yellow-500/30'}
+                    >
+                      Status: {goJourneyStatus}
+                    </Badge>
+                    {goJourney?.instanceId && (
+                      <p className="text-xs text-muted-foreground">Session: {goJourney.instanceId.substring(0, 8)}...</p>
+                    )}
+                    {!done && !bad && (
+                      <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Waiting for verification...
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
               {showQrCode && (
                 <div className="flex flex-col items-center gap-2 pt-2">
                   <QRCodeDisplay value={resolvedUrl} size={180} />
