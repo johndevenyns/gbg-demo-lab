@@ -168,10 +168,43 @@ Deno.serve(async (req) => {
         return json({ error: 'GO journey state fetch failed', status: res.status, details: data }, 502)
       }
 
+      // GO returns the verdict inside context.result and per-module outcomes
+      // inside context.process.steps[].result.outcome. Derive pass/fail here
+      // so the browser never has to guess from raw JSON.
+      const ctx = (data.context ?? {}) as Record<string, any>
+      const result = ctx.result ?? data.result ?? null
+      const steps: any[] = Array.isArray(ctx.process?.steps) ? ctx.process.steps : []
+      const outcomes = steps
+        .map((s) => ({
+          nodeId: s?.nodeId,
+          status: s?.result?.status ?? null,
+          outcome: s?.result?.outcome ?? s?.result?.decision ?? null,
+        }))
+        .filter((s) => s.status || s.outcome)
+      const journeyStatus = String(data.status || '').toLowerCase()
+      const done = journeyStatus === 'completed' || journeyStatus === 'failed'
+      let decision: 'pending' | 'pass' | 'fail' = 'pending'
+      let reason = ''
+      if (done) {
+        const negative = /fail|reject|declin|refer|no.?match|not.?match|under.?age|underage|high.?risk|alert|deny|denied|mismatch/i
+        const resultStatus = String(result?.status || '').toLowerCase()
+        const resultDecision = String(result?.decision ?? result?.outcome ?? '')
+        const badStep = outcomes.find((o) => negative.test(String(o.outcome || '')) || /fail/i.test(String(o.status || '')))
+        if (journeyStatus === 'failed') reason = 'Journey failed'
+        else if (resultStatus === 'failed') reason = 'Result status failed'
+        else if (negative.test(resultDecision)) reason = `Decision: ${resultDecision}`
+        else if (badStep) reason = `Outcome: ${badStep.outcome || badStep.status}`
+        decision = reason ? 'fail' : 'pass'
+        console.log('GO journey finished', JSON.stringify({ instanceId, status: data.status, result, outcomes, decision, reason }))
+      }
+
       return json({
         instanceId: data.instanceId,
         status: data.status,
-        result: data.result ?? null,
+        result,
+        outcomes,
+        decision,
+        reason,
       })
     }
 
