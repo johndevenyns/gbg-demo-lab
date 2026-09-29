@@ -1281,14 +1281,6 @@ export function DemoFlowRenderer({
           clearInterval(interval);
           const passed = data.decision === 'pass';
           setGoJourneyStatus(passed ? 'Completed – Pass' : `Completed – Fail${data.reason ? ` (${data.reason})` : ''}`);
-          logPortalActivity({
-            action: passed ? 'verification_completed' : 'verification_failed',
-            demoId,
-            demoName: customerName,
-            verificationType: 'hosted_journey',
-            verificationResult: passed ? 'pass' : 'fail',
-            details: { instanceId: goJourney.instanceId, reason: data.reason, outcomes: data.outcomes },
-          });
           setTimeout(() => completeFlow(passed, goJourney.instanceId), 1200);
         } else if (/fail|expire|cancel|reject/.test(status)) {
           clearInterval(interval);
