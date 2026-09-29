@@ -3061,44 +3061,67 @@ export function DemoFlowRenderer({
             }
           };
 
+          const mobileTitle = hjConfig?.mobileTitle || 'Continue on your mobile device';
+          const mobileDescription =
+            hjConfig?.mobileDescription ||
+            'For best results, continue on your mobile device. Scan the QR code below with your phone.';
+
           return (
-            <div className="w-full py-8 flex flex-col items-center text-center space-y-4">
-              {showLaunchText && (
-                <div className="space-y-1 max-w-md">
-                  <h3 className="text-lg font-semibold">{launchTitle}</h3>
-                  <p className="text-sm text-muted-foreground">{launchDescription}</p>
+            <div className="w-full py-8 flex flex-col items-center text-center space-y-6">
+              {/* Primary option: complete on the mobile device */}
+              {showQrCode && (
+                <div className="flex flex-col items-center gap-2 max-w-md">
+                  <h3 className="text-lg font-semibold">{mobileTitle}</h3>
+                  <p className="text-sm text-muted-foreground">{mobileDescription}</p>
+                  <div className="flex flex-col items-center gap-2 pt-2">
+                    <QRCodeDisplay value={resolvedUrl} size={200} />
+                    {qrCodeLabel && (
+                      <p className="text-xs text-muted-foreground max-w-xs">{qrCodeLabel}</p>
+                    )}
+                  </div>
                 </div>
               )}
-              {showLaunchButton && (
-                <Button
-                  asChild
-                  style={buttonColor ? { backgroundColor: buttonColor, color: getContrastTextColor(buttonColor) } : undefined}
-                >
-                  <a
-                    href={resolvedUrl}
-                    target={linkTarget}
-                    rel={linkTarget === '_blank' ? 'noopener noreferrer' : undefined}
-                    onClick={handleLaunchClick}
+
+              {/* Fallback option: continue in a new window */}
+              <div className="flex flex-col items-center gap-3 max-w-md">
+                {showLaunchText && (
+                  <div className="space-y-1">
+                    <h3 className="text-lg font-semibold">{launchTitle}</h3>
+                    <p className="text-sm text-muted-foreground">{launchDescription}</p>
+                  </div>
+                )}
+                {showLaunchButton && (
+                  <Button
+                    asChild
+                    style={buttonColor ? { backgroundColor: buttonColor, color: getContrastTextColor(buttonColor) } : undefined}
                   >
-                    <ExternalLink className="w-4 h-4 mr-2" />
-                    {launchButtonLabel}
-                  </a>
-                </Button>
-              )}
-              {isGoJourney && showUrl && (
-                <div className="max-w-md space-y-1">
-                  <p className="text-xs text-muted-foreground">Or open this link (opens in a new window):</p>
-                  <a
-                    href={resolvedUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={() => setHostedJourneyLaunchedStepId(currentStep.id)}
-                    className="text-xs text-primary underline break-all"
-                  >
-                    {resolvedUrl}
-                  </a>
-                </div>
-              )}
+                    <a
+                      href={resolvedUrl}
+                      target={linkTarget}
+                      rel={linkTarget === '_blank' ? 'noopener noreferrer' : undefined}
+                      onClick={handleLaunchClick}
+                    >
+                      <ExternalLink className="w-4 h-4 mr-2" />
+                      {launchButtonLabel}
+                    </a>
+                  </Button>
+                )}
+                {isGoJourney && showUrl && (
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground">Or open this link (opens in a new window):</p>
+                    <a
+                      href={resolvedUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => setHostedJourneyLaunchedStepId(currentStep.id)}
+                      className="text-xs text-primary underline break-all"
+                    >
+                      {resolvedUrl}
+                    </a>
+                  </div>
+                )}
+              </div>
+
               {isGoJourney && (() => {
                 const s = goJourneyStatus.toLowerCase();
                 const done = /complete|finish/.test(s);
@@ -3123,14 +3146,6 @@ export function DemoFlowRenderer({
                   </div>
                 );
               })()}
-              {showQrCode && (
-                <div className="flex flex-col items-center gap-2 pt-2">
-                  <QRCodeDisplay value={resolvedUrl} size={180} />
-                  {qrCodeLabel && (
-                    <p className="text-xs text-muted-foreground max-w-xs">{qrCodeLabel}</p>
-                  )}
-                </div>
-              )}
             </div>
           );
         }

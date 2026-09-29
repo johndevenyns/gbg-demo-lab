@@ -490,6 +490,9 @@ export interface HostedJourneyStepConfig {
   startTitle?: string;
   startDescription?: string;
   startButtonLabel?: string;
+  // Popup-only: mobile option heading/description shown above the QR code.
+  mobileTitle?: string;
+  mobileDescription?: string;
   // Popup-only: QR code caption text.
   qrCodeLabel?: string;
   // Auto-complete: after N seconds (from step mount in iframe mode, or from
