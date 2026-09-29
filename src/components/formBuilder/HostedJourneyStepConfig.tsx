@@ -79,7 +79,7 @@ export function HostedJourneyStepConfig({ step, onUpdateStep, demo }: Props) {
                 ...(value === 'gbg_go' ? { mode: 'popup', showQrCode: config.showQrCode ?? true, showUrl: config.showUrl ?? true, startTrigger: config.startTrigger ?? 'startButton' } : {}),
               })}
             >
-              <SelectTrigger className="bg-background"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="bg-card"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="url">Fixed URL</SelectItem>
                 <SelectItem value="gbg_go">GBG GO hosted journey</SelectItem>
@@ -101,7 +101,7 @@ export function HostedJourneyStepConfig({ step, onUpdateStep, demo }: Props) {
                   if (mode === 'inherit') update({ resourceId: undefined });
                 }}
               >
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger className="bg-card"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="inherit">Inherit demo → admin → global</SelectItem>
                   <SelectItem value="custom">Custom for this step</SelectItem>
@@ -114,7 +114,7 @@ export function HostedJourneyStepConfig({ step, onUpdateStep, demo }: Props) {
                   onBlur={() => update({ resourceId: localResourceId.trim() || undefined })}
                   onKeyDown={(event) => { if (event.key === 'Enter') event.currentTarget.blur(); }}
                   placeholder="Enter this journey's Resource ID"
-                  className="font-mono text-sm"
+                  className="bg-card font-mono text-sm"
                 />
               ) : (
                 <code className="block rounded border bg-muted px-2 py-2 text-xs break-all">
@@ -135,7 +135,7 @@ export function HostedJourneyStepConfig({ step, onUpdateStep, demo }: Props) {
                   value={config.version || ''}
                   onChange={(event) => update({ version: event.target.value })}
                   placeholder="latest"
-                  className="font-mono text-sm"
+                  className="bg-card font-mono text-sm"
                 />
               </div>
               <div className="space-y-2">
@@ -144,7 +144,7 @@ export function HostedJourneyStepConfig({ step, onUpdateStep, demo }: Props) {
                   value={config.startTrigger || 'startButton'}
                   onValueChange={(value) => update({ startTrigger: value as 'onEnter' | 'previousStep' | 'startButton' })}
                 >
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="bg-card"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="startButton">Show a start button on this step</SelectItem>
                     <SelectItem value="onEnter">When this step opens</SelectItem>
@@ -159,15 +159,15 @@ export function HostedJourneyStepConfig({ step, onUpdateStep, demo }: Props) {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   <div className="space-y-2">
                     <Label className="text-sm">Start Title</Label>
-                    <BufferedInput value={config.startTitle ?? ''} onValueChange={(v) => update({ startTitle: v })} placeholder="Verify your identity" />
+                    <BufferedInput value={config.startTitle ?? ''} onValueChange={(v) => update({ startTitle: v })} placeholder="Verify your identity" className="bg-card" />
                   </div>
                   <div className="space-y-2">
                     <Label className="text-sm">Start Description</Label>
-                    <BufferedInput value={config.startDescription ?? ''} onValueChange={(v) => update({ startDescription: v })} placeholder="Click below to begin the verification." />
+                    <BufferedInput value={config.startDescription ?? ''} onValueChange={(v) => update({ startDescription: v })} placeholder="Click below to begin the verification." className="bg-card" />
                   </div>
                   <div className="space-y-2">
                     <Label className="text-sm">Start Button Label</Label>
-                    <BufferedInput value={config.startButtonLabel ?? ''} onValueChange={(v) => update({ startButtonLabel: v })} placeholder="Get Started" />
+                    <BufferedInput value={config.startButtonLabel ?? ''} onValueChange={(v) => update({ startButtonLabel: v })} placeholder="Get Started" className="bg-card" />
                   </div>
                 </div>
               )}
@@ -179,7 +179,7 @@ export function HostedJourneyStepConfig({ step, onUpdateStep, demo }: Props) {
                 value={config.url || ''}
                 onChange={(event) => update({ url: event.target.value })}
                 placeholder="https://example.com/journey/start"
-                className="bg-background font-mono text-sm"
+                className="bg-card font-mono text-sm"
               />
               <p className="text-xs text-muted-foreground">
                 Use <code className="px-1 py-0.5 bg-muted rounded">{'{{fieldName}}'}</code> to insert values from earlier steps.
@@ -191,7 +191,7 @@ export function HostedJourneyStepConfig({ step, onUpdateStep, demo }: Props) {
             <div className="space-y-2">
               <Label className="text-sm">Display Mode</Label>
               <Select value={configuredMode} onValueChange={(value) => update({ mode: value as 'iframe' | 'popup' })}>
-                <SelectTrigger className="bg-background"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="bg-card"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="iframe">Embed in page</SelectItem>
                   <SelectItem value="popup">Open in new window</SelectItem>
@@ -210,7 +210,7 @@ export function HostedJourneyStepConfig({ step, onUpdateStep, demo }: Props) {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label className="text-sm">Iframe Height</Label>
-                <Input value={config.height || ''} onChange={(event) => update({ height: event.target.value })} placeholder="600px" />
+                <Input value={config.height || ''} onChange={(event) => update({ height: event.target.value })} placeholder="600px" className="bg-card" />
               </div>
               <div className="space-y-2">
                 <Label className="text-sm">Allow Fullscreen</Label>
@@ -229,11 +229,11 @@ export function HostedJourneyStepConfig({ step, onUpdateStep, demo }: Props) {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div className="space-y-2">
                   <Label className="text-sm">Title</Label>
-                  <Input value={config.launchTitle ?? ''} onChange={(event) => update({ launchTitle: event.target.value })} placeholder="Continue in a new window" disabled={config.showLaunchText === false} />
+                  <Input value={config.launchTitle ?? ''} onChange={(event) => update({ launchTitle: event.target.value })} placeholder="Continue in a new window" className="bg-card" disabled={config.showLaunchText === false} />
                 </div>
                 <div className="space-y-2">
                   <Label className="text-sm">Description</Label>
-                  <Input value={config.launchDescription ?? ''} onChange={(event) => update({ launchDescription: event.target.value })} placeholder="Complete verification in the window that opens." disabled={config.showLaunchText === false} />
+                  <Input value={config.launchDescription ?? ''} onChange={(event) => update({ launchDescription: event.target.value })} placeholder="Complete verification in the window that opens." className="bg-card" disabled={config.showLaunchText === false} />
                 </div>
               </div>
               <div className="flex items-center justify-between gap-4">
@@ -244,15 +244,15 @@ export function HostedJourneyStepConfig({ step, onUpdateStep, demo }: Props) {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   <div className="space-y-2">
                     <Label className="text-sm">Button Label</Label>
-                    <BufferedInput value={config.launchButtonLabel ?? ''} onValueChange={(v) => update({ launchButtonLabel: v })} placeholder="Continue in a new window" />
+                    <BufferedInput value={config.launchButtonLabel ?? ''} onValueChange={(v) => update({ launchButtonLabel: v })} placeholder="Continue in a new window" className="bg-card" />
                   </div>
                   <div className="space-y-2">
                     <Label className="text-sm">Window Width</Label>
-                    <Input type="number" value={config.popupWidth ?? ''} onChange={(event) => update({ popupWidth: event.target.value ? Number(event.target.value) : undefined })} placeholder="1024" />
+                    <Input type="number" value={config.popupWidth ?? ''} onChange={(event) => update({ popupWidth: event.target.value ? Number(event.target.value) : undefined })} placeholder="1024" className="bg-card" />
                   </div>
                   <div className="space-y-2">
                     <Label className="text-sm">Window Height</Label>
-                    <Input type="number" value={config.popupHeight ?? ''} onChange={(event) => update({ popupHeight: event.target.value ? Number(event.target.value) : undefined })} placeholder="768" />
+                    <Input type="number" value={config.popupHeight ?? ''} onChange={(event) => update({ popupHeight: event.target.value ? Number(event.target.value) : undefined })} placeholder="768" className="bg-card" />
                   </div>
                 </div>
               )}
@@ -261,7 +261,7 @@ export function HostedJourneyStepConfig({ step, onUpdateStep, demo }: Props) {
                 <Switch checked={config.showQrCode ?? isGo} onCheckedChange={(value) => update({ showQrCode: value })} />
               </div>
               {(config.showQrCode ?? isGo) && (
-                <Input value={config.qrCodeLabel ?? ''} onChange={(event) => update({ qrCodeLabel: event.target.value })} placeholder="Or scan to continue on your phone" />
+                <Input value={config.qrCodeLabel ?? ''} onChange={(event) => update({ qrCodeLabel: event.target.value })} placeholder="Or scan to continue on your phone" className="bg-card" />
               )}
               {isGo && (
                 <div className="flex items-center justify-between gap-4">
@@ -280,7 +280,7 @@ export function HostedJourneyStepConfig({ step, onUpdateStep, demo }: Props) {
                 <Switch checked={(config.autoCompleteAfterSeconds ?? 0) > 0} onCheckedChange={(value) => update({ autoCompleteAfterSeconds: value ? 10 : undefined })} />
               </div>
               {(config.autoCompleteAfterSeconds ?? 0) > 0 && (
-                <Input type="number" min={1} value={config.autoCompleteAfterSeconds ?? 10} onChange={(event) => update({ autoCompleteAfterSeconds: event.target.value ? Math.max(1, Number(event.target.value)) : undefined })} className="w-32" />
+                <Input type="number" min={1} value={config.autoCompleteAfterSeconds ?? 10} onChange={(event) => update({ autoCompleteAfterSeconds: event.target.value ? Math.max(1, Number(event.target.value)) : undefined })} className="bg-card w-32" />
               )}
             </div>
           )}
