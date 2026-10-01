@@ -703,7 +703,7 @@ Deno.serve(async (req) => {
     // Request 1: Simple branding + HTML (no actions, no timeout risk)
     const mainRequest = firecrawlScrape({
       url: formattedUrl,
-      formats: isLight ? ['screenshot', 'branding'] : ['html', 'rawHtml', 'screenshot', 'branding'],
+      formats: isLight ? ['screenshot', 'branding'] : ['rawHtml', 'screenshot', 'branding'],
       onlyMainContent: false,
       waitFor: isLight ? 1500 : 3000,
       timeout: 30000,
@@ -715,7 +715,7 @@ Deno.serve(async (req) => {
       url: formattedUrl,
       // Light mode skips the full page HTML (huge on big sites) — the header
       // and footer come back from the in-page script instead.
-      formats: isLight ? ['links'] : ['rawHtml'],
+      formats: ['links'],
       onlyMainContent: false,
       waitFor: isLight ? 1500 : 3500,
       timeout: 60000,
@@ -764,7 +764,18 @@ Deno.serve(async (req) => {
       mobileRequest,
     ]);
 
-    const mainData = await mainResponse.json();
+    // Guard against giant pages: read as text first and bail out with a clear
+    // "too large" error (so Auto mode can fall back to Light) instead of
+    // letting JSON parsing exhaust the worker's memory.
+    const mainText = await mainResponse.text();
+    if (mainText.length > 12_000_000) {
+      console.warn('Capture too large:', mainText.length);
+      return new Response(
+        JSON.stringify({ success: false, error: 'The site is too large for the capture service (ran out of memory). Try Light capture mode.' }),
+        { status: 413, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    const mainData = JSON.parse(mainText);
 
     if (!mainResponse.ok) {
       console.error('Firecrawl API error:', mainData);
@@ -791,7 +802,7 @@ Deno.serve(async (req) => {
       console.warn('Failed to get mobile screenshot:', e);
     }
 
-    const html = mainData.data?.html || mainData.html || '';
+    const html = mainData.data?.html || mainData.html || mainData.data?.rawHtml || mainData.rawHtml || '';
     const rawHtml = mainData.data?.rawHtml || mainData.rawHtml || html;
     const branding = mainData.data?.branding || mainData.branding || null;
     const desktopScreenshot = mainData.data?.screenshot || mainData.screenshot || null;
