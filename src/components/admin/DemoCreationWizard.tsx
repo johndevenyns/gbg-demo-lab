@@ -29,7 +29,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useCreateDemo, useUpdateDemo } from "@/hooks/useDemos";
 import { useGlobalUseCases, useAddDemoUseCaseLink } from "@/hooks/useUseCases";
 import { useIndustries } from "@/hooks/useIndustries";
-import { INDUSTRIES_ENABLED } from "@/lib/featureFlags";
+import { CUSTOMER_HOMEPAGE_CAPTURE_ENABLED, INDUSTRIES_ENABLED } from "@/lib/featureFlags";
 import { useEnabledPortalTypes } from "@/hooks/usePortalTypes";
 import { IndustryTemplate, DemoEnvironment, FormStep, FormField, FormFieldType } from "@/types/demo";
 import { scrapingApi, ScrapedBranding, ExtractedField, CaptureMode } from "@/lib/api/scraping";
@@ -332,7 +332,7 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
       tasks.push({ id: 'discover-form', label: 'Crawling site for application or contact form', phase: 'forms', status: 'pending' });
       tasks.push({ id: 'capture-form', label: 'Capturing form fields, labels & styling', phase: 'forms', status: 'pending' });
       tasks.push({ id: 'generate-steps', label: 'Generating matching workflow steps', phase: 'forms', status: 'pending' });
-      if (defaultView === 'homepage') {
+      if (CUSTOMER_HOMEPAGE_CAPTURE_ENABLED && defaultView === 'homepage') {
         tasks.push({ id: 'capture-homepage', label: 'Capturing customer homepage', phase: 'branding', status: 'pending' });
       }
     }
@@ -638,7 +638,7 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
       }
 
       // ===== Customer homepage as the default view (best-effort) =====
-      if (enableMirroring && normalizedSiteUrl && defaultView === 'homepage') {
+      if (CUSTOMER_HOMEPAGE_CAPTURE_ENABLED && enableMirroring && normalizedSiteUrl && defaultView === 'homepage') {
         activeTaskId = 'capture-homepage';
         updateTaskStatus('capture-homepage', 'in_progress');
         setTaskDetail('capture-homepage', 'Grabbing a full-length picture of the home page…');
@@ -994,23 +994,25 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
                           : 'Runs a lighter branding scan without taking screenshots. Best for very large sites like cvs.com.'}
                     </p>
                   </div>
-                  <div className="space-y-2">
-                    <Label>Default view</Label>
-                    <Select value={defaultView} onValueChange={(v) => setDefaultView(v as DefaultViewChoice)}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="use_cases">Use cases (default)</SelectItem>
-                        <SelectItem value="homepage">Customer homepage</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <p className="text-xs text-muted-foreground">
-                      {defaultView === 'homepage'
-                        ? "We'll grab a copy of the customer's home page and show that first."
-                        : 'Visitors land on the tabbed use case page.'}
-                    </p>
-                  </div>
+                  {CUSTOMER_HOMEPAGE_CAPTURE_ENABLED && (
+                    <div className="space-y-2">
+                      <Label>Default view</Label>
+                      <Select value={defaultView} onValueChange={(v) => setDefaultView(v as DefaultViewChoice)}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="use_cases">Use cases (default)</SelectItem>
+                          <SelectItem value="homepage">Customer homepage</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-muted-foreground">
+                        {defaultView === 'homepage'
+                          ? "We'll grab a copy of the customer's home page and show that first."
+                          : 'Visitors land on the tabbed use case page.'}
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

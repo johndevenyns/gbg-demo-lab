@@ -10,3 +10,6 @@ export const INDUSTRIES_ENABLED = false;
 
 /** Automatic screenshot fetching of customer sites (unreliable) — admins upload their own instead. */
 export const AUTO_SCREENSHOT_FETCH_ENABLED = false;
+
+/** Customer homepage capture is hidden while the capture quality is unreliable. */
+export const CUSTOMER_HOMEPAGE_CAPTURE_ENABLED = false;
