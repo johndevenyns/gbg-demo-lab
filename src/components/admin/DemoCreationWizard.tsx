@@ -745,12 +745,12 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
       setProcessingTasks(prev => {
         const failed = prev.filter(t => t.status === 'error').length;
         const skipped = prev.filter(t => t.status === 'skipped').length;
+        void markBuildStatus(demo.id, failed > 0 ? 'failed' : 'complete');
         void logAdminAction({
           action: 'create',
           entityType: 'demo_build_report',
           entityId: demo.id,
           entityLabel: customerName,
-          ...(void markBuildStatus(demo.id, failed > 0 ? 'failed' : 'complete'), {}),
           details: {
             siteUrl: normalizedSiteUrl,
             summary: { succeeded: prev.length - failed - skipped, failed, skipped },
