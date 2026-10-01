@@ -215,18 +215,53 @@ export async function describeFunctionError(error: unknown): Promise<string> {
   return err?.message || 'Unknown error';
 }
 
-export const scrapingApi = {
-  async scrapeSiteBranding(url: string, signal?: AbortSignal): Promise<ScrapeResponse> {
-    const { data, error } = await supabase.functions.invoke('scrape-site-branding', {
-      body: { url },
-      ...(signal ? { signal } : {}),
-    });
+export type CaptureMode = 'auto' | 'full' | 'light';
 
-    if (error) {
-      if (signal?.aborted) return { success: false, error: 'Cancelled' };
-      return { success: false, error: await describeFunctionError(error) };
+export interface SiteLogoResponse {
+  success: boolean;
+  error?: string;
+  data?: { logoUrl: string | null; logoSource: string | null; themeColor: string | null };
+}
+
+const isHeavyFailure = (msg?: string) =>
+  !!msg && /too large|ran out of memory|timed out|took too long/i.test(msg);
+
+export const scrapingApi = {
+  /**
+   * Capture header/footer/branding. `auto` tries a full capture and falls
+   * back to the light capture if the site is too large or too slow.
+   * The returned `modeUsed` says which capture produced the result.
+   */
+  async scrapeSiteBranding(
+    url: string,
+    signal?: AbortSignal,
+    mode: CaptureMode = 'auto',
+  ): Promise<ScrapeResponse & { modeUsed?: 'full' | 'light'; fullError?: string }> {
+    const run = async (m: 'full' | 'light'): Promise<ScrapeResponse> => {
+      const { data, error } = await supabase.functions.invoke('scrape-site-branding', {
+        body: { url, mode: m },
+        ...(signal ? { signal } : {}),
+      });
+      if (error) {
+        if (signal?.aborted) return { success: false, error: 'Cancelled' };
+        return { success: false, error: await describeFunctionError(error) };
+      }
+      return data;
+    };
+
+    if (mode === 'light') return { ...(await run('light')), modeUsed: 'light' };
+    const full = await run('full');
+    if (mode === 'full' || full.success || !isHeavyFailure(full.error) || signal?.aborted) {
+      return { ...full, modeUsed: 'full' };
     }
-    
+    const light = await run('light');
+    return { ...light, modeUsed: 'light', fullError: full.error };
+  },
+
+  /** Quick logo + theme colour lookup that doesn't render the page. */
+  async grabSiteLogo(url: string): Promise<SiteLogoResponse> {
+    const { data, error } = await supabase.functions.invoke('grab-site-logo', { body: { url } });
+    if (error) return { success: false, error: await describeFunctionError(error) };
     return data;
   },
 

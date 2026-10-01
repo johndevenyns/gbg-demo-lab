@@ -614,7 +614,8 @@ Deno.serve(async (req) => {
     const admin = await requireAdmin(req);
     if (!admin) return unauthorizedResponse(corsHeaders);
 
-    const { url } = await req.json();
+    const { url, mode } = await req.json();
+    const isLight = mode === 'light';
 
     if (!url) {
       return new Response(
@@ -694,34 +695,43 @@ Deno.serve(async (req) => {
       return res;
     };
 
+    // Light mode: one-screen screenshot, no tablet/mobile shots, no duplicate
+    // processed HTML, ads blocked, shorter waits, smaller font budget — so
+    // very large sites fit within memory limits.
+    console.log('Capture mode:', isLight ? 'light' : 'full');
+
     // Request 1: Simple branding + HTML (no actions, no timeout risk)
     const mainRequest = firecrawlScrape({
       url: formattedUrl,
-      formats: ['html', 'rawHtml', 'screenshot', 'branding'],
+      formats: isLight ? ['screenshot', 'branding'] : ['html', 'rawHtml', 'screenshot', 'branding'],
       onlyMainContent: false,
-      waitFor: 3000,
+      waitFor: isLight ? 1500 : 3000,
       timeout: 30000,
+      ...(isLight ? { blockAds: true } : {}),
     });
 
     // Request 2: Lightweight JS extraction for header/footer with inlined styles (separate to avoid timeout)
     const jsRequest = firecrawlScrape({
       url: formattedUrl,
-      formats: ['rawHtml'],
+      // Light mode skips the full page HTML (huge on big sites) — the header
+      // and footer come back from the in-page script instead.
+      formats: isLight ? ['links'] : ['rawHtml'],
       onlyMainContent: false,
-      waitFor: 3500,
+      waitFor: isLight ? 1500 : 3500,
       timeout: 60000,
+      ...(isLight ? { blockAds: true } : {}),
       actions: [
         // Initial settle for SPA hydration
-        { type: 'wait', milliseconds: 2000 },
+        { type: 'wait', milliseconds: isLight ? 1000 : 2000 },
         // Scroll to bottom so IntersectionObserver-driven footers mount
         { type: 'scroll', direction: 'down' },
-        { type: 'wait', milliseconds: 1500 },
+        { type: 'wait', milliseconds: isLight ? 800 : 1500 },
         { type: 'executeJavascript', script: INLINE_STYLES_SCRIPT },
       ],
     });
 
-    // Parallel screenshot requests for tablet/mobile
-    const tabletRequest = firecrawlScrape({
+    // Parallel screenshot requests for tablet/mobile (skipped in light mode)
+    const tabletRequest = isLight ? Promise.resolve(null) : firecrawlScrape({
       url: formattedUrl,
       formats: ['screenshot'],
       onlyMainContent: false,
@@ -733,7 +743,7 @@ Deno.serve(async (req) => {
       ],
     });
 
-    const mobileRequest = firecrawlScrape({
+    const mobileRequest = isLight ? Promise.resolve(null) : firecrawlScrape({
       url: formattedUrl,
       formats: ['screenshot'],
       onlyMainContent: false,
@@ -768,14 +778,14 @@ Deno.serve(async (req) => {
     let mobileScreenshot: string | null = null;
 
     try {
-      const tabletData = await tabletResponse.json();
+      const tabletData = tabletResponse ? await tabletResponse.json() : {};
       tabletScreenshot = tabletData.data?.screenshot || tabletData.screenshot || null;
     } catch (e) {
       console.warn('Failed to get tablet screenshot:', e);
     }
 
     try {
-      const mobileData = await mobileResponse.json();
+      const mobileData = mobileResponse ? await mobileResponse.json() : {};
       mobileScreenshot = mobileData.data?.screenshot || mobileData.screenshot || null;
     } catch (e) {
       console.warn('Failed to get mobile screenshot:', e);
@@ -899,7 +909,7 @@ Deno.serve(async (req) => {
     // (e.g. Truist's footer looked oversized). Embed the font files
     // directly so the mirror uses the real typeface.
     try {
-      cssContent = await embedFontFaces(cssContent, baseUrl);
+      cssContent = await embedFontFaces(cssContent, baseUrl, isLight ? 1_200_000 : 6_000_000);
     } catch (e) {
       console.warn('Font embedding failed:', e);
     }
@@ -1614,10 +1624,10 @@ function mergeWithBrandingDefaults(styles: Partial<FormElementStyles>, branding:
  * Replace remote font URLs inside @font-face rules with base64 data URIs.
  * Picks one format per rule (woff2 > woff > ttf/otf) to keep payload small.
  */
-async function embedFontFaces(css: string, baseUrl: URL): Promise<string> {
+async function embedFontFaces(css: string, baseUrl: URL, maxTotalBytes = 6_000_000): Promise<string> {
   if (!css || css.indexOf('@font-face') === -1) return css;
   const MAX_FONT_BYTES = 600_000;
-  const MAX_TOTAL_BYTES = 6_000_000;
+  const MAX_TOTAL_BYTES = maxTotalBytes;
   let total = 0;
   const cache = new Map<string, string | null>();
   const rank = (u: string) => /\.woff2(\?|#|$)/i.test(u) ? 0 : /\.woff(\?|#|$)/i.test(u) ? 1 : /\.(ttf|otf)(\?|#|$)/i.test(u) ? 2 : 3;

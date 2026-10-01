@@ -294,6 +294,12 @@ export function ScreenshotCaptureTab({ demo, url, onUrlChange, onApply, isConfig
  
     return (
       <div className="space-y-4">
+        {!demo.mirrorScreenshotHeaderHtml && !demo.mirrorHtmlHeaderHtml && (
+          <div className="rounded-md border border-amber-300 bg-amber-50 dark:bg-amber-950/20 px-3 py-2 text-sm">
+            <span className="font-medium">Header/footer still needed.</span>{' '}
+            Auto-capture didn't get this site's header and footer. Upload screenshots below or try fetching again.
+          </div>
+        )}
         {/* Upload Custom Images */}
         <ScreenshotUploadSection demo={demo} onApply={onApply} />
 
