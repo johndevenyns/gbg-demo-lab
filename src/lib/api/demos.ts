@@ -312,7 +312,7 @@ export const demosApi = {
     
     const { data, error } = await supabase
       .from('demo_environments')
-      .update(row)
+      .update(row as never)
       .eq('id', id)
       .select()
       .single();

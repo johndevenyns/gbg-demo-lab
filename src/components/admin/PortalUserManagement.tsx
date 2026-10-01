@@ -124,7 +124,7 @@ export function PortalUserManagement({ demoId }: PortalUserManagementProps) {
         };
         // Only send a password when the admin typed a new one (stored value is hashed)
         if (user.password) updates.password = user.password;
-        const { error } = await supabase.from('portal_users').update(updates).eq('id', user.id);
+        const { error } = await supabase.from('portal_users').update(updates as never).eq('id', user.id);
         if (error) throw error;
       } else {
         const { data, error } = await supabase.from('portal_users').insert({

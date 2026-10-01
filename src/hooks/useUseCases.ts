@@ -86,7 +86,7 @@ export function useUpdateGlobalUseCase() {
 
       const { data, error } = await supabase
         .from('global_use_cases')
-        .update(dbUpdates)
+        .update(dbUpdates as never)
         .eq('id', id)
         .select()
         .single();
@@ -210,7 +210,7 @@ export function useUpdateDemoUseCaseLink() {
 
       const { error } = await supabase
         .from('demo_use_case_links')
-        .update(dbUpdates)
+        .update(dbUpdates as never)
         .eq('id', id);
       if (error) throw error;
       return { demoId };
