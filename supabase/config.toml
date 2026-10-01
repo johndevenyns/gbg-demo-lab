@@ -38,3 +38,6 @@ verify_jwt = false
 
 [functions.portal-flow-rpc]
 verify_jwt = false
+
+[functions.grab-site-logo]
+verify_jwt = false

@@ -23,7 +23,8 @@ import { useIndustries } from "@/hooks/useIndustries";
 import { INDUSTRIES_ENABLED } from "@/lib/featureFlags";
 import { useEnabledPortalTypes } from "@/hooks/usePortalTypes";
 import { IndustryTemplate, DemoEnvironment, FormStep, FormField, FormFieldType } from "@/types/demo";
-import { scrapingApi, ScrapedBranding, ExtractedField } from "@/lib/api/scraping";
+import { scrapingApi, ScrapedBranding, ExtractedField, CaptureMode } from "@/lib/api/scraping";
+import { Upload } from "lucide-react";
 import { useTestProfiles } from "@/hooks/useTestProfiles";
 import { TestProfilePicker } from "@/components/formBuilder/TestProfilePicker";
 import { buildProfileSnapshot } from "@/lib/testProfiles";
@@ -134,6 +135,12 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
   const [siteUrl, setSiteUrl] = useState("");
   const [enableMirroring, setEnableMirroring] = useState(false);
   const [defaultView, setDefaultView] = useState<DefaultViewChoice>('use_cases');
+  const [captureMode, setCaptureMode] = useState<CaptureMode>('auto');
+  const [needsManualUpload, setNeedsManualUpload] = useState(false);
+  const [manualUploadReason, setManualUploadReason] = useState<string | null>(null);
+  const [manualHeaderUrl, setManualHeaderUrl] = useState<string | null>(null);
+  const [manualFooterUrl, setManualFooterUrl] = useState<string | null>(null);
+  const [manualUploading, setManualUploading] = useState<'header' | 'footer' | null>(null);
   const [selectedIndustryId, setSelectedIndustryId] = useState<string | null>(null);
   const [selectedUseCases, setSelectedUseCases] = useState<string[]>([]);
   const [hiddenFromLanding, setHiddenFromLanding] = useState<Set<string>>(new Set());
@@ -286,6 +293,7 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
       { id: 'create', label: 'Creating demo environment', phase: 'foundation', status: 'pending' },
     ];
     if (enableMirroring && normalizedSiteUrl) {
+      tasks.push({ id: 'grab-logo', label: 'Grabbing site logo', phase: 'branding', status: 'pending' });
       tasks.push({ id: 'scrape-html', label: 'Extracting HTML header & footer', phase: 'branding', status: 'pending' });
       tasks.push({ id: 'scrape-screenshot', label: 'Capturing pixel-perfect screenshot', phase: 'branding', status: 'pending' });
       tasks.push({ id: 'apply', label: 'Applying brand colors, logo & typography', phase: 'branding', status: 'pending' });
@@ -336,17 +344,39 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
       let screenshotCapture: { headerHtml: string; footerHtml: string; css: string } | null = null;
       const buttonColor = '#6366f1';
 
+      let quickLogo: string | null = null;
+      let quickThemeColor: string | null = null;
       if (enableMirroring && normalizedSiteUrl) {
+        // Quick logo grab — independent of the heavy capture so we still get
+        // a logo when the full site copy fails.
+        activeTaskId = 'grab-logo';
+        updateTaskStatus('grab-logo', 'in_progress');
+        try {
+          const logoRes = await scrapingApi.grabSiteLogo(normalizedSiteUrl);
+          if (logoRes.success && logoRes.data?.logoUrl) {
+            quickLogo = logoRes.data.logoUrl;
+            quickThemeColor = logoRes.data.themeColor;
+            updateTaskStatus('grab-logo', 'complete', `Found logo (${logoRes.data.logoSource})${quickThemeColor ? ` · theme colour ${quickThemeColor}` : ''}`);
+          } else {
+            updateTaskStatus('grab-logo', logoRes.success ? 'skipped' : 'error', logoRes.error || 'No logo found on the page');
+          }
+        } catch (e) {
+          updateTaskStatus('grab-logo', 'error', e instanceof Error ? e.message : 'Logo lookup failed');
+        }
+
         // Fetch site branding (returns HTML + screenshots)
         activeTaskId = 'scrape-html';
         updateTaskStatus('scrape-html', 'in_progress');
-        setTaskDetail('scrape-html', `Fetching ${safeHostname(normalizedSiteUrl)}…`);
-        let response;
+        setTaskDetail('scrape-html', `Fetching ${safeHostname(normalizedSiteUrl)} (${captureMode} capture)…`);
+        let response: Awaited<ReturnType<typeof scrapingApi.scrapeSiteBranding>>;
         try {
-          response = await scrapingApi.scrapeSiteBranding(normalizedSiteUrl);
+          response = await scrapingApi.scrapeSiteBranding(normalizedSiteUrl, undefined, captureMode);
         } catch (e) {
           response = { success: false, error: e instanceof Error ? e.message : 'Network error contacting scraper' };
         }
+        const modeNote = response.modeUsed === 'light'
+          ? (response.fullError ? ` · Full capture failed (${response.fullError}); used Light capture` : ' · Light capture')
+          : '';
         if (response.success && response.data && (response.data.headerHtml?.trim() || response.data.footerHtml?.trim())) {
           scrapedData = response.data;
           refinedHtml = {
@@ -357,7 +387,7 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
           const headerKb = Math.round((scrapedData.headerHtml?.length || 0) / 1024);
           const cssKb = Math.round((scrapedData.cssContent?.length || 0) / 1024);
           const regions = [scrapedData.headerHtml?.trim() ? 'header' : null, scrapedData.footerHtml?.trim() ? 'footer' : null].filter(Boolean);
-          updateTaskStatus('scrape-html', 'complete', `Captured ${regions.join(' and ')} · CSS ${cssKb}KB · HTML ${headerKb}KB`);
+          updateTaskStatus('scrape-html', 'complete', `Captured ${regions.join(' and ')} · CSS ${cssKb}KB · HTML ${headerKb}KB${modeNote}`);
         } else {
           // Edge function may return partialData (screenshot, logo, colors) even when
           // HTML capture failed — use it so screenshot mirroring still works.
@@ -401,12 +431,14 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
         // Apply branding (colors, logo, formStyle, BOTH captures)
         activeTaskId = 'apply';
         updateTaskStatus('apply', 'in_progress');
+        const capturedLogo = scrapedData?.logoUrl || scrapedData?.branding?.logo || '';
+        const finalLogo = capturedLogo || quickLogo || '';
         const brandingUpdates: Record<string, unknown> = {
           customerSiteUrl: normalizedSiteUrl,
-          headerBgColor: scrapedData?.colors?.headerBgColor || '#1a1a2e',
+          headerBgColor: scrapedData?.colors?.headerBgColor || quickThemeColor || '#1a1a2e',
           headerTextColor: scrapedData?.colors?.headerTextColor || '#ffffff',
-          buttonColor: scrapedData?.colors?.buttonColor || '#6366f1',
-          logoUrl: scrapedData?.logoUrl || scrapedData?.branding?.logo || '',
+          buttonColor: scrapedData?.colors?.buttonColor || quickThemeColor || '#6366f1',
+          logoUrl: finalLogo,
         };
 
         // Store HTML capture
@@ -432,11 +464,11 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
         try {
           await updateDemo.mutateAsync({ id: demo.id, updates: brandingUpdates as any });
           const assetResults = [
-            `Colors: ${scrapedData?.colors ? 'captured' : 'default'}`,
-            `Logo: ${scrapedData?.logoUrl || scrapedData?.branding?.logo ? 'captured' : 'not found'}`,
+            `Colors: ${scrapedData?.colors ? 'captured' : quickThemeColor ? 'from site theme colour' : 'default'}`,
+            `Logo: ${capturedLogo ? 'captured' : quickLogo ? 'from quick logo grab' : 'not found'}`,
             `Site-wide form style: ${scrapedData?.formStyles ? 'captured' : 'not found'}`,
           ];
-          const hasCustomerBranding = Boolean(scrapedData?.colors || scrapedData?.logoUrl || scrapedData?.branding?.logo || scrapedData?.formStyles);
+          const hasCustomerBranding = Boolean(scrapedData?.colors || finalLogo || quickThemeColor || scrapedData?.formStyles);
           updateTaskStatus('apply', hasCustomerBranding ? 'complete' : 'skipped', assetResults.join(' · '));
         } catch (e) {
           updateTaskStatus('apply', 'error', e instanceof Error ? e.message : 'Failed to save branding');
@@ -453,6 +485,10 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
           setScreenshotCaptureData(screenshotCapture);
           setScreenshotPreviewDoc(buildPreviewHtml(screenshotCapture.headerHtml, screenshotCapture.footerHtml, '', appliedButtonColor));
           setScreenshotAvailable(true);
+        }
+        if (!refinedHtml && !screenshotCapture) {
+          setManualUploadReason(response.error || null);
+          setNeedsManualUpload(true);
         }
 
         // ===== Form Discovery & Capture (best-effort, non-blocking) =====
@@ -704,6 +740,48 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
   };
 
   /** Continue with whatever has been created so far (skip remaining tasks). */
+  /** Upload a header/footer screenshot when auto-capture failed. */
+  const handleManualUpload = async (file: File, kind: 'header' | 'footer') => {
+    if (!createdDemoId) return;
+    if (!file.type.startsWith('image/')) {
+      sonnerToast.error('Please choose an image file');
+      return;
+    }
+    setManualUploading(kind);
+    const ext = file.name.split('.').pop() || 'png';
+    const path = `${createdDemoId}/screenshot-${kind}-${Date.now()}.${ext}`;
+    const { error } = await supabase.storage.from('demo-logos').upload(path, file, { upsert: true });
+    setManualUploading(null);
+    if (error) {
+      sonnerToast.error(`Upload failed: ${error.message}`);
+      return;
+    }
+    const { data } = supabase.storage.from('demo-logos').getPublicUrl(path);
+    if (kind === 'header') setManualHeaderUrl(data.publicUrl);
+    else setManualFooterUrl(data.publicUrl);
+  };
+
+  const handleApplyManualUploads = async () => {
+    if (!createdDemoId) return;
+    const img = (src: string, alt: string) =>
+      `<div style="width:100%;display:flex;justify-content:center;"><img src="${src}" alt="${alt}" style="width:100%;height:auto;display:block;" /></div>`;
+    const updates: Record<string, unknown> = { mirrorActiveMethod: 'screenshot' };
+    if (manualHeaderUrl) updates.mirrorScreenshotHeaderHtml = img(manualHeaderUrl, 'Site header');
+    if (manualFooterUrl) updates.mirrorScreenshotFooterHtml = img(manualFooterUrl, 'Site footer');
+    try {
+      await updateDemo.mutateAsync({ id: createdDemoId, updates: updates as any });
+      const ss = { headerHtml: (updates.mirrorScreenshotHeaderHtml as string) || '', footerHtml: (updates.mirrorScreenshotFooterHtml as string) || '', css: '' };
+      setScreenshotCaptureData(ss);
+      setScreenshotPreviewDoc(buildPreviewHtml(ss.headerHtml, ss.footerHtml, '', '#6366f1'));
+      setScreenshotAvailable(true);
+      setSelectedMethod('screenshot');
+      setNeedsManualUpload(false);
+      sonnerToast.success('Header/footer images saved');
+    } catch (e) {
+      sonnerToast.error(e instanceof Error ? e.message : 'Could not save images');
+    }
+  };
+
   const handleContinueAnyway = () => {
     if (!createdDemoId) {
       onOpenChange(false);
@@ -881,6 +959,26 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
                     />
                     <p className="text-xs text-muted-foreground">
                       We'll capture both an HTML extraction and a screenshot, then let you pick the best result
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Capture mode</Label>
+                    <Select value={captureMode} onValueChange={(v) => setCaptureMode(v as CaptureMode)}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="auto">Auto (recommended)</SelectItem>
+                        <SelectItem value="full">Full</SelectItem>
+                        <SelectItem value="light">Light — for very large sites</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">
+                      {captureMode === 'auto'
+                        ? 'Tries a full capture first and switches to Light automatically if the site is too big.'
+                        : captureMode === 'full'
+                          ? 'Captures everything, including tablet and mobile views. Can fail on very large sites.'
+                          : 'Captures only the first screen, skips mobile/tablet views and heavy extras. Best for giant sites like cvs.com.'}
                     </p>
                   </div>
                   <div className="space-y-2">
@@ -1389,6 +1487,60 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
                 ))}
               </div>
             </div>
+
+            {needsManualUpload && createdDemoId && (
+              <div className="rounded-lg border border-amber-300 bg-amber-50 dark:bg-amber-950/20 p-4 space-y-3">
+                <div className="flex items-start gap-2">
+                  <AlertTriangle className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
+                  <div>
+                    <p className="text-sm font-semibold">Auto-capture couldn't copy this site's header and footer</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {manualUploadReason || 'The capture service could not load the site.'} Upload screenshots of the header and footer, or skip for now — the demo's Site Appearance settings will remind you later.
+                    </p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {(['header', 'footer'] as const).map((kind) => {
+                    const url = kind === 'header' ? manualHeaderUrl : manualFooterUrl;
+                    return (
+                      <label key={kind} className="flex flex-col items-center justify-center gap-2 rounded-md border border-dashed border-border bg-background p-3 cursor-pointer hover:border-primary min-h-[110px]">
+                        {url ? (
+                          <img src={url} alt={`${kind} upload`} className="max-h-20 w-full object-contain" />
+                        ) : manualUploading === kind ? (
+                          <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                        ) : (
+                          <Upload className="w-5 h-5 text-muted-foreground" />
+                        )}
+                        <span className="text-xs font-medium">{url ? `Replace ${kind} image` : `Upload ${kind} screenshot`}</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const f = e.target.files?.[0];
+                            if (f) void handleManualUpload(f, kind);
+                            e.target.value = '';
+                          }}
+                        />
+                      </label>
+                    );
+                  })}
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button type="button" variant="outline" size="sm" onClick={() => setNeedsManualUpload(false)}>
+                    Skip for now
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    disabled={!manualHeaderUrl && !manualFooterUrl}
+                    onClick={handleApplyManualUploads}
+                  >
+                    Save uploads
+                  </Button>
+                </div>
+              </div>
+            )}
 
             {(htmlAvailable || htmlCaptureData || screenshotAvailable || screenshotCaptureData) && (
             <RadioGroup value={selectedMethod} onValueChange={(v) => setSelectedMethod(v as 'html' | 'screenshot')}>
