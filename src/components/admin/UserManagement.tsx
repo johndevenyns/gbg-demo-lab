@@ -1,3 +1,4 @@
+import { PUBLIC_SITE_URL } from "@/lib/siteUrl";
 import { useState, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -45,7 +46,7 @@ export function UserManagement({ isGlobalAdmin = true }: UserManagementProps) {
   const [introLetterText, setIntroLetterText] = useState('');
   const [introLetterCopied, setIntroLetterCopied] = useState(false);
 
-  const publishedUrl = 'https://gbg-demo-lab.lovable.app';
+  const publishedUrl = PUBLIC_SITE_URL;
 
   // Fetch the admin welcome letter template
   const { data: welcomeTemplate } = useQuery({

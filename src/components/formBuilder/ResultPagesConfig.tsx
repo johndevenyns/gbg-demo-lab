@@ -1,3 +1,4 @@
+import { PUBLIC_SITE_URL } from "@/lib/siteUrl";
 import { useState, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -350,7 +351,7 @@ export function ResultPagesConfig({
   const { toast } = useToast();
   const pages = extraCustomPages || [];
   const ucLinks = useCaseLinks || [];
-  const origin = typeof window !== 'undefined' ? window.location.origin : '';
+  const origin = PUBLIC_SITE_URL;
 
   // Use provided configs or defaults
   const successConfig = successPageConfig || DEFAULT_SUCCESS_CONFIG;

@@ -122,7 +122,7 @@ Deno.serve(async (req) => {
     const { data: templateData } = await templateQuery.maybeSingle();
 
     // Construct demo link
-    const origin = req.headers.get("origin") || req.headers.get("referer")?.replace(/\/[^/]*$/, '') || '';
+    const origin = 'https://gbg-demo-lab.vercel.app';
     const demoLink = `${origin}/demo/${demoSlug}`;
 
     // Render template
