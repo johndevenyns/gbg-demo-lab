@@ -90,7 +90,7 @@ export default function AdminDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const openWizard = useDemoBuildStore(s => s.openWizard);
   const restoreWizard = useDemoBuildStore(s => s.restore);
-  const liveBuild = useDemoBuildStore(s => ({ id: s.demoId, status: s.status, progress: s.progress }));
+  const liveBuild = { id: useDemoBuildStore(s => s.demoId), status: useDemoBuildStore(s => s.status), progress: useDemoBuildStore(s => s.progress) };
   const setCreateDialogOpen = (v: boolean) => { if (v) openWizard(); };
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [demoToDelete, setDemoToDelete] = useState<string | null>(null);
