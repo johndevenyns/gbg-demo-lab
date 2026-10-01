@@ -370,8 +370,9 @@ export default function DemoPreview() {
       headerHtml = `
         <header style="padding: 16px 24px; background: ${demo.headerBgColor || '#1a1a2e'}; color: ${demo.headerTextColor || '#ffffff'};">
           <div style="max-width: 1200px; margin: 0 auto; display: flex; align-items: center; gap: 16px;">
-            ${activeLogoUrl ? `<img src="${activeLogoUrl}" alt="${demo.customerName}" style="height: 32px;" />` : ''}
-            <span style="font-weight: 600; font-size: 18px;">${demo.customerName}</span>
+            ${activeLogoUrl
+              ? `<img src="${activeLogoUrl}" alt="${demo.customerName}" style="height: 32px;" />`
+              : `<span style="font-weight: 600; font-size: 18px;">${demo.customerName}</span>`}
           </div>
         </header>
       `;
