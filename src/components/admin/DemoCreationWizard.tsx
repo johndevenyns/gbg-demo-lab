@@ -5,6 +5,7 @@ import {
   Sparkles, Database, Palette, FileSearch, Workflow, Rocket, AlertTriangle,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { toast as sonnerToast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -1359,7 +1360,7 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
                     size="sm"
                     onClick={() => {
                       const text = processingTasks.map(t => `[${t.status.toUpperCase()}] ${t.label}${t.detail ? ` — ${t.detail}` : ''}`).join('\n');
-                      navigator.clipboard.writeText(text).then(() => toast({ title: 'Build report copied' })).catch(() => {});
+                      navigator.clipboard.writeText(text).then(() => sonnerToast.success('Build report copied')).catch(() => {});
                     }}
                   >
                     Copy report
