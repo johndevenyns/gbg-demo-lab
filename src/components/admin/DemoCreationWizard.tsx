@@ -438,29 +438,15 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
           }
         }
 
-        // Generate screenshot-based capture
+        // Automatic screenshot captures are disabled — they were unreliable.
+        // When the HTML copy fails, the admin is asked to upload header/footer
+        // screenshots (or skip) instead.
         activeTaskId = 'scrape-screenshot';
-        updateTaskStatus('scrape-screenshot', 'in_progress');
-        try {
-          if (scrapedData?.screenshot) {
-            const screenshotSrc = getScreenshotSrc(scrapedData.screenshot);
-            const naturalHeight = 1000; // Default estimate
-            screenshotCapture = {
-              headerHtml: generateScreenshotHeaderHtml(screenshotSrc, naturalHeight),
-              footerHtml: generateScreenshotFooterHtml(screenshotSrc, naturalHeight),
-              css: JSON.stringify({
-                viewportScreenshots: {
-                  desktop: { src: screenshotSrc, crop: { headerHeight: 180, headerOffsetY: 0, footerHeight: 180, footerOffsetY: 0 } },
-                }
-              }),
-            };
-            updateTaskStatus('scrape-screenshot', 'complete', 'Desktop snapshot saved');
-          } else {
-            updateTaskStatus('scrape-screenshot', 'skipped', 'No screenshot returned — you can capture manually later');
-          }
-        } catch (e) {
-          updateTaskStatus('scrape-screenshot', 'skipped', e instanceof Error ? e.message : 'Screenshot processing failed');
-        }
+        updateTaskStatus(
+          'scrape-screenshot',
+          'skipped',
+          refinedHtml ? 'Not needed — live header/footer copy succeeded' : 'Automatic screenshots are off — upload your own header and footer below'
+        );
 
         // Apply branding (colors, logo, formStyle, BOTH captures)
         activeTaskId = 'apply';
@@ -1532,9 +1518,9 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
                 <div className="flex items-start gap-2">
                   <AlertTriangle className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
                   <div>
-                    <p className="text-sm font-semibold">Auto-capture couldn't copy this site's header and footer</p>
+                    <p className="text-sm font-semibold">We couldn't copy this site's header and footer</p>
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      {manualUploadReason || 'The capture service could not load the site.'} Upload screenshots of the header and footer, or skip for now — the demo's Site Appearance settings will remind you later.
+                      {manualUploadReason ? `${manualUploadReason} ` : ''}Upload your own screenshots of the header and footer, or skip for now — you can add them later in the demo's Site Appearance settings.
                     </p>
                   </div>
                 </div>
