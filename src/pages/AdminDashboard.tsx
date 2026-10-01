@@ -1,3 +1,4 @@
+import { PUBLIC_SITE_URL } from "@/lib/siteUrl";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { INDUSTRIES_ENABLED } from "@/lib/featureFlags";
@@ -118,7 +119,7 @@ export default function AdminDashboard() {
   };
 
   const copyDemoUrl = (slug: string) => {
-    const url = `${window.location.origin}/demo/${slug}`;
+    const url = `${PUBLIC_SITE_URL}/demo/${slug}`;
     navigator.clipboard.writeText(url);
     toast({ title: "URL copied", description: "Demo URL has been copied to clipboard." });
   };

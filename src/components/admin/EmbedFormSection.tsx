@@ -1,3 +1,4 @@
+import { PUBLIC_SITE_URL } from "@/lib/siteUrl";
 import { useState } from 'react';
 import { Code2, Copy, Check, ChevronDown, ChevronUp } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -14,7 +15,7 @@ export function EmbedFormSection({ slug }: EmbedFormSectionProps) {
   const [isOpen, setIsOpen] = useState(true);
   const [copiedField, setCopiedField] = useState<'embed' | 'iframe' | null>(null);
   
-  const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+  const baseUrl = PUBLIC_SITE_URL;
   const embedUrl = `${baseUrl}/embed/${slug}`;
   const iframeCode = `<iframe src="${embedUrl}" width="100%" height="600" frameborder="0" style="border: none;"></iframe>`;
   

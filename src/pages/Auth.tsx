@@ -1,3 +1,4 @@
+import { PUBLIC_SITE_URL } from "@/lib/siteUrl";
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
@@ -81,7 +82,7 @@ export default function Auth() {
     setIsResetting(true);
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(resetEmail.trim(), {
-        redirectTo: `${window.location.origin}/reset-password`,
+        redirectTo: `${PUBLIC_SITE_URL}/reset-password`,
       });
       if (error) {
         setError(error.message);

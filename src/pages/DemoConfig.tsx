@@ -1,3 +1,4 @@
+import { PUBLIC_SITE_URL } from "@/lib/siteUrl";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { logAdminAction } from "@/lib/auditLog";
 import { ArrowLeft, Save, Eye, Loader2, Settings, Globe, Palette, Calendar, User, PanelLeftClose, PanelLeft, Copy, ExternalLink, Briefcase, Users, MoreVertical, Archive, CopyPlus, Factory } from "lucide-react";
@@ -63,7 +64,7 @@ function SiteSettingsSection({ demo, onUpdate, portalTypes }: { demo: DemoEnviro
     });
   };
 
-  const publicUrl = `${window.location.origin}/demo/${demo.slug}`;
+  const publicUrl = `${PUBLIC_SITE_URL}/demo/${demo.slug}`;
 
   const copyPublicUrl = () => {
     navigator.clipboard.writeText(publicUrl);

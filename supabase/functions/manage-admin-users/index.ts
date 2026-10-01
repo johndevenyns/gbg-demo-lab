@@ -170,6 +170,7 @@ serve(async (req) => {
       const { data: linkData, error: resetError } = await adminClient.auth.admin.generateLink({
         type: 'recovery',
         email: targetUser.email,
+        options: { redirectTo: 'https://gbg-demo-lab.vercel.app/reset-password' },
       });
 
       if (resetError) {
@@ -267,6 +268,7 @@ serve(async (req) => {
       const { data: linkData, error: linkError } = await adminClient.auth.admin.generateLink({
         type: 'recovery',
         email: email.toLowerCase(),
+        options: { redirectTo: 'https://gbg-demo-lab.vercel.app/reset-password' },
       });
 
       if (!linkError && linkData?.properties?.action_link) {

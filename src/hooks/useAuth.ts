@@ -1,3 +1,4 @@
+import { PUBLIC_SITE_URL } from "@/lib/siteUrl";
 import { useState, useEffect, useCallback } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -122,7 +123,7 @@ export function useAuth() {
   };
 
   const signUp = async (email: string, password: string) => {
-    const redirectUrl = `${window.location.origin}/`;
+    const redirectUrl = `${PUBLIC_SITE_URL}/`;
     
     const { error } = await supabase.auth.signUp({
       email,
