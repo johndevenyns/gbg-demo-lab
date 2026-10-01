@@ -15,6 +15,15 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { logAdminAction } from "@/lib/auditLog";
+import { useDemoBuildStore } from "@/stores/demoBuildStore";
+
+const markBuildStatus = async (demoId: string, buildStatus: "building" | "complete" | "failed") => {
+  try {
+    const { data } = await supabase.from("demo_environments").select("form_style").eq("id", demoId).maybeSingle();
+    const fs = ((data?.form_style as Record<string, unknown>) || {});
+    await supabase.from("demo_environments").update({ form_style: { ...fs, buildStatus, buildUpdatedAt: new Date().toISOString() } as any }).eq("id", demoId);
+  } catch (e) { console.warn("Could not save build status", e); }
+};
 import { captureCustomerHomepage, mergeHomepagePage } from "@/lib/homepageCapture";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useCreateDemo, useUpdateDemo } from "@/hooks/useDemos";
@@ -151,7 +160,9 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
   const [selectedPortalType, setSelectedPortalType] = useState<string>('');
   
   const [processingTasks, setProcessingTasks] = useState<ProcessingTask[]>([]);
-  const [createdDemoId, setCreatedDemoId] = useState<string | null>(null);
+  const [createdDemoId, _setCreatedDemoId] = useState<string | null>(null);
+  const createdDemoIdRef = useRef<string | null>(null);
+  const setCreatedDemoId = (id: string | null) => { createdDemoIdRef.current = id; _setCreatedDemoId(id); };
   const [processingError, setProcessingError] = useState<string | null>(null);
   const [processingStartedAt, setProcessingStartedAt] = useState<number | null>(null);
   const [elapsedMs, setElapsedMs] = useState(0);
@@ -174,9 +185,31 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
   const [htmlAvailable, setHtmlAvailable] = useState(false);
   const [screenshotAvailable, setScreenshotAvailable] = useState(false);
 
+  const buildMinimized = useDemoBuildStore(s => s.minimized);
+  const setBuild = useDemoBuildStore(s => s.setBuild);
+  const minimizeBuild = useDemoBuildStore(s => s.minimize);
+  const clearBuild = useDemoBuildStore(s => s.clear);
+
   useEffect(() => {
-    if (!open) resetForm();
-  }, [open]);
+    if (!open && !buildMinimized) resetForm();
+  }, [open, buildMinimized]);
+
+  // Mirror build progress into the app-wide store (floating pill + demo card badge).
+  useEffect(() => {
+    if (step !== 'processing' && step !== 'review') return;
+    const done = processingTasks.filter(t => t.status !== 'pending' && t.status !== 'in_progress').length;
+    const progress = processingTasks.length ? Math.round((done / processingTasks.length) * 100) : 0;
+    const status = step === 'review' ? (processingTasks.some(t => t.status === 'error') ? 'failed' : 'complete') : processingError ? 'failed' : 'building';
+    setBuild({ status, progress, demoId: createdDemoId, customerName: customerName.trim() || null });
+  }, [step, processingTasks, processingError, createdDemoId, customerName]);
+
+  // Warn before closing the browser tab mid-build (the build runs in this window).
+  useEffect(() => {
+    if (step !== 'processing' || processingError) return;
+    const handler = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ''; };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [step, processingError]);
 
   // When industry is selected, auto-select all its use cases
   useEffect(() => {
@@ -327,6 +360,7 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
       const template: IndustryTemplate = 'custom';
       const demo = await createDemo.mutateAsync({ customerName: customerName.trim(), template });
       setCreatedDemoId(demo.id);
+      void markBuildStatus(demo.id, 'building');
       let effectiveFormStyle: FormStyleConfig = { ...DEFAULT_FORM_STYLE, ...(demo.formStyle || {}) };
 
       await updateDemo.mutateAsync({
@@ -716,6 +750,7 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
           entityType: 'demo_build_report',
           entityId: demo.id,
           entityLabel: customerName,
+          ...(void markBuildStatus(demo.id, failed > 0 ? 'failed' : 'complete'), {}),
           details: {
             siteUrl: normalizedSiteUrl,
             summary: { succeeded: prev.length - failed - skipped, failed, skipped },
@@ -727,6 +762,7 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
       setTimeout(() => setStep('review'), 800);
     } catch (error) {
       console.error('Processing error:', error);
+      if (createdDemoIdRef.current) void markBuildStatus(createdDemoIdRef.current, 'failed');
       const message = error instanceof Error ? error.message : 'An unexpected error occurred';
       setProcessingError(message);
       setFailedTaskId(activeTaskId);
@@ -787,6 +823,7 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
       onOpenChange(false);
       return;
     }
+    clearBuild();
     onOpenChange(false);
     onCreated(createdDemoId);
   };
@@ -832,6 +869,7 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
       console.error('Failed to set active method:', e);
     }
 
+    clearBuild();
     onOpenChange(false);
     onCreated(createdDemoId);
   };
@@ -891,8 +929,9 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => {
-      if (!isOpen && step !== 'processing') resetForm();
-      if (step !== 'processing') onOpenChange(isOpen);
+      if (!isOpen && (step === 'processing' || step === 'review')) { minimizeBuild(); return; }
+      if (!isOpen) { resetForm(); clearBuild(); }
+      onOpenChange(isOpen);
     }}>
       <DialogContent className={cn(
         "max-h-[85vh] flex flex-col overflow-hidden",
