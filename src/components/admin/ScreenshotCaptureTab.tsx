@@ -1,4 +1,5 @@
 import { useState, useMemo, useRef } from "react";
+import { AUTO_SCREENSHOT_FETCH_ENABLED } from "@/lib/featureFlags";
 import { Camera, Loader2, ExternalLink, Eye, Check, Monitor, Tablet, Smartphone, Paintbrush, RefreshCw, Crop, Ban } from "lucide-react";
 import { ScreenshotUploadSection } from "./ScreenshotUploadSection";
  import { Button } from "@/components/ui/button";
@@ -297,12 +298,13 @@ export function ScreenshotCaptureTab({ demo, url, onUrlChange, onApply, isConfig
         {!demo.mirrorScreenshotHeaderHtml && !demo.mirrorHtmlHeaderHtml && (
           <div className="rounded-md border border-amber-300 bg-amber-50 dark:bg-amber-950/20 px-3 py-2 text-sm">
             <span className="font-medium">Header/footer still needed.</span>{' '}
-            Auto-capture didn't get this site's header and footer. Upload screenshots below or try fetching again.
+            Upload screenshots of this site's header and footer below.
           </div>
         )}
         {/* Upload Custom Images */}
         <ScreenshotUploadSection demo={demo} onApply={onApply} />
 
+        {AUTO_SCREENSHOT_FETCH_ENABLED && (
         <Card>
           <CardContent className="pt-4 space-y-4">
             <p className="text-sm text-muted-foreground">
@@ -344,6 +346,7 @@ export function ScreenshotCaptureTab({ demo, url, onUrlChange, onApply, isConfig
             </div>
          </CardContent>
        </Card>
+        )}
  
        {/* Screenshot Preview & Crop Editor */}
        {scrapedData && selectedScreenshot && (
