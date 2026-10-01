@@ -328,7 +328,6 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
     if (enableMirroring && normalizedSiteUrl) {
       tasks.push({ id: 'grab-logo', label: 'Grabbing site logo', phase: 'branding', status: 'pending' });
       tasks.push({ id: 'scrape-html', label: 'Extracting HTML header & footer', phase: 'branding', status: 'pending' });
-      tasks.push({ id: 'scrape-screenshot', label: 'Capturing pixel-perfect screenshot', phase: 'branding', status: 'pending' });
       tasks.push({ id: 'apply', label: 'Applying brand colors, logo & typography', phase: 'branding', status: 'pending' });
       tasks.push({ id: 'discover-form', label: 'Crawling site for application or contact form', phase: 'forms', status: 'pending' });
       tasks.push({ id: 'capture-form', label: 'Capturing form fields, labels & styling', phase: 'forms', status: 'pending' });
@@ -372,7 +371,7 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
       });
       updateTaskStatus('create', 'complete', `Demo /${demo.slug} ready`);
 
-      // Step 2: Site mirroring - capture BOTH methods
+      // Step 2: Copy the live site styling. Screenshots are manual uploads only.
       let scrapedData: ScrapedBranding | null = null;
       let refinedHtml: { headerHtml: string; footerHtml: string; css: string } | null = null;
       let screenshotCapture: { headerHtml: string; footerHtml: string; css: string } | null = null;
@@ -398,7 +397,7 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
           updateTaskStatus('grab-logo', 'error', e instanceof Error ? e.message : 'Logo lookup failed');
         }
 
-        // Fetch site branding (returns HTML + screenshots)
+        // Fetch the live header/footer and branding details.
         activeTaskId = 'scrape-html';
         updateTaskStatus('scrape-html', 'in_progress');
         setTaskDetail('scrape-html', `Fetching ${safeHostname(normalizedSiteUrl)} (${captureMode} capture)…`);
@@ -423,32 +422,21 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
           const regions = [scrapedData.headerHtml?.trim() ? 'header' : null, scrapedData.footerHtml?.trim() ? 'footer' : null].filter(Boolean);
           updateTaskStatus('scrape-html', 'complete', `Captured ${regions.join(' and ')} · CSS ${cssKb}KB · HTML ${headerKb}KB${modeNote}`);
         } else {
-          // Edge function may return partialData (screenshot, logo, colors) even when
-          // HTML capture failed — use it so screenshot mirroring still works.
+          // Keep any partial logo and colour data even when the HTML copy fails.
           const partial = (response as { partialData?: typeof scrapedData }).partialData;
           if (partial) {
             scrapedData = partial;
             updateTaskStatus(
               'scrape-html',
               'skipped',
-              'HTML capture blocked (likely SPA/bot protection) — using Screenshot method instead'
+              'Live header/footer copy was blocked — upload header and footer images below'
             );
           } else {
             updateTaskStatus('scrape-html', 'error', response.error || 'Could not fetch site HTML');
           }
         }
 
-        // Automatic screenshot captures are disabled — they were unreliable.
-        // When the HTML copy fails, the admin is asked to upload header/footer
-        // screenshots (or skip) instead.
-        activeTaskId = 'scrape-screenshot';
-        updateTaskStatus(
-          'scrape-screenshot',
-          'skipped',
-          refinedHtml ? 'Not needed — live header/footer copy succeeded' : 'Automatic screenshots are off — upload your own header and footer below'
-        );
-
-        // Apply branding (colors, logo, formStyle, BOTH captures)
+        // Apply branding (colors, logo, and form style).
         activeTaskId = 'apply';
         updateTaskStatus('apply', 'in_progress');
         const capturedLogo = scrapedData?.logoUrl || scrapedData?.branding?.logo || '';
@@ -983,11 +971,11 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
                       onChange={(e) => setSiteUrl(e.target.value)}
                     />
                     <p className="text-xs text-muted-foreground">
-                      We'll capture both an HTML extraction and a screenshot, then let you pick the best result
+                      We'll copy the live header, footer, logo, colours, and form styling. If the header or footer cannot be copied, you can upload images or skip for now.
                     </p>
                   </div>
                   <div className="space-y-2">
-                    <Label>Capture mode</Label>
+                    <Label>Site scan mode</Label>
                     <Select value={captureMode} onValueChange={(v) => setCaptureMode(v as CaptureMode)}>
                       <SelectTrigger>
                         <SelectValue />
@@ -1000,10 +988,10 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
                     </Select>
                     <p className="text-xs text-muted-foreground">
                       {captureMode === 'auto'
-                        ? 'Tries a full capture first and switches to Light automatically if the site is too big.'
+                        ? 'Tries a detailed scan first and switches to a lighter scan if the site is too large. No screenshots are taken.'
                         : captureMode === 'full'
-                          ? 'Captures everything, including tablet and mobile views. Can fail on very large sites.'
-                          : 'Captures only the first screen, skips mobile/tablet views and heavy extras. Best for giant sites like cvs.com.'}
+                          ? 'Copies the full live header, footer, and styling. This can fail on very large sites.'
+                          : 'Runs a lighter branding scan without taking screenshots. Best for very large sites like cvs.com.'}
                     </p>
                   </div>
                   <div className="space-y-2">
