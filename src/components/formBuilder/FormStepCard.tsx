@@ -341,11 +341,12 @@ export function FormStepCard({
 
   return (
     <Card
-      ref={setDragRef}
+      ref={(node) => { setDragRef(node); setNodeRef(node); }}
       style={style}
       className={`
         glass-card transition-all duration-200
         ${isDragging ? 'opacity-50 ring-2 ring-primary' : ''}
+        ${isOver && !isDragging ? 'ring-2 ring-primary/60' : ''}
         ${isOver ? 'ring-2 ring-primary/50 bg-primary/5' : ''}
       `}
     >
@@ -574,7 +575,6 @@ export function FormStepCard({
       
       {isExpanded && (
         <CardContent
-          ref={setNodeRef}
           className={`
             pt-0 pb-4 space-y-2 min-h-[100px] transition-colors
             ${isOver ? 'bg-primary/5' : ''}
