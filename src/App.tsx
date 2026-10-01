@@ -16,6 +16,7 @@ import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 import QrCodePreview from "./pages/QrCodePreview";
 import VerifyRedirect from "./pages/VerifyRedirect";
+import { GlobalDemoWizard } from "@/components/admin/GlobalDemoWizard";
 
 // Disable refetch-on-window-focus so returning to the tab doesn't trigger
 // query refetches that can cascade into parent re-renders and close open
@@ -87,6 +88,7 @@ function AppContent() {
           <Route path="/verify/redirect" element={<VerifyRedirect />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
+        <GlobalDemoWizard />
       </BrowserRouter>
     </>
   );

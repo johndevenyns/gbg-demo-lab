@@ -15,7 +15,8 @@ import { useDemos, useDeleteDemo } from "@/hooks/useDemos";
 import { useAuth } from "@/hooks/useAuth";
 import { logAdminAction } from "@/lib/auditLog";
 import { IndustryTemplate } from "@/types/demo";
-import { CreateDemoDialog } from "@/components/admin/CreateDemoDialog";
+import { useDemoBuildStore } from "@/stores/demoBuildStore";
+import { Loader2 } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -87,7 +88,10 @@ export default function AdminDashboard() {
   const { data: demos = [], isLoading } = useDemos();
   const deleteDemo = useDeleteDemo();
   const [searchQuery, setSearchQuery] = useState("");
-  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const openWizard = useDemoBuildStore(s => s.openWizard);
+  const restoreWizard = useDemoBuildStore(s => s.restore);
+  const liveBuild = useDemoBuildStore(s => ({ id: s.demoId, status: s.status, progress: s.progress }));
+  const setCreateDialogOpen = (v: boolean) => { if (v) openWizard(); };
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [demoToDelete, setDemoToDelete] = useState<string | null>(null);
 
@@ -167,9 +171,24 @@ export default function AdminDashboard() {
                     <CardDescription className="font-mono text-xs">/demo/{demo.slug}</CardDescription>
                   </div>
                 </div>
-                <Badge variant={demo.isActive ? 'default' : 'secondary'}>
-                  {demo.isActive ? 'Active' : 'Inactive'}
-                </Badge>
+                {(() => {
+                  const isLive = liveBuild.id === demo.id && liveBuild.status === 'building';
+                  const saved = (demo.formStyle as any)?.buildStatus as string | undefined;
+                  const savedAt = Date.parse((demo.formStyle as any)?.buildUpdatedAt || '') || 0;
+                  const interrupted = !isLive && saved === 'building' && Date.now() - savedAt > 10 * 60 * 1000;
+                  if (isLive) return (
+                    <Badge variant="outline" className="gap-1 cursor-pointer" onClick={restoreWizard}>
+                      <Loader2 className="h-3 w-3 animate-spin" /> Building demo… {liveBuild.progress}%
+                    </Badge>
+                  );
+                  if (interrupted) return <Badge variant="destructive">Build interrupted</Badge>;
+                  if (!isLive && saved === 'building') return <Badge variant="outline" className="gap-1"><Loader2 className="h-3 w-3 animate-spin" /> Building demo…</Badge>;
+                  return (
+                    <Badge variant={demo.isActive ? 'default' : 'secondary'}>
+                      {demo.isActive ? 'Active' : 'Inactive'}
+                    </Badge>
+                  );
+                })()}
               </div>
             </CardHeader>
             <CardContent>
@@ -367,12 +386,6 @@ export default function AdminDashboard() {
         </Tabs>
       </main>
 
-      {/* Create Dialog */}
-      <CreateDemoDialog 
-        open={createDialogOpen} 
-        onOpenChange={setCreateDialogOpen}
-        onCreated={(id) => navigate(`/admin/demo/${id}`)}
-      />
 
       {/* Delete Confirmation */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
