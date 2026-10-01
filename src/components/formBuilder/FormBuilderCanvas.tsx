@@ -5,6 +5,9 @@ import {
   DndContext,
   DragOverlay,
   closestCenter,
+  pointerWithin,
+  rectIntersection,
+  CollisionDetection,
   KeyboardSensor,
   PointerSensor,
   useSensor,
@@ -53,6 +56,16 @@ export function FormBuilderCanvas({ steps, onUpdateSteps, demo }: FormBuilderCan
       coordinateGetter: sortableKeyboardCoordinates,
     })
   );
+
+  // Forgiving drop targeting: use whatever is under the pointer first,
+  // then anything the dragged item overlaps, then the nearest target.
+  const collisionDetection: CollisionDetection = (args) => {
+    const within = pointerWithin(args);
+    if (within.length) return within;
+    const overlapping = rectIntersection(args);
+    if (overlapping.length) return overlapping;
+    return closestCenter(args);
+  };
 
   const generateId = () => crypto.randomUUID();
 
@@ -622,7 +635,7 @@ export function FormBuilderCanvas({ steps, onUpdateSteps, demo }: FormBuilderCan
   return (
     <DndContext
       sensors={sensors}
-      collisionDetection={closestCenter}
+      collisionDetection={collisionDetection}
       onDragStart={handleDragStart}
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}

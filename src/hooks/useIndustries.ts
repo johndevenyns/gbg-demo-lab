@@ -74,7 +74,7 @@ export function useUpdateIndustry() {
 
       const { data, error } = await supabase
         .from('industries')
-        .update(dbUpdates)
+        .update(dbUpdates as never)
         .eq('id', id)
         .select()
         .single();

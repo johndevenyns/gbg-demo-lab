@@ -56,7 +56,7 @@ export function useUpdateVerificationType() {
       
       const { data, error } = await supabase
         .from('verification_type_configs')
-        .update(dbUpdates)
+        .update(dbUpdates as never)
         .eq('id', id)
         .select()
         .single();
@@ -176,7 +176,7 @@ export function useUpdateDidProvider() {
       
       const { data, error } = await supabase
         .from('did_providers')
-        .update(dbUpdates)
+        .update(dbUpdates as never)
         .eq('id', id)
         .select()
         .single();
