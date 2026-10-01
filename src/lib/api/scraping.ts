@@ -176,6 +176,45 @@ export interface CaptureFormResponse {
   availableFormIds?: string[]; // Returned even on error to help users
 }
 
+/**
+ * Turn a backend function failure into a plain-language reason.
+ * The default message ("Edge Function returned a non-2xx status code") hides
+ * the real cause, so read the HTTP status and response body when available.
+ */
+export async function describeFunctionError(error: unknown): Promise<string> {
+  const err = error as { message?: string; context?: Response };
+  let status: number | undefined;
+  let body = '';
+  try {
+    if (err?.context && typeof err.context.text === 'function') {
+      status = err.context.status;
+      body = await err.context.clone().text();
+    }
+  } catch { /* ignore */ }
+  let bodyMsg = '';
+  try {
+    const parsed = JSON.parse(body);
+    bodyMsg = parsed?.error || parsed?.message || parsed?.msg || '';
+  } catch { bodyMsg = body.slice(0, 200); }
+  const text = `${bodyMsg} ${err?.message || ''}`.toLowerCase();
+  if (status === 546 || /memory limit|worker_limit|resource limit/.test(text)) {
+    return 'The site is too large for the capture service (ran out of memory). Try the Screenshot method or a simpler page URL.';
+  }
+  if (status === 504 || status === 408 || /timeout|timed out/.test(text)) {
+    return 'The site took too long to respond (timed out). It may be slow or blocking automated visits.';
+  }
+  if (status === 401 || status === 403) {
+    return bodyMsg ? `Access denied: ${bodyMsg}` : 'Access denied — your session may have expired. Sign in again and retry.';
+  }
+  if (status === 402 || /credits|payment required|rate limit|429/.test(text)) {
+    return 'The capture service is out of credits or rate-limited. Wait a moment and retry.';
+  }
+  if (bodyMsg) return `${bodyMsg}${status ? ` (HTTP ${status})` : ''}`;
+  if (status) return `Capture service error (HTTP ${status})`;
+  if (/failed to fetch|network/.test(text)) return 'Could not reach the capture service (network error).';
+  return err?.message || 'Unknown error';
+}
+
 export const scrapingApi = {
   async scrapeSiteBranding(url: string, signal?: AbortSignal): Promise<ScrapeResponse> {
     const { data, error } = await supabase.functions.invoke('scrape-site-branding', {
@@ -185,7 +224,7 @@ export const scrapingApi = {
 
     if (error) {
       if (signal?.aborted) return { success: false, error: 'Cancelled' };
-      return { success: false, error: error.message };
+      return { success: false, error: await describeFunctionError(error) };
     }
     
     return data;
@@ -212,7 +251,7 @@ export const scrapingApi = {
 
     if (error) {
       if (options?.signal?.aborted) return { success: false, error: 'Cancelled' };
-      return { success: false, error: error.message };
+      return { success: false, error: await describeFunctionError(error) };
     }
     
     return data;
@@ -240,7 +279,7 @@ export const scrapingApi = {
 
     if (error) {
       if (options?.signal?.aborted) return { success: false, error: 'Cancelled' };
-      return { success: false, error: error.message };
+      return { success: false, error: await describeFunctionError(error) };
     }
     
     return data;
@@ -256,7 +295,7 @@ export const scrapingApi = {
     });
     if (error) {
       if (options?.signal?.aborted) return { success: false, error: 'Cancelled' };
-      return { success: false, error: error.message };
+      return { success: false, error: await describeFunctionError(error) };
     }
     return data;
   },
@@ -279,7 +318,7 @@ export const scrapingApi = {
     });
     if (error) {
       if (options?.signal?.aborted) return { success: false, error: 'Cancelled' };
-      return { success: false, error: error.message };
+      return { success: false, error: await describeFunctionError(error) };
     }
     return data;
   },
@@ -376,7 +415,7 @@ export const formAnalysisApi = {
 
     if (error) {
       if (signal?.aborted) return { success: false, error: 'Cancelled' };
-      return { success: false, error: error.message };
+      return { success: false, error: await describeFunctionError(error) };
     }
     
     return data;
@@ -393,7 +432,7 @@ export const formAnalysisApi = {
     });
 
     if (error) {
-      return { success: false, error: error.message };
+      return { success: false, error: await describeFunctionError(error) };
     }
 
     return data;
@@ -438,7 +477,7 @@ export const headerRefinementApi = {
 
     if (error) {
       if (signal?.aborted) return { success: false, error: 'Cancelled' };
-      return { success: false, error: error.message };
+      return { success: false, error: await describeFunctionError(error) };
     }
 
     return data;

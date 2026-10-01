@@ -5,6 +5,7 @@ import {
   Sparkles, Database, Palette, FileSearch, Workflow, Rocket, AlertTriangle,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { toast as sonnerToast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,6 +14,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { logAdminAction } from "@/lib/auditLog";
 import { captureCustomerHomepage, mergeHomepagePage } from "@/lib/homepageCapture";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useCreateDemo, useUpdateDemo } from "@/hooks/useDemos";
@@ -461,8 +463,17 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
           updateTaskStatus('discover-form', 'in_progress');
           setTaskDetail('discover-form', 'Scanning /apply, /contact, /signup…');
           const discovery = await scrapingApi.discoverForms(normalizedSiteUrl, { formType: 'any', maxPages: 6 });
-          if (discovery.success && discovery.data?.best) {
-            const best = discovery.data.best;
+          const bestCandidate = discovery.data?.best;
+          const isUnusableForm = bestCandidate && (bestCandidate.detectedKind === 'search' || (bestCandidate.fieldCount ?? 0) < 2);
+          if (discovery.success && bestCandidate && isUnusableForm) {
+            updateTaskStatus(
+              'discover-form',
+              'skipped',
+              `Only found a ${bestCandidate.detectedKind || 'small'} form on ${safePathname(bestCandidate.pageUrl)} (${bestCandidate.fieldCount} field${bestCandidate.fieldCount === 1 ? '' : 's'}) — not a sign-up or application form, so it was ignored`,
+            );
+            updateTaskStatus('capture-form', 'skipped', 'Skipped — no sign-up or application form to copy styling from; default form style used');
+          } else if (discovery.success && bestCandidate) {
+            const best = bestCandidate;
             setDiscoveredFormUrl(best.pageUrl);
             updateTaskStatus(
               'discover-form',
@@ -512,7 +523,7 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
                updateTaskStatus('capture-form', 'error', `${e instanceof Error ? e.message : 'Capture failed'} — retry from Site Appearance`);
             }
           } else {
-            updateTaskStatus('discover-form', 'skipped', 'No suitable form found on site');
+            updateTaskStatus('discover-form', discovery.success ? 'skipped' : 'error', discovery.success ? 'No suitable form found on site' : `${discovery.error || 'Discovery failed'} — you can run it later`);
             updateTaskStatus('capture-form', 'skipped', 'Skipped — no form to capture');
           }
         } catch (e) {
@@ -660,6 +671,23 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
       // Always keep the final report visible. If captures exist, the user can
       // also choose which site mirror to activate before opening the demo.
       setSelectedMethod(refinedHtml ? 'html' : 'screenshot');
+      // Save the build report to the audit log so failures can be reviewed later.
+      setProcessingTasks(prev => {
+        const failed = prev.filter(t => t.status === 'error').length;
+        const skipped = prev.filter(t => t.status === 'skipped').length;
+        void logAdminAction({
+          action: 'create',
+          entityType: 'demo_build_report',
+          entityId: demo.id,
+          entityLabel: customerName,
+          details: {
+            siteUrl: normalizedSiteUrl,
+            summary: { succeeded: prev.length - failed - skipped, failed, skipped },
+            tasks: prev.map(t => ({ step: t.label, status: t.status, detail: t.detail ?? null })),
+          },
+        });
+        return prev;
+      });
       setTimeout(() => setStep('review'), 800);
     } catch (error) {
       console.error('Processing error:', error);
@@ -1319,7 +1347,25 @@ export function DemoCreationWizard({ open, onOpenChange, onCreated }: DemoCreati
           <div className="py-4 space-y-4">
             <div className="rounded-lg border border-border overflow-hidden">
               <div className="px-3 py-2 bg-muted/30 border-b border-border">
-                <h3 className="text-sm font-semibold">Initial build report</h3>
+                <div className="flex items-center justify-between gap-2">
+                  <div>
+                    <h3 className="text-sm font-semibold">Initial build report</h3>
+                    <p className="text-xs text-muted-foreground">
+                      {processingTasks.filter(t => t.status === 'complete').length} succeeded · {processingTasks.filter(t => t.status === 'error').length} failed · {processingTasks.filter(t => t.status === 'skipped').length} skipped — saved to Reporting → Admin activity
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const text = processingTasks.map(t => `[${t.status.toUpperCase()}] ${t.label}${t.detail ? ` — ${t.detail}` : ''}`).join('\n');
+                      navigator.clipboard.writeText(text).then(() => sonnerToast.success('Build report copied')).catch(() => {});
+                    }}
+                  >
+                    Copy report
+                  </Button>
+                </div>
               </div>
               <div className="divide-y divide-border">
                 {processingTasks.map((task) => (
