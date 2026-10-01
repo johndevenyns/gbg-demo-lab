@@ -1,1 +1,2 @@
 Hosted Journey Resource IDs use step override → demo default → admin default → global default, with the backend secret only as a legacy safety fallback; this keeps GO journeys configurable without exposing credentials.
+Customer homepage capture remains implemented but is controlled by a disabled feature flag; this preserves existing homepage data while hiding unreliable creation controls.
